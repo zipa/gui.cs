@@ -219,7 +219,14 @@ namespace Terminal.Gui {
 
 	public partial class View : IEnumerable<View> {
 		bool ShouldOrderChildren { get; set; }
-
+		bool layoutInvalidated;
+		
+		void InvalidateLayout ()
+		{
+			layoutInvalidated = true;
+			// TODO: walk the parent chain to invalidate
+		}
+		
 		/// <summary>
 		/// This property defines how the layout engine will distribute space between and 
 		/// around child items that have been laid out on multiple lines. This property is 
@@ -228,14 +235,30 @@ namespace Terminal.Gui {
 		/// </summary>
 		/// <remarks>The default value for this property is Stretch.</remarks>
 		/// <value>The content of the align.</value>
-		public AlignContent AlignContent { get; set; } = AlignContent.Stretch;
+		public AlignContent AlignContent {
+			get => _AlignContent;
+			set {
+				_AlignContent = value;
+				InvalidateLayout ();
+			}
+		}
+		AlignContent _AlignContent = AlignContent.Stretch;
+		
 		/// <summary>
 		/// This property defines how the layout engine will distribute space between 
 		/// and around child items along the cross-axis.
 		/// </summary>
 		/// <value>The align items.</value>
 		/// <remarks>The default value for this property is Stretch.</remarks>
-		public AlignItems AlignItems { get; set; } = AlignItems.Stretch;
+		public AlignItems AlignItems {
+			get => _AlignItems;
+			set {
+				_AlignItems = value;
+				InvalidateLayout ();
+			}
+		}
+		AlignItems _AlignItems = AlignItems.Stretch;
+		
 		/// <summary>
 		/// his property defines how the layout engine will distribute space between and 
 		/// around child items for a specific child along the cross-axis. If this property 
@@ -243,7 +266,15 @@ namespace Terminal.Gui {
 		/// <see cref="P:Xamarin.Flex.Item.AlignItems" /> will be used instead.
 		/// </summary>
 		/// <value>The align self.</value>
-		public AlignSelf AlignSelf { get; set; } = AlignSelf.Auto;
+		public AlignSelf AlignSelf {
+			get => _AlignSelf;
+			set {
+				_AlignSelf = value;
+				InvalidateLayout ();
+			}
+		}
+		AlignSelf _AlignSelf = AlignSelf.Auto;
+		
 		/// <summary>
 		/// This property defines the initial main-axis dimension of the item. 
 		/// If <see cref="P:Xamarin.Flex.Item.Direction" /> is row-based (horizontal), 
@@ -252,7 +283,15 @@ namespace Terminal.Gui {
 		/// <see cref="P:Xamarin.Flex.Item.Height" />.
 		/// </summary>
 		/// <value>The basis.</value>
-		public Basis Basis { get; set; } = Basis.Auto;
+		public Basis Basis {
+			get => _Basis;
+			set {
+				_Basis = value;
+				InvalidateLayout ();
+			}
+		}
+		Basis _Basis = Basis.Auto;
+		
 		/// <summary>
 		/// This property defines the bottom edge absolute position of the item. It also 
 		/// defines the item's height if <see cref="P:Xamarin.Flex.Item.Top" /> is also set 
@@ -261,7 +300,15 @@ namespace Terminal.Gui {
 		/// </summary>
 		/// <value>The bottom.</value>
 		/// <remarks>The default value is UnsetValue.</remarks>
-		public int Bottom { get; set; } = UnsetValue;
+		public int Bottom {
+			get => _Bottom;
+			set {
+				_Bottom = value;
+				InvalidateLayout ();
+			}
+		}
+		int _Bottom = UnsetValue;
+		
 		/// <summary>
 		/// This property defines the direction and main-axis of child items. If set to 
 		/// Column (or ColumnReverse), the main-axis will be the y-axis and items will be 
@@ -270,7 +317,14 @@ namespace Terminal.Gui {
 		/// </summary>
 		/// <value>The direction.</value>
 		/// <remarks>The default value for this property is Column.</remarks>
-		public Direction Direction { get; set; } = Direction.Column;
+		public Direction Direction {
+			get => _Direction;
+			set {
+				_Direction = value;
+				InvalidateLayout ();
+			}
+		}
+		Direction _Direction = Direction.Column;
 		/// <summary>
 		/// This property defines the grow factor of the item; the amount of available 
 		/// space it should use on the main-axis. If this property is set to 0, 
@@ -278,13 +332,27 @@ namespace Terminal.Gui {
 		/// </summary>
 		/// <value>The item grow factor.</value>
 		/// <remarks>The default value for this property is 0 (does not take any available space).</remarks>
-		public int Grow { get; set; } = 0;
+		public int Grow {
+			get => _Grow;
+			set {
+				_Grow = value;
+				InvalidateLayout ();
+			}
+		}
+		int _Grow = 0;
 		/// <summary>
 		/// This property defines the height size dimension of the item.
 		/// </summary>
 		/// <value>The height size dimension.</value>
 		/// <remarks>The default value is UnsetValue.</remarks>
-		public int Height { get; set; } = UnsetValue;
+		public int Height {
+			get => _Height;
+			set {
+				_Height = value;
+				InvalidateLayout ();
+			}
+		}
+		int _Height = UnsetValue;
 		/// <summary>
 		/// This property defines how the layout engine will distribute space 
 		/// between and around child items along the main-axis.
@@ -294,7 +362,14 @@ namespace Terminal.Gui {
 		/// <remarks>
 		/// The default value for this property is Start.
 		/// </remarks>
-		public Justify JustifyContent { get; set; } = Justify.Start;
+		public Justify JustifyContent {
+			get => _JustifyContent;
+			set {
+				_JustifyContent = value;
+				InvalidateLayout ();
+			}
+		}
+		Justify _JustifyContent = Justify.Start;
 		/// <summary>
 		/// This property defines the left edge absolute position of the item. 
 		/// It also defines the item's width if <see cref="P:Xamarin.Flex.Item.Right" /> 
@@ -304,25 +379,53 @@ namespace Terminal.Gui {
 		/// </summary>
 		/// <value>The value for the property.</value>
 		/// <remarks>The default value is UnsetValue.</remarks>
-		public int Left { get; set; } = UnsetValue;
+		public int Left {
+			get => _Left;
+			set {
+				_Left = value;
+				InvalidateLayout ();
+			}
+		}
+		int _Left = UnsetValue;
 		/// <summary>
 		/// This property defines the margin space required on the bottom edge of the item.
 		/// </summary>
 		/// <value>The top edge margin space (negative values are allowed).</value>
 		/// <remarks>The default value for this property is 0.</remarks>
-		public int MarginBottom { get; set; } = 0;
+		public int MarginBottom {
+			get => _MarginBottom;
+			set {
+				_MarginBottom = value;
+				InvalidateLayout ();
+			}
+		}
+		int _MarginBottom = 0;
 		/// <summary>
 		/// This property defines the margin space required on the left edge of the item.
 		/// </summary>
 		/// <value>The top edge margin space (negative values are allowed).</value>
 		/// <remarks>The default value for this property is 0.</remarks>
-		public int MarginLeft { get; set; } = 0;
+		public int MarginLeft {
+			get => _MarginLeft;
+			set {
+				_MarginLeft = value;
+				InvalidateLayout ();
+			}
+		}
+		int _MarginLeft = 0;
 		/// <summary>
 		/// This property defines the margin space required on the right edge of the item.
 		/// </summary>
 		/// <value>The top edge margin space (negative values are allowed).</value>
 		/// <remarks>The default value for this property is 0.</remarks>
-		public int MarginRight { get; set; } = 0;
+		public int MarginRight {
+			get => _MarginRight;
+			set {
+				_MarginRight = value;
+				InvalidateLayout ();
+			}
+		}
+		int _MarginRight = 0;
 
 		/// <summary>
 		/// This value is used to reprensent that a dimension has not been set
@@ -339,7 +442,14 @@ namespace Terminal.Gui {
 		/// </summary>
 		/// <value>The top edge margin space (negative values are allowed).</value>
 		/// <remarks>The default value for this property is 0.</remarks>
-		public int MarginTop { get; set; } = 0;
+		public int MarginTop {
+			get => _MarginTop;
+			set {
+				_MarginTop = value;
+				InvalidateLayout ();
+			}
+		}
+		int _MarginTop = 0;
 
 		int order;
 		/// <summary>
@@ -355,6 +465,7 @@ namespace Terminal.Gui {
 			set {
 				if ((order = value) != 0 && SuperView != null)
 					SuperView.ShouldOrderChildren = true;
+				InvalidateLayout ();
 			}
 		}
 
@@ -363,25 +474,53 @@ namespace Terminal.Gui {
 		/// space that should be used when laying out child items.
 		/// </summary>
 		/// <value>The bottom edge padding space.Negative values are not allowed.</value>
-		public int PaddingBottom { get; set; } = 0;
+		public int PaddingBottom {
+			get => _PaddingBottom;
+			set {
+				_PaddingBottom = value;
+				InvalidateLayout ();
+			}
+		}
+		int _PaddingBottom = 0;
 		/// <summary>
 		/// This property defines the height of the item's left edge padding 
 		/// space that should be used when laying out child items.
 		/// </summary>
 		/// <value>The bottom edge padding space.Negative values are not allowed.</value>
-		public int PaddingLeft { get; set; } = 0;
+		public int PaddingLeft {
+			get => _PaddingLeft;
+			set {
+				_PaddingLeft = value;
+				InvalidateLayout ();
+			}
+		}
+		int _PaddingLeft = 0;
 		/// <summary>
 		/// This property defines the height of the item's right edge padding 
 		/// space that should be used when laying out child items.
 		/// </summary>
 		/// <value>The bottom edge padding space.Negative values are not allowed.</value>
-		public int PaddingRight { get; set; } = 0;
+		public int PaddingRight {
+			get => _PaddingRight;
+			set {
+				_PaddingRight = value;
+				InvalidateLayout ();
+			}
+		}
+		int _PaddingRight = 0;
 		/// <summary>
 		/// This property defines the height of the item's top edge padding 
 		/// space that should be used when laying out child items.
 		/// </summary>
 		/// <value>The bottom edge padding space.Negative values are not allowed.</value>
-		public int PaddingTop { get; set; } = 0;
+		public int PaddingTop {
+			get => _PaddingTop;
+			set {
+				_PaddingTop = value;
+				InvalidateLayout ();
+			}
+		}
+		int _PaddingTop = 0;
 		/// <summary>
 		/// This property defines whether the item should be positioned by the flexbox rules 
 		/// of the layout engine(Relative) or have an absolute fixed position (Absolute). 
@@ -392,7 +531,14 @@ namespace Terminal.Gui {
 		/// </summary>
 		/// <value>Any value part of the<see cref="T:Xamarin.Flex.Position" /> enumeration.</value>
 		/// <remarks>The default value for this property is Relative</remarks>
-		public Position Position { get; set; } = Position.Relative;
+		public Position Position {
+			get => _Position;
+			set {
+				_Position = value;
+				InvalidateLayout ();
+			}
+		}
+		Position _Position = Position.Relative;
 		/// <summary>
 		/// This property defines the right edge absolute position of the item. It also defines 
 		/// the item's width if <see cref="P:Xamarin.Flex.Item.Left" /> is also set and if 
@@ -400,7 +546,14 @@ namespace Terminal.Gui {
 		/// <see cref = "P:Xamarin.Flex.Item.Position" /> isn't set to Absolute.
 		/// </summary>
 		/// <remarks>The default value is UnsetValue.</remarks>
-		public int Right { get; set; } = UnsetValue;
+		public int Right {
+			get => _Right;
+			set {
+				_Right = value;
+				InvalidateLayout ();
+			}
+		}
+		int _Right = UnsetValue;
 		/// <summary>
 		/// This property defines the shrink factor of the item. In case the child 
 		/// items overflow the main-axis of the container, this factor will be used 
@@ -409,7 +562,14 @@ namespace Terminal.Gui {
 		/// will not shrink.</summary>
 		/// <value>The item shrink factor.</value>
 		/// <remarks>The default value for this property is 1 (all items will shrink equally).</remarks>
-		public int Shrink { get; set; } = 1;
+		public int Shrink {
+			get => _Shrink;
+			set {
+				_Shrink = value;
+				InvalidateLayout ();
+			}
+		}
+		int _Shrink = 1;
 		/// <summary>
 		/// This property defines the top edge absolute position of the item. 
 		/// It also defines the item's height if <see cref="P:Xamarin.Flex.Item.Bottom" /> 
@@ -418,13 +578,27 @@ namespace Terminal.Gui {
 		/// </summary>
 		/// <value>The value for the property.</value>
 		/// <remarks>The default value is UnsetValue.</remarks>
-		public int Top { get; set; } = UnsetValue;
+		public int Top {
+			get => _Top;
+			set {
+				_Top = value;
+				InvalidateLayout ();
+			}
+		}
+		int _Top = UnsetValue;
 		/// <summary>
 		/// This property defines the width size dimension of the item.
 		/// </summary>
 		/// <value>The width size dimension.</value>
 		/// <remarks>The default value is UnsetValue.</remarks>
-		public int Width { get; set; } = UnsetValue;
+		public int Width {
+			get => _Width;
+			set {
+				_Width = value;
+				InvalidateLayout ();
+			}
+		}
+		int _Width = UnsetValue;
 		/// <summary>
 		/// This property defines whether child items should be laid out in a single 
 		/// line(NoWrap) or multiple lines(Wrap or WrapReverse). If this property is set
@@ -433,7 +607,14 @@ namespace Terminal.Gui {
 		/// </summary>
 		/// <value>Any value part of the<see cref="T:Xamarin.Flex.Wrap" /> enumeration.</value>
 		/// <remarks>The default value for this property is NoWrap.</remarks>
-		public Wrap Wrap { get; set; } = Wrap.NoWrap;
+		public Wrap Wrap {
+			get => _Wrap;
+			set {
+				_Wrap = value;
+				InvalidateLayout ();
+			}
+		}
+		Wrap _Wrap = Wrap.NoWrap;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="T:Terminal.Gui.View"/> class,
