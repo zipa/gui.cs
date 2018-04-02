@@ -3,24 +3,24 @@ using System;
 using Mono.Terminal;
 using System.Collections.Generic;
 
-class Demo {
+static class Demo {
 	class Box10x : View {
 		public Box10x (int x, int y) : base (new Rect (x, y, 10, 10))
 		{
 		}
 
-		public override void Redraw(Rect region)
+		public override void Redraw (Rect region)
 		{
 			Driver.SetAttribute (ColorScheme.Focus);
 
 			for (int y = 0; y < 10; y++) {
 				Move (0, y);
 				for (int x = 0; x < 10; x++) {
-					
-					Driver.AddRune ((Rune)('0' + (x+y)%10));
+
+					Driver.AddRune ((Rune)('0' + (x + y) % 10));
 				}
 			}
-	
+
 		}
 	}
 
@@ -30,7 +30,7 @@ class Demo {
 		{
 		}
 
-		public override void Redraw(Rect region)
+		public override void Redraw (Rect region)
 		{
 			Driver.SetAttribute (ColorScheme.Focus);
 			var f = Frame;
@@ -52,7 +52,7 @@ class Demo {
 					}
 					Driver.AddRune (r);
 				}
-			}	
+			}
 		}
 	}
 
@@ -136,6 +136,34 @@ class Demo {
 		Application.Run (d);
 	}
 
+	// 
+	// Creates a nested editor
+	static void Editor (Toplevel top)
+	{
+		var tframe = top.Frame;
+		var ntop = new Toplevel (tframe);
+		var menu = new MenuBar (new MenuBarItem [] {
+			new MenuBarItem ("_File", new MenuItem [] {
+				new MenuItem ("_Close", "", () => {Application.RequestStop ();}),
+			}),
+			new MenuBarItem ("_Edit", new MenuItem [] {
+				new MenuItem ("_Copy", "", null),
+				new MenuItem ("C_ut", "", null),
+				new MenuItem ("_Paste", "", null)
+			}),
+		});
+		ntop.Add (menu);
+
+		var win = new Window (new Rect (0, 1, tframe.Width, tframe.Height - 1), "/etc/passwd");
+		ntop.Add (win);
+
+		var text = new TextView (new Rect (0, 0, tframe.Width - 2, tframe.Height - 3));
+		text.Text = System.IO.File.ReadAllText ("/etc/passwd");
+		win.Add (text);
+
+		Application.Run (ntop);
+	}
+
 	static bool Quit ()
 	{
 		var n = MessageBox.Query (50, 7, "Quit Demo", "Are you sure you want to quit this demo?", "Yes", "No");
@@ -201,6 +229,15 @@ class Demo {
 			container.Add (j);
 		}
 	}
+	// Watch what happens when I try to introduce a newline after the first open brace
+	// it introduces a new brace instead, and does not indent.  Then watch me fight
+	// the editor as more oddities happen.
+
+	public static void Open ()
+	{
+		var d = new OpenDialog ("Open", "Open a file");
+		Application.Run (d);
+	}
 
 	public static Label ml;
 	static void Main ()
@@ -214,8 +251,9 @@ class Demo {
 		var win = new Window (new Rect (0, 1, tframe.Width, tframe.Height-1), "Hello");
 		var menu = new MenuBar (new MenuBarItem [] {
 			new MenuBarItem ("_File", new MenuItem [] {
+				new MenuItem ("Text Editor Demo", "", () => { Editor (top); }),
 				new MenuItem ("_New", "Creates new file", NewFile),
-				new MenuItem ("_Open", "", null),
+				new MenuItem ("_Open", "", Open),
 				new MenuItem ("_Close", "", () => Close ()),
 				new MenuItem ("_Quit", "", () => { if (Quit ()) top.Running = false; })
 			}),
@@ -223,8 +261,10 @@ class Demo {
 				new MenuItem ("_Copy", "", null),
 				new MenuItem ("C_ut", "", null),
 				new MenuItem ("_Paste", "", null)
-			})
+			}),
 		});
+
+		int count = 0;
 
 		ml = new Label (new Rect (3, 17, 47, 1), "Mouse: ");
 		if (true) {
