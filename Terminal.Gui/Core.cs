@@ -128,8 +128,15 @@ namespace Terminal.Gui {
 	///    can contain one or more subviews, can respond to user input and render themselves on the screen.
 	/// </para>
 	/// <para>
-	///    Views are created with a specified rectangle region (the frame) that is relative to the container
-	///    that they are added into.   
+	///    When views are created with a specified rectangle region, this is considered a fixed layout
+	///    whose coordinates are relative to the container into which they are added to. Otherwise,
+	///    Views can start their life cycle without any coordinate set (by chainging to the empty
+	///    constructor) or by chainging to the constructor that sets the Width and Height properties,
+	///    and when either one of those is called, the view is positioned inside its parent using the
+	///    Flexbox model.  
+	/// </para>
+	/// <para>
+	///    The Flexbox model
 	/// </para>
 	/// <para>
 	///    Subviews can be added to a View by calling the Add method.   The container of a view is the 
@@ -164,7 +171,7 @@ namespace Terminal.Gui {
 	///    in a visually sensible place.
 	/// </para>
 	/// </remarks>
-	public class View : Responder, IEnumerable {
+	public partial class View : Responder, IEnumerable {
 		View container = null;
 		View focused = null;
 
@@ -254,6 +261,11 @@ namespace Terminal.Gui {
 		public View (Rect frame)
 		{
 			this.Frame = frame;
+			Width = frame.Width;
+			Height = frame.Height;
+			Left = frame.Left;
+			Top = frame.Top;
+			Position = Position.Absolute;
 			CanFocus = false;
 		}
 
@@ -315,9 +327,12 @@ namespace Terminal.Gui {
 		{
 			if (view == null)
 				return;
+			ValidateChild (view);
 			if (subviews == null)
 				subviews = new List<View> ();
 			subviews.Add (view);
+			ShouldOrderChildren |= view.Order != 0;
+
 			view.container = this;
 			if (view.CanFocus)
 				CanFocus = true;

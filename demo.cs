@@ -1,6 +1,7 @@
 using Terminal.Gui;
 using System;
 using Mono.Terminal;
+using System.Collections.Generic;
 
 static class Demo {
 	class Box10x : View {
@@ -8,34 +9,35 @@ static class Demo {
 		{
 		}
 
-		public override void Redraw(Rect region)
+		public override void Redraw (Rect region)
 		{
 			Driver.SetAttribute (ColorScheme.Focus);
 
 			for (int y = 0; y < 10; y++) {
 				Move (0, y);
 				for (int x = 0; x < 10; x++) {
-					
-					Driver.AddRune ((Rune)('0' + (x+y)%10));
+
+					Driver.AddRune ((Rune)('0' + (x + y) % 10));
 				}
 			}
-	
+
 		}
 	}
 
 	class Filler : View {
+		public Filler (int w, int h) : base (w, h) { }
 		public Filler (Rect rect) : base (rect)
 		{
 		}
 
-		public override void Redraw(Rect region)
+		public override void Redraw (Rect region)
 		{
 			Driver.SetAttribute (ColorScheme.Focus);
 			var f = Frame;
 
-			for (int y = 0; y < f.Width; y++) {
+			for (int y = 0; y < f.Height; y++) {
 				Move (0, y);
-				for (int x = 0; x < f.Height; x++) {
+				for (int x = 0; x < f.Width; x++) {
 					Rune r;
 					switch (x % 3) {
 					case 0:
@@ -50,7 +52,7 @@ static class Demo {
 					}
 					Driver.AddRune (r);
 				}
-			}	
+			}
 		}
 	}
 
@@ -173,6 +175,70 @@ static class Demo {
 		MessageBox.ErrorQuery (50, 5, "Error", "There is nothing to close", "Ok");
 	}
 
+	static void ShowLayout (View container)
+	{
+		View [,] views = new View [3, 2];
+		View [,] fillers = new View [3, 2];
+		int w = 25;
+		int h = 10;
+		int x, y;
+
+		for (x = 0; x < 3; x++) {
+			for (y = 0; y < 2; y++) {
+
+				views [x, y] = new FrameView (new Rect (x * (w+1), y * (h+1), w, h), $"{x},{y}");
+				fillers [x, y] = new Filler (3, 3);
+			}
+		}
+
+		x = -1; y = 0;
+		void Demo (Action<View, View> cback)
+		{
+			if (x < 2)
+				x++;
+			else {
+				x = 0;
+				y++;
+			}
+			if (y == 2)
+				return;
+			cback (views [x, y], fillers [x, y]);
+			views [x, y].Add (fillers [x,y]);
+			views [x, y].Layout ();
+		}
+		// Just add
+		Demo ((host, filler) => { });
+		Demo ((host, filler) => {
+			filler.MarginLeft = 5;
+		});
+		Demo ((host, filler) => {
+			filler.MarginRight = 5;
+		});
+		Demo ((host, filler) => {
+			filler.AlignContent = AlignContent.Center;
+			filler.Right = 1;
+		});
+		Demo ((host, filler) => {
+			filler.AlignContent = AlignContent.Stretch;
+		});
+		Demo ((host, filler) => {
+			filler.AlignContent = AlignContent.End;
+		});
+
+		foreach (var j in views){
+			container.Add (j);
+		}
+	}
+	// Watch what happens when I try to introduce a newline after the first open brace
+	// it introduces a new brace instead, and does not indent.  Then watch me fight
+	// the editor as more oddities happen.
+
+	public static void Open ()
+	{
+		var d = new OpenDialog ("Open", "Open a file");
+		Application.Run (d);
+	}
+
 	public static Label ml;
 	static void Main ()
 	{
@@ -187,7 +253,7 @@ static class Demo {
 			new MenuBarItem ("_File", new MenuItem [] {
 				new MenuItem ("Text Editor Demo", "", () => { Editor (top); }),
 				new MenuItem ("_New", "Creates new file", NewFile),
-				new MenuItem ("_Open", "", null),
+				new MenuItem ("_Open", "", Open),
 				new MenuItem ("_Close", "", () => Close ()),
 				new MenuItem ("_Quit", "", () => { if (Quit ()) top.Running = false; })
 			}),
@@ -198,17 +264,21 @@ static class Demo {
 			}),
 		});
 
-		ShowEntries (win);
-
 		int count = 0;
+
 		ml = new Label (new Rect (3, 17, 47, 1), "Mouse: ");
-		Application.RootMouseEvent += delegate (MouseEvent me) {
+		if (true) {
+			ShowLayout (win);
+		} else {
+			ShowEntries (win);
 
-			ml.Text = $"Mouse: ({me.X},{me.Y}) - {me.Flags} {count++}";
-		};
+			Application.RootMouseEvent += delegate (MouseEvent me) {
 
-		win.Add (ml);
+				ml.Text = $"Mouse: ({me.X},{me.Y}) - {me.Flags} {count++}";
+			};
 
+			win.Add (ml);
+		}
 		// ShowTextAlignments (win);
 		top.Add (win);
 		top.Add (menu);
