@@ -25,6 +25,11 @@ namespace Terminal.Gui {
 	/// </para>
 	/// </remarks>
 	public enum Key : uint {
+		/// <summary>
+		/// Mask that indictes that this is a character value, values outside this range
+		/// indicate special characters like Alt-key combinations or special keys on the
+		/// keyboard like function keys, arrows keys and so on.
+		/// </summary>
 		CharMask = 0xfffff,
 
 		/// <summary>
@@ -33,6 +38,11 @@ namespace Terminal.Gui {
 		/// </summary>
 		SpecialMask = 0xfff00000,
 
+		/// <summary>
+		/// The key code for the user pressing Control-spacebar
+		/// </summary>
+		ControlSpace = 0,
+			
 		/// <summary>
 	        /// The key code for the user pressing Control-A
 		/// </summary>
