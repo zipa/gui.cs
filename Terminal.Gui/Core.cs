@@ -1554,6 +1554,11 @@ namespace Terminal.Gui {
 						Iteration (null, EventArgs.Empty);
 				} else if (wait == false)
 					return;
+				if (state.Toplevel.LayoutInvalidated) {
+					state.Toplevel.Layout ();
+					state.Toplevel.SetNeedsDisplay ();
+				};
+					     
 				if (!state.Toplevel.NeedDisplay.IsEmpty || state.Toplevel.childNeedsDisplay) {
 					state.Toplevel.Redraw (state.Toplevel.Bounds);
 					if (DebugDrawBounds)

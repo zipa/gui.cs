@@ -219,12 +219,15 @@ namespace Terminal.Gui {
 
 	public partial class View : IEnumerable<View> {
 		bool ShouldOrderChildren { get; set; }
-		bool layoutInvalidated;
+		internal bool LayoutInvalidated;
 		
 		void InvalidateLayout ()
 		{
-			layoutInvalidated = true;
-			// TODO: walk the parent chain to invalidate
+			if (LayoutInvalidated)
+				return;
+			
+			LayoutInvalidated = true;
+			Root.LayoutInvalidated = true;
 		}
 		
 		/// <summary>
@@ -765,6 +768,7 @@ namespace Terminal.Gui {
 
 		static void layout_item (View item, int width, int height)
 		{
+			item.LayoutInvalidated = false;
 			if (item.Subviews == null || item.Subviews.Count == 0)
 				return;
 
@@ -1144,6 +1148,7 @@ namespace Terminal.Gui {
 
 				layout.lines_sizes += line.size;
 			}
+			item.LayoutInvalidated = false;
 		}
 
 		static int absolute_size (int val, int pos1, int pos2, int dim) =>
