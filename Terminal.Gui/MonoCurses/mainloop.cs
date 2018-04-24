@@ -372,7 +372,7 @@ namespace Mono.Terminal {
 				return windowsKeyResult.HasValue;
 			}
 		}
-
+			
 		/// <summary>
 		///   Runs one iteration of timers and file watches
 		/// </summary>

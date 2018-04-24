@@ -33,11 +33,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="mscorlib" />
     <Reference Include="NStack">
-      <HintPath>packages\NStack.Core.0.8.0\lib\netstandard1.5\NStack.dll</HintPath>
+      <HintPath>packages\NStack.Core.0.11.0\lib\netstandard1.5\NStack.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="mscorlib" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="demo.cs" />

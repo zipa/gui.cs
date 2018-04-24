@@ -214,7 +214,7 @@ namespace Terminal.Gui {
 		///    Altering the Frame of a view will trigger the redrawing of the 
 		///    view as well as the redrawing of the affected regions in the superview.
 		/// </remarks>
-		public Rect Frame {
+		public virtual Rect Frame {
 			get => frame;
 			set {
 				if (SuperView != null) {
@@ -886,6 +886,7 @@ namespace Terminal.Gui {
 		/// </summary>
 		public virtual void LayoutSubviews ()
 		{
+			Layout ();
 		}
 
 		/// <summary>

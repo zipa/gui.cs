@@ -60,6 +60,19 @@ namespace Terminal.Gui {
 			return new Rect (x, y, cols, ml);
 		}
 
+		public Label (ustring text) : base ()
+		{
+			this.text = text;
+			SelfSizing = LabelSelfSizing;
+		}
+
+		static void LabelSelfSizing (View view, ref int width, ref int height)
+		{
+			Label label = view as Label;
+			width = label.Text.ConsoleWidth;
+			height = 1;
+		}
+
 		/// <summary>
 		///   Public constructor: creates a label at the given
 		///   coordinate with the given string, computes the bounding box

@@ -39,13 +39,39 @@ namespace Terminal.Gui {
 		/// </remarks>
 		public TextField (int x, int y, int w, string s) : base (new Rect (x, y, w, 1))
 		{
+			Init (s);
+			first = point > w ? point - w : 0;
+		}
+
+		public TextField (string s) : base ()
+		{
+			Init (s);
+			first = 0;
+		}
+
+		void Init (string s)
+		{
 			if (s == null)
 				s = "";
 
 			text = s;
 			point = s.Length;
-			first = point > w ? point - w : 0;
 			CanFocus = true;
+			SelfSizing = TextSelfSizing;
+		}
+
+		static void TextSelfSizing (View view, ref int width, ref int height)
+		{
+			TextField text = view as TextField;
+			width = 10;
+			height = 1;
+		}
+
+		public override Rect Frame {
+			set {
+				base.Frame = value;
+				first = point > value.Width ? point - value.Width : 0;
+			}
 		}
 
 		/// <summary>
