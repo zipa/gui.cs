@@ -222,7 +222,10 @@ static class Demo {
 			filler.AlignContent = AlignContent.Stretch;
 		});
 		Demo ((host, filler) => {
-			filler.AlignContent = AlignContent.End;
+			host.AlignContent = AlignContent.Center;
+			host.AlignItems = AlignItems.Center;
+			host.Add (new Filler (3, 3));
+			host.Add (new Filler (3, 3));
 		});
 
 		foreach (var j in views){

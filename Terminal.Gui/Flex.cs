@@ -2,7 +2,7 @@
 // Flex layout by Laurent Sansonetti
 // Port to C# by Stephane Delcroix
 //
-// Last check against changes 6d5d4a33e115ba930c8e3959a8fdf3db0c0666ac
+// Last check against changes 90ca928180447c230f1f517880058dcd78c3c0d4
 
 using System;
 using System.Collections;
@@ -659,13 +659,13 @@ namespace Terminal.Gui {
 			return child;
 		}
 #endif
-		public uint Count =>
-			(uint)(subviews?.Count ?? 0);
+		public int Count =>
+			(int)(subviews?.Count ?? 0);
 
-		public View ItemAt (uint index) =>
-			subviews? [(int)index];
+		public View ItemAt (int index) =>
+			subviews? [index];
 
-		public View this [uint index] {
+		public View this [int index] {
 			get => ItemAt (index);
 		}
 
@@ -776,9 +776,9 @@ namespace Terminal.Gui {
 			layout.init (item, width, height);
 			layout.reset ();
 
-			uint last_layout_child = 0;
-			uint relative_children_count = 0;
-			for (uint i = 0; i < item.Count; i++) {
+			int last_layout_child = 0;
+			int relative_children_count = 0;
+			for (int i = 0; i < item.Count; i++) {
 				View child = layout.child_at (item, i);
 				// Items with an absolute position have their frames determined
 				// directly and are skipped during layout.
@@ -810,8 +810,7 @@ namespace Terminal.Gui {
 						layout.need_lines = true;
 					} else {
 						child.Frame = SetDim (child.Frame, layout.frame_size2_i, (layout.vertical ? width : height)
-								      - (layout.vertical ? child.MarginLeft : child.MarginTop)
-								      - (layout.vertical ? child.MarginRight : child.MarginBottom));
+								      - child.MarginThickness (!layout.vertical));
 
 					}
 				}
@@ -850,7 +849,7 @@ namespace Terminal.Gui {
 					int basis = child.Basis.Length;
 					if (child.Basis.IsRelative)
 						basis *= (layout.vertical ? height : width);
-					child.Frame = SetDim (child.Frame, layout.frame_size_i, basis);
+					child.Frame = SetDim (child.Frame, layout.frame_size_i, basis - child.MarginThickness (layout.vertical));
 				}
 
 				int child_size = GetDim (child.Frame, layout.frame_size_i);
@@ -866,8 +865,8 @@ namespace Terminal.Gui {
 					}
 
 					int child_size2 = GetDim (child.Frame, layout.frame_size2_i);
-					if (!IsUnset (child_size2) && child_size2 > layout.line_dim) {
-						layout.line_dim = child_size2;
+					if (!IsUnset (child_size2) && child_size2 + child.MarginThickness (!layout.vertical) > layout.line_dim) {
+						layout.line_dim = child_size2 + child.MarginThickness (!layout.vertical);
 					}
 				}
 
@@ -878,9 +877,7 @@ namespace Terminal.Gui {
 				layout.flex_grows += child.Grow;
 				layout.flex_shrinks += child.Shrink;
 
-				layout.flex_dim -= child_size
-					+ (layout.vertical ? child.MarginTop : child.MarginLeft)
-					+ (layout.vertical ? child.MarginBottom : child.MarginRight);
+				layout.flex_dim -= child_size + child.MarginThickness (layout.vertical);
 
 				relative_children_count++;
 
@@ -920,7 +917,7 @@ namespace Terminal.Gui {
 
 					// Re-position the children of this line, honoring any child
 					// alignment previously set within the line.
-					for (uint j = line.child_begin; j < line.child_end; j++) {
+					for (int j = line.child_begin; j < line.child_end; j++) {
 						View child = layout.child_at (item, j);
 						if (child.Position == Position.Absolute) {
 							// Should not be re-positioned.
@@ -946,7 +943,9 @@ namespace Terminal.Gui {
 			layout.cleanup ();
 		}
 
-		static void layout_align (Justify align, int flex_dim, uint children_count, ref int pos_p, ref int spacing_p)
+		int MarginThickness (bool vertical) => vertical ? MarginTop + MarginBottom : MarginLeft + MarginRight;
+
+		static void layout_align (Justify align, int flex_dim, int children_count, ref int pos_p, ref int spacing_p)
 		{
 			if (flex_dim < 0)
 				throw new ArgumentException ();
@@ -1029,7 +1028,7 @@ namespace Terminal.Gui {
 			}
 		}
 
-		static void layout_items (View item, uint child_begin, uint child_end, uint children_count, ref flex_layout layout)
+		static void layout_items (View item, int child_begin, int child_end, int children_count, ref flex_layout layout)
 		{
 			if (children_count > (child_end - child_begin))
 				throw new ArgumentException ();
@@ -1061,7 +1060,7 @@ namespace Terminal.Gui {
 				layout.pos2 -= layout.line_dim;
 			}
 
-			for (uint i = child_begin; i < child_end; i++) {
+			for (int i = child_begin; i < child_end; i++) {
 				View child = layout.child_at (item, i);
 				if (child.Position == Position.Absolute) {
 					// Already positioned.
@@ -1179,7 +1178,7 @@ namespace Terminal.Gui {
 			public Axis frame_pos2_i;                       // cross axis position
 			public Dim frame_size_i;                       // main axis size
 			public Dim frame_size2_i;                      // cross axis size
-			uint [] ordered_indices;
+			int [] ordered_indices;
 
 			// Set for each line layout.
 			public int line_dim;                          // the cross axis size
@@ -1194,8 +1193,8 @@ namespace Terminal.Gui {
 			//   - or if any child item doesn't have a cross-axis size set
 			public bool need_lines;
 			public struct flex_layout_line {
-				public uint child_begin;
-				public uint child_end;
+				public int child_begin;
+				public int child_end;
 				public int size;
 			};
 
@@ -1220,12 +1219,9 @@ namespace Terminal.Gui {
 				    || item.PaddingTop < 0
 				    || item.PaddingBottom < 0)
 					throw new ArgumentException ();
-
-				width -= item.PaddingLeft + item.PaddingRight;
-				height -= item.PaddingTop + item.PaddingBottom;
-				if (width < 0
-				    || height < 0)
-					throw new ArgumentException ();
+				
+				width = Math.Max (0, width - item.PaddingLeft + item.PaddingRight);
+				height = Math.Max (0, height - item.PaddingTop + item.PaddingBottom);
 
 				reverse = item.Direction == Direction.RowReverse || item.Direction == Direction.ColumnReverse;
 				vertical = true;
@@ -1253,18 +1249,18 @@ namespace Terminal.Gui {
 
 				ordered_indices = null;
 				if (item.ShouldOrderChildren && item.Count > 0) {
-					var indices = new uint [item.Count];
+					var indices = new int [item.Count];
 					// Creating a list of item indices sorted using the children's `order'
 					// attribute values. We are using a simple insertion sort as we need
 					// stability (insertion order must be preserved) and cross-platform
 					// support. We should eventually switch to merge sort (or something
 					// else) if the number of items becomes significant enough.
-					for (uint i = 0; i < item.Count; i++) {
+					for (int i = 0; i < item.Count; i++) {
 						indices [i] = i;
-						for (uint j = i; j > 0; j--) {
-							uint prev = indices [j - 1];
-							uint curr = indices [j];
-							if (item.Subviews [(int)prev].Order <= item.Subviews [(int)curr].Order) {
+						for (int j = i; j > 0; j--) {
+							int prev = indices [j - 1];
+							int curr = indices [j];
+							if (item.Subviews [prev].Order <= item.Subviews [curr].Order) {
 								break;
 							}
 							indices [j - 1] = curr;
@@ -1294,8 +1290,8 @@ namespace Terminal.Gui {
 				lines_sizes = 0;
 			}
 
-			public View child_at (View item, uint i) =>
-			item.Subviews [(int)(ordered_indices? [i] ?? i)];
+			public View child_at (View item, int i) =>
+			item.Subviews [(ordered_indices? [i] ?? i)];
 
 			public void cleanup ()
 			{

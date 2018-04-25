@@ -14,18 +14,25 @@ namespace Terminal.Gui {
 
 		public FileDialog (ustring title, ustring prompt, ustring nameFieldLabel, ustring message) : base (title, Driver.Cols - 20, Driver.Rows - 6, null)
 		{
+			
+			ContentView.Direction = Direction.Row;
 			this.prompt = new Button (prompt);
 			AddButton (this.prompt);
 			AlignSelf = AlignSelf.Start;
 			AlignItems = AlignItems.Start;
 			this.nameFieldLabel = new Label ("MFL" + nameFieldLabel) {
 				Width = 30,
-				AlignSelf = AlignSelf.Start
+				AlignSelf = AlignSelf.Start,
+				Direction = Direction.Row
 			};
-			entry = new TextField ("");
+			entry = new TextField ("") {
+				Direction = Direction.Row
+			};
 
-			
-			this.message = new Label ("MSG" + message);
+
+			this.message = new Label ("MSG" + message) {
+				Direction = Direction.Row
+			};
 
 			Add (this.nameFieldLabel);
 			Add (entry);

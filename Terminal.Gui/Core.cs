@@ -1014,9 +1014,11 @@ namespace Terminal.Gui {
 			}
 		}
 
-		class ContentView : View {
-			public ContentView (Rect frame) : base (frame) { }
+		class WindowContentView : View {
+			public WindowContentView (Rect frame) : base (frame) { }
 		}
+
+		public View ContentView => contentView;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="T:Terminal.Gui.Gui.Window"/> class with an optioanl title
@@ -1042,7 +1044,7 @@ namespace Terminal.Gui {
 			int wb = 2 * (1 + padding);
 			this.padding = padding;
 			var cFrame = new Rect (1 + padding, 1 + padding, frame.Width - wb, frame.Height - wb);
-			contentView = new ContentView (cFrame);
+			contentView = new WindowContentView (cFrame);
 			base.Add (contentView);
 		}
 
@@ -1066,6 +1068,8 @@ namespace Terminal.Gui {
 		/// <param name="view">View to add to the window.</param>
 		public override void Add (View view)
 		{
+			if (view == null)
+				throw new ArgumentNullException (nameof (view));
 			contentView.Add (view);
 			if (view.CanFocus)
 				CanFocus = true;
