@@ -9,24 +9,68 @@ using NStack;
 namespace Terminal.Gui {
 	public class FileDialog : Dialog {
 		Button prompt;
+		Label directoryLabel, fileLabel;
 		Label nameFieldLabel, message;
-		TextField entry;
+		TextField nameEntry, directoryEntry;
+
+		class Filler : View {
+			public Filler (int w, int h) : base (w, h) { }
+			public Filler (Rect rect) : base (rect)
+			{
+			}
+			public Filler () : base () { }
+
+			public override void Redraw (Rect region)
+			{
+				Driver.SetAttribute (ColorScheme.Focus);
+				var f = Frame;
+
+				for (int y = 0; y < f.Height; y++) {
+					Move (0, y);
+					for (int x = 0; x < f.Width; x++) {
+						Rune r;
+						switch (x % 3) {
+						case 0:
+							r = '.';
+							break;
+						case 1:
+							r = 'o';
+							break;
+						default:
+							r = 'O';
+							break;
+						}
+						Driver.AddRune (r);
+					}
+				}
+			}
+		}
 
 		public FileDialog (ustring title, ustring prompt, ustring nameFieldLabel, ustring message) : base (title, Driver.Cols - 20, Driver.Rows - 6, null)
 		{
-			
-			ContentView.Direction = Direction.Row;
 			this.prompt = new Button (prompt);
 			AddButton (this.prompt);
-			AlignSelf = AlignSelf.Start;
-			AlignItems = AlignItems.Start;
-			this.nameFieldLabel = new Label ("MFL" + nameFieldLabel) {
-				Width = 30,
-				AlignSelf = AlignSelf.Start,
-				Direction = Direction.Row
+
+			directoryLabel = new Label ("Directory: ") {
+				MarginLeft = 1,
 			};
-			entry = new TextField ("") {
-				Direction = Direction.Row
+			directoryEntry = new TextField ("") {
+				Grow = 1,
+				AlignSelf = AlignSelf.Stretch,
+				MarginRight = 2
+			};
+
+			this.nameFieldLabel = new Label (nameFieldLabel + ": ") {
+				MarginLeft = 1,
+				MarginTop = 1,
+				// THIS BELOW TELLS ME THAT WE PROBABLY SHOULD NOT BE DOING SIZING BY DEFAULT, AS IT OVERRIDES THIS
+				Width = 30,
+			};
+			nameEntry = new TextField ("") {
+				Grow = 1,
+				AlignSelf = AlignSelf.Stretch,
+				MarginTop = 1,
+				MarginRight = 2,
 			};
 
 
@@ -34,9 +78,34 @@ namespace Terminal.Gui {
 				Direction = Direction.Row
 			};
 
-			Add (this.nameFieldLabel);
-			Add (entry);
-			Add (this.message);
+			AddViews ();
+		}
+
+		void AddViews ()
+		{
+			ContentView.Direction = Direction.Row;
+			ContentView.AlignItems = AlignItems.Start;
+			ContentView.AlignContent = AlignContent.Start;
+			ContentView.Wrap = Wrap.Wrap;
+
+			AlignSelf = AlignSelf.Start;
+			AlignItems = AlignItems.Start;
+
+			//Add (this.nameFieldLabel);
+			Add (directoryLabel);
+			Add (directoryEntry);
+			Add (new Filler () { Width = 500, Height = 0 });
+			Add (nameFieldLabel);
+			Add (nameEntry);
+			Add (new Filler () { Width = 500, Height = 0 } );
+			//Add (this.message);
+			Add (new Filler () {
+				AlignSelf = AlignSelf.Stretch,
+				Grow = 1,
+				Basis = Basis.Auto,
+				Height = 3
+
+			});
 			Layout ();
 		}
 

@@ -29,6 +29,7 @@ static class Demo {
 		public Filler (Rect rect) : base (rect)
 		{
 		}
+		public Filler () : base () { }
 
 		public override void Redraw (Rect region)
 		{

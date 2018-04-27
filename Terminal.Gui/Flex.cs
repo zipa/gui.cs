@@ -529,10 +529,10 @@ namespace Terminal.Gui {
 		/// of the layout engine(Relative) or have an absolute fixed position (Absolute). 
 		/// If this property is set to Absolute, the<see cref="P:Xamarin.Flex.Item.Left" />, 
 		/// <see cref = "P:Xamarin.Flex.Item.Right" />, <see cref = "P:Xamarin.Flex.Item.Top" /> 
-		/// and < see cref= "P:Xam\arin.Flex.Item.Bottom"/> properties will then be 
+		/// and <see cref= "P:Xam\arin.Flex.Item.Bottom"/> properties will then be 
 		/// used to determine the item's fixed position in its container.
 		/// </summary>
-		/// <value>Any value part of the<see cref="T:Xamarin.Flex.Position" /> enumeration.</value>
+		/// <value>Any value part of the <see cref="T:Xamarin.Flex.Position" /> enumeration.</value>
 		/// <remarks>The default value for this property is Relative</remarks>
 		public Position Position {
 			get => _Position;
