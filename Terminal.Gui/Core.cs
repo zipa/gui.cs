@@ -840,6 +840,10 @@ namespace Terminal.Gui {
 			focused.EnsureFocus ();
 		}
 
+		public void AddChord (string chordSpec, Action action)
+		{
+		}
+
 		/// <param name="keyEvent">Contains the details about the key that produced the event.</param>
 		public override bool ProcessKey (KeyEvent keyEvent)
 		{

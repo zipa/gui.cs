@@ -18,6 +18,17 @@ namespace Terminal.Gui {
 	/// </summary>
 	public class MenuItem {
 
+
+		/// <summary>
+		/// Initializes a new <see cref="T:Terminal.Gui.MenuItem"/>.
+		/// </summary>
+		/// <param name="title">Title for the menu item.</param>
+		/// <param name="help">Help text to display.</param>
+		/// <param name="action">Action to invoke when the menu item is activated.</param>
+		public MenuItem (string title, string help, Action action) : this (ustring.Make (title), help, action)
+		{
+		}
+
 		/// <summary>
 		/// Initializes a new <see cref="T:Terminal.Gui.MenuItem"/>.
 		/// </summary>
@@ -79,13 +90,27 @@ namespace Terminal.Gui {
 	}
 
 	/// <summary>
-	/// A menu bar item contains other menu items.
+	/// A menu bar item contains other menu items, they are used to construct the top-level menu items
 	/// </summary>
 	public class MenuBarItem {
+		/// <summary>
+		/// Initializes a new instance of the <see cref="T:Terminal.Gui.MenuBarItem"/> class.
+		/// </summary>
+		/// <param name="title">Title for the menu item.</param>
+		/// <param name="children">Children items.</param>
 		public MenuBarItem (ustring title, MenuItem [] children)
 		{
 			SetTitle (title ?? "");
 			Children = children;
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="T:Terminal.Gui.MenuBarItem"/> class.
+		/// </summary>
+		/// <param name="title">Title for the menu item.</param>
+		/// <param name="children">Children items.</param>
+		public MenuBarItem (string title, MenuItem [] children) : this (ustring.Make (title), children)
+		{
 		}
 
 		void SetTitle (ustring title)
@@ -259,7 +284,7 @@ namespace Terminal.Gui {
 	}
 
 	/// <summary>
-	/// A menu bar for your application.
+	/// A menu bar for your application, it hardcodes its position to occupy the top row of the screen.
 	/// </summary>
 	public class MenuBar : View {
 		/// <summary>

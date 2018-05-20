@@ -5,6 +5,7 @@
 //   Miguel de Icaza (miguel@gnome.org)
 //
 using System;
+using NStack;
 
 namespace Terminal.Gui {
 
@@ -279,7 +280,7 @@ namespace Terminal.Gui {
 	public struct KeyEvent {
 
 		/// <summary>
-		/// Symb olid definition for the key.
+		/// Symbolic definition for the key.
 		/// </summary>
 		public Key Key;
 
@@ -308,6 +309,29 @@ namespace Terminal.Gui {
 		public KeyEvent (Key k)
 		{
 			Key = k;
+		}
+
+		public override string ToString ()
+		{
+			string kstr;
+			string alt;
+			int lkey;
+			if (IsAlt){
+				alt = "Alt-";
+				lkey = KeyValue & (int) (~((uint)Key.AltMask));
+			} else {
+				alt = "";
+				lkey = KeyValue;
+			}
+
+			if (lkey >= 1 && lkey <= 25)
+				kstr = $"Control-{lkey + 'A'}";
+			else if (Rune.IsLetterOrDigit ((Rune)lkey))
+				kstr = ustring.Make ((Rune) lkey).ToString ();
+			else
+				kstr = $"#{lkey}";
+
+			return $"KeyEvent(Key={kstr})";
 		}
 	}
 

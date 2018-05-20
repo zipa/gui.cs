@@ -76,6 +76,20 @@ namespace Terminal.Gui {
 
 		/// <summary>
 		///   Public constructor, creates a button based on
+		///   the given text at position 0,0
+		/// </summary>
+		/// <remarks>
+		///   The size of the button is computed based on the
+		///   text length.   This button is not a default button.
+		/// </remarks>
+		/// <param name="text">The button's text</param>
+		/// <param name="is_default">If set, this makes the button the default button in the current view, which means that if the user presses return on a view that does not handle return, it will be treated as if he had clicked on the button</param>
+		public Button (string text, bool is_default = false) : this (ustring.Make (text), is_default)
+		{
+		}
+
+		/// <summary>
+		///   Public constructor, creates a button based on
 		///   the given text at the given position.
 		/// </summary>
 		/// <remarks>
