@@ -840,10 +840,6 @@ namespace Terminal.Gui {
 			focused.EnsureFocus ();
 		}
 
-		public void AddChord (string chordSpec, Action action)
-		{
-		}
-
 		/// <param name="keyEvent">Contains the details about the key that produced the event.</param>
 		public override bool ProcessKey (KeyEvent keyEvent)
 		{
@@ -1163,6 +1159,12 @@ namespace Terminal.Gui {
 	///     toplevel and then invoke <see cref="M:Terminal.Gui.Application.Run"/> with the
 	///     new toplevel.
 	///   </para>
+	///   <para>
+	///     It is possible to attach sequences of keystrokes (Chords) to a Toplevel and
+	///     have this execute the provided action.   This is useful to add global shortcuts
+	///     and it handles multi-key sequences.   See the documentation for 
+	///     <see cref="T:Terminal.Gui.Chords"/> for more information.
+	///   </para>
 	/// </remarks>
 	public class Toplevel : View {
 		/// <summary>
@@ -1201,6 +1203,24 @@ namespace Terminal.Gui {
 
 		public override bool CanFocus {
 			get => true;
+		}
+
+		internal Chords chords;
+
+		/// <summary>
+		/// Registers the specified key sequence chord to execute the provided action
+		/// </summary>
+		/// <param name="chordSpec">A key sequence specification, in the format accept by Chord.</param>
+		/// <param name="action">Action to execute when the sequence matches.</param>
+		/// <remarks>
+		/// You can use this method to register a handler for a specific key sequence
+		/// input to trigger the invocation of a method.
+		/// </remarks>
+		public void AddChord (string chordSpec, Action action)
+		{
+			if (chords == null)
+				chords = new Chords ();
+			chords.Add (chordSpec, action);
 		}
 
 		public override bool ProcessKey (KeyEvent keyEvent)
@@ -1654,6 +1674,27 @@ namespace Terminal.Gui {
 		}
 
 		static void ProcessKeyEvent (KeyEvent ke)
+		{
+			if (Current.chords != null) {
+				var chords = Current.chords;
+				List<KeyEvent> flushEvents;
+
+				switch (chords.ProcessKeyEvent (ke, out flushEvents)) {
+				case Chords.ChordStatus.Consumed:
+					return;
+				case Chords.ChordStatus.NoMatch:
+					foreach (var fev in flushEvents)
+						DispatchKeyEventToTopLevel (fev);
+					break;
+				case Chords.ChordStatus.NotConsumed:
+					break;
+				}
+			}
+
+			DispatchKeyEventToTopLevel (ke);
+		}
+
+		static void DispatchKeyEventToTopLevel (KeyEvent ke)
 		{
 			if (Current.ProcessHotKey (ke))
 				return;

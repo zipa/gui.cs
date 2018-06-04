@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Terminal.Gui", "Terminal.Gu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Designer", "Designer\Designer.csproj", "{1228D992-C801-49BB-839A-7BD28A3FFF0A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{CFD4BDAC-B401-464A-B657-6C9DB3AC7415}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -25,6 +27,10 @@ Global
 		{1228D992-C801-49BB-839A-7BD28A3FFF0A}.Debug|x86.Build.0 = Debug|x86
 		{1228D992-C801-49BB-839A-7BD28A3FFF0A}.Release|x86.ActiveCfg = Release|x86
 		{1228D992-C801-49BB-839A-7BD28A3FFF0A}.Release|x86.Build.0 = Release|x86
+		{CFD4BDAC-B401-464A-B657-6C9DB3AC7415}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CFD4BDAC-B401-464A-B657-6C9DB3AC7415}.Debug|x86.Build.0 = Debug|Any CPU
+		{CFD4BDAC-B401-464A-B657-6C9DB3AC7415}.Release|x86.ActiveCfg = Release|Any CPU
+		{CFD4BDAC-B401-464A-B657-6C9DB3AC7415}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		Policies = $0

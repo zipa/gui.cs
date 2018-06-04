@@ -241,7 +241,7 @@ namespace Terminal.Gui {
 		/// Process the specified keyEvent, returns true if there was a match, 
 		/// which means that the event should not be propagated further.
 		/// </summary>
-		/// <returns>True if the the event was processed.</returns>
+		/// <returns>One of the possible states of processing the event, a ChordStatus.</returns>
 		/// <param name="keyEvent">Incoming key event.</param>
 		/// <remarks>
 		/// </remarks>
@@ -288,8 +288,11 @@ namespace Terminal.Gui {
 			}
 			if (!matches)
 				return ChordStatus.NotConsumed;
-			else
+			else {
+				events = sequence;
+				sequence = null;
 				return ChordStatus.NoMatch;
+			}
 
 			// Returns true if the chord has the given prefix
 			bool PrefixMatches (List<KeyEvent> prefix, KeyEvent [] chord)

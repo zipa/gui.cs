@@ -282,6 +282,7 @@ static class Demo {
 			}),
 		});
 
+		top.AddChord ("C-x C-f", Open);
 		ShowEntries (win);
 
 		int count = 0;
