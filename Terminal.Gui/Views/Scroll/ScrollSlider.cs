@@ -28,8 +28,12 @@ internal class ScrollSlider : View
 
         SetContentSize (
                         new (
-                             SuperViewAsScroll.Orientation == Orientation.Vertical ? SuperViewAsScroll.GetContentSize ().Width : sliderLocationAndDimension.Dimension,
-                             SuperViewAsScroll.Orientation == Orientation.Vertical ? sliderLocationAndDimension.Dimension : SuperViewAsScroll.GetContentSize ().Height
+                             SuperViewAsScroll.Orientation == Orientation.Vertical
+                                 ? SuperViewAsScroll.GetContentSize ().Width
+                                 : sliderLocationAndDimension.Dimension,
+                             SuperViewAsScroll.Orientation == Orientation.Vertical
+                                 ? sliderLocationAndDimension.Dimension
+                                 : SuperViewAsScroll.GetContentSize ().Height
                             ));
         SetSliderText ();
     }
@@ -85,8 +89,13 @@ internal class ScrollSlider : View
         {
             if (SuperViewAsScroll.Orientation == Orientation.Vertical)
             {
-                Y = Frame.Y + offset < 0 ? 0 :
-                    Frame.Y + offset + Frame.Height > barSize ? Math.Max (barSize - Frame.Height, 0) : Frame.Y + offset;
+                Y = Frame.Y + offset < 0
+                        ? 0
+                        :
+                        Frame.Y + offset + Frame.Height > barSize + (SuperViewAsScroll.KeepContentInAllViewport ? 0 : barSize)
+                            ?
+                            Math.Max (barSize - Frame.Height, 0)
+                            : Frame.Y + offset;
 
                 SuperViewAsScroll.Position = GetPositionFromSliderLocation (Frame.Y);
             }
@@ -144,14 +153,16 @@ internal class ScrollSlider : View
             return 0;
         }
 
-        int scrollSize = SuperViewAsScroll.Orientation == Orientation.Vertical ? SuperViewAsScroll.GetContentSize ().Height : SuperViewAsScroll.GetContentSize ().Width;
+        int scrollSize = SuperViewAsScroll.Orientation == Orientation.Vertical
+                             ? SuperViewAsScroll.GetContentSize ().Height
+                             : SuperViewAsScroll.GetContentSize ().Width;
 
         // Ensure the Position is valid if the slider is at end
         // We use Frame here instead of ContentSize because even if the slider has a margin or border, Frame indicates the actual size
         if ((SuperViewAsScroll.Orientation == Orientation.Vertical && location + Frame.Height >= scrollSize)
             || (SuperViewAsScroll.Orientation == Orientation.Horizontal && location + Frame.Width >= scrollSize))
         {
-            return SuperViewAsScroll.Size - scrollSize;
+            return SuperViewAsScroll.Size - scrollSize + (SuperViewAsScroll.KeepContentInAllViewport ? 0 : scrollSize);
         }
 
         return (int)Math.Min (Math.Round ((double)(location * SuperViewAsScroll.Size + location) / scrollSize), SuperViewAsScroll.Size - scrollSize);
@@ -164,7 +175,9 @@ internal class ScrollSlider : View
             return new (0, 0);
         }
 
-        int scrollSize = SuperViewAsScroll.Orientation == Orientation.Vertical ? SuperViewAsScroll.GetContentSize ().Height : SuperViewAsScroll.GetContentSize ().Width;
+        int scrollSize = SuperViewAsScroll.Orientation == Orientation.Vertical
+                             ? SuperViewAsScroll.GetContentSize ().Height
+                             : SuperViewAsScroll.GetContentSize ().Width;
         int location;
         int dimension;
 
@@ -173,7 +186,8 @@ internal class ScrollSlider : View
             dimension = (int)Math.Min (Math.Max (Math.Ceiling ((double)scrollSize * scrollSize / SuperViewAsScroll.Size), 1), scrollSize);
 
             // Ensure the Position is valid
-            if (SuperViewAsScroll.Position > 0 && SuperViewAsScroll.Position + scrollSize > SuperViewAsScroll.Size)
+            if (SuperViewAsScroll.Position > 0
+                && SuperViewAsScroll.Position + scrollSize > SuperViewAsScroll.Size + (SuperViewAsScroll.KeepContentInAllViewport ? 0 : scrollSize))
             {
                 SuperViewAsScroll.Position = SuperViewAsScroll.Size - scrollSize;
             }
