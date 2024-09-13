@@ -5,8 +5,11 @@ using System.ComponentModel;
 namespace Terminal.Gui;
 
 /// <summary>
-///     Indicates the position and size of scrollable content. The indicator can be dragged with the mouse. Can be
-///     oriented either vertically or horizontally. Used within a <see cref="ScrollBar"/>.
+///     Indicates the size of scrollable content and provides a visible element, referred to as the "ScrollSlider" that
+///     that is sized to
+///     show the proportion of the scrollable content to the size of the <see cref="View.Viewport"/>. The ScrollSlider
+///     can be dragged with the mouse. A Scroll can be oriented either vertically or horizontally and is used within a
+///     <see cref="ScrollBar"/>.
 /// </summary>
 /// <remarks>
 ///     <para>
@@ -33,6 +36,7 @@ public class Scroll : View
     private Orientation _orientation;
     private int _position;
     private int _size;
+    private bool _keepContentInAllViewport;
 
     /// <inheritdoc/>
     public override void EndInit ()
@@ -40,6 +44,42 @@ public class Scroll : View
         base.EndInit ();
 
         AdjustScroll ();
+    }
+
+    /// <summary>Get or sets if the view-port is kept in all visible area of this <see cref="Scroll"/></summary>
+    public bool KeepContentInAllViewport
+    {
+        get => _keepContentInAllViewport;
+        set
+        {
+            if (_keepContentInAllViewport != value)
+            {
+                _keepContentInAllViewport = value;
+                var pos = 0;
+
+                if (value
+                    && Orientation == Orientation.Horizontal
+                    && _position + (SuperViewAsScrollBar is { } ? SuperViewAsScrollBar.GetContentSize ().Width : GetContentSize ().Width) > Size)
+                {
+                    pos = Size - (SuperViewAsScrollBar is { } ? SuperViewAsScrollBar.GetContentSize ().Width : GetContentSize ().Width);
+                }
+
+                if (value
+                    && Orientation == Orientation.Vertical
+                    && _position + (SuperViewAsScrollBar is { } ? SuperViewAsScrollBar.GetContentSize ().Height : GetContentSize ().Height) > Size)
+                {
+                    pos = _size - (SuperViewAsScrollBar is { } ? SuperViewAsScrollBar.GetContentSize ().Height : GetContentSize ().Height);
+                }
+
+                if (pos != 0)
+                {
+                    Position = pos;
+                }
+
+                SetNeedsDisplay ();
+                AdjustScroll ();
+            }
+        }
     }
 
     /// <summary>
@@ -74,21 +114,21 @@ public class Scroll : View
                 SetRelativeLayout (SuperViewAsScrollBar.Frame.Size);
             }
 
-            int barSize = BarSize;
+            int pos = SetPosition (value);
 
-            if (value + barSize > Size)
+            if (pos == _position)
             {
                 return;
             }
 
-            CancelEventArgs<int> args = OnPositionChanging (_position, value);
+            CancelEventArgs<int> args = OnPositionChanging (_position, pos);
 
             if (args.Cancel)
             {
                 return;
             }
 
-            _position = value;
+            _position = pos;
 
             AdjustScroll ();
 
@@ -113,6 +153,11 @@ public class Scroll : View
         get => _size;
         set
         {
+            if (value == _size || value < 0)
+            {
+                return;
+            }
+
             _size = value;
             OnSizeChanged (_size);
             AdjustScroll ();
@@ -140,14 +185,12 @@ public class Scroll : View
         }
         else if (mouseEvent.Flags.HasFlag (MouseFlags.Button1Pressed) && location > sliderPos.end)
         {
-            int distance = location - sliderPos.end;
-            int scrollAmount = (int)((double)distance / barSize * (Size - barSize));
-            Position = Math.Min (Position + scrollAmount, Size - barSize);
+            Position = Math.Min (Position + barSize, Size - barSize + (KeepContentInAllViewport ? 0 : barSize));
         }
         else if ((mouseEvent.Flags == MouseFlags.WheeledDown && Orientation == Orientation.Vertical)
                  || (mouseEvent.Flags == MouseFlags.WheeledRight && Orientation == Orientation.Horizontal))
         {
-            Position = Math.Min (Position + 1, Size - barSize);
+            Position = Math.Min (Position + 1, Size - barSize + (KeepContentInAllViewport ? 0 : barSize));
         }
         else if ((mouseEvent.Flags == MouseFlags.WheeledUp && Orientation == Orientation.Vertical)
                  || (mouseEvent.Flags == MouseFlags.WheeledLeft && Orientation == Orientation.Horizontal))
@@ -208,6 +251,18 @@ public class Scroll : View
     internal ScrollBar? SuperViewAsScrollBar => SuperView as ScrollBar;
 
     private int BarSize => Orientation == Orientation.Vertical ? Viewport.Height : Viewport.Width;
+
+    private int SetPosition (int position)
+    {
+        int barSize = BarSize;
+
+        if (position + barSize > Size + (KeepContentInAllViewport ? 0 : barSize) - (SuperViewAsScrollBar is { } ? 2 : 0))
+        {
+            return KeepContentInAllViewport ? Math.Max (Size - barSize - (SuperViewAsScrollBar is { } ? 2 : 0), 0) : Math.Max (Size - 1, 0);
+        }
+
+        return position;
+    }
 
     private void SetScrollText ()
     {
