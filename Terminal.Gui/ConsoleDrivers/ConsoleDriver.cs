@@ -630,25 +630,6 @@ public abstract class ConsoleDriver
     /// <returns>The request response.</returns>
     public abstract string WriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest);
 
-    internal bool WriteAnsiRequestDefault (string ansi)
-    {
-        try
-        {
-            Console.Out.Write (ansi);
-            Console.Out.Flush (); // Ensure the request is sent
-
-            // Read the response from stdin (response should come back as input)
-            Thread.Sleep (100); // Allow time for the terminal to respond
-
-        }
-        catch (Exception)
-        {
-            return false;
-        }
-
-        return true;
-    }
-
     internal string ReadAnsiResponseDefault (AnsiEscapeSequenceRequest ansiRequest)
     {
         var response = new StringBuilder ();
