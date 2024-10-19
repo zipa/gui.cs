@@ -98,7 +98,7 @@ public class AnsiEscapeSequenceRequest
         }
         catch (Exception ex)
         {
-            error.AppendLine ($"Error executing ANSI request:\n{ansiRequest.Response}\n{ex.Message}");
+            error.AppendLine ($"Error executing ANSI request:\n{ex.Message}");
         }
         finally
         {
