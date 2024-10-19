@@ -335,9 +335,9 @@ public abstract record Pos
     /// </summary>
     /// <param name="pos">A reference to this <see cref="Pos"/> instance.</param>
     /// <returns></returns>
-    public bool Has<T> (out Pos pos) where T : Pos
+    public bool Has<T> (out T pos) where T : Pos
     {
-        pos = this;
+        pos = (this as T)!;
 
         return this switch
                {

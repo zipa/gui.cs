@@ -137,10 +137,6 @@ public class Shortcut : View, IOrientation, IDesignable
                          DimAutoStyle.Content,
                          Dim.Func (() =>
                                    {
-                                       if (Subviews [0].NeedsLayout)
-                                       {
-                                           // throw new Exception ();
-                                       }
                                        return PosAlign.CalculateMinDimension (0, Subviews, Dimension.Width);
                                    }),
                          Dim.Func (() =>

@@ -348,7 +348,7 @@ public partial class View // Layout APIs
 
             SetLayoutNeeded ();
 
-            if (IsAbsoluteLayout())
+            if (IsAbsoluteLayout ())
             {
                 // Implicit layout is ok here because all Pos/Dim are Absolute values.
                 Layout ();
@@ -546,13 +546,24 @@ public partial class View // Layout APIs
     /// <returns><see langword="false"/>If the view could not be laid out (typically because a dependencies was not ready). </returns>
     public bool Layout (Size contentSize)
     {
+        int bailAfter = 100;
         // Note, SetRelativeLayout calls SetTextFormatterSize
-        if (SetRelativeLayout (contentSize))
-        {
-            LayoutSubviews ();
+        //while (NeedsLayout)
+        //{
+            if (SetRelativeLayout (contentSize))
+            {
+                LayoutSubviews ();
 
-            return true;
-        }
+                Debug.Assert(!NeedsLayout);
+                return true;
+            }
+
+        //    if (--bailAfter == 0)
+        //    {
+        //        Debug.Write ($"Layout: After {100} tries, SetRelativeLayout was unable to complete.");
+        //        return false;
+        //    }
+        //}
 
         return false;
     }

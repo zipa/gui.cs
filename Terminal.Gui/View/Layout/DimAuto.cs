@@ -238,22 +238,12 @@ public record DimAuto (Dim? MaximumContentDim, Dim? MinimumContentDim, DimAutoSt
                 List<int> groupIds = includedSubviews.Select (
                                                               v =>
                                                               {
-                                                                  if (dimension == Dimension.Width)
-                                                                  {
-                                                                      if (v.X.Has<PosAlign> (out Pos posAlign))
-                                                                      {
-                                                                          return ((PosAlign)posAlign).GroupId;
-                                                                      }
-                                                                  }
-                                                                  else
-                                                                  {
-                                                                      if (v.Y.Has<PosAlign> (out Pos posAlign))
-                                                                      {
-                                                                          return ((PosAlign)posAlign).GroupId;
-                                                                      }
-                                                                  }
-
-                                                                  return -1;
+                                                                  return dimension switch
+                                                                         {
+                                                                             Dimension.Width when v.X.Has<PosAlign> (out PosAlign posAlign) => ((PosAlign)posAlign).GroupId,
+                                                                             Dimension.Height when v.Y.Has<PosAlign> (out PosAlign posAlign) => ((PosAlign)posAlign).GroupId,
+                                                                             _ => -1
+                                                                         };
                                                               })
                                                      .Distinct ()
                                                      .ToList ();
@@ -261,18 +251,7 @@ public record DimAuto (Dim? MaximumContentDim, Dim? MinimumContentDim, DimAutoSt
                 foreach (int groupId in groupIds.Where (g => g != -1))
                 {
                     // PERF: If this proves a perf issue, consider caching a ref to this list in each item
-                    List<PosAlign?> posAlignsInGroup = includedSubviews.Where (
-                                                                               v =>
-                                                                               {
-                                                                                   return dimension switch
-                                                                                   {
-                                                                                       Dimension.Width when v.X is PosAlign alignX => alignX.GroupId
-                                                                                           == groupId,
-                                                                                       Dimension.Height when v.Y is PosAlign alignY => alignY.GroupId
-                                                                                           == groupId,
-                                                                                       _ => false
-                                                                                   };
-                                                                               })
+                    List<PosAlign?> posAlignsInGroup = includedSubviews.Where (v => PosAlign.HasGroupId (v, dimension, groupId))
                                                                        .Select (v => dimension == Dimension.Width ? v.X as PosAlign : v.Y as PosAlign)
                                                                        .ToList ();
 
@@ -350,16 +329,9 @@ public record DimAuto (Dim? MaximumContentDim, Dim? MinimumContentDim, DimAutoSt
 
                     // BUGBUG: The order may not be correct. May need to call TopologicalSort?
                     // TODO: Figure out a way to not have Calculate change the state of subviews (calling SRL).
-                    if (dimension == Dimension.Width)
-                    {
-                        v.SetRelativeLayout (new (maxCalculatedSize, 0));
-                    }
-                    else
-                    {
-                        v.SetRelativeLayout (new (0, maxCalculatedSize));
-                    }
-
-                    int maxPosView = dimension == Dimension.Width ? v.Frame.X + v.Frame.Width : v.Frame.Y + v.Frame.Height;
+                    int maxPosView = dimension == Dimension.Width
+                                         ? v.Frame.X + v.Width!.Calculate (0, maxCalculatedSize, v, dimension)
+                                         : v.Frame.Y + v.Height!.Calculate (0, maxCalculatedSize, v, dimension);
 
                     if (maxPosView > maxCalculatedSize)
                     {
@@ -391,16 +363,9 @@ public record DimAuto (Dim? MaximumContentDim, Dim? MinimumContentDim, DimAutoSt
 
                     // BUGBUG: The order may not be correct. May need to call TopologicalSort?
                     // TODO: Figure out a way to not have Calculate change the state of subviews (calling SRL).
-                    if (dimension == Dimension.Width)
-                    {
-                        v.SetRelativeLayout (new (maxCalculatedSize, 0));
-                    }
-                    else
-                    {
-                        v.SetRelativeLayout (new (0, maxCalculatedSize));
-                    }
-
-                    int maxDimView = dimension == Dimension.Width ? v.Frame.X + v.Frame.Width : v.Frame.Y + v.Frame.Height;
+                    int maxDimView = dimension == Dimension.Width
+                                         ? v.Frame.X + v.Width!.Calculate (0, maxCalculatedSize, v, dimension)
+                                         : v.Frame.Y + v.Height!.Calculate (0, maxCalculatedSize, v, dimension);
 
                     if (maxDimView > maxCalculatedSize)
                     {
@@ -428,16 +393,9 @@ public record DimAuto (Dim? MaximumContentDim, Dim? MinimumContentDim, DimAutoSt
                 {
                     View v = dimAutoSubViews [i];
 
-                    if (dimension == Dimension.Width)
-                    {
-                        v.SetRelativeLayout (new (maxCalculatedSize, 0));
-                    }
-                    else
-                    {
-                        v.SetRelativeLayout (new (0, maxCalculatedSize));
-                    }
-
-                    int maxDimAuto= dimension == Dimension.Width ? v.Frame.X + v.Frame.Width : v.Frame.Y + v.Frame.Height;
+                    int maxDimAuto = dimension == Dimension.Width 
+                                        ? v.Frame.X + v.Width!.Calculate (0, maxCalculatedSize, v, dimension) 
+                                        : v.Frame.Y + v.Height!.Calculate (0, maxCalculatedSize, v, dimension);
 
                     if (maxDimAuto > maxCalculatedSize)
                     {

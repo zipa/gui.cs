@@ -21,9 +21,9 @@ public class ShortcutTests
     {
         var shortcut = new Shortcut ();
         shortcut.BeginInit();
-        shortcut.EndInit();
-
+        shortcut.EndInit ();
         shortcut.Layout ();
+
         Assert.Equal (2, shortcut.Frame.Width);
         Assert.Equal (1, shortcut.Frame.Height);
         Assert.Equal (2, shortcut.Viewport.Width);
@@ -45,7 +45,9 @@ public class ShortcutTests
             Key = Key.A,
             HelpText = "0"
         };
-        shortcut.SetRelativeLayout (new (100, 100));
+        shortcut.BeginInit ();
+        shortcut.EndInit ();
+        shortcut.Layout ();
         Assert.Equal (8, shortcut.Frame.Width);
         Assert.Equal (1, shortcut.Frame.Height);
         Assert.Equal (8, shortcut.Viewport.Width);
@@ -68,7 +70,9 @@ public class ShortcutTests
             Key = Key.A,
             HelpText = "0"
         };
-        shortcut.SetRelativeLayout (new (100, 100));
+        shortcut.BeginInit ();
+        shortcut.EndInit ();
+        shortcut.Layout ();
         Assert.Equal (9, shortcut.Frame.Width);
         Assert.Equal (1, shortcut.Frame.Height);
         Assert.Equal (9, shortcut.Viewport.Width);
