@@ -1184,7 +1184,12 @@ internal class WindowsDriver : ConsoleDriver
     /// <inheritdoc />
     public override string WriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest)
     {
-        while (_mainLoopDriver is { } && Console.KeyAvailable)
+        if (_mainLoopDriver is null)
+        {
+            return string.Empty;
+        }
+
+        while (Console.KeyAvailable)
         {
             _mainLoopDriver._waitForProbe.Set ();
             _mainLoopDriver._waitForProbe.Reset ();
@@ -1192,11 +1197,7 @@ internal class WindowsDriver : ConsoleDriver
             _mainLoopDriver._forceRead = true;
         }
 
-        if (_mainLoopDriver is { })
-        {
-            _mainLoopDriver._forceRead = false;
-        }
-
+        _mainLoopDriver._forceRead = false;
         _mainLoopDriver._suspendRead = true;
 
         try
@@ -1208,14 +1209,13 @@ internal class WindowsDriver : ConsoleDriver
                 return ReadAnsiResponseDefault (ansiRequest);
             }
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return string.Empty;
         }
         finally
         {
             _mainLoopDriver._suspendRead = false;
-
         }
 
         return string.Empty;

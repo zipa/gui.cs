@@ -1445,6 +1445,11 @@ internal class NetDriver : ConsoleDriver
     /// <inheritdoc/>
     public override string WriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest)
     {
+        if (_mainLoopDriver is null)
+        {
+            return string.Empty;
+        }
+
         var response = string.Empty;
 
         try
@@ -1483,10 +1488,7 @@ internal class NetDriver : ConsoleDriver
         }
         finally
         {
-            if (_mainLoopDriver is { })
-            {
-                _mainLoopDriver._netEvents._forceRead = false;
-            }
+            _mainLoopDriver._netEvents._forceRead = false;
 
             if (_mainLoopDriver._netEvents.EscSeqRequests.Statuses.TryPeek (out EscSeqReqStatus request))
             {
