@@ -211,11 +211,11 @@ This TextFormatter (tf2) with fill will be cleared on rewritten.       ",
                                                      );
 
         Assert.False (label.NeedsDisplay);
-        Assert.False (label.IsLayoutNeeded ());
+        Assert.False (label.NeedsLayout);
         Assert.False (label.SubViewNeedsDisplay);
         label.Text = "This label is rewritten.";
         Assert.True (label.NeedsDisplay);
-        Assert.True (label.IsLayoutNeeded ());
+        Assert.True (label.NeedsLayout);
         //Assert.False (label.SubViewNeedsDisplay);
         label.Draw ();
 
@@ -1360,6 +1360,7 @@ e
         Application.Navigation = new ();
         Application.Top = new ();
         Application.Top.Add (otherView, label, nextView);
+        Application.Top.Layout ();
 
         Application.Top.SetFocus ();
 
@@ -1432,6 +1433,7 @@ e
         };
         Application.Top.Add (label, otherView);
         Application.Top.SetFocus ();
+        Application.Top.Layout ();
 
         Assert.True (label.CanFocus);
         Assert.True (label.HasFocus);

@@ -110,7 +110,7 @@ public record PosAlign : Pos
 
     internal override int Calculate (int superviewDimension, Dim dim, View us, Dimension dimension)
     {
-        if (_cachedLocation.HasValue && Aligner.ContainerSize == superviewDimension && !us.IsLayoutNeeded())
+        if (_cachedLocation.HasValue && Aligner.ContainerSize == superviewDimension && !us.NeedsLayout)
         {
             return _cachedLocation.Value;
         }

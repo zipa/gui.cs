@@ -492,7 +492,7 @@ public static partial class Application // Run (Begin, Run, End, Stop)
     public static void Wakeup () { MainLoop?.Wakeup (); }
 
     /// <summary>
-    /// Refreshes layout and the display. Only Views that need to be laid out (see <see cref="View.IsLayoutNeeded()"/>) will be laid out.
+    /// Refreshes layout and the display. Only Views that need to be laid out (see <see cref="View.NeedsLayout"/>) will be laid out.
     /// Only Views that need to be drawn (see <see cref="View.NeedsDisplay"/>) will be drawn.
     /// </summary>
     /// <param name="forceRedraw">If <see langword="true"/> the entire View hierarchy will be redrawn. The default is <see langword="false"/> and should only be overriden for testing.</param>
@@ -501,7 +501,7 @@ public static partial class Application // Run (Begin, Run, End, Stop)
         bool clear = false;
         foreach (Toplevel tl in TopLevels.Reverse ())
         {
-            if (tl.IsLayoutNeeded ())
+            if (tl.NeedsLayout)
             {
                 clear = true;
                 tl.Layout (Screen.Size);

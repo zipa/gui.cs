@@ -879,6 +879,7 @@ public class MenuBarTests (ITestOutputHelper output)
                 new (new MenuItem [] { new ("One", "", null), new ("Two", "", null) })
             ]
         };
+        menu.Layout ();
 
         Assert.Equal (new (-1, -1), new Point (menu.Frame.X, menu.Frame.Y));
 
@@ -958,6 +959,7 @@ public class MenuBarTests (ITestOutputHelper output)
                 new (new MenuItem [] { new ("One", "", null), new ("Two", "", null) })
             ]
         };
+        menu.Layout ();
 
         Assert.Equal (new (-2, -1), new Point (menu.Frame.X, menu.Frame.Y));
 

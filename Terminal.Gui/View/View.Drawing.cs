@@ -195,7 +195,7 @@ public partial class View // Drawing APIs
             return;
         }
 
-        if (IsLayoutNeeded ())
+        if (NeedsLayout)
         {
             //Debug.WriteLine ($"Layout should be de-coupled from drawing: {this}");
         }
@@ -541,7 +541,7 @@ public partial class View // Drawing APIs
 
             foreach (View view in subviewsNeedingDraw)
             {
-                if (view.IsLayoutNeeded ())
+                if (view.NeedsLayout)
                 {
                     //Debug.WriteLine ($"Layout should be de-coupled from drawing: {view}");
                     //view.LayoutSubviews ();
@@ -638,7 +638,7 @@ public partial class View // Drawing APIs
     /// <summary>Gets or sets whether the view needs to be redrawn.</summary>
     public bool NeedsDisplay
     {
-        get => _needsDisplayRect != Rectangle.Empty || IsLayoutNeeded ();
+        get => _needsDisplayRect != Rectangle.Empty || NeedsLayout;
         set
         {
             if (value)

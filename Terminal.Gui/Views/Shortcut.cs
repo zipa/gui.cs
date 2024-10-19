@@ -127,9 +127,6 @@ public class Shortcut : View, IOrientation, IDesignable
         Key = key;
         Title = commandText ?? string.Empty;
         Action = action;
-
-        return;
-
     }
 
     // Helper to set Width consistently
@@ -140,7 +137,7 @@ public class Shortcut : View, IOrientation, IDesignable
                          DimAutoStyle.Content,
                          Dim.Func (() =>
                                    {
-                                       if (Subviews [0].IsLayoutNeeded ())
+                                       if (Subviews [0].NeedsLayout)
                                        {
                                            // throw new Exception ();
                                        }

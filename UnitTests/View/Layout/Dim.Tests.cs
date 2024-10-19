@@ -254,7 +254,7 @@ public class DimTests
                        Assert.Equal (18, v6.Frame.Height); // 89*20%=18
 
                        w.Width = 200;
-                       Assert.True (t.IsLayoutNeeded ());
+                       Assert.True (t.NeedsLayout);
                        w.Height = 200;
                        t.LayoutSubviews ();
 

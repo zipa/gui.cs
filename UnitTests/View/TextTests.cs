@@ -715,7 +715,7 @@ w ";
         Assert.Equal (new (0, 0, 2, 1), lbl.Frame);
         Assert.Equal (new (0, 0, 2, 1), lbl._needsDisplayRect);
         Assert.Equal (new (0, 0, 80, 25), lbl.SuperView._needsDisplayRect);
-        Assert.True (lbl.SuperView.IsLayoutNeeded ());
+        Assert.True (lbl.SuperView.NeedsLayout);
         Application.RunIteration (ref rs);
 
         Assert.Equal ("12  ", GetContents ());
@@ -1127,7 +1127,7 @@ w ";
             Width = Dim.Auto (DimAutoStyle.Text),
             Height = Dim.Auto (DimAutoStyle.Text)
         };
-        Assert.True (view.IsLayoutNeeded ());
+        Assert.True (view.NeedsLayout);
         view.Layout ();
         Assert.Equal (new (0, 0, 5, 1), view.Frame);
         Assert.Equal (new (0, 0, 5, 1), view.Viewport);

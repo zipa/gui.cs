@@ -20,8 +20,10 @@ public class ShortcutTests
     public void Size_Defaults ()
     {
         var shortcut = new Shortcut ();
+        shortcut.BeginInit();
+        shortcut.EndInit();
 
-        shortcut.SetRelativeLayout (new (100, 100));
+        shortcut.Layout ();
         Assert.Equal (2, shortcut.Frame.Width);
         Assert.Equal (1, shortcut.Frame.Height);
         Assert.Equal (2, shortcut.Viewport.Width);
@@ -31,10 +33,10 @@ public class ShortcutTests
         Assert.Equal (1, shortcut.CommandView.Viewport.Height);
 
         Assert.Equal (0, shortcut.HelpView.Viewport.Width);
-        Assert.Equal (1, shortcut.HelpView.Viewport.Height);
+        Assert.Equal (0, shortcut.HelpView.Viewport.Height);
 
         Assert.Equal (0, shortcut.KeyView.Viewport.Width);
-        Assert.Equal (1, shortcut.KeyView.Viewport.Height);
+        Assert.Equal (0, shortcut.KeyView.Viewport.Height);
 
         //  0123456789
         // "   0  A "

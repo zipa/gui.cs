@@ -859,10 +859,10 @@ public class ApplicationTests
                                          Application.RaiseMouseEvent (new () { Flags = MouseFlags.ReportMousePosition });
                                          Assert.False (top.NeedsDisplay);
                                          Assert.False (top.SubViewNeedsDisplay);
-                                         Assert.False (top.IsLayoutNeeded ());
+                                         Assert.False (top.NeedsLayout);
                                          Assert.False (d.NeedsDisplay);
                                          Assert.False (d.SubViewNeedsDisplay);
-                                         Assert.False (d.IsLayoutNeeded ());
+                                         Assert.False (d.NeedsLayout);
                                      }
                                      else
                                      {

@@ -65,6 +65,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         Assert.False (sv.AutoHideScrollBars);
         Assert.False (sv.ShowHorizontalScrollIndicator);
         Assert.True (sv.ShowVerticalScrollIndicator);
+        top.Layout ();
         sv.Draw ();
 
         TestHelpers.AssertDriverContentsAre (
@@ -89,6 +90,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         Assert.False (sv.AutoHideScrollBars);
         Assert.True (sv.ShowHorizontalScrollIndicator);
         Assert.False (sv.ShowVerticalScrollIndicator);
+        top.Layout ();
         sv.Draw ();
 
         TestHelpers.AssertDriverContentsAre (
@@ -113,6 +115,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         Assert.False (sv.AutoHideScrollBars);
         Assert.False (sv.ShowHorizontalScrollIndicator);
         Assert.False (sv.ShowVerticalScrollIndicator);
+        top.Layout ();
         sv.Draw ();
 
         TestHelpers.AssertDriverContentsAre (

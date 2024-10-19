@@ -405,7 +405,7 @@ public class DrawTests (ITestOutputHelper _output)
     public void Draw_Minimum_Full_Border_With_Empty_Viewport ()
     {
         var view = new View { Width = 2, Height = 2, BorderStyle = LineStyle.Single };
-        Assert.True (view.IsLayoutNeeded());
+        Assert.True (view.NeedsLayout);
         Assert.True (view.NeedsDisplay);
         view.Layout ();
 

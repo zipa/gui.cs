@@ -562,7 +562,7 @@ public class UICatalogApp
                 Width = Dim.Auto (),
                 Height = Dim.Fill (Dim.Func (() =>
                                              {
-                                                 if (_statusBar.IsLayoutNeeded ())
+                                                 if (_statusBar.NeedsLayout)
                                                  {
                                                     // throw new Exception ("DimFunc.Fn aborted because dependent View needs layout.");
                                                  }
@@ -588,7 +588,7 @@ public class UICatalogApp
                 Width = Dim.Fill (),
                 Height = Dim.Fill (Dim.Func (() =>
                                              {
-                                                 if (_statusBar.IsLayoutNeeded ())
+                                                 if (_statusBar.NeedsLayout)
                                                  {
                                                     // throw new Exception ("DimFunc.Fn aborted because dependent View needs layout.");
                                                  }

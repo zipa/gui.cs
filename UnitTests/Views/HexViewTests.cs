@@ -22,7 +22,7 @@ public class HexViewTests
     public void BytesPerLine_Calculates_Correctly (int width, int expectedBpl)
     {
         var hv = new HexView (LoadStream (null, out long _)) { Width = width, Height = 10, AddressWidth = 0 };
-        hv.LayoutSubviews ();
+        hv.Layout ();
 
         Assert.Equal (expectedBpl, hv.BytesPerLine);
     }
@@ -370,7 +370,7 @@ public class HexViewTests
         Application.Top = new Toplevel ();
         Application.Top.Add (hv);
 
-        hv.LayoutSubviews ();
+        hv.Layout ();
 
         Assert.True (hv.NewKeyDownEvent (Key.End));
         Assert.Equal (MEM_STRING_LENGTH - 1, hv.DisplayStart);
