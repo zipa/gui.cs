@@ -85,7 +85,7 @@ public class AnsiRequestsScenario : Scenario
         int lastSendTime = Environment.TickCount;
         object lockObj = new object ();
         Application.AddTimeout (
-                                TimeSpan.FromMilliseconds (100),
+                                TimeSpan.FromMilliseconds (50),
                                 () =>
                                 {
                                     lock (lockObj)
