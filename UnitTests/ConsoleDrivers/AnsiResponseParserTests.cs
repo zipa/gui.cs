@@ -154,7 +154,7 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
             null,
             new []
             {
-                new StepExpectation ('\u001b',ParserState.ExpectingBracket,string.Empty)
+                new StepExpectation ('\u001b',AnsiResponseParserState.ExpectingBracket,string.Empty)
             }
         ];
 
@@ -164,13 +164,13 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
             'c',
             new []
             {
-                new StepExpectation ('\u001b',ParserState.ExpectingBracket,string.Empty),
-                new StepExpectation ('H',ParserState.Normal,"\u001bH"), // H is known terminator and not expected one so here we release both chars
-                new StepExpectation ('\u001b',ParserState.ExpectingBracket,string.Empty),
-                new StepExpectation ('[',ParserState.InResponse,string.Empty),
-                new StepExpectation ('0',ParserState.InResponse,string.Empty),
-                new StepExpectation ('c',ParserState.Normal,string.Empty,"\u001b[0c"), // c is expected terminator so here we swallow input and populate expected response
-                new StepExpectation ('\u001b',ParserState.ExpectingBracket,string.Empty),
+                new StepExpectation ('\u001b',AnsiResponseParserState.ExpectingBracket,string.Empty),
+                new StepExpectation ('H',AnsiResponseParserState.Normal,"\u001bH"), // H is known terminator and not expected one so here we release both chars
+                new StepExpectation ('\u001b',AnsiResponseParserState.ExpectingBracket,string.Empty),
+                new StepExpectation ('[',AnsiResponseParserState.InResponse,string.Empty),
+                new StepExpectation ('0',AnsiResponseParserState.InResponse,string.Empty),
+                new StepExpectation ('c',AnsiResponseParserState.Normal,string.Empty,"\u001b[0c"), // c is expected terminator so here we swallow input and populate expected response
+                new StepExpectation ('\u001b',AnsiResponseParserState.ExpectingBracket,string.Empty),
             }
         ];
     }
@@ -186,7 +186,7 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
         /// What should the state of the parser be after the <see cref="Input"/>
         /// is fed in.
         /// </summary>
-        public ParserState ExpectedStateAfterOperation { get; }
+        public AnsiResponseParserState ExpectedStateAfterOperation { get; }
 
         /// <summary>
         /// If this step should release one or more characters, put them here.
@@ -201,7 +201,7 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
 
         public StepExpectation (
             char input,
-            ParserState expectedStateAfterOperation,
+            AnsiResponseParserState expectedStateAfterOperation,
             string expectedRelease = "",
             string expectedAnsiResponse = "") : this ()
         {
@@ -261,8 +261,8 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
         AssertConsumed (input,ref i);
 
         // We should know when the state changed
-        Assert.Equal (ParserState.ExpectingBracket, _parser1.State);
-        Assert.Equal (ParserState.ExpectingBracket, _parser2.State);
+        Assert.Equal (AnsiResponseParserState.ExpectingBracket, _parser1.State);
+        Assert.Equal (AnsiResponseParserState.ExpectingBracket, _parser2.State);
 
         Assert.Equal (DateTime.Now.Date, _parser1.StateChangedAt.Date);
         Assert.Equal (DateTime.Now.Date, _parser2.StateChangedAt.Date);
@@ -300,14 +300,14 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
 
         // First Esc gets grabbed
         AssertConsumed (input, ref i); // Esc
-        Assert.Equal (ParserState.ExpectingBracket,_parser1.State);
-        Assert.Equal (ParserState.ExpectingBracket, _parser2.State);
+        Assert.Equal (AnsiResponseParserState.ExpectingBracket,_parser1.State);
+        Assert.Equal (AnsiResponseParserState.ExpectingBracket, _parser2.State);
 
         // Because next char is 'f' we do not see a bracket so release both
         AssertReleased (input, ref i, "\u001bf", 0,1); // f
 
-        Assert.Equal (ParserState.Normal, _parser1.State);
-        Assert.Equal (ParserState.Normal, _parser2.State);
+        Assert.Equal (AnsiResponseParserState.Normal, _parser1.State);
+        Assert.Equal (AnsiResponseParserState.Normal, _parser2.State);
 
         AssertReleased (input, ref i,"i",2);
         AssertReleased (input, ref i, "s", 3);
@@ -428,7 +428,7 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
 
         Assert.Equal (expectedRelease, _parser2.Release ());
 
-        Assert.Equal (ParserState.Normal, _parser1.State);
-        Assert.Equal (ParserState.Normal, _parser2.State);
+        Assert.Equal (AnsiResponseParserState.Normal, _parser1.State);
+        Assert.Equal (AnsiResponseParserState.Normal, _parser2.State);
     }
 }

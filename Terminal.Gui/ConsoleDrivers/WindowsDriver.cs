@@ -1566,7 +1566,7 @@ internal class WindowsDriver : ConsoleDriver
     public IEnumerable<WindowsConsole.InputRecord> ShouldRelease ()
     {
 
-        if (Parser.State == ParserState.ExpectingBracket &&
+        if (Parser.State == AnsiResponseParserState.ExpectingBracket &&
             DateTime.Now - Parser.StateChangedAt > _escTimeout)
         {
             return Parser.Release ().Select (o => o.Item2);
