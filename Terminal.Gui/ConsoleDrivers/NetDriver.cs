@@ -1175,7 +1175,7 @@ internal class NetDriver : ConsoleDriver
 
                 break;
             case EventType.Mouse:
-                MouseEvent me = ToDriverMouse (inputEvent.MouseEvent);
+                MouseEventArgs me = ToDriverMouse (inputEvent.MouseEvent);
                 //Debug.WriteLine ($"NetDriver: ({me.X},{me.Y}) - {me.Flags}");
                 OnMouseEvent (me);
 
@@ -1414,7 +1414,7 @@ internal class NetDriver : ConsoleDriver
         }
     }
 
-    private MouseEvent ToDriverMouse (NetEvents.MouseEvent me)
+    private MouseEventArgs ToDriverMouse (NetEvents.MouseEvent me)
     {
        //System.Diagnostics.Debug.WriteLine ($"X: {me.Position.X}; Y: {me.Position.Y}; ButtonState: {me.ButtonState}");
 
@@ -1560,7 +1560,7 @@ internal class NetDriver : ConsoleDriver
             mouseFlag |= MouseFlags.ButtonAlt;
         }
 
-        return new MouseEvent { Position = me.Position, Flags = mouseFlag };
+        return new MouseEventArgs { Position = me.Position, Flags = mouseFlag };
     }
 
     #endregion Mouse Handling
