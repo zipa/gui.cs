@@ -1191,10 +1191,10 @@ internal class WindowsDriver : ConsoleDriver
 
         while (Console.KeyAvailable)
         {
+            _mainLoopDriver._forceRead = true;
+
             _mainLoopDriver._waitForProbe.Set ();
             _mainLoopDriver._waitForProbe.Reset ();
-
-            _mainLoopDriver._forceRead = true;
         }
 
         _mainLoopDriver._forceRead = false;
