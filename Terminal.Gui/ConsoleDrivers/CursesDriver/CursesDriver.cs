@@ -210,12 +210,38 @@ internal class CursesDriver : ConsoleDriver
     /// <inheritdoc />
     public override string WriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest)
     {
-        if (WriteAnsiRequestDefault (ansiRequest.Request))
+        if (_mainLoopDriver is null)
         {
-            return ReadAnsiResponseDefault (ansiRequest);
+            return string.Empty;
         }
 
-        return string.Empty;
+        while (Console.KeyAvailable)
+        {
+            _mainLoopDriver._forceRead = true;
+
+            _mainLoopDriver._waitForInput.Set ();
+            _mainLoopDriver._waitForInput.Reset ();
+        }
+
+        _mainLoopDriver._forceRead = false;
+        _mainLoopDriver._suspendRead = true;
+
+        try
+        {
+            Console.Out.Write (ansiRequest.Request);
+            Console.Out.Flush (); // Ensure the request is sent
+            Task.Delay (100).Wait (); // Allow time for the terminal to respond
+
+            return ReadAnsiResponseDefault (ansiRequest);
+        }
+        catch (Exception)
+        {
+            return string.Empty;
+        }
+        finally
+        {
+            _mainLoopDriver._suspendRead = false;
+        }
     }
 
     public override void Suspend ()

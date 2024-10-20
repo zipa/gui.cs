@@ -46,6 +46,10 @@ internal class UnixMainLoop : IMainLoopDriver
     private bool _pollDirty = true;
     private Pollfd [] _pollMap;
     private bool _winChanged;
+    private readonly ManualResetEventSlim _eventReady = new (false);
+    internal readonly ManualResetEventSlim _waitForInput = new (false);
+    private readonly CancellationTokenSource _eventReadyTokenSource = new ();
+    private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
 
     public UnixMainLoop (ConsoleDriver consoleDriver = null)
     {
@@ -89,22 +93,99 @@ internal class UnixMainLoop : IMainLoopDriver
         {
             throw new NotSupportedException ("libc not found", e);
         }
+
+        Task.Run (CursesInputHandler, _inputHandlerTokenSource.Token);
+    }
+
+    internal bool _forceRead;
+    internal bool _suspendRead;
+    private int n;
+
+    private void CursesInputHandler ()
+    {
+        while (_mainLoop is { })
+        {
+            try
+            {
+                UpdatePollMap ();
+
+                if (!_inputHandlerTokenSource.IsCancellationRequested && !_forceRead)
+                {
+                    _waitForInput.Wait (_inputHandlerTokenSource.Token);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            finally
+            {
+                if (!_inputHandlerTokenSource.IsCancellationRequested)
+                {
+                    _waitForInput.Reset ();
+                }
+            }
+
+            while (!_inputHandlerTokenSource.IsCancellationRequested)
+            {
+                if (!_suspendRead)
+                {
+                    n = poll (_pollMap, (uint)_pollMap.Length, 0);
+
+                    if (n == KEY_RESIZE)
+                    {
+                        _winChanged = true;
+
+                        break;
+                    }
+
+                    if (n > 0)
+                    {
+                        break;
+                    }
+                }
+
+                if (!_forceRead)
+                {
+                    Task.Delay (100, _inputHandlerTokenSource.Token).Wait (_inputHandlerTokenSource.Token);
+                }
+            }
+
+            _eventReady.Set ();
+        }
     }
 
     bool IMainLoopDriver.EventsPending ()
     {
-        UpdatePollMap ();
+        _waitForInput.Set ();
 
-        bool checkTimersResult = _mainLoop.CheckTimersAndIdleHandlers (out int pollTimeout);
-
-        int n = poll (_pollMap, (uint)_pollMap.Length, pollTimeout);
-
-        if (n == KEY_RESIZE)
+        if (_mainLoop.CheckTimersAndIdleHandlers (out int waitTimeout))
         {
-            _winChanged = true;
+            return true;
         }
 
-        return checkTimersResult || n >= KEY_RESIZE;
+        try
+        {
+            if (!_eventReadyTokenSource.IsCancellationRequested)
+            {
+                _eventReady.Wait (waitTimeout, _eventReadyTokenSource.Token);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return true;
+        }
+        finally
+        {
+            _eventReady.Reset ();
+        }
+
+        if (!_eventReadyTokenSource.IsCancellationRequested)
+        {
+            return n > 0 || _mainLoop.CheckTimersAndIdleHandlers (out _) || _winChanged;
+        }
+
+        return true;
     }
 
     void IMainLoopDriver.Iteration ()
@@ -117,6 +198,8 @@ internal class UnixMainLoop : IMainLoopDriver
             // This is needed on the mac. See https://github.com/gui-cs/Terminal.Gui/pull/2922#discussion_r1365992426
             _cursesDriver.ProcessWinChange ();
         }
+
+        n = 0;
 
         if (_pollMap is null)
         {
@@ -147,6 +230,15 @@ internal class UnixMainLoop : IMainLoopDriver
     void IMainLoopDriver.TearDown ()
     {
         _descriptorWatchers?.Clear ();
+
+        _inputHandlerTokenSource?.Cancel ();
+        _inputHandlerTokenSource?.Dispose ();
+
+        _waitForInput?.Dispose ();
+
+        _eventReadyTokenSource?.Cancel ();
+        _eventReadyTokenSource?.Dispose ();
+        _eventReady?.Dispose ();
 
         _mainLoop = null;
     }
