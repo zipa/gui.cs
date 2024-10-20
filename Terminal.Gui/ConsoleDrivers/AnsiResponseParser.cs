@@ -1,6 +1,90 @@
 ﻿#nullable enable
 
+using System.Collections.Concurrent;
+using System.Runtime.ConstrainedExecution;
+
 namespace Terminal.Gui;
+
+public class AnsiRequestScheduler(IAnsiResponseParser parser)
+{
+    public static int sent = 0;
+    public List<AnsiEscapeSequenceRequest> Requsts = new  ();
+
+    private ConcurrentDictionary<string, DateTime> _lastSend = new ();
+
+    private TimeSpan _throttle = TimeSpan.FromMilliseconds (100);
+
+    /// <summary>
+    /// Sends the <paramref name="request"/> immediately or queues it if there is already
+    /// an outstanding request for the given <see cref="AnsiEscapeSequenceRequest.Terminator"/>.
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns><see langword="true"/> if request was sent immediately. <see langword="false"/> if it was queued.</returns>
+    public bool SendOrSchedule (AnsiEscapeSequenceRequest request )
+    {
+        if (CanSend(request))
+        {
+            Send (request);
+
+            return true;
+        }
+        else
+        {
+            Requsts.Add (request);
+            return false;
+        }
+    }
+
+
+    /// <summary>
+    /// Identifies and runs any <see cref="Requsts"/> that can be sent based on the
+    /// current outstanding requests of the parser.
+    /// </summary>
+    /// <returns><see langword="true"/> if a request was found and run. <see langword="false"/>
+    /// if no outstanding requests or all have existing outstanding requests underway in parser.</returns>
+    public bool RunSchedule ()
+    {
+        var opportunity = Requsts.FirstOrDefault (CanSend);
+
+        if (opportunity != null)
+        {
+            Requsts.Remove (opportunity);
+            Send (opportunity);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private void Send (AnsiEscapeSequenceRequest r)
+    {
+        Interlocked.Increment(ref sent);
+        _lastSend.AddOrUpdate (r.Terminator,(s)=>DateTime.Now,(s,v)=>DateTime.Now);
+        parser.ExpectResponse (r.Terminator,r.ResponseReceived);
+        r.Send ();
+    }
+
+    public bool CanSend (AnsiEscapeSequenceRequest r)
+    {
+        if (ShouldThrottle (r))
+        {
+            return false;
+        }
+
+        return !parser.IsExpecting (r.Terminator);
+    }
+
+    private bool ShouldThrottle (AnsiEscapeSequenceRequest r)
+    {
+        if (_lastSend.TryGetValue (r.Terminator, out DateTime value))
+        {
+            return DateTime.Now - value < _throttle;
+        }
+
+        return false;
+    }
+}
 
 internal abstract class AnsiResponseParserBase : IAnsiResponseParser
 {
@@ -227,6 +311,13 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     ///     completed.
     /// </summary>
     public void ExpectResponse (string terminator, Action<string> response) { expectedResponses.Add ((terminator, response)); }
+
+    /// <inheritdoc />
+    public bool IsExpecting (string requestTerminator)
+    {
+        // If any of the new terminator matches any existing terminators characters it's a collision so true.
+        return expectedResponses.Any (r => r.terminator.Intersect (requestTerminator).Any());
+    }
 }
 
 internal class AnsiResponseParser<T> : AnsiResponseParserBase
@@ -297,4 +388,57 @@ internal class AnsiResponseParser : AnsiResponseParserBase
     protected override IEnumerable<object> HeldToObjects () { return held.ToString ().Select (c => (object)c).ToArray (); }
 
     protected override void AddToHeld (object o) { held.Append ((char)o); }
+}
+
+
+/// <summary>
+///     Describes an ongoing ANSI request sent to the console.
+///     Use <see cref="ResponseReceived"/> to handle the response
+///     when console answers the request.
+/// </summary>
+public class AnsiEscapeSequenceRequest
+{
+    /// <summary>
+    ///     Request to send e.g. see
+    ///     <see>
+    ///         <cref>EscSeqUtils.CSI_SendDeviceAttributes.Request</cref>
+    ///     </see>
+    /// </summary>
+    public required string Request { get; init; }
+
+    /// <summary>
+    ///     Invoked when the console responds with an ANSI response code that matches the
+    ///     <see cref="Terminator"/>
+    /// </summary>
+    public Action<string> ResponseReceived;
+
+    /// <summary>
+    ///     <para>
+    ///         The terminator that uniquely identifies the type of response as responded
+    ///         by the console. e.g. for
+    ///         <see>
+    ///             <cref>EscSeqUtils.CSI_SendDeviceAttributes.Request</cref>
+    ///         </see>
+    ///         the terminator is
+    ///         <see>
+    ///             <cref>EscSeqUtils.CSI_SendDeviceAttributes.Terminator</cref>
+    ///         </see>
+    ///         .
+    ///     </para>
+    ///     <para>
+    ///         After sending a request, the first response with matching terminator will be matched
+    ///         to the oldest outstanding request.
+    ///     </para>
+    /// </summary>
+    public required string Terminator { get; init; }
+
+    /// <summary>
+    /// Sends the <see cref="Request"/> to the raw output stream of the current <see cref="ConsoleDriver"/>.
+    /// Only call this method from the main UI thread. You should use <see cref="AnsiRequestScheduler"/> if
+    /// sending many requests.
+    /// </summary>
+    public void Send ()
+    {
+        Application.Driver?.RawWrite (Request);
+    }
 }

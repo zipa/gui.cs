@@ -24,10 +24,14 @@ public class AnsiRequestsScenario : Scenario
     private List<DateTime> sends = new  ();
     private Dictionary<DateTime,string> answers = new ();
     private Label _lblSummary;
+    private AnsiRequestScheduler _scheduler;
 
     public override void Main ()
     {
         Application.Init ();
+
+        _scheduler = new AnsiRequestScheduler (Application.Driver.GetParser ());
+        
         _win = new Window { Title = $"{Application.QuitKey} to Quit - Scenario: {GetName ()}" };
 
         var lbl = new Label ()
@@ -45,7 +49,7 @@ public class AnsiRequestsScenario : Scenario
 
                                     UpdateResponses ();
 
-                                    return _win.DisposedCount == 0;
+                                    return true;
                                 });
 
         var tv = new TextView ()
@@ -79,24 +83,32 @@ public class AnsiRequestsScenario : Scenario
         _win.Add (cbDar);
 
         int lastSendTime = Environment.TickCount;
+        object lockObj = new object ();
         Application.AddTimeout (
-                                TimeSpan.FromMilliseconds (50),
+                                TimeSpan.FromMilliseconds (100),
                                 () =>
                                 {
-                                    if (cbDar.Value > 0)
+                                    lock (lockObj)
                                     {
-                                        int interval = 1000 / cbDar.Value; // Calculate the desired interval in milliseconds
-                                        int currentTime = Environment.TickCount; // Current system time in milliseconds
-
-                                        // Check if the time elapsed since the last send is greater than the interval
-                                        if (currentTime - lastSendTime >= interval)
+                                        if (cbDar.Value > 0)
                                         {
-                                            SendDar (); // Send the request
-                                            lastSendTime = currentTime; // Update the last send time
+                                            int interval = 1000 / cbDar.Value; // Calculate the desired interval in milliseconds
+                                            int currentTime = Environment.TickCount; // Current system time in milliseconds
+
+                                            // Check if the time elapsed since the last send is greater than the interval
+                                            if (currentTime - lastSendTime >= interval)
+                                            {
+                                                SendDar (); // Send the request
+                                                lastSendTime = currentTime; // Update the last send time
+                                            }
                                         }
+
+                                        // TODO: Scheduler probably should be part of core driver
+                                        // Also any that we didn't get a chance to send
+                                        _scheduler.RunSchedule();
                                     }
 
-                                    return _win.DisposedCount == 0;
+                                    return true;
                                 });
 
 
@@ -157,7 +169,7 @@ public class AnsiRequestsScenario : Scenario
         _graphView.Series.Add (_answeredSeries = new ScatterSeries ());
 
         _sentSeries.Fill = new GraphCellToRender (new Rune ('.'), new Attribute (ColorName16.BrightGreen, ColorName16.Black));
-        _answeredSeries.Fill = new GraphCellToRender (new Rune ('.'), new Attribute (ColorName16.BrightCyan, ColorName16.Black));
+        _answeredSeries.Fill = new GraphCellToRender (new Rune ('.'), new Attribute (ColorName16.BrightRed, ColorName16.Black));
 
         // Todo:
         // _graphView.Annotations.Add (_sentSeries new PathAnnotation {});
@@ -192,10 +204,13 @@ public class AnsiRequestsScenario : Scenario
 
     private void SendDar ()
     {
-        // Ask for device attributes (DAR)
-        var p = Application.Driver.GetParser ();
-        p.ExpectResponse ("c", HandleResponse);
-        Application.Driver.RawWrite (EscSeqUtils.CSI_SendDeviceAttributes);
+        _scheduler.SendOrSchedule (
+                        new ()
+                        {
+                            Request = EscSeqUtils.CSI_SendDeviceAttributes,
+                            Terminator = EscSeqUtils.CSI_ReportDeviceAttributes_Terminator,
+                            ResponseReceived = HandleResponse
+                        });
         sends.Add (DateTime.Now);
     }
 
