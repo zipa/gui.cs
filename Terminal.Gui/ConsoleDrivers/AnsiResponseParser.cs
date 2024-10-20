@@ -3,7 +3,7 @@
 namespace Terminal.Gui;
 
     // Enum to manage the parser's state
-    internal enum ParserState
+    public enum ParserState
     {
         Normal,
         ExpectingBracket,

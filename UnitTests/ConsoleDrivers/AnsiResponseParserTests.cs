@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.CommandLine.Parsing;
+using System.Diagnostics;
 using System.Text;
 using Xunit.Abstractions;
 
@@ -103,7 +104,6 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
     // Add more test cases here...
     public void TestInputSequences (string ansiStream, string expectedTerminator, string expectedResponse, string expectedOutput)
     {
-
         var swGenBatches = Stopwatch.StartNew ();
         int tests = 0;
 
@@ -144,6 +144,111 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
         }
 
         output.WriteLine ($"Tested {tests} in {swRunTest.ElapsedMilliseconds} ms (gen batches took {swGenBatches.ElapsedMilliseconds} ms)" );
+    }
+
+    public static IEnumerable<object []> TestInputSequencesExact_Cases ()
+    {
+        yield return
+        [
+            "Esc Only",
+            null,
+            new []
+            {
+                new StepExpectation ('\u001b',ParserState.ExpectingBracket,string.Empty)
+            }
+        ];
+
+        yield return
+        [
+            "Esc Hi with intermediate",
+            'c',
+            new []
+            {
+                new StepExpectation ('\u001b',ParserState.ExpectingBracket,string.Empty),
+                new StepExpectation ('H',ParserState.Normal,"\u001bH"), // H is known terminator and not expected one so here we release both chars
+                new StepExpectation ('\u001b',ParserState.ExpectingBracket,string.Empty),
+                new StepExpectation ('[',ParserState.InResponse,string.Empty),
+                new StepExpectation ('0',ParserState.InResponse,string.Empty),
+                new StepExpectation ('c',ParserState.Normal,string.Empty,"\u001b[0c"), // c is expected terminator so here we swallow input and populate expected response
+                new StepExpectation ('\u001b',ParserState.ExpectingBracket,string.Empty),
+            }
+        ];
+    }
+
+    public class StepExpectation ()
+    {
+        /// <summary>
+        /// The input character to feed into the parser at this step of the test
+        /// </summary>
+        public char Input { get; }
+
+        /// <summary>
+        /// What should the state of the parser be after the <see cref="Input"/>
+        /// is fed in.
+        /// </summary>
+        public ParserState ExpectedStateAfterOperation { get; }
+
+        /// <summary>
+        /// If this step should release one or more characters, put them here.
+        /// </summary>
+        public string ExpectedRelease { get; } = string.Empty;
+
+        /// <summary>
+        /// If this step should result in a completing of detection of ANSI response
+        /// then put the expected full response sequence here.
+        /// </summary>
+        public string ExpectedAnsiResponse { get; } = string.Empty;
+
+        public StepExpectation (
+            char input,
+            ParserState expectedStateAfterOperation,
+            string expectedRelease = "",
+            string expectedAnsiResponse = "") : this ()
+        {
+            Input = input;
+            ExpectedStateAfterOperation = expectedStateAfterOperation;
+            ExpectedRelease = expectedRelease;
+            ExpectedAnsiResponse = expectedAnsiResponse;
+        }
+
+    }
+
+
+
+    [MemberData(nameof(TestInputSequencesExact_Cases))]
+    [Theory]
+    public void TestInputSequencesExact (string caseName, char? terminator, IEnumerable<StepExpectation> expectedStates)
+    {
+        output.WriteLine ("Running test case:" + caseName);
+
+        var parser = new AnsiResponseParser ();
+        string? response = null;
+
+        if (terminator.HasValue)
+        {
+            parser.ExpectResponse (terminator.Value.ToString (),(s)=> response = s);
+        }
+        foreach (var state in expectedStates)
+        {
+            // If we expect the response to be detected at this step
+            if (!string.IsNullOrWhiteSpace (state.ExpectedAnsiResponse))
+            {
+                // Then before passing input it should be null
+                Assert.Null (response);
+            }
+
+            var actual = parser.ProcessInput (state.Input.ToString ());
+
+            Assert.Equal (state.ExpectedRelease,actual);
+            Assert.Equal (state.ExpectedStateAfterOperation, parser.State);
+
+            // If we expect the response to be detected at this step
+            if (!string.IsNullOrWhiteSpace (state.ExpectedAnsiResponse))
+            {
+                // And after passing input it shuld be the expected value
+                Assert.Equal (state.ExpectedAnsiResponse, response);
+            }
+        }
     }
 
     [Fact]
