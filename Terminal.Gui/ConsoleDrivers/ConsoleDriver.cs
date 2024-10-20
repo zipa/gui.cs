@@ -633,14 +633,18 @@ public abstract class ConsoleDriver
     internal string ReadAnsiResponseDefault (AnsiEscapeSequenceRequest ansiRequest)
     {
         var response = new StringBuilder ();
+        int index = 0;
 
         while (Console.KeyAvailable)
         {
             // Peek the next key
             ConsoleKeyInfo keyInfo = Console.ReadKey (true); // true to not display on the console
 
-            // Append the current key to the response
-            response.Append (keyInfo.KeyChar);
+            if ((index == 0 && keyInfo.KeyChar == EscSeqUtils.KeyEsc) || (index > 0 && keyInfo.KeyChar != EscSeqUtils.KeyEsc))
+            {
+                // Append the current key to the response
+                response.Append (keyInfo.KeyChar);
+            }
 
             // Read until no key is available if no terminator was specified or
             // check if the key is terminator (ANSI escape sequence ends)
@@ -649,6 +653,8 @@ public abstract class ConsoleDriver
                 // Break out of the loop when terminator is found
                 break;
             }
+
+            index++;
         }
 
         return response.ToString ();
