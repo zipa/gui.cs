@@ -127,6 +127,11 @@ public class Shortcut : View, IOrientation, IDesignable
         Key = key;
         Title = commandText ?? string.Empty;
         Action = action;
+
+        SuperViewRendersLineCanvas = true;
+        Border.Settings &= ~BorderSettings.Title;
+
+        ShowHide ();
     }
 
     // Helper to set Width consistently
@@ -135,45 +140,15 @@ public class Shortcut : View, IOrientation, IDesignable
         // TODO: PosAlign.CalculateMinDimension is a hack. Need to figure out a better way of doing this.
         return Dim.Auto (
                          DimAutoStyle.Content,
-                         Dim.Func (() =>
-                                   {
-                                       return PosAlign.CalculateMinDimension (0, Subviews, Dimension.Width);
-                                   }),
-                         Dim.Func (() =>
-                                   {
-                                       return PosAlign.CalculateMinDimension (0, Subviews, Dimension.Width);
-                                   }))!;
-    }
-
-    /// <inheritdoc />
-    public override void EndInit ()
-    {
-        base.EndInit ();
-
-        SuperViewRendersLineCanvas = true;
-        Border.Settings &= ~BorderSettings.Title;
-
-        ShowHide ();
-
-        // Force Width to DimAuto to calculate natural width and then set it back
-        Dim? savedDim = Width;
-        Width = GetWidthDimAuto ();
-        // Force a SRL)
-        SetRelativeLayout (Application.Screen.Size);
-        _minimumNatrualWidth = Frame.Width;
-        Width = savedDim;
-
-        SetCommandViewDefaultLayout ();
-        SetHelpViewDefaultLayout ();
-        SetKeyViewDefaultLayout ();
-
-        SetColors ();
+                         Dim.Func (() => PosAlign.CalculateMinDimension (0, Subviews, Dimension.Width)),
+                         Dim.Func (() => PosAlign.CalculateMinDimension (0, Subviews, Dimension.Width)))!;
     }
 
     private AlignmentModes _alignmentModes = AlignmentModes.StartToEnd | AlignmentModes.IgnoreFirstOrLast;
 
-    // This is used to calculate the minimum width of the Shortcut when the width is NOT Dim.Auto
-    // It is calculated by setting Width to DimAuto temporarily and forcing layout
+    // This is used to calculate the minimum width of the Shortcut when Width is NOT Dim.Auto
+    // It is calculated by setting Width to DimAuto temporarily and forcing layout.
+    // Once Frame.Width gets below this value, LayoutStarted makes HelpView an KeyView smaller.
     private int? _minimumNatrualWidth;
 
     /// <inheritdoc/>
@@ -218,29 +193,41 @@ public class Shortcut : View, IOrientation, IDesignable
         if (CommandView.Visible)
         {
             Add (CommandView);
+            SetCommandViewDefaultLayout ();
         }
 
         if (HelpView.Visible && !string.IsNullOrEmpty (HelpView.Text))
         {
             Add (HelpView);
+            SetHelpViewDefaultLayout ();
         }
 
         if (KeyView.Visible && Key != Key.Empty)
         {
             Add (KeyView);
+            SetKeyViewDefaultLayout ();
         }
+
+        // Force Width to DimAuto to calculate natural width and then set it back
+        Dim? savedDim = Width;
+        Width = GetWidthDimAuto ();
+        // Force a SRL)
+        CommandView.SetRelativeLayout (Application.Screen.Size);
+        HelpView.SetRelativeLayout (Application.Screen.Size);
+        KeyView.SetRelativeLayout (Application.Screen.Size);
+        SetRelativeLayout (Application.Screen.Size);
+        _minimumNatrualWidth = Frame.Width;
+        Width = savedDim;
+
+        SetColors ();
     }
 
     private Thickness GetMarginThickness ()
     {
-        if (Orientation == Orientation.Vertical)
-        {
-            return new (1, 0, 1, 0);
-        }
-
         return new (1, 0, 1, 0);
     }
 
+    private int _maxHelpWidth = 0;
     // When layout starts, we need to adjust the layout of the HelpView and KeyView
     private void OnLayoutStarted (object? sender, LayoutEventArgs e)
     {
@@ -257,61 +244,39 @@ public class Shortcut : View, IOrientation, IDesignable
 
             int currentWidth = Frame.Width;
 
-            // If our width is smaller than the natural width then reduce width of HelpView first.
+            // Frame.Width is smaller than the natural width. Reduce width of HelpView first.
             // Then KeyView.
             // Don't ever reduce CommandView (it should spill).
-            // When Horizontal, Key is first, then Help, then Command.
-            // When Vertical, Command is first, then Help, then Key.
-            // BUGBUG: This does not do what the above says.
             // TODO: Add Unit tests for this.
-            if (currentWidth < _minimumNatrualWidth)
+            int delta = _minimumNatrualWidth.Value - currentWidth;
+            _maxHelpWidth = int.Max (0, GetContentSize().Width - CommandView.Frame.Width - KeyView.Frame.Width);
+            if (_maxHelpWidth < 3)
             {
-                int delta = _minimumNatrualWidth.Value - currentWidth;
-                int maxHelpWidth = int.Max (0, HelpView.Text.GetColumns () + Margin.Thickness.Horizontal - delta);
-
-                switch (maxHelpWidth)
+                Thickness t = GetMarginThickness ();
+                switch (_maxHelpWidth)
                 {
-                    case 0:
-                        // Hide HelpView
-                        HelpView.Visible = false;
-                        HelpView.X = 0;
-
-                        break;
-
-                    case 1:
-                        // Scrunch it by removing margins
-                        HelpView.Margin.Thickness = new (0, 0, 0, 0);
-
-                        break;
-
                     case 2:
+
                         // Scrunch just the right margin
-                        Thickness t = GetMarginThickness ();
                         HelpView.Margin.Thickness = new (t.Right, t.Top, t.Left - 1, t.Bottom);
 
                         break;
 
-                    default:
-                        // Default margin
-                        HelpView.Margin.Thickness = GetMarginThickness ();
+                    case 0:
+                    case 1:
+                        // Scrunch it by removing both margins
+                        HelpView.Margin.Thickness = new (t.Right - 1, t.Top, t.Left - 1, t.Bottom);
 
                         break;
-                }
 
-                if (maxHelpWidth > 0)
-                {
-                    HelpView.X = Pos.Align (Alignment.End, AlignmentModes);
-
-                    // Leverage Dim.Auto's max:
-                    HelpView.Width = Dim.Auto (DimAutoStyle.Text, maximumContentDim: maxHelpWidth);
-                    HelpView.Visible = true;
                 }
             }
             else
             {
                 // Reset to default
-                SetHelpViewDefaultLayout ();
+                HelpView.Margin.Thickness = GetMarginThickness ();
             }
+            KeyView.SetLayoutNeeded();
         }
     }
 
@@ -395,14 +360,7 @@ public class Shortcut : View, IOrientation, IDesignable
     ///     <see cref="Orientation.Horizontal"/>.
     /// </summary>
     /// <remarks>
-    ///     <para>
-    ///         Horizontal orientation arranges the command, help, and key parts of each <see cref="Shortcut"/>s from right to
-    ///         left
-    ///         Vertical orientation arranges the command, help, and key parts of each <see cref="Shortcut"/>s from left to
-    ///         right.
-    ///     </para>
     /// </remarks>
-
     public Orientation Orientation
     {
         get => _orientationHelper.Orientation;
@@ -512,12 +470,8 @@ public class Shortcut : View, IOrientation, IDesignable
             Title = _commandView.Text;
 
             _commandView.Selecting += CommandViewOnSelecting;
-
             _commandView.Accepting += CommandViewOnAccepted;
 
-            SetCommandViewDefaultLayout ();
-            SetHelpViewDefaultLayout ();
-            SetKeyViewDefaultLayout ();
             ShowHide ();
             UpdateKeyBindings (Key.Empty);
 
@@ -565,18 +519,21 @@ public class Shortcut : View, IOrientation, IDesignable
     /// <summary>
     ///     The subview that displays the help text for the command. Internal for unit testing.
     /// </summary>
-    internal View HelpView { get; } = new ();
+    public View HelpView { get; } = new ();
 
     private void SetHelpViewDefaultLayout ()
     {
         HelpView.Margin.Thickness = GetMarginThickness ();
         HelpView.X = Pos.Align (Alignment.End, AlignmentModes);
         HelpView.Y = 0; //Pos.Center ();
-        HelpView.Width = Dim.Auto (DimAutoStyle.Text);
+        _maxHelpWidth = HelpView.Text.GetColumns ();
+        HelpView.Width = Dim.Auto (DimAutoStyle.Text, maximumContentDim: Dim.Func ((() => _maxHelpWidth)));
         HelpView.Height = CommandView?.Visible == true ? Dim.Height (CommandView) : 1;
 
         HelpView.Visible = true;
         HelpView.VerticalTextAlignment = Alignment.Center;
+        HelpView.TextAlignment = Alignment.Start;
+        HelpView.TextFormatter.WordWrap = false;
         HelpView.HighlightStyle = HighlightStyle.None;
     }
 
@@ -668,7 +625,7 @@ public class Shortcut : View, IOrientation, IDesignable
     ///     Gets the subview that displays the key. Internal for unit testing.
     /// </summary>
 
-    internal View KeyView { get; } = new ();
+    public View KeyView { get; } = new ();
 
     private int _minimumKeyTextSize;
 
@@ -694,14 +651,13 @@ public class Shortcut : View, IOrientation, IDesignable
         }
     }
 
-    private int GetMinimumKeyViewSize () { return MinimumKeyTextSize; }
 
     private void SetKeyViewDefaultLayout ()
     {
         KeyView.Margin.Thickness = GetMarginThickness ();
         KeyView.X = Pos.Align (Alignment.End, AlignmentModes);
         KeyView.Y = 0;
-        KeyView.Width = Dim.Auto (DimAutoStyle.Text, Dim.Func (GetMinimumKeyViewSize));
+        KeyView.Width = Dim.Auto (DimAutoStyle.Text, minimumContentDim: Dim.Func (() => MinimumKeyTextSize));
         KeyView.Height = CommandView?.Visible == true ? Dim.Height (CommandView) : 1;
 
         KeyView.Visible = true;
@@ -809,7 +765,6 @@ public class Shortcut : View, IOrientation, IDesignable
 
         return true;
     }
-
 
     /// <inheritdoc/>
     protected override void Dispose (bool disposing)

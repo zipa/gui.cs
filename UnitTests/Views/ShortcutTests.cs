@@ -20,8 +20,6 @@ public class ShortcutTests
     public void Size_Defaults ()
     {
         var shortcut = new Shortcut ();
-        shortcut.BeginInit();
-        shortcut.EndInit ();
         shortcut.Layout ();
 
         Assert.Equal (2, shortcut.Frame.Width);
@@ -45,8 +43,6 @@ public class ShortcutTests
             Key = Key.A,
             HelpText = "0"
         };
-        shortcut.BeginInit ();
-        shortcut.EndInit ();
         shortcut.Layout ();
         Assert.Equal (8, shortcut.Frame.Width);
         Assert.Equal (1, shortcut.Frame.Height);
@@ -70,8 +66,6 @@ public class ShortcutTests
             Key = Key.A,
             HelpText = "0"
         };
-        shortcut.BeginInit ();
-        shortcut.EndInit ();
         shortcut.Layout ();
         Assert.Equal (9, shortcut.Frame.Width);
         Assert.Equal (1, shortcut.Frame.Height);
@@ -116,10 +110,15 @@ public class ShortcutTests
     }
 
     [Theory]
-    [InlineData (5, 0, 3, 6)]
-    [InlineData (6, 0, 3, 6)]
-    [InlineData (7, 0, 3, 6)]
-    [InlineData (8, 0, 3, 6)]
+    [InlineData (0, 0, 3, 3)]
+    [InlineData (1, 0, 3, 3)]
+    [InlineData (2, 0, 3, 3)]
+    [InlineData (3, 0, 3, 3)]
+    [InlineData (4, 0, 3, 3)]
+    [InlineData (5, 0, 3, 3)]
+    [InlineData (6, 0, 3, 3)]
+    [InlineData (7, 0, 3, 4)]
+    [InlineData (8, 0, 3, 5)]
     [InlineData (9, 0, 3, 6)]
     [InlineData (10, 0, 4, 7)]
     [InlineData (11, 0, 5, 8)]
@@ -132,9 +131,22 @@ public class ShortcutTests
             Text = "H",
             Key = Key.K
         };
+        shortcut.Layout ();
 
-        shortcut.LayoutSubviews ();
-        shortcut.SetRelativeLayout (new (100, 100));
+        // 01234
+        // -C--K 
+
+        // 012345
+        // -C--K- 
+
+        // 0123456
+        // -C-H-K- 
+
+        // 01234567
+        // -C--H-K- 
+
+        // 012345678
+        // -C--H--K- 
 
         // 0123456789
         // -C--H--K- 
@@ -424,8 +436,7 @@ public class ShortcutTests
             Title = "C"
         };
         Application.Top.Add (shortcut);
-        Application.Top.SetRelativeLayout (new (100, 100));
-        Application.Top.LayoutSubviews ();
+        Application.Top.Layout ();
 
         var accepted = 0;
         shortcut.Accepting += (s, e) => accepted++;

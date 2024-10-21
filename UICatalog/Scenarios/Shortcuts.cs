@@ -39,6 +39,7 @@ public class Shortcuts : Scenario
         var eventLog = new ListView
         {
             X = Pos.AnchorEnd (),
+            Y = 0,
             Height = Dim.Fill (4),
             ColorScheme = Colors.ColorSchemes ["Toplevel"],
             Source = new ListWrapper<string> (eventSource),
@@ -50,12 +51,11 @@ public class Shortcuts : Scenario
 
         var vShortcut1 = new Shortcut
         {
-            Orientation = Orientation.Vertical,
             X = 0,
-            Width = 35,
+            Width = Dim.Fill () - Dim.Width (eventLog),
             Title = "A_pp Shortcut",
             Key = Key.F1,
-            Text = "Width is 35",
+            Text = "Width is DimFIll",
             KeyBindingScope = KeyBindingScope.Application,
         };
 
@@ -63,7 +63,6 @@ public class Shortcuts : Scenario
 
         var vShortcut2 = new Shortcut
         {
-            Orientation = Orientation.Vertical,
             X = 0,
             Y = Pos.Bottom (vShortcut1),
             Width = 35,
@@ -88,7 +87,6 @@ public class Shortcuts : Scenario
 
         var vShortcut3 = new Shortcut
         {
-            Orientation = Orientation.Vertical,
             X = 0,
             Y = Pos.Bottom (vShortcut2),
             CommandView = new CheckBox
@@ -242,6 +240,27 @@ public class Shortcuts : Scenario
         Application.Top.Add (vShortcut7);
         vShortcut7.SetFocus ();
 
+        var framedShortcut = new Shortcut
+        {
+            X = 0,
+            Y = Pos.Bottom(vShortcut7) + 1,
+            Width = Dim.Auto(),
+            Title = "C",
+            Key = Key.K,
+            Text = "H",
+            BorderStyle = LineStyle.Dotted,
+            Arrangement = ViewArrangement.Resizable,
+            CanFocus = false,
+            // Orientation = Orientation.Horizontal,
+            //AlignmentModes = AlignmentModes.EndToStart
+
+        };
+        framedShortcut.Orientation = Orientation.Horizontal;
+        framedShortcut.Padding.Thickness = new (0, 1, 0, 0);
+        framedShortcut.CommandView.Margin.ColorScheme = framedShortcut.CommandView.ColorScheme = Colors.ColorSchemes ["Error"];
+        framedShortcut.HelpView.Margin.ColorScheme = framedShortcut.HelpView.ColorScheme = Colors.ColorSchemes ["Dialog"];
+        framedShortcut.KeyView.Margin.ColorScheme = framedShortcut.KeyView.ColorScheme = Colors.ColorSchemes ["Menu"];
+        Application.Top.Add (framedShortcut);
 
         // Horizontal
         var hShortcut1 = new Shortcut
@@ -395,8 +414,6 @@ public class Shortcuts : Scenario
                 };
             }
         }
-
-        //((CheckBox)vShortcut5.CommandView).OnToggle ();
     }
 
     private void Button_Clicked (object sender, CommandEventArgs e)
