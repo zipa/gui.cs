@@ -123,19 +123,19 @@ public static class EscSeqUtils
     public static readonly string CSI_SaveCursorAndActivateAltBufferNoBackscroll = CSI + "?1049h";
 
     //private static bool isButtonReleased;
-    private static bool isButtonClicked;
+    private static bool _isButtonClicked;
 
-    private static bool isButtonDoubleClicked;
+    private static bool _isButtonDoubleClicked;
 
     //private static MouseFlags? lastMouseButtonReleased;
     // QUESTION: What's the difference between isButtonClicked and isButtonPressed?
     // Some clarity or comments would be handy, here.
     // It also seems like some enforcement of valid states might be a good idea.
-    private static bool isButtonPressed;
-    private static bool isButtonTripleClicked;
+    private static bool _isButtonPressed;
+    private static bool _isButtonTripleClicked;
 
-    private static MouseFlags? lastMouseButtonPressed;
-    private static Point? point;
+    private static MouseFlags? _lastMouseButtonPressed;
+    private static Point? _point;
 
     /// <summary>
     ///     Control sequence for disabling mouse events.
@@ -774,32 +774,32 @@ public static class EscSeqUtils
 
         mouseFlags = [MouseFlags.AllEvents];
 
-        if (lastMouseButtonPressed != null
-            && !isButtonPressed
+        if (_lastMouseButtonPressed != null
+            && !_isButtonPressed
             && !buttonState.HasFlag (MouseFlags.ReportMousePosition)
             && !buttonState.HasFlag (MouseFlags.Button1Released)
             && !buttonState.HasFlag (MouseFlags.Button2Released)
             && !buttonState.HasFlag (MouseFlags.Button3Released)
             && !buttonState.HasFlag (MouseFlags.Button4Released))
         {
-            lastMouseButtonPressed = null;
-            isButtonPressed = false;
+            _lastMouseButtonPressed = null;
+            _isButtonPressed = false;
         }
 
-        if ((!isButtonClicked
-             && !isButtonDoubleClicked
+        if ((!_isButtonClicked
+             && !_isButtonDoubleClicked
              && (buttonState == MouseFlags.Button1Pressed
                  || buttonState == MouseFlags.Button2Pressed
                  || buttonState == MouseFlags.Button3Pressed
                  || buttonState == MouseFlags.Button4Pressed)
-             && lastMouseButtonPressed is null)
-            || (isButtonPressed && lastMouseButtonPressed is { } && buttonState.HasFlag (MouseFlags.ReportMousePosition)))
+             && _lastMouseButtonPressed is null)
+            || (_isButtonPressed && _lastMouseButtonPressed is { } && buttonState.HasFlag (MouseFlags.ReportMousePosition)))
         {
             mouseFlags [0] = buttonState;
-            lastMouseButtonPressed = buttonState;
-            isButtonPressed = true;
+            _lastMouseButtonPressed = buttonState;
+            _isButtonPressed = true;
 
-            point = pos;
+            _point = pos;
 
             if ((mouseFlags [0] & MouseFlags.ReportMousePosition) == 0)
             {
@@ -818,7 +818,7 @@ public static class EscSeqUtils
             }
             else if (mouseFlags [0].HasFlag (MouseFlags.ReportMousePosition))
             {
-                point = pos;
+                _point = pos;
 
                 // The isButtonPressed must always be true, otherwise we can lose the feature
                 // If mouse flags has ReportMousePosition this feature won't run
@@ -826,25 +826,25 @@ public static class EscSeqUtils
                 //isButtonPressed = false;
             }
         }
-        else if (isButtonDoubleClicked
+        else if (_isButtonDoubleClicked
                  && (buttonState == MouseFlags.Button1Pressed
                      || buttonState == MouseFlags.Button2Pressed
                      || buttonState == MouseFlags.Button3Pressed
                      || buttonState == MouseFlags.Button4Pressed))
         {
             mouseFlags [0] = GetButtonTripleClicked (buttonState);
-            isButtonDoubleClicked = false;
-            isButtonTripleClicked = true;
+            _isButtonDoubleClicked = false;
+            _isButtonTripleClicked = true;
         }
-        else if (isButtonClicked
+        else if (_isButtonClicked
                  && (buttonState == MouseFlags.Button1Pressed
                      || buttonState == MouseFlags.Button2Pressed
                      || buttonState == MouseFlags.Button3Pressed
                      || buttonState == MouseFlags.Button4Pressed))
         {
             mouseFlags [0] = GetButtonDoubleClicked (buttonState);
-            isButtonClicked = false;
-            isButtonDoubleClicked = true;
+            _isButtonClicked = false;
+            _isButtonDoubleClicked = true;
 
             Application.MainLoop.AddIdle (
                                           () =>
@@ -866,24 +866,24 @@ public static class EscSeqUtils
         //	});
 
         //} 
-        else if (!isButtonClicked
-                 && !isButtonDoubleClicked
+        else if (!_isButtonClicked
+                 && !_isButtonDoubleClicked
                  && (buttonState == MouseFlags.Button1Released
                      || buttonState == MouseFlags.Button2Released
                      || buttonState == MouseFlags.Button3Released
                      || buttonState == MouseFlags.Button4Released))
         {
             mouseFlags [0] = buttonState;
-            isButtonPressed = false;
+            _isButtonPressed = false;
 
-            if (isButtonTripleClicked)
+            if (_isButtonTripleClicked)
             {
-                isButtonTripleClicked = false;
+                _isButtonTripleClicked = false;
             }
-            else if (pos.X == point?.X && pos.Y == point?.Y)
+            else if (pos.X == _point?.X && pos.Y == _point?.Y)
             {
                 mouseFlags.Add (GetButtonClicked (buttonState));
-                isButtonClicked = true;
+                _isButtonClicked = true;
 
                 Application.MainLoop.AddIdle (
                                               () =>
@@ -894,7 +894,7 @@ public static class EscSeqUtils
                                               });
             }
 
-            point = pos;
+            _point = pos;
 
             //if ((lastMouseButtonPressed & MouseFlags.ReportMousePosition) == 0) {
             //	lastMouseButtonReleased = buttonState;
@@ -1104,13 +1104,13 @@ public static class EscSeqUtils
     private static async Task ProcessButtonClickedAsync ()
     {
         await Task.Delay (300);
-        isButtonClicked = false;
+        _isButtonClicked = false;
     }
 
     private static async Task ProcessButtonDoubleClickedAsync ()
     {
         await Task.Delay (300);
-        isButtonDoubleClicked = false;
+        _isButtonDoubleClicked = false;
     }
 
     private static async Task ProcessContinuousButtonPressedAsync (MouseFlags mouseFlag, Action<MouseFlags, Point> continuousButtonPressedHandler)
@@ -1118,7 +1118,7 @@ public static class EscSeqUtils
         // PERF: Pause and poll in a hot loop.
         // This should be replaced with event dispatch and a synchronization primitive such as AutoResetEvent.
         // Will make a massive difference in responsiveness.
-        while (isButtonPressed)
+        while (_isButtonPressed)
         {
             await Task.Delay (100);
 
@@ -1129,9 +1129,9 @@ public static class EscSeqUtils
                 break;
             }
 
-            if (isButtonPressed && lastMouseButtonPressed is { } && (mouseFlag & MouseFlags.ReportMousePosition) == 0)
+            if (_isButtonPressed && _lastMouseButtonPressed is { } && (mouseFlag & MouseFlags.ReportMousePosition) == 0)
             {
-                Application.Invoke (() => continuousButtonPressedHandler (mouseFlag, point ?? Point.Empty));
+                Application.Invoke (() => continuousButtonPressedHandler (mouseFlag, _point ?? Point.Empty));
             }
         }
     }
