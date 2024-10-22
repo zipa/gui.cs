@@ -723,6 +723,7 @@ public class TextViewTests
         var top = new Toplevel ();
         top.Add (tv);
         Application.Begin (top);
+        Application.Refresh ();
 
         Assert.False (tv.WordWrap);
         Assert.Equal (Point.Empty, tv.CursorPosition);
@@ -795,6 +796,7 @@ This is the second line.
         var top = new Toplevel ();
         top.Add (tv);
         Application.Begin (top);
+        Application.Refresh ();
 
         Assert.True (tv.WordWrap);
         Assert.Equal (Point.Empty, tv.CursorPosition);
@@ -867,6 +869,7 @@ This is the second line.
         var top = new Toplevel ();
         top.Add (tv);
         Application.Begin (top);
+        Application.Refresh ();
 
         Assert.False (tv.WordWrap);
         Assert.Equal (Point.Empty, tv.CursorPosition);
@@ -939,6 +942,7 @@ This is the second line.
         var top = new Toplevel ();
         top.Add (tv);
         Application.Begin (top);
+        Application.Refresh ();
 
         Assert.True (tv.WordWrap);
         Assert.Equal (Point.Empty, tv.CursorPosition);
@@ -6996,6 +7000,7 @@ TAB to jump between text field",
         var top = new Toplevel ();
         top.Add (tv);
         Application.Begin (top);
+        Application.Refresh ();
 
         Assert.False (tv.WordWrap);
         Assert.Equal (Point.Empty, tv.CursorPosition);
@@ -8168,6 +8173,7 @@ line.
         var top = new Toplevel ();
         top.Add (tv);
         Application.Begin (top);
+        Application.Refresh ();
 
         Assert.Equal (Point.Empty, tv.CursorPosition);
         Assert.Equal (0, tv.LeftColumn);
@@ -8247,6 +8253,7 @@ a
         _textView.Text = "Line 1.\nLine 2.";
         _textView.WordWrap = true;
         Application.Begin (top);
+        Application.Refresh ();
 
         Assert.True (_textView.WordWrap);
 
@@ -8903,6 +8910,7 @@ line.
         var top = new Toplevel ();
         top.Add (tv);
         Application.Begin (top);
+        Application.Refresh ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -8956,6 +8964,8 @@ line.  ",
         var top = new Toplevel ();
         top.Add (tv);
         RunState rs = Application.Begin (top);
+        Application.Refresh ();
+
         Assert.True (tv.InheritsPreviousAttribute);
 
         var expectedText = @"
