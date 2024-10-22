@@ -1320,10 +1320,10 @@ public class TableView : View
     /// <returns></returns>
     internal int GetHeaderHeightIfAny () { return ShouldRenderHeaders () ? GetHeaderHeight () : 0; }
 
-    private void AddRuneAt (ConsoleDriver d, int col, int row, Rune ch)
+    private void AddRuneAt (ConsoleDriver? d, int col, int row, Rune ch)
     {
         Move (col, row);
-        d.AddRune (ch);
+        d?.AddRune (ch);
     }
 
     /// <summary>
@@ -1505,6 +1505,10 @@ public class TableView : View
     /// <param name="width"></param>
     private void ClearLine (int row, int width)
     {
+        if (Driver is null)
+        {
+            return;
+        }
         Move (0, row);
         Driver.SetAttribute (GetNormalColor ());
         Driver.AddStr (new string (' ', width));
@@ -1728,7 +1732,7 @@ public class TableView : View
 
             Move (current.X, row);
 
-            Driver.AddStr (TruncateOrPad (colName, colName, current.Width, colStyle));
+            Driver?.AddStr (TruncateOrPad (colName, colName, current.Width, colStyle));
 
             if (Style.ExpandLastColumn == false && current.IsVeryLast)
             {
@@ -1776,7 +1780,10 @@ public class TableView : View
                 }
             }
 
-            AddRuneAt (Driver, c, row, rune);
+            if (Driver is { })
+            {
+                AddRuneAt (Driver, c, row, rune);
+            }
         }
     }
 
@@ -1885,19 +1892,19 @@ public class TableView : View
         //start by clearing the entire line
         Move (0, row);
 
-        Attribute color;
+        Attribute? color;
 
         if (FullRowSelect && IsSelected (0, rowToRender))
         {
-            color = focused ? rowScheme.Focus : rowScheme.HotNormal;
+            color = focused ? rowScheme?.Focus : rowScheme?.HotNormal;
         }
         else
         {
-            color = Enabled ? rowScheme.Normal : rowScheme.Disabled;
+            color = Enabled ? rowScheme?.Normal : rowScheme?.Disabled;
         }
 
-        Driver.SetAttribute (color);
-        Driver.AddStr (new string (' ', Viewport.Width));
+        Driver?.SetAttribute (color.Value);
+        Driver?.AddStr (new string (' ', Viewport.Width));
 
         // Render cells for each visible header for the current row
         for (var i = 0; i < columnsToRender.Length; i++)
@@ -1948,15 +1955,15 @@ public class TableView : View
                 scheme = rowScheme;
             }
 
-            Attribute cellColor;
+            Attribute? cellColor;
 
             if (isSelectedCell)
             {
-                cellColor = focused ? scheme.Focus : scheme.HotNormal;
+                cellColor = focused ? scheme?.Focus : scheme?.HotNormal;
             }
             else
             {
-                cellColor = Enabled ? scheme.Normal : scheme.Disabled;
+                cellColor = Enabled ? scheme?.Normal : scheme?.Disabled;
             }
 
             string render = TruncateOrPad (val, representation, current.Width, colStyle);
@@ -1964,7 +1971,10 @@ public class TableView : View
             // While many cells can be selected (see MultiSelectedRegions) only one cell is the primary (drives navigation etc)
             bool isPrimaryCell = current.Column == selectedColumn && rowToRender == selectedRow;
 
-            RenderCell (cellColor, render, isPrimaryCell);
+            if (cellColor.HasValue)
+            {
+                RenderCell (cellColor.Value, render, isPrimaryCell);
+            }
 
             // Reset color scheme to normal for drawing separators if we drew text with custom scheme
             if (scheme != rowScheme)
@@ -1978,18 +1988,18 @@ public class TableView : View
                     color = Enabled ? rowScheme.Normal : rowScheme.Disabled;
                 }
 
-                Driver.SetAttribute (color);
+                Driver?.SetAttribute (color.Value);
             }
 
             // If not in full row select mode always, reset color scheme to normal and render the vertical line (or space) at the end of the cell
             if (!FullRowSelect)
             {
-                Driver.SetAttribute (Enabled ? rowScheme.Normal : rowScheme.Disabled);
+                Driver?.SetAttribute (Enabled ? rowScheme.Normal : rowScheme.Disabled);
             }
 
             if (style.AlwaysUseNormalColorForVerticalCellLines && style.ShowVerticalCellLines)
             {
-                Driver.SetAttribute (rowScheme.Normal);
+                Driver?.SetAttribute (rowScheme.Normal);
             }
 
             RenderSeparator (current.X - 1, row, false);
@@ -2002,7 +2012,7 @@ public class TableView : View
 
         if (style.ShowVerticalCellLines)
         {
-            Driver.SetAttribute (rowScheme.Normal);
+            Driver?.SetAttribute (rowScheme.Normal);
 
             //render start and end of line
             AddRune (0, row, Glyphs.VLine);

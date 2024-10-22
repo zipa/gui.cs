@@ -177,7 +177,7 @@ public class TileView : View
     /// <inheritdoc/>
     public override void OnDrawContent (Rectangle viewport)
     {
-        Driver.SetAttribute (ColorScheme.Normal);
+        Driver?.SetAttribute (ColorScheme.Normal);
 
         Clear ();
 
@@ -236,7 +236,7 @@ public class TileView : View
             }
         }
 
-        Driver.SetAttribute (ColorScheme.Normal);
+        Driver?.SetAttribute (ColorScheme.Normal);
 
         foreach (KeyValuePair<Point, Rune> p in lc.GetMap (Viewport))
         {

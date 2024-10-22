@@ -558,7 +558,7 @@ namespace Terminal.Gui
             if (_provider is null)
             {
                 Move (0, 0);
-                Driver.AddStr ("Error: ITextValidateProvider not set!");
+                Driver?.AddStr ("Error: ITextValidateProvider not set!");
 
                 return;
             }
@@ -571,28 +571,28 @@ namespace Terminal.Gui
             Move (0, 0);
 
             // Left Margin
-            Driver.SetAttribute (textColor);
+            Driver?.SetAttribute (textColor);
 
             for (var i = 0; i < margin_left; i++)
             {
-                Driver.AddRune ((Rune)' ');
+                Driver?.AddRune ((Rune)' ');
             }
 
             // Content
-            Driver.SetAttribute (textColor);
+            Driver?.SetAttribute (textColor);
 
             // Content
             for (var i = 0; i < _provider.DisplayText.Length; i++)
             {
-                Driver.AddRune ((Rune)_provider.DisplayText [i]);
+                Driver?.AddRune ((Rune)_provider.DisplayText [i]);
             }
 
             // Right Margin
-            Driver.SetAttribute (textColor);
+            Driver?.SetAttribute (textColor);
 
             for (var i = 0; i < margin_right; i++)
             {
-                Driver.AddRune ((Rune)' ');
+                Driver?.AddRune ((Rune)' ');
             }
         }
 

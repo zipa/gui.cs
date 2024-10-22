@@ -364,7 +364,7 @@ public class RadioGroup : View, IDesignable, IOrientation
     {
         base.OnDrawContent (viewport);
 
-        Driver.SetAttribute (GetNormalColor ());
+        Driver?.SetAttribute (GetNormalColor ());
 
         for (var i = 0; i < _radioLabels.Count; i++)
         {
@@ -381,8 +381,8 @@ public class RadioGroup : View, IDesignable, IOrientation
             }
 
             string rl = _radioLabels [i];
-            Driver.SetAttribute (GetNormalColor ());
-            Driver.AddStr ($"{(i == _selected ? Glyphs.Selected : Glyphs.UnSelected)} ");
+            Driver?.SetAttribute (GetNormalColor ());
+            Driver?.AddStr ($"{(i == _selected ? Glyphs.Selected : Glyphs.UnSelected)} ");
             TextFormatter.FindHotKey (rl, HotKeySpecifier, out int hotPos, out Key hotKey);
 
             if (hotPos != -1 && hotKey != Key.Empty)
@@ -430,7 +430,7 @@ public class RadioGroup : View, IDesignable, IOrientation
                     }
 
                     Application.Driver?.AddRune (rune);
-                    Driver.SetAttribute (GetNormalColor ());
+                    Driver?.SetAttribute (GetNormalColor ());
                 }
             }
             else

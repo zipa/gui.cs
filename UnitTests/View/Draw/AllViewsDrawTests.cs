@@ -6,7 +6,7 @@ public class AllViewsDrawTests (ITestOutputHelper _output) : TestsAllViews
 {
     [Theory]
     [MemberData (nameof (AllViewTypes))]
-    public void AllViews_Does_Not_Layout (Type viewType)
+    public void AllViews_Draw_Does_Not_Layout (Type viewType)
     {
         var view = (View)CreateInstanceIfNotGeneric (viewType);
 
@@ -38,6 +38,7 @@ public class AllViewsDrawTests (ITestOutputHelper _output) : TestsAllViews
         Assert.Equal (1, layoutStartedCount);
         Assert.Equal (1, layoutCompleteCount);
 
+        view.SetNeedsDisplay ();
         view.Draw ();
 
         Assert.Equal (1, drawContentCount);

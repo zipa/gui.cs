@@ -752,8 +752,8 @@ public class ListView : View, IDesignable
     {
         base.OnDrawContent (viewport);
 
-        Attribute current = ColorScheme.Focus;
-        Driver.SetAttribute (current);
+        Attribute current = ColorScheme?.Focus ?? Attribute.Default;
+        Driver?.SetAttribute (current);
         Move (0, 0);
         Rectangle f = Viewport;
         int item = Viewport.Y;
@@ -770,7 +770,7 @@ public class ListView : View, IDesignable
 
             if (newcolor != current)
             {
-                Driver.SetAttribute (newcolor);
+                Driver?.SetAttribute (newcolor);
                 current = newcolor;
             }
 
@@ -780,7 +780,7 @@ public class ListView : View, IDesignable
             {
                 for (var c = 0; c < f.Width; c++)
                 {
-                    Driver.AddRune ((Rune)' ');
+                    Driver?.AddRune ((Rune)' ');
                 }
             }
             else
@@ -791,16 +791,16 @@ public class ListView : View, IDesignable
                 if (rowEventArgs.RowAttribute is { } && current != rowEventArgs.RowAttribute)
                 {
                     current = (Attribute)rowEventArgs.RowAttribute;
-                    Driver.SetAttribute (current);
+                    Driver?.SetAttribute (current);
                 }
 
                 if (_allowsMarking)
                 {
-                    Driver.AddRune (
+                    Driver?.AddRune (
                                     _source.IsMarked (item) ? AllowsMultipleSelection ? Glyphs.CheckStateChecked : Glyphs.Selected :
                                     AllowsMultipleSelection ? Glyphs.CheckStateUnChecked : Glyphs.UnSelected
                                    );
-                    Driver.AddRune ((Rune)' ');
+                    Driver?.AddRune ((Rune)' ');
                 }
 
                 Source.Render (this, Driver, isSelected, item, col, row, f.Width - col, start);

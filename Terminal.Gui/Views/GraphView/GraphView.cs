@@ -344,5 +344,5 @@ public class GraphView : View
     ///     Sets the color attribute of <see cref="Application.Driver"/> to the <see cref="GraphColor"/> (if defined) or
     ///     <see cref="ColorScheme"/> otherwise.
     /// </summary>
-    public void SetDriverColorToGraphColor () { Driver.SetAttribute (GraphColor ?? GetNormalColor ()); }
+    public void SetDriverColorToGraphColor () { Driver?.SetAttribute (GraphColor ?? GetNormalColor ()); }
 }

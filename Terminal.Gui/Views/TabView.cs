@@ -292,7 +292,7 @@ public class TabView : View
     /// <inheritdoc/>
     public override void OnDrawContent (Rectangle viewport)
     {
-        Driver.SetAttribute (GetNormalColor ());
+        Driver?.SetAttribute (GetNormalColor ());
 
         if (Tabs.Any ())
         {
@@ -300,7 +300,11 @@ public class TabView : View
             _tabsBar.OnDrawContent (viewport);
             _contentView.SetNeedsDisplay ();
             _contentView.Draw ();
-            Driver.Clip = savedClip;
+
+            if (Driver is { })
+            {
+                Driver.Clip = savedClip;
+            }
         }
     }
 
@@ -648,7 +652,7 @@ public class TabView : View
             RenderTabLine ();
 
             RenderUnderline ();
-            Driver.SetAttribute (HasFocus ? GetFocusColor () : GetNormalColor ());
+            Driver?.SetAttribute (HasFocus ? GetFocusColor () : GetNormalColor ());
         }
 
         public override void OnDrawContentComplete (Rectangle viewport)
@@ -1271,7 +1275,7 @@ public class TabView : View
 
                 tab.OnDrawAdornments ();
 
-                Attribute prevAttr = Driver.GetAttribute ();
+                Attribute prevAttr = Driver?.GetAttribute () ?? Attribute.Default;
 
                 // if tab is the selected one and focus is inside this control
                 if (toRender.IsSelected && _host.HasFocus)
@@ -1296,7 +1300,7 @@ public class TabView : View
 
                 tab.OnRenderLineCanvas ();
 
-                Driver.SetAttribute (GetNormalColor ());
+                Driver?.SetAttribute (GetNormalColor ());
             }
         }
 

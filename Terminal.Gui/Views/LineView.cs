@@ -59,7 +59,7 @@ public class LineView : View
         base.OnDrawContent (viewport);
 
         Move (0, 0);
-        Driver.SetAttribute (GetNormalColor ());
+        Driver?.SetAttribute (GetNormalColor ());
 
         int hLineWidth = Math.Max (1, Glyphs.HLine.GetColumns ());
 
@@ -87,7 +87,7 @@ public class LineView : View
                 rune = EndingAnchor ?? LineRune;
             }
 
-            Driver.AddRune (rune);
+            Driver?.AddRune (rune);
         }
     }
 }

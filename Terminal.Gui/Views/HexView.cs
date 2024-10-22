@@ -430,7 +430,7 @@ public class HexView : View, IDesignable
 
         Attribute currentAttribute;
         Attribute current = GetFocusColor ();
-        Driver.SetAttribute (current);
+        Driver?.SetAttribute (current);
         Move (0, 0);
 
         int nBlocks = BytesPerLine / NUM_BYTES_PER_HEX_COLUMN;
@@ -452,13 +452,13 @@ public class HexView : View, IDesignable
 
             Move (0, line);
             currentAttribute = new Attribute (GetNormalColor ().Foreground.GetHighlightColor (), GetNormalColor ().Background);
-            Driver.SetAttribute (currentAttribute);
+            Driver?.SetAttribute (currentAttribute);
             var address = $"{_displayStart + line * nBlocks * NUM_BYTES_PER_HEX_COLUMN:x8}";
-            Driver.AddStr ($"{address.Substring (8 - AddressWidth)}");
+            Driver?.AddStr ($"{address.Substring (8 - AddressWidth)}");
 
             if (AddressWidth > 0)
             {
-                Driver.AddStr (" ");
+                Driver?.AddStr (" ");
             }
 
             SetAttribute (GetNormalColor ());
@@ -480,12 +480,12 @@ public class HexView : View, IDesignable
                         SetAttribute (edited ? editedAttribute : GetNormalColor ());
                     }
 
-                    Driver.AddStr (offset >= n && !edited ? "  " : $"{value:x2}");
+                    Driver?.AddStr (offset >= n && !edited ? "  " : $"{value:x2}");
                     SetAttribute (GetNormalColor ());
-                    Driver.AddRune (_spaceCharRune);
+                    Driver?.AddRune (_spaceCharRune);
                 }
 
-                Driver.AddStr (block + 1 == nBlocks ? " " : $"{_columnSeparatorRune} ");
+                Driver?.AddStr (block + 1 == nBlocks ? " " : $"{_columnSeparatorRune} ");
             }
 
             for (var byteIndex = 0; byteIndex < nBlocks * NUM_BYTES_PER_HEX_COLUMN; byteIndex++)
@@ -538,12 +538,12 @@ public class HexView : View, IDesignable
                     SetAttribute (edited ? editedAttribute : GetNormalColor ());
                 }
 
-                Driver.AddRune (c);
+                Driver?.AddRune (c);
 
                 for (var i = 1; i < utf8BytesConsumed; i++)
                 {
                     byteIndex++;
-                    Driver.AddRune (_periodCharRune);
+                    Driver?.AddRune (_periodCharRune);
                 }
             }
         }
@@ -553,7 +553,7 @@ public class HexView : View, IDesignable
             if (currentAttribute != attribute)
             {
                 currentAttribute = attribute;
-                Driver.SetAttribute (attribute);
+                Driver?.SetAttribute (attribute);
             }
         }
     }

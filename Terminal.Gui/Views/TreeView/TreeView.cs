@@ -1137,7 +1137,7 @@ public class TreeView<T> : View, ITreeView where T : class
         if (TreeBuilder is null)
         {
             Move (0, 0);
-            Driver.AddStr (NoBuilderError);
+            Driver?.AddStr (NoBuilderError);
 
             return;
         }
@@ -1158,8 +1158,8 @@ public class TreeView<T> : View, ITreeView where T : class
             {
                 // Else clear the line to prevent stale symbols due to scrolling etc
                 Move (0, line);
-                Driver.SetAttribute (GetNormalColor ());
-                Driver.AddStr (new string (' ', Viewport.Width));
+                Driver?.SetAttribute (GetNormalColor ());
+                Driver?.AddStr (new string (' ', Viewport.Width));
             }
         }
     }

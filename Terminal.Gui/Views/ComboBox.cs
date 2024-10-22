@@ -303,9 +303,9 @@ public class ComboBox : View, IDesignable
             return;
         }
 
-        Driver.SetAttribute (ColorScheme.Focus);
+        Driver?.SetAttribute (ColorScheme.Focus);
         Move (Viewport.Right - 1, 0);
-        Driver.AddRune (Glyphs.DownArrow);
+        Driver?.AddRune (Glyphs.DownArrow);
     }
 
 
@@ -887,8 +887,8 @@ public class ComboBox : View, IDesignable
 
         public override void OnDrawContent (Rectangle viewport)
         {
-            Attribute current = ColorScheme.Focus;
-            Driver.SetAttribute (current);
+            Attribute current = ColorScheme?.Focus ?? Attribute.Default;
+            Driver?.SetAttribute (current);
             Move (0, 0);
             Rectangle f = Frame;
             int item = TopItem;
@@ -918,7 +918,7 @@ public class ComboBox : View, IDesignable
 
                 if (newcolor != current)
                 {
-                    Driver.SetAttribute (newcolor);
+                    Driver?.SetAttribute (newcolor);
                     current = newcolor;
                 }
 
@@ -928,7 +928,7 @@ public class ComboBox : View, IDesignable
                 {
                     for (var c = 0; c < f.Width; c++)
                     {
-                        Driver.AddRune ((Rune)' ');
+                        Driver?.AddRune ((Rune)' ');
                     }
                 }
                 else
@@ -939,16 +939,16 @@ public class ComboBox : View, IDesignable
                     if (rowEventArgs.RowAttribute is { } && current != rowEventArgs.RowAttribute)
                     {
                         current = (Attribute)rowEventArgs.RowAttribute;
-                        Driver.SetAttribute (current);
+                        Driver?.SetAttribute (current);
                     }
 
                     if (AllowsMarking)
                     {
-                        Driver.AddRune (
+                        Driver?.AddRune (
                                         Source.IsMarked (item) ? AllowsMultipleSelection ? Glyphs.CheckStateChecked : Glyphs.Selected :
                                         AllowsMultipleSelection ? Glyphs.CheckStateUnChecked : Glyphs.UnSelected
                                        );
-                        Driver.AddRune ((Rune)' ');
+                        Driver?.AddRune ((Rune)' ');
                     }
 
                     Source.Render (this, Driver, isSelected, item, col, row, f.Width - col, start);

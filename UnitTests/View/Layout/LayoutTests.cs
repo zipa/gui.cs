@@ -32,6 +32,7 @@ public class LayoutTests (ITestOutputHelper _output) : TestsAllViews
         view.LayoutComplete += (s, e) => layoutCompleteCount++;
 
         view.SetLayoutNeeded ();
+        view.SetNeedsDisplay();
         view.Layout ();
 
         Assert.Equal (0, drawContentCount);

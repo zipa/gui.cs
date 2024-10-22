@@ -299,7 +299,7 @@ public class MenuBar : View, IDesignable
     /// <inheritdoc/>
     public override void OnDrawContent (Rectangle viewport)
     {
-        Driver.SetAttribute (GetNormalColor ());
+        Driver?.SetAttribute (GetNormalColor ());
 
         Clear ();
 

@@ -141,7 +141,7 @@ public class ProgressBar : View, IDesignable
     ///<inheritdoc/>
     public override void OnDrawContent (Rectangle viewport)
     {
-        Driver.SetAttribute (GetHotNormalColor ());
+        Driver?.SetAttribute (GetHotNormalColor ());
 
         Move (0, 0);
 
@@ -151,11 +151,11 @@ public class ProgressBar : View, IDesignable
             {
                 if (Array.IndexOf (_activityPos, i) != -1)
                 {
-                    Driver.AddRune (SegmentCharacter);
+                    Driver?.AddRune (SegmentCharacter);
                 }
                 else
                 {
-                    Driver.AddRune ((Rune)' ');
+                    Driver?.AddRune ((Rune)' ');
                 }
             }
         }
@@ -166,12 +166,12 @@ public class ProgressBar : View, IDesignable
 
             for (i = 0; (i < mid) & (i < Viewport.Width); i++)
             {
-                Driver.AddRune (SegmentCharacter);
+                Driver?.AddRune (SegmentCharacter);
             }
 
             for (; i < Viewport.Width; i++)
             {
-                Driver.AddRune ((Rune)' ');
+                Driver?.AddRune ((Rune)' ');
             }
         }
 
@@ -185,7 +185,7 @@ public class ProgressBar : View, IDesignable
                 attr = new Attribute (ColorScheme.HotNormal.Background, ColorScheme.HotNormal.Foreground);
             }
 
-            tf?.Draw (
+            tf.Draw (
                       ViewportToScreen (Viewport),
                       attr,
                       ColorScheme.Normal,
