@@ -194,7 +194,7 @@ internal class CursesDriver : ConsoleDriver
     }
 
     /// <inheritdoc />
-    public override void RawWrite (string str)
+    internal override void RawWrite (string str)
     {
         Console.Out.Write (str);
     }
@@ -583,9 +583,9 @@ internal class CursesDriver : ConsoleDriver
         return new MainLoop (_mainLoopDriver);
     }
 
-    private AnsiResponseParser Parser { get; set; } = new ();
+    private readonly AnsiResponseParser _parser = new ();
     /// <inheritdoc />
-    public override IAnsiResponseParser GetParser () => Parser;
+    protected override IAnsiResponseParser GetParser () => _parser;
 
     internal void ProcessInput ()
     {
@@ -889,7 +889,7 @@ internal class CursesDriver : ConsoleDriver
                     {
                         foreach (var c in cki)
                         {
-                            Parser.ProcessInput (c.KeyChar.ToString());
+                            _parser.ProcessInput (c.KeyChar.ToString());
                         }
                     }
 

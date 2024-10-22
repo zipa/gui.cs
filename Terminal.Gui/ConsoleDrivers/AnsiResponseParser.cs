@@ -13,6 +13,7 @@ public class AnsiRequestScheduler(IAnsiResponseParser parser)
     private ConcurrentDictionary<string, DateTime> _lastSend = new ();
 
     private TimeSpan _throttle = TimeSpan.FromMilliseconds (100);
+    private TimeSpan _runScheduleThrottle = TimeSpan.FromMilliseconds (100);
 
     /// <summary>
     /// Sends the <paramref name="request"/> immediately or queues it if there is already
@@ -35,15 +36,23 @@ public class AnsiRequestScheduler(IAnsiResponseParser parser)
         }
     }
 
+    private DateTime _lastRun = DateTime.Now;
 
     /// <summary>
     /// Identifies and runs any <see cref="Requests"/> that can be sent based on the
     /// current outstanding requests of the parser.
     /// </summary>
+    /// <param name="force">Repeated requests to run the schedule over short period of time will be ignored.
+    /// Pass <see langword="true"/> to override this behaviour and force evaluation of outstanding requests.</param>
     /// <returns><see langword="true"/> if a request was found and run. <see langword="false"/>
     /// if no outstanding requests or all have existing outstanding requests underway in parser.</returns>
-    public bool RunSchedule ()
+    public bool RunSchedule (bool force = false)
     {
+        if (!force && DateTime.Now - _lastRun < _runScheduleThrottle)
+        {
+            return false;
+        }
+
         var opportunity = Requests.FirstOrDefault (CanSend);
 
         if (opportunity != null)

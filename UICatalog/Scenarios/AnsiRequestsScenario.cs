@@ -24,14 +24,11 @@ public class AnsiRequestsScenario : Scenario
     private List<DateTime> sends = new  ();
     private Dictionary<DateTime,string> answers = new ();
     private Label _lblSummary;
-    private AnsiRequestScheduler _scheduler;
 
     public override void Main ()
     {
         Application.Init ();
 
-        _scheduler = new AnsiRequestScheduler (Application.Driver.GetParser ());
-        
         _win = new Window { Title = $"{Application.QuitKey} to Quit - Scenario: {GetName ()}" };
 
         var lbl = new Label ()
@@ -102,10 +99,6 @@ public class AnsiRequestsScenario : Scenario
                                                 lastSendTime = currentTime; // Update the last send time
                                             }
                                         }
-
-                                        // TODO: Scheduler probably should be part of core driver
-                                        // Also any that we didn't get a chance to send
-                                        _scheduler.RunSchedule();
                                     }
 
                                     return true;
@@ -204,13 +197,13 @@ public class AnsiRequestsScenario : Scenario
 
     private void SendDar ()
     {
-        _scheduler.SendOrSchedule (
-                        new ()
-                        {
-                            Request = EscSeqUtils.CSI_SendDeviceAttributes,
-                            Terminator = EscSeqUtils.CSI_ReportDeviceAttributes_Terminator,
-                            ResponseReceived = HandleResponse
-                        });
+        Application.Driver.QueueAnsiRequest (
+                                             new ()
+                                             {
+                                                 Request = EscSeqUtils.CSI_SendDeviceAttributes,
+                                                 Terminator = EscSeqUtils.CSI_ReportDeviceAttributes_Terminator,
+                                                 ResponseReceived = HandleResponse
+                                             });
         sends.Add (DateTime.Now);
     }
 

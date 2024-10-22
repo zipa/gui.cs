@@ -1165,10 +1165,10 @@ internal class WindowsDriver : ConsoleDriver
     }
 
     /// <inheritdoc />
-    public override IAnsiResponseParser GetParser () => Parser;
+    protected override IAnsiResponseParser GetParser () => _parser;
 
     /// <inheritdoc />
-    public override void RawWrite (string str) => WinConsole?.WriteANSI (str);
+    internal override void RawWrite (string str) => WinConsole?.WriteANSI (str);
 
     #region Not Implemented
 
@@ -1458,7 +1458,7 @@ internal class WindowsDriver : ConsoleDriver
     /// How long after Esc has been pressed before we give up on getting an Ansi escape sequence
     /// </summary>
     private TimeSpan _escTimeout = TimeSpan.FromMilliseconds (50);
-    public AnsiResponseParser<WindowsConsole.InputRecord> Parser { get; set; } = new ();
+    private AnsiResponseParser<WindowsConsole.InputRecord> _parser = new ();
 
     internal void ProcessInput (WindowsConsole.InputRecord inputEvent)
     {
@@ -1557,7 +1557,7 @@ internal class WindowsDriver : ConsoleDriver
         }
 
         foreach (Tuple<char, WindowsConsole.InputRecord> output in
-                 Parser.ProcessInput (Tuple.Create (inputEvent.KeyEvent.UnicodeChar, inputEvent)))
+                 _parser.ProcessInput (Tuple.Create (inputEvent.KeyEvent.UnicodeChar, inputEvent)))
         {
                 yield return output.Item2;
         }
@@ -1566,10 +1566,10 @@ internal class WindowsDriver : ConsoleDriver
     public IEnumerable<WindowsConsole.InputRecord> ShouldRelease ()
     {
 
-        if (Parser.State == AnsiResponseParserState.ExpectingBracket &&
-            DateTime.Now - Parser.StateChangedAt > _escTimeout)
+        if (_parser.State == AnsiResponseParserState.ExpectingBracket &&
+            DateTime.Now - _parser.StateChangedAt > _escTimeout)
         {
-            return Parser.Release ().Select (o => o.Item2);
+            return _parser.Release ().Select (o => o.Item2);
         }
 
         return [];

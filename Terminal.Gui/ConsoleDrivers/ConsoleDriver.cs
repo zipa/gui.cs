@@ -13,7 +13,7 @@ namespace Terminal.Gui;
 ///     <see cref="WindowsDriver"/> - <see cref="NetDriver"/> that uses the .NET Console API - <see cref="FakeConsole"/>
 ///     for unit testing.
 /// </remarks>
-public abstract class ConsoleDriver : IConsoleDriver
+public abstract class ConsoleDriver
 {
     // As performance is a concern, we keep track of the dirty lines and only refresh those.
     // This is in addition to the dirty flag on each cell.
@@ -610,11 +610,31 @@ public abstract class ConsoleDriver : IConsoleDriver
 
     #endregion
 
-    /// <inheritdoc />
-    public abstract IAnsiResponseParser GetParser ();
+    private AnsiRequestScheduler? _scheduler;
 
-    /// <inheritdoc />
-    public abstract void RawWrite (string str);
+    /// <summary>
+    /// Queues the given <paramref name="request"/> for execution
+    /// </summary>
+    /// <param name="request"></param>
+    public void QueueAnsiRequest (AnsiEscapeSequenceRequest request)
+    {
+        GetRequestScheduler ().SendOrSchedule (request);
+    }
+
+    protected abstract IAnsiResponseParser GetParser ();
+
+    internal AnsiRequestScheduler GetRequestScheduler ()
+    {
+        // Lazy initialization because GetParser is virtual
+        return _scheduler ??= new (GetParser ());
+    }
+
+    /// <summary>
+    /// Writes the given <paramref name="str"/> directly to the console (rather than the output
+    /// draw buffer).
+    /// </summary>
+    /// <param name="str"></param>
+    internal abstract void RawWrite (string str);
 }
 
 /// <summary>
