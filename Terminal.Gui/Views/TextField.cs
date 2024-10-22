@@ -997,11 +997,11 @@ public class TextField : View
             }
         }
 
-        Driver.SetAttribute (GetFocusColor ());
+        Driver?.SetAttribute (GetFocusColor ());
 
         for (int i = col; i < width; i++)
         {
-            Driver.AddRune ((Rune)' ');
+            Driver?.AddRune ((Rune)' ');
         }
 
         PositionCursor ();

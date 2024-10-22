@@ -191,7 +191,7 @@ public class Border : Adornment
             // TODO: Make Border.LineStyle inherit from the SuperView hierarchy
             // TODO: Right now, Window and FrameView use CM to set BorderStyle, which negates
             // TODO: all this.
-            return Parent!.SuperView?.BorderStyle ?? LineStyle.None;
+            return Parent?.SuperView?.BorderStyle ?? LineStyle.None;
         }
         set => _lineStyle = value;
     }
@@ -634,12 +634,15 @@ public class Border : Adornment
         int maxTitleWidth = Math.Max (
                                       0,
                                       Math.Min (
-                                                Parent!.TitleTextFormatter.FormatAndGetSize ().Width,
+                                                Parent?.TitleTextFormatter.FormatAndGetSize ().Width ?? 0,
                                                 Math.Min (screenBounds.Width - 4, borderBounds.Width - 4)
                                                )
                                      );
 
-        Parent.TitleTextFormatter.ConstrainToSize = new (maxTitleWidth, 1);
+        if (Parent is { })
+        {
+            Parent.TitleTextFormatter.ConstrainToSize = new (maxTitleWidth, 1);
+        }
 
         int sideLineLength = borderBounds.Height;
         bool canDrawBorder = borderBounds is { Width: > 0, Height: > 0 };
@@ -678,7 +681,7 @@ public class Border : Adornment
             }
         }
 
-        if (canDrawBorder && Thickness.Top > 0 && maxTitleWidth > 0 && Settings.FastHasFlags (BorderSettings.Title) && !string.IsNullOrEmpty (Parent?.Title))
+        if (Parent is {} && canDrawBorder && Thickness.Top > 0 && maxTitleWidth > 0 && Settings.FastHasFlags (BorderSettings.Title) && !string.IsNullOrEmpty (Parent?.Title))
         {
             Attribute focus = Parent.GetNormalColor ();
 

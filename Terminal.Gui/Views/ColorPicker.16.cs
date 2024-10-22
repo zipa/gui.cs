@@ -135,7 +135,7 @@ public class ColorPicker16 : View
     {
         base.OnDrawContent (viewport);
 
-        Driver.SetAttribute (HasFocus ? ColorScheme.Focus : GetNormalColor ());
+        Driver?.SetAttribute (HasFocus ? ColorScheme.Focus : GetNormalColor ());
         var colorIndex = 0;
 
         for (var y = 0; y < Math.Max (2, viewport.Height / BoxHeight); y++)
@@ -149,7 +149,7 @@ public class ColorPicker16 : View
                     continue;
                 }
 
-                Driver.SetAttribute (new ((ColorName16)foregroundColorIndex, (ColorName16)colorIndex));
+                Driver?.SetAttribute (new ((ColorName16)foregroundColorIndex, (ColorName16)colorIndex));
                 bool selected = x == Cursor.X && y == Cursor.Y;
                 DrawColorBox (x, y, selected);
                 colorIndex++;
@@ -223,7 +223,7 @@ public class ColorPicker16 : View
             for (var zoomedX = 0; zoomedX < BoxWidth; zoomedX++)
             {
                 Move (x * BoxWidth + zoomedX, y * BoxHeight + zoomedY);
-                Driver.AddRune ((Rune)' ');
+                Driver?.AddRune ((Rune)' ');
                 index++;
             }
         }

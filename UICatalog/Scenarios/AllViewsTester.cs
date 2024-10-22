@@ -360,7 +360,6 @@ public class AllViewsTester : Scenario
 
         // Instantiate view
         var view = (View)Activator.CreateInstance (type);
-
         if (view is IDesignable designable)
         {
             designable.EnableForDesign (ref _demoText);
@@ -384,6 +383,7 @@ public class AllViewsTester : Scenario
         view.Initialized += CurrentView_Initialized;
         view.LayoutComplete += CurrentView_LayoutComplete;
 
+        view.Id = "_curView";
         _curView = view;
         _hostPane.Add (_curView);
     }

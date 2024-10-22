@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using System.ComponentModel;
 using Terminal.Gui;
+using static Terminal.Gui.SpinnerStyle;
 using Attribute = Terminal.Gui.Attribute;
 
 /// <summary>
@@ -15,7 +16,7 @@ using Attribute = Terminal.Gui.Attribute;
 ///         mouse input. Each can be customized by manipulating their Subviews.
 ///     </para>
 /// </remarsk>
-public class Adornment : View
+public class Adornment : View, IDesignable
 {
     /// <inheritdoc/>
     public Adornment ()
@@ -63,6 +64,7 @@ public class Adornment : View
             {
                 Parent?.SetAdornmentFrames ();
                 SetLayoutNeeded ();
+                SetNeedsDisplay ();
                 //Parent?.SetLayoutNeeded ();
 
                 OnThicknessChanged ();
@@ -88,9 +90,12 @@ public class Adornment : View
     ///     Adornments cannot be used as sub-views (see <see cref="Parent"/>); setting this property will throw
     ///     <see cref="InvalidOperationException"/>.
     /// </summary>
+    /// <remarks>
+    ///     While there are no real use cases for an Adornment being a subview, it is not explicitly dis-allowed to support testing. E.g. in AllViewsTester.
+    /// </remarks>
     public override View? SuperView
     {
-        get => null!;
+        get => base.SuperView!;
         set => throw new InvalidOperationException (@"Adornments can not be Subviews or have SuperViews. Use Parent instead.");
     }
 
@@ -115,7 +120,7 @@ public class Adornment : View
     /// </remarks>
     public override Rectangle Viewport
     {
-        get => Frame with { Location = Point.Empty };
+        get => base.Viewport;
         set => throw new InvalidOperationException (@"The Viewport of an Adornment cannot be modified.");
     }
 
@@ -124,6 +129,14 @@ public class Adornment : View
     {
         if (Parent is null)
         {
+            // While there are no real use cases for an Adornment being a subview, we support it for
+            // testing. E.g. in AllViewsTester.
+            if (SuperView is { })
+            {
+                Point super = SuperView.ViewportToScreen (Frame.Location);
+
+                return new (super, Frame.Size);
+            }
             return Frame;
         }
 
@@ -254,4 +267,15 @@ public class Adornment : View
     //    }
     //}
     #endregion Mouse Support
+
+
+    /// <inheritdoc/>
+    bool IDesignable.EnableForDesign ()
+    {
+        Thickness = new (3);
+        Frame = new (0, 0, 10, 10);
+        Diagnostics = ViewDiagnosticFlags.Padding;
+
+        return true;
+    }
 }

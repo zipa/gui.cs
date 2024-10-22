@@ -103,7 +103,7 @@ public partial class ColorPicker : View
     {
         base.OnDrawContent (viewport);
         Attribute normal = GetNormalColor ();
-        Driver.SetAttribute (new (SelectedColor, normal.Background));
+        Driver?.SetAttribute (new (SelectedColor, normal.Background));
         int y = _bars.Count + (Style.ShowColorName ? 1 : 0);
         AddRune (13, y, (Rune)'■');
     }
