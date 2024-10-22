@@ -43,7 +43,7 @@ public class DrawTests (ITestOutputHelper _output)
             Width = 3, Height = 3
         };
         view.Margin.Thickness = new (1);
-        View.Diagnostics = ViewDiagnosticFlags.Padding;
+        view.Margin.Diagnostics = ViewDiagnosticFlags.Padding;
         view.BeginInit ();
         view.EndInit ();
         view.Draw ();
@@ -59,8 +59,6 @@ public class DrawTests (ITestOutputHelper _output)
 
         view.AddRune (1, 1, Rune.ReplacementChar);
         Assert.Equal ((Rune)'M', Application.Driver?.Contents! [3, 3].Rune);
-
-        View.Diagnostics = ViewDiagnosticFlags.Off;
     }
 
     [Theory]

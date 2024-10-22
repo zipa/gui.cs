@@ -1,6 +1,7 @@
 #nullable enable
 
 using System.ComponentModel;
+using System.Text.RegularExpressions;
 
 namespace Terminal.Gui;
 
@@ -123,7 +124,7 @@ public record PosAlign : Pos
         }
         else
         {
-            groupViews = us.SuperView!.Subviews;
+            groupViews = us.SuperView!.Subviews.Where (v => HasGroupId (v, dimension, GroupId)).ToList ();
         }
 
         AlignAndUpdateGroup (GroupId, groupViews, dimension, superviewDimension);

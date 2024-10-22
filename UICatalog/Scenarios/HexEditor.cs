@@ -41,6 +41,7 @@ public class HexEditor : Scenario
             Title = _fileName ?? "Untitled",
             BorderStyle = LineStyle.Rounded,
         };
+        _hexView.Arrangement = ViewArrangement.Resizable;
         _hexView.Edited += _hexView_Edited;
         _hexView.PositionChanged += _hexView_PositionChanged;
         app.Add (_hexView);

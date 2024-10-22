@@ -54,14 +54,12 @@ public class ThicknessTests (ITestOutputHelper output)
         ((FakeDriver)Application.Driver!).SetBufferSize (60, 60);
         var t = new Thickness (0, 0, 0, 0);
         var r = new Rectangle (5, 5, 40, 15);
-        View.Diagnostics |= ViewDiagnosticFlags.Padding;
 
         Application.Driver?.FillRect (
                                      new Rectangle (0, 0, Application.Driver!.Cols, Application.Driver!.Rows),
                                      (Rune)' '
                                     );
-        t.Draw (r, "Test");
-        View.Diagnostics = ViewDiagnosticFlags.Off;
+        t.Draw (r, ViewDiagnosticFlags.Padding, "Test");
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -71,14 +69,12 @@ public class ThicknessTests (ITestOutputHelper output)
 
         t = new Thickness (1, 1, 1, 1);
         r = new Rectangle (5, 5, 40, 15);
-        View.Diagnostics |= ViewDiagnosticFlags.Padding;
 
         Application.Driver?.FillRect (
                                      new Rectangle (0, 0, Application.Driver!.Cols, Application.Driver!.Rows),
                                      (Rune)' '
                                     );
-        t.Draw (r, "Test");
-        View.Diagnostics = ViewDiagnosticFlags.Off;
+        t.Draw (r, ViewDiagnosticFlags.Padding, "Test");
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -102,14 +98,12 @@ public class ThicknessTests (ITestOutputHelper output)
 
         t = new Thickness (1, 2, 3, 4);
         r = new Rectangle (5, 5, 40, 15);
-        View.Diagnostics |= ViewDiagnosticFlags.Padding;
 
         Application.Driver?.FillRect (
                                      new Rectangle (0, 0, Application.Driver!.Cols, Application.Driver!.Rows),
                                      (Rune)' '
                                     );
-        t.Draw (r, "Test");
-        View.Diagnostics = ViewDiagnosticFlags.Off;
+        t.Draw (r, ViewDiagnosticFlags.Padding, "Test");
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -133,14 +127,12 @@ public class ThicknessTests (ITestOutputHelper output)
 
         t = new Thickness (-1, 1, 1, 1);
         r = new Rectangle (5, 5, 40, 15);
-        View.Diagnostics |= ViewDiagnosticFlags.Padding;
 
         Application.Driver?.FillRect (
                                      new Rectangle (0, 0, Application.Driver!.Cols, Application.Driver!.Rows),
                                      (Rune)' '
                                     );
-        t.Draw (r, "Test");
-        View.Diagnostics = ViewDiagnosticFlags.Off;
+        t.Draw (r, ViewDiagnosticFlags.Padding, "Test");
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -179,9 +171,7 @@ public class ThicknessTests (ITestOutputHelper output)
         var r = new Rectangle (2, 2, 40, 15);
         Application.RunIteration (ref rs);
 
-        View.Diagnostics |= ViewDiagnosticFlags.Ruler;
-        t.Draw (r, "Test");
-        View.Diagnostics = ViewDiagnosticFlags.Off;
+        t.Draw (r, ViewDiagnosticFlags.Ruler, "Test");
 
         TestHelpers.AssertDriverContentsAre (
                                              @"
@@ -212,9 +202,7 @@ public class ThicknessTests (ITestOutputHelper output)
         r = new Rectangle (1, 1, 40, 15);
         top.SetNeedsDisplay ();
         Application.RunIteration (ref rs);
-        View.Diagnostics |= ViewDiagnosticFlags.Ruler;
-        t.Draw (r, "Test");
-        View.Diagnostics = ViewDiagnosticFlags.Off;
+        t.Draw (r, ViewDiagnosticFlags.Ruler,  "Test");
 
         TestHelpers.AssertDriverContentsAre (
                                              @"
@@ -245,9 +233,7 @@ public class ThicknessTests (ITestOutputHelper output)
         r = new Rectangle (2, 2, 40, 15);
         top.SetNeedsDisplay ();
         Application.RunIteration (ref rs);
-        View.Diagnostics |= ViewDiagnosticFlags.Ruler;
-        t.Draw (r, "Test");
-        View.Diagnostics = ViewDiagnosticFlags.Off;
+        t.Draw (r, ViewDiagnosticFlags.Ruler,  "Test");
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -278,9 +264,7 @@ public class ThicknessTests (ITestOutputHelper output)
         r = new Rectangle (5, 5, 40, 15);
         top.SetNeedsDisplay ();
         Application.RunIteration (ref rs);
-        View.Diagnostics |= ViewDiagnosticFlags.Ruler;
-        t.Draw (r, "Test");
-        View.Diagnostics = ViewDiagnosticFlags.Off;
+        t.Draw (r, ViewDiagnosticFlags.Ruler, "Test");
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"

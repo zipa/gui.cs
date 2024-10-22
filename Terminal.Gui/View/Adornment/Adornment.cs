@@ -42,6 +42,11 @@ public class Adornment : View
 
     #region Thickness
 
+    /// <summary>
+    /// 
+    /// </summary>
+    public ViewDiagnosticFlags Diagnostics { get; set; } = View.Diagnostics;
+
     private Thickness _thickness = Thickness.Empty;
 
     /// <summary>Defines the rectangle that the <see cref="Adornment"/> will use to draw its content.</summary>
@@ -51,6 +56,7 @@ public class Adornment : View
         set
         {
             Thickness current = _thickness;
+
             _thickness = value;
 
             if (current != _thickness)
@@ -154,7 +160,7 @@ public class Adornment : View
         Driver?.SetAttribute (normalAttr);
 
         // This just draws/clears the thickness, not the insides.
-        Thickness.Draw (screen, ToString ());
+        Thickness.Draw (screen, Diagnostics, ToString ());
 
         if (!string.IsNullOrEmpty (TextFormatter.Text))
         {

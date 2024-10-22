@@ -67,8 +67,12 @@ public class ColorPicker16 : View
 
     /// <summary>Moves the selected item index to the next row.</summary>
     /// <returns></returns>
-    public virtual bool MoveDown ()
+    private bool MoveDown (CommandContext ctx)
     {
+        if (RaiseSelecting (ctx) == true)
+        {
+            return true;
+        }
         if (Cursor.Y < _rows - 1)
         {
             SelectedColor += _cols;
@@ -79,8 +83,13 @@ public class ColorPicker16 : View
 
     /// <summary>Moves the selected item index to the previous column.</summary>
     /// <returns></returns>
-    public virtual bool MoveLeft ()
+    private bool MoveLeft (CommandContext ctx)
     {
+        if (RaiseSelecting (ctx) == true)
+        {
+            return true;
+        }
+
         if (Cursor.X > 0)
         {
             SelectedColor--;
@@ -91,8 +100,12 @@ public class ColorPicker16 : View
 
     /// <summary>Moves the selected item index to the next column.</summary>
     /// <returns></returns>
-    public virtual bool MoveRight ()
+    private bool MoveRight (CommandContext ctx)
     {
+        if (RaiseSelecting (ctx) == true)
+        {
+            return true;
+        }
         if (Cursor.X < _cols - 1)
         {
             SelectedColor++;
@@ -103,8 +116,12 @@ public class ColorPicker16 : View
 
     /// <summary>Moves the selected item index to the previous row.</summary>
     /// <returns></returns>
-    public virtual bool MoveUp ()
+    private bool MoveUp (CommandContext ctx)
     {
+        if (RaiseSelecting (ctx) == true)
+        {
+            return true;
+        }
         if (Cursor.Y > 0)
         {
             SelectedColor -= _cols;
@@ -164,13 +181,24 @@ public class ColorPicker16 : View
     /// <summary>Add the commands.</summary>
     private void AddCommands ()
     {
-        AddCommand (Command.Left, () => MoveLeft ());
-        AddCommand (Command.Right, () => MoveRight ());
-        AddCommand (Command.Up, () => MoveUp ());
-        AddCommand (Command.Down, () => MoveDown ());
+        AddCommand (Command.Left, (ctx) => MoveLeft (ctx));
+        AddCommand (Command.Right, (ctx) => MoveRight (ctx));
+        AddCommand (Command.Up, (ctx) => MoveUp (ctx));
+        AddCommand (Command.Down, (ctx) => MoveDown (ctx));
+
+        AddCommand (Command.Select, (ctx) =>
+                                    {
+                                        bool set = false;
+                                        if (ctx.Data is MouseEventArgs me)
+                                        {
+                                            Cursor = new (me.Position.X / _boxWidth, me.Position.Y / _boxHeight);
+                                            set = true;
+                                        }
+                                        return RaiseAccepting (ctx) == true || set;
+                                    });
     }
 
-    /// <summary>Add the KeyBindinds.</summary>
+    /// <summary>Add the KeyBindings.</summary>
     private void AddKeyBindings ()
     {
         KeyBindings.Add (Key.CursorLeft, Command.Left);
@@ -181,15 +209,6 @@ public class ColorPicker16 : View
 
     // TODO: Decouple Cursor from SelectedColor so that mouse press-and-hold can show the color under the cursor.
 
-    private void ColorPicker_MouseClick (object sender, MouseEventArgs me)
-    {
-        // if (CanFocus)
-        {
-            Cursor = new (me.Position.X / _boxWidth, me.Position.Y / _boxHeight);
-            SetFocus ();
-            me.Handled = true;
-        }
-    }
 
     /// <summary>Draw a box for one color.</summary>
     /// <param name="x">X location.</param>
@@ -265,7 +284,5 @@ public class ColorPicker16 : View
         Width = Dim.Auto (minimumContentDim: _boxWidth * _cols);
         Height = Dim.Auto (minimumContentDim: _boxHeight * _rows);
         SetContentSize (new (_boxWidth * _cols, _boxHeight * _rows));
-
-        MouseClick += ColorPicker_MouseClick;
     }
 }

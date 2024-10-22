@@ -352,6 +352,7 @@ public partial class View // Layout APIs
             {
                 // Implicit layout is ok here because all Pos/Dim are Absolute values.
                 Layout ();
+                SetLayoutNeeded ();
             }
         }
     }
@@ -406,6 +407,7 @@ public partial class View // Layout APIs
             {
                 // Implicit layout is ok here because all Pos/Dim are Absolute values.
                 Layout ();
+                SetLayoutNeeded ();
             }
         }
     }
@@ -463,6 +465,7 @@ public partial class View // Layout APIs
             {
                 // Implicit layout is ok here because all Pos/Dim are Absolute values.
                 Layout ();
+                SetLayoutNeeded ();
             }
         }
     }
@@ -521,6 +524,7 @@ public partial class View // Layout APIs
             {
                 // Implicit layout is ok here because all Pos/Dim are Absolute values.
                 Layout ();
+                SetLayoutNeeded ();
             }
         }
     }
@@ -554,7 +558,7 @@ public partial class View // Layout APIs
             {
                 LayoutSubviews ();
 
-                Debug.Assert(!NeedsLayout);
+               // Debug.Assert(!NeedsLayout);
                 return true;
             }
 

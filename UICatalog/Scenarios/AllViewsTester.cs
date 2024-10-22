@@ -50,7 +50,6 @@ public class AllViewsTester : Scenario
     {
         // Don't create a sub-win (Scenario.Win); just use Application.Top
         Application.Init ();
-   //     ConfigurationManager.Apply ();
 
         var app = new Window
         {
@@ -315,8 +314,11 @@ public class AllViewsTester : Scenario
             Height = Dim.Fill (), // + 1 for status bar
             CanFocus = true,
             TabStop = TabBehavior.TabGroup,
-            ColorScheme = Colors.ColorSchemes ["Dialog"]
+            ColorScheme = Colors.ColorSchemes ["Base"]
         };
+        _hostPane.Padding.Thickness = new (1);
+        _hostPane.Padding.Diagnostics = ViewDiagnosticFlags.Ruler;
+        _hostPane.Padding.ColorScheme = Colors.ColorSchemes ["Error"];
 
         _hostPane.LayoutStarted += (sender, args) =>
                                    {

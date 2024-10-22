@@ -86,7 +86,7 @@ public class Margin : Adornment
         }
 
         // This just draws/clears the thickness, not the insides.
-        Thickness.Draw (screen, ToString ());
+        Thickness.Draw (screen, Diagnostics, ToString ());
 
         if (Subviews.Count > 0)
         {

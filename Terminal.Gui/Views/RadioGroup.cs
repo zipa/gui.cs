@@ -52,9 +52,9 @@ public class RadioGroup : View, IDesignable, IOrientation
         // Accept (Enter key) - Raise Accept event - DO NOT advance state
         AddCommand (Command.Accept, RaiseAccepting);
 
-        // Hotkey - ctx may indicate a radio item hotkey was pressed. Beahvior depends on HasFocus
+        // Hotkey - ctx may indicate a radio item hotkey was pressed. Behavior depends on HasFocus
         //          If HasFocus and it's this.HotKey invoke Select command - DO NOT raise Accept
-        //          If it's a radio item HotKey select that item and raise Seelcted event - DO NOT raise Accept
+        //          If it's a radio item HotKey select that item and raise Selected event - DO NOT raise Accept
         //          If nothing is selected, select first and raise Selected event - DO NOT raise Accept
         AddCommand (Command.HotKey,
                     ctx =>

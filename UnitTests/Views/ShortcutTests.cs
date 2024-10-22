@@ -95,19 +95,50 @@ public class ShortcutTests
     {
         var shortcut = new Shortcut
         {
-            Title = command,
             HelpText = help,
-            Key = key
+            Key = key,
+            Title = command,
         };
 
-        Assert.IsType<DimAuto> (shortcut.Width);
-        Assert.IsType<DimAuto> (shortcut.Height);
-        shortcut.SetRelativeLayout (new (100, 100));
+        shortcut.Layout();
 
         // |0123456789
         // | C  H  K |
         Assert.Equal (expectedWidth, shortcut.Frame.Width);
+
+        shortcut = new Shortcut
+        {
+            HelpText = help,
+            Title = command,
+            Key = key
+        };
+
+        shortcut.Layout ();
+        Assert.Equal (expectedWidth, shortcut.Frame.Width);
+
+        shortcut = new Shortcut
+        {
+            HelpText = help,
+            Key = key,
+            Title = command,
+        };
+
+        shortcut.Layout ();
+        Assert.Equal (expectedWidth, shortcut.Frame.Width);
+
+        shortcut = new Shortcut
+        {
+            Key = key,
+            HelpText = help,
+            Title = command,
+        };
+
+        shortcut.Layout ();
+        Assert.Equal (expectedWidth, shortcut.Frame.Width);
+
     }
+
+
 
     [Theory]
     [InlineData (0, 0, 3, 3)]

@@ -198,6 +198,7 @@ public class HexView : View, IDesignable
                 Address = 0;
             }
 
+            SetLayoutNeeded ();
             SetNeedsDisplay ();
         }
     }
@@ -577,6 +578,8 @@ public class HexView : View, IDesignable
     /// </summary>
     protected void RaisePositionChanged ()
     {
+        SetNeedsDisplay ();
+
         HexViewEventArgs args = new (Address, Position, BytesPerLine);
         OnPositionChanged (args);
         PositionChanged?.Invoke (this, args);

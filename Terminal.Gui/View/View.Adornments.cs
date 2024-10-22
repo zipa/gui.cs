@@ -142,7 +142,7 @@ public partial class View // Adornments
             LineStyle old = Border?.LineStyle ?? LineStyle.None;
             CancelEventArgs<LineStyle> e = new (ref old, ref value);
 
-            if (OnBorderStyleChanging (e)|| e.Cancel)
+            if (OnBorderStyleChanging (e) || e.Cancel)
             {
                 return;
             }

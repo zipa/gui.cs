@@ -121,6 +121,7 @@ public class WindowTests
     {
         // Parameterless
         using var defaultWindow = new Window ();
+        defaultWindow.Layout ();
         Assert.NotNull (defaultWindow);
         Assert.Equal (string.Empty, defaultWindow.Title);
 
@@ -148,6 +149,7 @@ public class WindowTests
 
         // Empty Rect
         using var windowWithFrameRectEmpty = new Window { Frame = Rectangle.Empty, Title = "title" };
+        windowWithFrameRectEmpty.Layout ();
         Assert.NotNull (windowWithFrameRectEmpty);
         Assert.Equal ("title", windowWithFrameRectEmpty.Title);
         Assert.True (windowWithFrameRectEmpty.CanFocus);

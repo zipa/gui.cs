@@ -88,9 +88,10 @@ public record struct Thickness
     ///     Thickness.
     /// </remarks>
     /// <param name="rect">The location and size of the rectangle that bounds the thickness rectangle, in screen coordinates.</param>
+    /// <param name="diagnosticFlags"></param>
     /// <param name="label">The diagnostics label to draw on the bottom of the <see cref="Bottom"/>.</param>
     /// <returns>The inner rectangle remaining to be drawn.</returns>
-    public Rectangle Draw (Rectangle rect, string label = null)
+    public Rectangle Draw (Rectangle rect, ViewDiagnosticFlags diagnosticFlags = ViewDiagnosticFlags.Off, string label = null)
     {
         if (rect.Size.Width < 1 || rect.Size.Height < 1)
         {
@@ -103,7 +104,7 @@ public record struct Thickness
         Rune topChar = clearChar;
         Rune bottomChar = clearChar;
 
-        if (View.Diagnostics.HasFlag (ViewDiagnosticFlags.Padding))
+        if (diagnosticFlags.HasFlag (ViewDiagnosticFlags.Padding))
         {
             leftChar = (Rune)'L';
             rightChar = (Rune)'R';
@@ -155,7 +156,7 @@ public record struct Thickness
                                         );
         }
 
-        if (View.Diagnostics.HasFlag (ViewDiagnosticFlags.Ruler))
+        if (diagnosticFlags.HasFlag (ViewDiagnosticFlags.Ruler))
         {
             // PERF: This can almost certainly be simplified down to a single point offset and fewer calls to Draw
             // Top
@@ -187,7 +188,7 @@ public record struct Thickness
             }
         }
 
-        if (View.Diagnostics.HasFlag (ViewDiagnosticFlags.Padding))
+        if (diagnosticFlags.HasFlag (ViewDiagnosticFlags.Padding))
         {
             // Draw the diagnostics label on the bottom
             string text = label is null ? string.Empty : $"{label} {this}";
