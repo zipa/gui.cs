@@ -1,5 +1,4 @@
-﻿using System.CommandLine.Parsing;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Text;
 using Xunit.Abstractions;
 
@@ -317,6 +316,39 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
 
         // Assume 50ms or something has passed, lets force release as no new content
         AssertManualReleaseIs ("\u001b", 5);
+    }
+
+    [Fact]
+    public void TestLateResponses ()
+    {
+        var p = new AnsiResponseParser ();
+
+        string? responseA = null;
+        string? responseB = null;
+
+        p.ExpectResponse ("z",(r)=>responseA=r);
+
+        // Some time goes by without us seeing a response
+        p.StopExpecting ("z");
+
+        // Send our new request
+        p.ExpectResponse ("z", (r) => responseB = r);
+
+        // Because we gave up on getting A, we should expect the response to be to our new request
+        Assert.Empty(p.ProcessInput ("\u001b[<1;2z"));
+        Assert.Null (responseA);
+        Assert.Equal ("\u001b[<1;2z", responseB);
+
+        // Oh looks like we got one late after all - swallow it
+        Assert.Empty (p.ProcessInput ("\u001b[0000z"));
+
+        // Do not expect late responses to be populated back to your variable
+        Assert.Null (responseA);
+        Assert.Equal ("\u001b[<1;2z", responseB);
+
+        // We now have no outstanding requests (late or otherwise) so new ansi codes should just fall through
+        Assert.Equal ("\u001b[111z", p.ProcessInput ("\u001b[111z"));
+
     }
 
     private Tuple<char, int> [] StringToBatch (string batch)

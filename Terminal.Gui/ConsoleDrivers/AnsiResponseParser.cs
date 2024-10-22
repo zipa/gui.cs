@@ -208,13 +208,13 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
         string cur = HeldToString ();
 
         // Look for an expected response for what is accumulated so far (since Esc)
-        if (MatchResponse (cur, expectedResponses))
+        if (MatchResponse (cur, expectedResponses, true))
         {
             return false;
         }
 
-        // Also try looking for late requests
-        if (MatchResponse (cur, lateResponses))
+        // Also try looking for late requests - in which case we do not invoke but still swallow content to avoid corrupting downstream
+        if (MatchResponse (cur, lateResponses, false))
         {
             return false;
         }
@@ -230,26 +230,25 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
         return false; // Continue accumulating
     }
 
-    private bool MatchResponse (string cur, List<(string terminator, Action<string> response)> valueTuples)
+    private bool MatchResponse (string cur, List<(string terminator, Action<string> response)> collection, bool invokeCallback)
     {
         // Check for expected responses
-        var matchingResponse = valueTuples.FirstOrDefault (r => cur.EndsWith (r.terminator));
+        var matchingResponse = collection.FirstOrDefault (r => cur.EndsWith (r.terminator));
 
         if (matchingResponse.response != null)
         {
-            DispatchResponse (matchingResponse.response);
-            expectedResponses.Remove (matchingResponse);
+
+            if (invokeCallback)
+            {
+                matchingResponse.response?.Invoke (HeldToString ());
+            }
+            ResetState ();
+            collection.Remove (matchingResponse);
 
             return true;
         }
 
         return false;
-    }
-
-    protected void DispatchResponse (Action<string> response)
-    {
-        response?.Invoke (HeldToString ());
-        ResetState ();
     }
 
     /// <inheritdoc />
