@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace Terminal.Gui;
 
@@ -73,8 +74,6 @@ public class AnsiRequestScheduler(IAnsiResponseParser parser)
     {
         if (_lastSend.TryGetValue (withTerminator, out var dt))
         {
-            // TODO: If debugging this can cause problem becuase we stop expecting response but one comes in anyway
-            // causing parser to ignore and it to fall through to default console iteration which typically crashes.
             if (DateTime.Now - dt > _staleTimeout)
             {
                 parser.StopExpecting (withTerminator);

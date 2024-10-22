@@ -6,7 +6,16 @@ namespace Terminal.Gui;
 
 internal abstract class AnsiResponseParserBase : IAnsiResponseParser
 {
+    /// <summary>
+    /// Responses we are expecting to come in.
+    /// </summary>
     protected readonly List<(string terminator, Action<string> response)> expectedResponses = new ();
+
+    /// <summary>
+    /// Collection of responses that we <see cref="StopExpecting"/>.
+    /// </summary>
+    protected readonly List<(string terminator, Action<string> response)> lateResponses = new ();
+
     private AnsiResponseParserState _state = AnsiResponseParserState.Normal;
 
     // Current state of the parser
@@ -198,17 +207,20 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     {
         string cur = HeldToString ();
 
-        // Check for expected responses
-        (string terminator, Action<string> response) matchingResponse = expectedResponses.FirstOrDefault (r => cur.EndsWith (r.terminator));
-
-        if (matchingResponse.response != null)
+        // Look for an expected response for what is accumulated so far (since Esc)
+        if (MatchResponse (cur, expectedResponses))
         {
-            DispatchResponse (matchingResponse.response);
-            expectedResponses.Remove (matchingResponse);
-
             return false;
         }
 
+        // Also try looking for late requests
+        if (MatchResponse (cur, lateResponses))
+        {
+            return false;
+        }
+
+        // Finally if it is a valid ansi response but not one we are expect (e.g. its mouse activity)
+        // then we can release it back to input processing stream
         if (_knownTerminators.Contains (cur.Last ()) && cur.StartsWith (EscSeqUtils.CSI))
         {
             // Detected a response that was not expected
@@ -216,6 +228,22 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
         }
 
         return false; // Continue accumulating
+    }
+
+    private bool MatchResponse (string cur, List<(string terminator, Action<string> response)> valueTuples)
+    {
+        // Check for expected responses
+        var matchingResponse = valueTuples.FirstOrDefault (r => cur.EndsWith (r.terminator));
+
+        if (matchingResponse.response != null)
+        {
+            DispatchResponse (matchingResponse.response);
+            expectedResponses.Remove (matchingResponse);
+
+            return true;
+        }
+
+        return false;
     }
 
     protected void DispatchResponse (Action<string> response)
@@ -237,7 +265,13 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     /// <inheritdoc />
     public void StopExpecting (string requestTerminator)
     {
-        expectedResponses.RemoveAll (r => r.terminator == requestTerminator);
+        var removed = expectedResponses.Where (r => r.terminator == requestTerminator).ToArray ();
+
+        foreach (var r in removed)
+        {
+            expectedResponses.Remove (r);
+            lateResponses.Add (r);
+        }
     }
 }
 
