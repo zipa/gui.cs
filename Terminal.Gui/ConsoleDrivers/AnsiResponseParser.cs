@@ -224,10 +224,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
         ResetState ();
     }
 
-    /// <summary>
-    ///     Registers a new expected ANSI response with a specific terminator and a callback for when the response is
-    ///     completed.
-    /// </summary>
+    /// <inheritdoc />
     public void ExpectResponse (string terminator, Action<string> response) { expectedResponses.Add ((terminator, response)); }
 
     /// <inheritdoc />
@@ -235,6 +232,12 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     {
         // If any of the new terminator matches any existing terminators characters it's a collision so true.
         return expectedResponses.Any (r => r.terminator.Intersect (requestTerminator).Any());
+    }
+
+    /// <inheritdoc />
+    public void StopExpecting (string requestTerminator)
+    {
+        expectedResponses.RemoveAll (r => r.terminator == requestTerminator);
     }
 }
 
