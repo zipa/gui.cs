@@ -355,6 +355,8 @@ public class TileView : View
             // BUGBUG: This should not be needed:
             tile.TitleChanged += (s, e) => SetLayoutNeeded ();
         }
+
+        SetLayoutNeeded ();
     }
 
     /// <summary>
@@ -423,6 +425,7 @@ public class TileView : View
 
         _splitterDistances [idx] = value;
         OnSplitterMoved (idx);
+        SetLayoutNeeded ();
 
         return true;
     }
@@ -1017,6 +1020,7 @@ public class TileView : View
         /// <param name="newValue"></param>
         private bool FinalisePosition (Pos oldValue, Pos newValue)
         {
+            SetLayoutNeeded ();
             if (oldValue is PosPercent)
             {
                 if (Orientation == Orientation.Horizontal)

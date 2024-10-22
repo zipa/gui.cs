@@ -272,6 +272,7 @@ public class HexView : View, IDesignable
 
             _addressWidth = value;
             SetNeedsDisplay ();
+            SetLayoutNeeded ();
         }
     }
 

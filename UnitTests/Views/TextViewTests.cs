@@ -8322,7 +8322,7 @@ Line 2.",
 
         var top = new Toplevel ();
         top.Add (tv);
-        top.LayoutSubviews ();
+        top.Layout();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -8427,7 +8427,7 @@ line.
         var top = new Toplevel ();
         top.Add (tv);
 
-        tv.LayoutSubviews ();
+        top.Layout ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (

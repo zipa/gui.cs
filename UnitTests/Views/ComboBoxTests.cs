@@ -297,6 +297,8 @@ public class ComboBoxTests (ITestOutputHelper output)
         Assert.Equal (0, cb.SelectedItem);
         Assert.Equal ("One", cb.Text);
 
+        cb.Layout ();
+
         Assert.True (
                      cb.Subviews [1]
                        .NewMouseEvent (
@@ -522,6 +524,9 @@ public class ComboBoxTests (ITestOutputHelper output)
         Assert.True (cb.IsShow);
         Assert.Equal (-1, cb.SelectedItem);
         Assert.Equal ("", cb.Text);
+
+        cb.Layout ();
+
         cb.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -897,6 +902,9 @@ Three ",
         Assert.Equal (0, cb.SelectedItem);
         Assert.Equal ("One", cb.Text);
         Assert.True (Application.RaiseKeyDownEvent (Key.CursorUp));
+
+        cb.Layout ();
+
         Assert.True (cb.IsShow);
         Assert.Equal (0, cb.SelectedItem);
         Assert.Equal ("One", cb.Text);

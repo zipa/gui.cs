@@ -14,6 +14,7 @@ public class TextFieldTests (ITestOutputHelper output)
     public void Accented_Letter_With_Three_Combining_Unicode_Chars ()
     {
         var tf = new TextField { Width = 3, Text = "ắ" };
+        tf.Layout ();
         tf.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -23,6 +24,7 @@ public class TextFieldTests (ITestOutputHelper output)
                                                      );
 
         tf.Text = "\u1eaf";
+        tf.Layout ();
         tf.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -32,6 +34,7 @@ public class TextFieldTests (ITestOutputHelper output)
                                                      );
 
         tf.Text = "\u0103\u0301";
+        tf.Layout ();
         tf.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -41,6 +44,7 @@ public class TextFieldTests (ITestOutputHelper output)
                                                      );
 
         tf.Text = "\u0061\u0306\u0301";
+        tf.Layout ();
         tf.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
