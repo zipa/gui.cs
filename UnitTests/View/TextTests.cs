@@ -705,6 +705,8 @@ w ";
         var top = new Toplevel ();
         top.Add (lbl);
         RunState rs = Application.Begin (top);
+        Application.RunIteration (ref rs);
+
         Assert.Equal (new (0, 0, 3, 1), lbl.Frame);
 
         Assert.Equal ("123 ", GetContents ());

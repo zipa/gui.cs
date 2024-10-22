@@ -156,6 +156,7 @@ public class ViewTests (ITestOutputHelper output)
         var top = new Toplevel ();
         top.Add (root);
         RunState runState = Application.Begin (top);
+        Application.RunIteration (ref runState);
 
         if (label)
         {
@@ -244,6 +245,7 @@ cccccccccccccccccccc",
         Toplevel top = new ();
         top.Add (label, view);
         RunState runState = Application.Begin (top);
+        Application.RunIteration (ref runState);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -340,6 +342,7 @@ At 0,0
         Toplevel top = new ();
         top.Add (label, view);
         RunState runState = Application.Begin (top);
+        Application.RunIteration (ref runState);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -447,7 +450,8 @@ At 0,0
 
         var top = new Toplevel ();
         top.Add (view, tv);
-        Application.Begin (top);
+        RunState runState = Application.Begin (top);
+        Application.RunIteration (ref runState);
 
         Assert.True (viewCalled);
         Assert.True (tvCalled);
@@ -554,6 +558,7 @@ At 0,0
         Toplevel top = new ();
         top.Add (label, view);
         RunState runState = Application.Begin (top);
+        Application.RunIteration (ref runState);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -598,8 +603,7 @@ At 0,0
         Toplevel top = new ();
         top.Add (label, view);
         RunState runState = Application.Begin (top);
-
-        view.Draw ();
+        Application.RunIteration (ref runState);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -648,6 +652,7 @@ At 0,0
         Toplevel top = new ();
         top.Add (label, view);
         RunState runState = Application.Begin (top);
+        Application.RunIteration (ref runState);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -693,8 +698,7 @@ At 0,0
         Toplevel top = new ();
         top.Add (label, view);
         RunState runState = Application.Begin (top);
-
-        view.Draw ();
+        Application.RunIteration (ref runState);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"

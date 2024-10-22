@@ -111,9 +111,9 @@ internal class ShadowView : View
         // Fill the rest of the rectangle - note we skip the last since vertical will draw it
         for (int i = Math.Max(0, screen.X + 1); i < screen.X + screen.Width - 1; i++)
         {
-            Driver.Move (i, screen.Y);
+            Driver?.Move (i, screen.Y);
 
-            if (i < Driver.Contents!.GetLength (1) && screen.Y < Driver.Contents.GetLength (0))
+            if (i < Driver?.Contents!.GetLength (1) && screen.Y < Driver?.Contents?.GetLength (0))
             {
                 Driver.AddRune (Driver.Contents [screen.Y, i].Rune);
             }

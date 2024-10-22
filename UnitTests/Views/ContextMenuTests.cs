@@ -138,6 +138,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         var top = new Toplevel { X = 2, Y = 2, Width = 15, Height = 4 };
         top.Add (new TextField { X = Pos.Center (), Width = 10, Text = "Test" });
         RunState rs = Application.Begin (top);
+        Application.Refresh ();
 
         Assert.Equal (new Rectangle (2, 2, 15, 4), top.Frame);
         Assert.Equal (top, Application.Top);
@@ -208,6 +209,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         var testWindow = new Window { X = 2, Y = 2, Width = 15, Height = 4 };
         testWindow.Add (new TextField { X = Pos.Center (), Width = 10, Text = "Test" });
         RunState rsDialog = Application.Begin (testWindow);
+        Application.Refresh ();
 
         Assert.Equal (new Rectangle (2, 2, 15, 4), testWindow.Frame);
 
@@ -273,6 +275,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         var dialog = new Window { X = 2, Y = 2, Width = 15, Height = 4 };
         dialog.Add (new TextField { X = Pos.Center (), Width = 10, Text = "Test" });
         RunState rs = Application.Begin (dialog);
+        Application.Refresh ();
 
         Assert.Equal (new Rectangle (2, 2, 15, 4), dialog.Frame);
         Assert.Equal (dialog, Application.Top);

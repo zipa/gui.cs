@@ -197,7 +197,7 @@ public static partial class Application // Run (Begin, Run, End, Stop)
         // DEBATE: Should Begin call Refresh (or Draw) here? It previously did.
         //   FOR: the screen has something on it after Begin is called.
         //   AGAINST: the screen is cleared and then redrawn in RunLoop. We don't want to draw twice.
-        Refresh ();
+        //Refresh ();
 
         toplevel.OnLoaded ();
 

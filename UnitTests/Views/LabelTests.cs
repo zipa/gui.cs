@@ -192,7 +192,8 @@ public class LabelTests (ITestOutputHelper output)
 
         var top = new Toplevel ();
         top.Add (label);
-        Application.Begin (top);
+        RunState runState = Application.Begin (top);
+        Application.RunIteration (ref runState);
 
         Assert.False (label.TextFormatter.FillRemaining);
         Assert.False (tf1.FillRemaining);
@@ -243,6 +244,7 @@ This TextFormatter (tf2) is rewritten.                                 ",
         var top = new Toplevel ();
         top.Add (label);
         Application.Begin (top);
+        Application.Refresh ();
 
         Assert.Equal (new (0, 0, 16, 1), label.Frame);
 
@@ -263,7 +265,7 @@ Demo Simple Rune
         var top = new Toplevel ();
         top.Add (label);
         Application.Begin (top);
-
+        Application.Refresh ();
         Assert.NotNull (label.Width);
         Assert.NotNull (label.Height);
 
@@ -299,6 +301,7 @@ e
         var top = new Toplevel ();
         top.Add (label);
         Application.Begin (top);
+        Application.Refresh ();
 
         var expected = @"
 デ
@@ -469,6 +472,7 @@ e
         var top = new Toplevel ();
         top.Add (label);
         Application.Begin (top);
+        Application.Refresh ();
 
         Assert.Equal (new (0, 0, 6, 3), label.Frame);
         Assert.Equal (new (0, 0, 4, 1), label.Viewport);
@@ -492,7 +496,7 @@ e
         var top = new Toplevel ();
         top.Add (label);
         Application.Begin (top);
-
+        Application.Refresh ();
         Assert.Equal (new (0, 0, 6, 2), label.Frame);
         Assert.Equal (new (0, 0, 4, 1), label.Viewport);
         Application.Begin (top);

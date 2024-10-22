@@ -569,6 +569,7 @@ public class MenuBarTests (ITestOutputHelper output)
         }
 
         RunState rsDialog = Application.Begin (dialog);
+        Application.RunIteration (ref rsDialog);
 
         Assert.Equal (new (2, 2, 15, 4), dialog.Frame);
 
@@ -594,8 +595,7 @@ public class MenuBarTests (ITestOutputHelper output)
 
         Assert.Equal ("File", menu.Menus [0].Title);
         menu.OpenMenu ();
-        var firstIteration = false;
-        Application.RunIteration (ref rsDialog, firstIteration);
+        Application.RunIteration (ref rsDialog);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -619,10 +619,9 @@ public class MenuBarTests (ITestOutputHelper output)
 
         Application.RaiseMouseEvent (new () { ScreenPosition = new (20, 5), Flags = MouseFlags.Button1Clicked });
 
-        firstIteration = false;
-
         // Need to fool MainLoop into thinking it's running
         Application.MainLoop.Running = true;
+        bool firstIteration = true;
         Application.RunIteration (ref rsDialog, firstIteration);
         Assert.Equal (items [0], menu.Menus [0].Title);
 
@@ -652,15 +651,13 @@ public class MenuBarTests (ITestOutputHelper output)
 
             Application.RaiseMouseEvent (new () { ScreenPosition = new (20, 5 + i), Flags = MouseFlags.Button1Clicked });
 
-            firstIteration = false;
-            Application.RunIteration (ref rsDialog, firstIteration);
+            Application.RunIteration (ref rsDialog);
             Assert.Equal (items [i], menu.Menus [0].Title);
         }
 
         ((FakeDriver)Application.Driver!).SetBufferSize (20, 15);
         menu.OpenMenu ();
-        firstIteration = false;
-        Application.RunIteration (ref rsDialog, firstIteration);
+        Application.RunIteration (ref rsDialog);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -781,6 +778,7 @@ public class MenuBarTests (ITestOutputHelper output)
         }
 
         RunState rs = Application.Begin (dialog);
+        Application.RunIteration (ref rs);
 
         Assert.Equal (new (2, 2, 15, 4), dialog.Frame);
 
@@ -795,8 +793,7 @@ public class MenuBarTests (ITestOutputHelper output)
 
         Assert.Equal ("File", menu.Menus [0].Title);
         menu.OpenMenu ();
-        var firstIteration = false;
-        Application.RunIteration (ref rs, firstIteration);
+        Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -815,11 +812,9 @@ public class MenuBarTests (ITestOutputHelper output)
 
         Application.RaiseMouseEvent (new () { ScreenPosition = new (20, 5), Flags = MouseFlags.Button1Clicked });
 
-        firstIteration = false;
-
         // Need to fool MainLoop into thinking it's running
         Application.MainLoop.Running = true;
-        Application.RunIteration (ref rs, firstIteration);
+        Application.RunIteration (ref rs);
         Assert.Equal (items [0], menu.Menus [0].Title);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -837,15 +832,13 @@ public class MenuBarTests (ITestOutputHelper output)
 
             Application.RaiseMouseEvent (new () { ScreenPosition = new (20, 5 + i), Flags = MouseFlags.Button1Clicked });
 
-            firstIteration = false;
-            Application.RunIteration (ref rs, firstIteration);
+            Application.RunIteration (ref rs);
             Assert.Equal (items [i], menu.Menus [0].Title);
         }
 
         ((FakeDriver)Application.Driver!).SetBufferSize (20, 15);
         menu.OpenMenu ();
-        firstIteration = false;
-        Application.RunIteration (ref rs, firstIteration);
+        Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -1857,7 +1850,8 @@ wo
         };
         win.Add (menu);
         ((FakeDriver)Application.Driver!).SetBufferSize (40, 8);
-        Application.Begin (win);
+        RunState rs = Application.Begin (win);
+        Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -1873,7 +1867,7 @@ wo
                                                      );
 
         Assert.True (win.NewKeyDownEvent (menu.Key));
-        win.Draw ();
+        Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -1889,7 +1883,7 @@ wo
                                                      );
 
         Assert.True (menu.NewKeyDownEvent (Key.CursorRight));
-        Application.Refresh ();
+        Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -1905,7 +1899,7 @@ wo
                                                      );
 
         Assert.True (menu._openMenu.NewKeyDownEvent (Key.CursorRight));
-        win.Draw ();
+        Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -1921,7 +1915,7 @@ wo
                                                      );
 
         Assert.True (menu._openMenu.NewKeyDownEvent (Key.CursorRight));
-        win.Draw ();
+        Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -1947,6 +1941,7 @@ wo
         Application.Iteration += (s, a) =>
                                  {
                                      Toplevel top = Application.Top;
+                                     Application.Refresh();
 
                                      TestHelpers.AssertDriverContentsWithFrameAre (
                                                                                    @"

@@ -57,8 +57,8 @@ public class AppendAutocompleteTests (ITestOutputHelper output)
 
         // Should reappear when you press next letter
         Application.Driver?.SendKeys ('i', ConsoleKey.I, false, false, false);
-        tf.Draw ();
         tf.PositionCursor ();
+        tf.Draw ();
         TestHelpers.AssertDriverContentsAre ("fish", output);
         Assert.Equal ("fi", tf.Text);
         Application.Top.Dispose ();

@@ -738,7 +738,6 @@ public class UICatalogApp
                                    }
 
                                    ColorScheme = Colors.ColorSchemes [_topLevelColorScheme];
-                                   Application.Top!.SetNeedsDisplay ();
                                };
                 item.ShortcutKey = ((Key)sc.Key [0].ToString ().ToLower ()).WithCtrl;
                 schemeMenuItems.Add (item);
@@ -862,7 +861,6 @@ public class UICatalogApp
                                    }
 
                                    Diagnostics = _diagnosticFlags;
-                                   Application.Top!.SetNeedsDisplay ();
                                };
                 menuItems.Add (item);
             }

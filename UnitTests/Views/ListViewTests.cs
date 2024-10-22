@@ -305,6 +305,7 @@ public class ListViewTests (ITestOutputHelper output)
         var top = new Toplevel ();
         top.Add (lv);
         Application.Begin (top);
+        Application.Refresh ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -342,6 +343,7 @@ Item 6",
         var top = new Toplevel ();
         top.Add (lv);
         Application.Begin (top);
+        Application.Refresh ();
 
         Assert.Equal ("Second ", GetContents (0));
         Assert.Equal (new (' ', 7), GetContents (1));
@@ -723,6 +725,7 @@ Item 6",
         var top = new Toplevel ();
         top.Add (lv);
         Application.Begin (top);
+        Application.Refresh ();
 
         Assert.Equal (new (1), lv.Border.Thickness);
         Assert.Equal (-1, lv.SelectedItem);
@@ -796,6 +799,7 @@ Item 6",
         var top = new Toplevel ();
         top.Add (lv);
         Application.Begin (top);
+        Application.Refresh ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"

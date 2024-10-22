@@ -46,6 +46,9 @@ public class DialogTests
         dlg.Border.Thickness = new (1, 0, 1, 0);
         runstate = Begin (dlg);
         var buttonRow = $"{CM.Glyphs.VLine}    {btn1}     {CM.Glyphs.VLine}";
+
+        RunIteration (ref runstate);
+
         TestHelpers.AssertDriverContentsWithFrameAre ($"{buttonRow}", _output);
 
         // Now add a second button
@@ -70,6 +73,9 @@ public class DialogTests
         // Create with no top or bottom border to simplify testing button layout (no need to account for title etc..)
         dlg.Border.Thickness = new (1, 0, 1, 0);
         runstate = Begin (dlg);
+
+        RunIteration (ref runstate);
+
         buttonRow = $"{CM.Glyphs.VLine}{btn1}         {CM.Glyphs.VLine}";
         TestHelpers.AssertDriverContentsWithFrameAre ($"{buttonRow}", _output);
 
@@ -94,6 +100,9 @@ public class DialogTests
         // Create with no top or bottom border to simplify testing button layout (no need to account for title etc..)
         dlg.Border.Thickness = new (1, 0, 1, 0);
         runstate = Begin (dlg);
+
+        RunIteration (ref runstate);
+
         buttonRow = $"{CM.Glyphs.VLine}{new (' ', width - btn1.Length - 2)}{btn1}{CM.Glyphs.VLine}";
         TestHelpers.AssertDriverContentsWithFrameAre ($"{buttonRow}", _output);
 
@@ -119,6 +128,8 @@ public class DialogTests
         // Create with no top or bottom border to simplify testing button layout (no need to account for title etc..)
         dlg.Border.Thickness = new (1, 0, 1, 0);
         runstate = Begin (dlg);
+        RunIteration (ref runstate);
+
         buttonRow = $"{CM.Glyphs.VLine}{btn1}{new (' ', width - btn1.Length - 2)}{CM.Glyphs.VLine}";
         TestHelpers.AssertDriverContentsWithFrameAre ($"{buttonRow}", _output);
 
@@ -1027,6 +1038,8 @@ public class DialogTests
                          }
                          else if (iterations == 1)
                          {
+                             Refresh ();
+
                              // BUGBUG: This seems wrong; is it a bug in Dim.Percent(85)?? No
                              _ = TestHelpers.AssertDriverContentsWithFrameAre (expected, _output);
                          }
@@ -1092,13 +1105,23 @@ public class DialogTests
                      {
                          iterations++;
 
-                         if (iterations == 0)
+                         switch (iterations)
                          {
-                             Assert.False (btn1.NewKeyDownEvent (Key.Space));
-                         }
-                         else if (iterations == 1)
-                         {
-                             expected = @$"
+                             case 0:
+                                 Top.SetLayoutNeeded();
+                                 Top.SetNeedsDisplay();
+                                 Refresh ();
+
+                                 break;
+
+                             case 1:
+                                 Assert.False (btn1.NewKeyDownEvent (Key.Space));
+
+                                 break;
+                             case 2:
+                                 Refresh ();
+
+                                 expected = @$"
   ┌───────────────────────┐
   │                       │
   │                       │
@@ -1107,14 +1130,16 @@ public class DialogTests
   │                       │
   │{CM.Glyphs.LeftBracket} Show Sub {CM.Glyphs.RightBracket} {CM.Glyphs.LeftBracket} Close {CM.Glyphs.RightBracket} │
   └───────────────────────┘";
-                             TestHelpers.AssertDriverContentsWithFrameAre (expected, _output);
+                                 TestHelpers.AssertDriverContentsWithFrameAre (expected, _output);
 
-                             Assert.False (btn2.NewKeyDownEvent (Key.Space));
-                         }
-                         else if (iterations == 2)
-                         {
-                             TestHelpers.AssertDriverContentsWithFrameAre (
-                                                                           @$"
+                                 Assert.False (btn2.NewKeyDownEvent (Key.Space));
+
+                                 break;
+                             case 3:
+                                 Refresh ();
+
+                                 TestHelpers.AssertDriverContentsWithFrameAre (
+                                                                               @$"
   ┌───────────────────────┐
   │  ┌──────────────────┐ │
   │  │ya                │ │
@@ -1123,29 +1148,33 @@ public class DialogTests
   │  └──────────────────┘ │
   │{CM.Glyphs.LeftBracket} Show Sub {CM.Glyphs.RightBracket} {CM.Glyphs.LeftBracket} Close {CM.Glyphs.RightBracket} │
   └───────────────────────┘",
-                                                                           _output
-                                                                          );
+                                                                               _output
+                                                                              );
 
-                             Assert.False (Top!.NewKeyDownEvent (Key.Enter));
-                         }
-                         else if (iterations == 3)
-                         {
-                             TestHelpers.AssertDriverContentsWithFrameAre (expected, _output);
+                                 Assert.False (Top!.NewKeyDownEvent (Key.Enter));
 
-                             Assert.False (btn3.NewKeyDownEvent (Key.Space));
-                         }
-                         else if (iterations == 4)
-                         {
-                             TestHelpers.AssertDriverContentsWithFrameAre ("", _output);
+                                 break;
+                             case 4:
+                                 Refresh ();
 
-                             RequestStop ();
+                                 TestHelpers.AssertDriverContentsWithFrameAre (expected, _output);
+
+                                 Assert.False (btn3.NewKeyDownEvent (Key.Space));
+
+                                 break;
+                             case 5:
+                                 TestHelpers.AssertDriverContentsWithFrameAre ("", _output);
+
+                                 RequestStop ();
+
+                                 break;
                          }
                      };
 
         Run ().Dispose ();
         Shutdown ();
 
-        Assert.Equal (4, iterations);
+        Assert.Equal (5, iterations);
     }
 
     [Fact]
