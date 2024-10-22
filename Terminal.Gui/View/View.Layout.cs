@@ -167,7 +167,7 @@ public partial class View // Layout APIs
 
     #region Frame
 
-    private Rectangle _frame;
+    private Rectangle? _frame;
 
     /// <summary>Gets or sets the absolute location and dimension of the view.</summary>
     /// <value>
@@ -199,7 +199,7 @@ public partial class View // Layout APIs
             {
                 //Debug.WriteLine("Frame_get with _layoutNeeded");
             }
-            return _frame;
+            return _frame ?? Rectangle.Empty;
         }
         set
         {
@@ -207,10 +207,10 @@ public partial class View // Layout APIs
             if (SetFrame (value with { Width = Math.Max (value.Width, 0), Height = Math.Max (value.Height, 0) }))
             {
                 // If Frame gets set, set all Pos/Dim to Absolute values.
-                _x = _frame.X;
-                _y = _frame.Y;
-                _width = _frame.Width;
-                _height = _frame.Height;
+                _x = _frame!.Value.X;
+                _y = _frame!.Value.Y;
+                _width = _frame!.Value.Width;
+                _height = _frame!.Value.Height;
 
                 // Implicit layout is ok here because we are setting the Frame directly.
                 Layout ();
@@ -308,6 +308,18 @@ public partial class View // Layout APIs
         return frame;
     }
 
+    // helper for X, Y, Width, Height setters to ensure consistency
+    private void PosDimSet ()
+    {
+        SetLayoutNeeded ();
+
+        if (_x is PosAbsolute && _y is PosAbsolute && _width is DimAbsolute && _height is DimAbsolute)
+        {
+            // Implicit layout is ok here because all Pos/Dim are Absolute values.
+            Layout ();
+        }
+    }
+
     private Pos _x = Pos.Absolute (0);
 
     /// <summary>Gets or sets the X position for the view (the column).</summary>
@@ -346,20 +358,8 @@ public partial class View // Layout APIs
 
             _x = value ?? throw new ArgumentNullException (nameof (value), @$"{nameof (X)} cannot be null");
 
-            SetLayoutNeeded ();
-
-            if (IsAbsoluteLayout ())
-            {
-                // Implicit layout is ok here because all Pos/Dim are Absolute values.
-                Layout ();
-                SetLayoutNeeded ();
-            }
+            PosDimSet ();
         }
-    }
-
-    private bool IsAbsoluteLayout ()
-    {
-        return _x is PosAbsolute && _y is PosAbsolute && _width is DimAbsolute && _height is DimAbsolute;
     }
 
     private Pos _y = Pos.Absolute (0);
@@ -400,15 +400,7 @@ public partial class View // Layout APIs
             }
 
             _y = value ?? throw new ArgumentNullException (nameof (value), @$"{nameof (Y)} cannot be null");
-
-            SetLayoutNeeded ();
-
-            if (IsAbsoluteLayout ())
-            {
-                // Implicit layout is ok here because all Pos/Dim are Absolute values.
-                Layout ();
-                SetLayoutNeeded ();
-            }
+            PosDimSet ();
         }
     }
 
@@ -459,14 +451,7 @@ public partial class View // Layout APIs
             // Reset TextFormatter - Will be recalculated in SetTextFormatterSize
             TextFormatter.ConstrainToHeight = null;
 
-            SetLayoutNeeded ();
-
-            if (IsAbsoluteLayout ())
-            {
-                // Implicit layout is ok here because all Pos/Dim are Absolute values.
-                Layout ();
-                SetLayoutNeeded ();
-            }
+            PosDimSet ();
         }
     }
 
@@ -517,15 +502,7 @@ public partial class View // Layout APIs
 
             // Reset TextFormatter - Will be recalculated in SetTextFormatterSize
             TextFormatter.ConstrainToWidth = null;
-
-            SetLayoutNeeded ();
-
-            if (IsAbsoluteLayout ())
-            {
-                // Implicit layout is ok here because all Pos/Dim are Absolute values.
-                Layout ();
-                SetLayoutNeeded ();
-            }
+            PosDimSet ();
         }
     }
 

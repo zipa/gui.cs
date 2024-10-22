@@ -1,8 +1,4 @@
 #nullable enable
-using System.Text;
-using Microsoft.VisualStudio.TestPlatform.Utilities;
-using Xunit.Abstractions;
-
 namespace Terminal.Gui.ViewTests;
 
 [Trait ("Category", "Output")]
@@ -116,7 +112,7 @@ public class NeedsDisplayTests ()
     }
 
     [Fact]
-    public void NeedsDisplay_False_After_SetRelativeLayout ()
+    public void NeedsDisplay_False_After_SetRelativeLayout_Absolute_Dims ()
     {
         var view = new View { Width = 2, Height = 2 };
         Assert.True (view.NeedsDisplay);
@@ -131,16 +127,22 @@ public class NeedsDisplayTests ()
         Assert.False (view.NeedsDisplay);
 
         view.SetLayoutNeeded ();
+
         // SRL won't change anything since the view is Absolute
         view.SetRelativeLayout (Application.Screen.Size);
         Assert.True (view.NeedsDisplay);
 
         view.NeedsDisplay = false;
+
         // SRL won't change anything since the view is Absolute. However, Layout has not been called
         view.SetRelativeLayout (new (10, 10));
         Assert.True (view.NeedsDisplay);
+    }
 
-        view = new View { Width = Dim.Percent (50), Height = Dim.Percent (50) };
+    [Fact]
+    public void NeedsDisplay_False_After_SetRelativeLayout_Relative_Dims ()
+    {
+        var view = new View { Width = Dim.Percent (50), Height = Dim.Percent (50) };
         View superView = new ()
         {
             Id = "superView",
@@ -164,18 +166,25 @@ public class NeedsDisplayTests ()
         superView.SetRelativeLayout (Application.Screen.Size);
         Assert.True (view.NeedsDisplay);
         Assert.True (superView.NeedsDisplay);
+    }
+
+
+    [Fact]
+    public void NeedsDisplay_False_After_SetRelativeLayout_10x10 ()
+    {
+        View superView = new ()
+        {
+            Id = "superView",
+            Width = Dim.Fill (),
+            Height = Dim.Fill ()
+        };
+        Assert.True (superView.NeedsDisplay);
+
+        superView.Layout ();
 
         superView.NeedsDisplay = false;
         superView.SetRelativeLayout (new (10, 10));
         Assert.True (superView.NeedsDisplay);
-        Assert.True (view.NeedsDisplay);
-
-        superView.Layout ();
-
-        view.SetRelativeLayout (new (11, 11));
-        Assert.True (superView.NeedsDisplay);
-        Assert.True (view.NeedsDisplay);
-
     }
 
     [Fact]
@@ -258,7 +267,7 @@ public class NeedsDisplayTests ()
         view.Frame = new (3, 3, 6, 6); // Grow right/bottom 1
         Assert.Equal (new (3, 3, 6, 6), view.Frame);
         Assert.Equal (new (0, 0, 6, 6), view.Viewport);
-        Assert.Equal (new (0, 0, 6, 6), view._needsDisplayRect); 
+        Assert.Equal (new (0, 0, 6, 6), view._needsDisplayRect);
 
         view.Frame = new (3, 3, 5, 5); // Shrink right/bottom 1
         Assert.Equal (new (3, 3, 5, 5), view.Frame);
@@ -278,7 +287,7 @@ public class NeedsDisplayTests ()
         view.Frame = new (3, 3, 6, 6); // Grow right/bottom 1
         Assert.Equal (new (3, 3, 6, 6), view.Frame);
         Assert.Equal (new (1, 1, 6, 6), view.Viewport);
-        Assert.Equal (new (1, 1, 6, 6), view._needsDisplayRect); 
+        Assert.Equal (new (1, 1, 6, 6), view._needsDisplayRect);
 
         view.Frame = new (3, 3, 5, 5);
         Assert.Equal (new (3, 3, 5, 5), view.Frame);

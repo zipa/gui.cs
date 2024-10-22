@@ -994,9 +994,10 @@ public partial class DimAutoTests (ITestOutputHelper output)
     }
 
     [Fact]
+    [SetupFakeDriver]
     public void DimAutoStyle_Content_Pos_AnchorEnd_Locates_Correctly ()
     {
-        Application.SetScreenSize (new Size (10, 10));
+        (((FakeDriver)Application.Driver)!).SetBufferSize(10,10);
 
         DimAutoTestView view = new (Auto (DimAutoStyle.Content), Auto (DimAutoStyle.Content));
 

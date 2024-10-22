@@ -62,7 +62,8 @@ public class Adornment : View
             if (current != _thickness)
             {
                 Parent?.SetAdornmentFrames ();
-                Parent?.SetLayoutNeeded ();
+                SetLayoutNeeded ();
+                //Parent?.SetLayoutNeeded ();
 
                 OnThicknessChanged ();
             }
