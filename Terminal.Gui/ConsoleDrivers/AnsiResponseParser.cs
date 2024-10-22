@@ -8,7 +8,7 @@ namespace Terminal.Gui;
 public class AnsiRequestScheduler(IAnsiResponseParser parser)
 {
     public static int sent = 0;
-    public List<AnsiEscapeSequenceRequest> Requsts = new  ();
+    public List<AnsiEscapeSequenceRequest> Requests = new  ();
 
     private ConcurrentDictionary<string, DateTime> _lastSend = new ();
 
@@ -30,25 +30,25 @@ public class AnsiRequestScheduler(IAnsiResponseParser parser)
         }
         else
         {
-            Requsts.Add (request);
+            Requests.Add (request);
             return false;
         }
     }
 
 
     /// <summary>
-    /// Identifies and runs any <see cref="Requsts"/> that can be sent based on the
+    /// Identifies and runs any <see cref="Requests"/> that can be sent based on the
     /// current outstanding requests of the parser.
     /// </summary>
     /// <returns><see langword="true"/> if a request was found and run. <see langword="false"/>
     /// if no outstanding requests or all have existing outstanding requests underway in parser.</returns>
     public bool RunSchedule ()
     {
-        var opportunity = Requsts.FirstOrDefault (CanSend);
+        var opportunity = Requests.FirstOrDefault (CanSend);
 
         if (opportunity != null)
         {
-            Requsts.Remove (opportunity);
+            Requests.Remove (opportunity);
             Send (opportunity);
 
             return true;

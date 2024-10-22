@@ -392,6 +392,14 @@ public class FakeDriver : ConsoleDriver
         MockKeyPressedHandler (new ConsoleKeyInfo (keyChar, key, shift, alt, control));
     }
 
+    private AnsiResponseParser _parser = new ();
+
+    /// <inheritdoc />
+    public override IAnsiResponseParser GetParser () => _parser;
+
+    /// <inheritdoc />
+    public override void RawWrite (string str) { throw new NotImplementedException (); }
+
     public void SetBufferSize (int width, int height)
     {
         FakeConsole.SetBufferSize (width, height);

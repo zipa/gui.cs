@@ -611,18 +611,10 @@ public abstract class ConsoleDriver : IConsoleDriver
     #endregion
 
     /// <inheritdoc />
-    public virtual IAnsiResponseParser GetParser ()
-    {
-        // TODO: implement in other drivers
-        throw new NotSupportedException ();
-    }
+    public abstract IAnsiResponseParser GetParser ();
 
     /// <inheritdoc />
-    public virtual void RawWrite (string str)
-    {
-        // TODO: implement in other drivers
-        throw new NotSupportedException ();
-    }
+    public abstract void RawWrite (string str);
 }
 
 /// <summary>
