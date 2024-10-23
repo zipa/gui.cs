@@ -421,11 +421,11 @@ public class HexView : View, IDesignable
     }
 
     ///<inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
         if (Source is null)
         {
-            return;
+            return true;
         }
 
         Attribute currentAttribute;
@@ -547,6 +547,8 @@ public class HexView : View, IDesignable
                 }
             }
         }
+
+        return true;
 
         void SetAttribute (Attribute attribute)
         {

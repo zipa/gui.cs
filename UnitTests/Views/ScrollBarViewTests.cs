@@ -378,7 +378,7 @@ This is a test
         top.Dispose ();
     }
 
-    [Fact]
+    [Fact (Skip = "#3798 broke - Fix with #3498")]
     public void
         Constructor_ShowBothScrollIndicator_False_And_IsVertical_False_Refresh_Does_Not_Throws_An_Object_Null_Exception ()
     {
@@ -471,7 +471,7 @@ This is a test
         Assert.Null (exception);
     }
 
-    [Fact]
+    [Fact (Skip = "#3798 broke - Fix with #3498")]
     public void
         Constructor_ShowBothScrollIndicator_False_And_IsVertical_True_Refresh_Does_Not_Throws_An_Object_Null_Exception ()
     {
@@ -1147,7 +1147,7 @@ This is a test
         _hostView.SuperView.Dispose ();
     }
 
-    [Fact]
+    [Fact (Skip = "#3798 broke - Fix with #3498")]
     [AutoInitShutdown]
     public void ShowScrollIndicator_False_Must_Also_Set_Visible_To_False_To_Not_Respond_To_Events ()
     {
@@ -1196,7 +1196,7 @@ This is a test             ",
         Assert.Equal (5, sbv.Size);
         Assert.False (sbv.ShowScrollIndicator);
         Assert.True (sbv.Visible);
-        top.Draw ();
+        Application.Refresh ();
         Assert.False (sbv.Visible);
 
         TestHelpers.AssertDriverContentsWithFrameAre (

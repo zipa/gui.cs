@@ -446,7 +446,7 @@ public class ScrollBarView : View
     public virtual void OnChangedPosition () { ChangedPosition?.Invoke (this, EventArgs.Empty); }
 
     /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
         if (ColorScheme is null || ((!ShowScrollIndicator || Size == 0) && AutoHideScrollBars && Visible))
         {
@@ -455,12 +455,12 @@ public class ScrollBarView : View
                 ShowHideScrollBars (false);
             }
 
-            return;
+            return false;
         }
 
         if (Size == 0 || (_vertical && Viewport.Height == 0) || (!_vertical && Viewport.Width == 0))
         {
-            return;
+            return false;
         }
 
         Driver.SetAttribute (Host.HasFocus ? ColorScheme.Focus : GetNormalColor ());
@@ -469,7 +469,7 @@ public class ScrollBarView : View
         {
             if (Viewport.Right < Viewport.Width - 1)
             {
-                return;
+                return true;
             }
 
             int col = Viewport.Width - 1;
@@ -577,7 +577,7 @@ public class ScrollBarView : View
         {
             if (Viewport.Bottom < Viewport.Height - 1)
             {
-                return;
+                return true;
             }
 
             int row = Viewport.Height - 1;
@@ -663,6 +663,8 @@ public class ScrollBarView : View
                 Driver.AddRune (Glyphs.RightArrow);
             }
         }
+
+        return false;
     }
 
 

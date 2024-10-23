@@ -64,7 +64,7 @@ public class Line : View, IOrientation
     }
 
     /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
         LineCanvas lc = LineCanvas;
 
@@ -98,5 +98,6 @@ public class Line : View, IOrientation
                     Orientation,
                     BorderStyle
                    );
+        return true;
     }
 }

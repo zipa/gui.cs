@@ -20,18 +20,14 @@ public class TileViewTests
 
         top.Tiles.ElementAt (0).ContentView.Add (new Label { Text = "bleh" });
         top.Tiles.ElementAt (1).ContentView.Add (new Label { Text = "blah" });
-        top.BeginInit ();
-        top.EndInit ();
-        top.LayoutSubviews ();
+        top.Layout ();
 
         tileView.Tiles.ElementAt (1).ContentView.Add (new Label { Text = "Hello" });
         tileView.ColorScheme = new ColorScheme ();
         top.ColorScheme = new ColorScheme ();
 
-        tileView.BeginInit ();
-        tileView.EndInit ();
-        tileView.LayoutSubviews ();
-
+        top.Layout ();
+        tileView.Layout ();
         tileView.Draw ();
 
         var looksLike =

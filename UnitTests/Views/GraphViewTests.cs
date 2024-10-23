@@ -1360,6 +1360,7 @@ public class LegendTests
         legend.BorderStyle = LineStyle.None;
 
         gv.Annotations.Add (legend);
+
         gv.Draw ();
 
         var expected =

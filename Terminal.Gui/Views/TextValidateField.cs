@@ -553,14 +553,14 @@ namespace Terminal.Gui
         }
 
         /// <inheritdoc/>
-        public override void OnDrawContent (Rectangle viewport)
+        protected override bool OnDrawContent (Rectangle viewport)
         {
             if (_provider is null)
             {
                 Move (0, 0);
                 Driver?.AddStr ("Error: ITextValidateProvider not set!");
 
-                return;
+                return true;
             }
 
             Color bgcolor = !IsValid ? new Color (Color.BrightRed) : ColorScheme.Focus.Background;
@@ -594,6 +594,8 @@ namespace Terminal.Gui
             {
                 Driver?.AddRune ((Rune)' ');
             }
+
+            return true;
         }
 
         /// <inheritdoc/>

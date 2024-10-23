@@ -127,6 +127,17 @@ public class LegendAnnotation : View, IAnnotation
     /// <summary>Returns false i.e. Legends render after series</summary>
     public bool BeforeSeries => false;
 
+    // BUGBUG: Legend annotations are subviews. But for some reason the are rendered directly in OnDrawContent 
+    // BUGBUG: instead of just being normal subviews. They get rendered as blank rects and thus we disable subview drawing.
+    /// <inheritdoc />
+    protected override bool OnDrawText (Rectangle viewport) { return true; }
+
+    // BUGBUG: Legend annotations are subviews. But for some reason the are rendered directly in OnDrawContent 
+    // BUGBUG: instead of just being normal subviews. They get rendered as blank rects and thus we disable subview drawing.
+    /// <inheritdoc />
+    protected override bool OnClearViewport (Rectangle viewport) { return true; }
+
+
     /// <summary>Draws the Legend and all entries into the area within <see cref="View.Viewport"/></summary>
     /// <param name="graph"></param>
     public void Render (GraphView graph)

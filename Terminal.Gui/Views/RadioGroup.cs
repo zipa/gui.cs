@@ -360,10 +360,8 @@ public class RadioGroup : View, IDesignable, IOrientation
     }
 
     /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
-        base.OnDrawContent (viewport);
-
         Driver?.SetAttribute (GetNormalColor ());
 
         for (var i = 0; i < _radioLabels.Count; i++)
@@ -438,6 +436,7 @@ public class RadioGroup : View, IDesignable, IOrientation
                 DrawHotString (rl, HasFocus && i == Cursor);
             }
         }
+        return true;
     }
 
     #region IOrientation

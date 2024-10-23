@@ -36,10 +36,16 @@ internal class ShadowView : View
         return base.GetNormalColor ();
     }
 
-    /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    /// <inheritdoc />
+    protected override bool OnClearViewport (Rectangle viewport)
     {
-        //base.OnDrawContent (viewport);
+        // Prevent clearing (so we can have transparency)
+        return true;
+    }
+
+    /// <inheritdoc/>
+    protected override bool OnDrawContent (Rectangle viewport)
+    {
         switch (ShadowStyle)
         {
             case ShadowStyle.Opaque:
@@ -72,6 +78,8 @@ internal class ShadowView : View
 
                 break;
         }
+
+        return true;
     }
 
     /// <summary>

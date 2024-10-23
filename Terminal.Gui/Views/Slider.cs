@@ -775,13 +775,13 @@ public class Slider<T> : View, IOrientation
     #region Drawing
 
     /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
         // TODO: make this more surgical to reduce repaint
 
         if (_options is null || _options.Count == 0)
         {
-            return;
+            return true;
         }
 
         // Draw Slider
@@ -797,6 +797,8 @@ public class Slider<T> : View, IOrientation
         {
             AddRune (_moveRenderPosition.Value.X, _moveRenderPosition.Value.Y, Style.DragChar.Rune);
         }
+
+        return true;
     }
 
     private string AlignText (string text, int width, Alignment alignment)

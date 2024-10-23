@@ -657,11 +657,11 @@ internal class CharMap : View
     private static int RowWidth => RowLabelWidth + COLUMN_WIDTH * 16;
     public event EventHandler<ListViewItemEventArgs> Hover;
 
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
         if (viewport.Height == 0 || viewport.Width == 0)
         {
-            return;
+            return true;
         }
 
         Clear ();
@@ -799,6 +799,8 @@ internal class CharMap : View
                 Driver.AddStr (new (' ', RowLabelWidth));
             }
         }
+
+        return true;
     }
 
     public override Point? PositionCursor ()

@@ -931,7 +931,7 @@ public class TextField : View
     }
 
     /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
         _isDrawing = true;
 
@@ -1010,6 +1010,8 @@ public class TextField : View
 
         DrawAutocomplete ();
         _isDrawing = false;
+
+        return true;
     }
 
     /// <inheritdoc/>

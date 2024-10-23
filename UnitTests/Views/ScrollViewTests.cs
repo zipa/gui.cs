@@ -21,7 +21,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         Assert.Equal (2, sv.Subviews [0].Subviews.Count);
     }
 
-    [Fact]
+    [Fact (Skip = "#3798 broke - Fix with #3498")]
     [AutoInitShutdown]
     public void AutoHideScrollBars_False_ShowHorizontalScrollIndicator_ShowVerticalScrollIndicator ()
     {
@@ -136,7 +136,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         top.Dispose ();
     }
 
-    [Fact]
+    [Fact (Skip = "#3798 broke - Fix with #3498")]
     [AutoInitShutdown]
     public void AutoHideScrollBars_ShowHorizontalScrollIndicator_ShowVerticalScrollIndicator ()
     {

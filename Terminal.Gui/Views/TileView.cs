@@ -13,9 +13,7 @@ public class TileView : View
     private TileView _parentTileView;
 
     /// <summary>Creates a new instance of the <see cref="TileView"/> class with 2 tiles (i.e. left and right).</summary>
-    public TileView () : this (2)
-    {
-    }
+    public TileView () : this (2) { }
 
     /// <summary>Creates a new instance of the <see cref="TileView"/> class with <paramref name="tiles"/> number of tiles.</summary>
     /// <param name="tiles"></param>
@@ -58,7 +56,9 @@ public class TileView : View
 
             _orientation = value;
 
+            SetNeedsDisplay ();
             SetLayoutNeeded ();
+
         }
     }
 
@@ -150,7 +150,9 @@ public class TileView : View
             }
         }
 
+        SetNeedsDisplay ();
         SetLayoutNeeded ();
+
         return toReturn;
     }
 
@@ -172,16 +174,17 @@ public class TileView : View
     // QUESTION: Does this need to be fixed before events are refactored?
     /// <summary>Overridden so no Frames get drawn</summary>
     /// <returns></returns>
-    public override bool OnDrawAdornments () { return false; }
+    protected override bool OnDrawAdornments () { return true; }
 
     /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnRenderLineCanvas () { return false; }
+
+    /// <inheritdoc/>
+    protected override bool OnDrawComplete (Rectangle viewport)
     {
         Driver?.SetAttribute (ColorScheme.Normal);
 
-        Clear ();
-
-        base.OnDrawContent (viewport);
+        //Clear ();
 
         var lc = new LineCanvas ();
 
@@ -196,14 +199,14 @@ public class TileView : View
                 lc.AddLine (Point.Empty, Viewport.Height, Orientation.Vertical, LineStyle);
 
                 lc.AddLine (
-                            new Point (Viewport.Width - 1, Viewport.Height - 1),
+                            new (Viewport.Width - 1, Viewport.Height - 1),
                             -Viewport.Width,
                             Orientation.Horizontal,
                             LineStyle
                            );
 
                 lc.AddLine (
-                            new Point (Viewport.Width - 1, Viewport.Height - 1),
+                            new (Viewport.Width - 1, Viewport.Height - 1),
                             -Viewport.Height,
                             Orientation.Vertical,
                             LineStyle
@@ -271,6 +274,8 @@ public class TileView : View
                 AddRune (renderAt.X + i, renderAt.Y, (Rune)title [i]);
             }
         }
+
+        return true;
     }
 
     //// BUGBUG: Why is this not handled by a key binding???
@@ -308,8 +313,8 @@ public class TileView : View
     /// <param name="count"></param>
     public void RebuildForTileCount (int count)
     {
-        _tiles = new List<Tile> ();
-        _splitterDistances = new List<Pos> ();
+        _tiles = new ();
+        _splitterDistances = new ();
 
         if (_splitterLines is { })
         {
@@ -319,7 +324,7 @@ public class TileView : View
             }
         }
 
-        _splitterLines = new List<TileViewLineView> ();
+        _splitterLines = new ();
 
         RemoveAll ();
 
@@ -352,6 +357,7 @@ public class TileView : View
             _tiles.Add (tile);
             tile.ContentView.Id = $"Tile.ContentView {i}";
             Add (tile.ContentView);
+
             // BUGBUG: This should not be needed:
             tile.TitleChanged += (s, e) => SetLayoutNeeded ();
         }
@@ -425,6 +431,7 @@ public class TileView : View
 
         _splitterDistances [idx] = value;
         OnSplitterMoved (idx);
+        SetNeedsDisplay ();
         SetLayoutNeeded ();
 
         return true;
@@ -513,7 +520,7 @@ public class TileView : View
     }
 
     /// <summary>Raises the <see cref="SplitterMoved"/> event</summary>
-    protected virtual void OnSplitterMoved (int idx) { SplitterMoved?.Invoke (this, new SplitterEventArgs (this, idx, _splitterDistances [idx])); }
+    protected virtual void OnSplitterMoved (int idx) { SplitterMoved?.Invoke (this, new (this, idx, _splitterDistances [idx])); }
 
     private List<TileViewLineView> GetAllLineViewsRecursively (View v)
     {
@@ -563,7 +570,7 @@ public class TileView : View
             {
                 if (sub.Title.Length > 0)
                 {
-                    titles.Add (new TileTitleToRender (v, sub, depth));
+                    titles.Add (new (v, sub, depth));
                 }
             }
         }
@@ -808,6 +815,7 @@ public class TileView : View
                 tile.ContentView.Width = viewport.Width;
                 tile.ContentView.Height = GetTileWidthOrHeight (i, Viewport.Height, visibleTiles, visibleSplitterLines);
             }
+
             //  BUGBUG: This should not be needed. If any of the pos/dim setters above actually changed values, NeedsDisplay should have already been set. 
             tile.ContentView.SetNeedsDisplay ();
         }
@@ -833,6 +841,7 @@ public class TileView : View
         public Point GetLocalCoordinateForTitle (TileView intoCoordinateSpace)
         {
             Rectangle screen = Tile.ContentView.ViewportToScreen (Rectangle.Empty);
+
             return intoCoordinateSpace.ScreenToFrame (new (screen.X, screen.Y - 1));
         }
 
@@ -963,11 +972,14 @@ public class TileView : View
             return false;
         }
 
-        public override void OnDrawContent (Rectangle viewport)
-        {
-            base.OnDrawContent (viewport);
+        /// <inheritdoc/>
+        protected override bool OnClearViewport (Rectangle viewport) { return true; }
 
+        protected override bool OnDrawContent (Rectangle viewport)
+        {
             DrawSplitterSymbol ();
+
+            return true;
         }
 
         public override Point? PositionCursor ()
@@ -999,7 +1011,7 @@ public class TileView : View
             float position = p.GetAnchor (parentLength) + 0.5f;
 
             // Calculate the percentage
-            int percent = (int)Math.Round ((position / parentLength) * 100);
+            var percent = (int)Math.Round (position / parentLength * 100);
 
             // Return a new PosPercent object
             return Pos.Percent (percent);
@@ -1020,7 +1032,10 @@ public class TileView : View
         /// <param name="newValue"></param>
         private bool FinalisePosition (Pos oldValue, Pos newValue)
         {
+            SetNeedsDisplay ();
+
             SetLayoutNeeded ();
+
             if (oldValue is PosPercent)
             {
                 if (Orientation == Orientation.Horizontal)
@@ -1063,10 +1078,10 @@ public class TileView : View
         private Pos Offset (Pos pos, int delta)
         {
             int posAbsolute = pos.GetAnchor (
-                                          Orientation == Orientation.Horizontal
-                                              ? Parent.Viewport.Height
-                                              : Parent.Viewport.Width
-                                         );
+                                             Orientation == Orientation.Horizontal
+                                                 ? Parent.Viewport.Height
+                                                 : Parent.Viewport.Width
+                                            );
 
             return posAbsolute + delta;
         }

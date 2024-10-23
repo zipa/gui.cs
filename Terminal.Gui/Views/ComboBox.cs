@@ -294,18 +294,19 @@ public class ComboBox : View, IDesignable
     public virtual void OnCollapsed () { Collapsed?.Invoke (this, EventArgs.Empty); }
 
     /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
-        base.OnDrawContent (viewport);
 
         if (!_autoHide)
         {
-            return;
+            return true;
         }
 
         Driver?.SetAttribute (ColorScheme.Focus);
         Move (Viewport.Right - 1, 0);
         Driver?.AddRune (Glyphs.DownArrow);
+
+        return true;
     }
 
 
@@ -885,7 +886,7 @@ public class ComboBox : View, IDesignable
             return res;
         }
 
-        public override void OnDrawContent (Rectangle viewport)
+        protected override bool OnDrawContent (Rectangle viewport)
         {
             Attribute current = ColorScheme?.Focus ?? Attribute.Default;
             Driver?.SetAttribute (current);
@@ -954,6 +955,8 @@ public class ComboBox : View, IDesignable
                     Source.Render (this, Driver, isSelected, item, col, row, f.Width - col, start);
                 }
             }
+
+            return true;
         }
 
         protected override void OnHasFocusChanged (bool newHasFocus, [CanBeNull] View previousFocusedView, [CanBeNull] View focusedVew)

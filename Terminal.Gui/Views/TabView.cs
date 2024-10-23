@@ -130,7 +130,7 @@ public class TabView : View
                 if (_selectedTab.View is { })
                 {
                     _contentView.Add (_selectedTab.View);
-                   // _contentView.Id = $"_contentView for {_selectedTab.DisplayText}";
+                    // _contentView.Id = $"_contentView for {_selectedTab.DisplayText}";
                 }
             }
 
@@ -165,7 +165,7 @@ public class TabView : View
                 return;
             }
             _style = value;
-            SetLayoutNeeded();
+            SetLayoutNeeded ();
         }
     }
 
@@ -252,7 +252,7 @@ public class TabView : View
             int tabHeight = GetTabHeight (true);
 
             //move content down to make space for tabs
-            _contentView.Y = Pos.Bottom (_tabsBar) ;
+            _contentView.Y = Pos.Bottom (_tabsBar);
 
             // Fill client area leaving space at bottom for border
             _contentView.Height = Dim.Fill ();
@@ -264,7 +264,7 @@ public class TabView : View
             // Should be able to just use 0 but switching between top/bottom tabs repeatedly breaks in ValidatePosDim if just using the absolute value 0
         }
 
-        SetLayoutNeeded();
+        SetLayoutNeeded ();
     }
 
     /// <summary>Updates <see cref="TabScrollOffset"/> to ensure that <see cref="SelectedTab"/> is visible.</summary>
@@ -290,14 +290,12 @@ public class TabView : View
     public int EnsureValidScrollOffsets (int value) { return Math.Max (Math.Min (value, Tabs.Count - 1), 0); }
 
     /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
-        Driver?.SetAttribute (GetNormalColor ());
-
         if (Tabs.Any ())
         {
             Rectangle savedClip = SetClip ();
-            _tabsBar.OnDrawContent (viewport);
+            _tabsBar.Draw ();
             _contentView.SetNeedsDisplay ();
             _contentView.Draw ();
 
@@ -306,10 +304,9 @@ public class TabView : View
                 Driver.Clip = savedClip;
             }
         }
-    }
 
-    /// <inheritdoc/>
-    public override void OnDrawContentComplete (Rectangle viewport) { _tabsBar.OnDrawContentComplete (viewport); }
+        return true;
+    }
 
     /// <summary>
     ///     Removes the given <paramref name="tab"/> from <see cref="Tabs"/>. Caller is responsible for disposing the
@@ -376,7 +373,7 @@ public class TabView : View
         // Currently selected tab has vanished!
         if (currentIdx == -1)
         {
-            SelectedTab = Tabs.ElementAt (0); 
+            SelectedTab = Tabs.ElementAt (0);
             return true;
         }
 
@@ -642,24 +639,32 @@ public class TabView : View
             return false;
         }
 
-        public override void OnDrawContent (Rectangle viewport)
+        /// <inheritdoc />
+        protected override bool OnClearViewport (Rectangle viewport)
         {
-            _host._tabLocations = _host.CalculateViewport (Viewport).ToArray ();
-
             // clear any old text
             Clear ();
+
+            return true;
+        }
+
+        protected override bool OnDrawContent (Rectangle viewport)
+        {
+            _host._tabLocations = _host.CalculateViewport (Viewport).ToArray ();
 
             RenderTabLine ();
 
             RenderUnderline ();
             Driver?.SetAttribute (HasFocus ? GetFocusColor () : GetNormalColor ());
+
+            return true;
         }
 
-        public override void OnDrawContentComplete (Rectangle viewport)
+        protected override bool OnDrawComplete (Rectangle viewport)
         {
             if (_host._tabLocations is null)
             {
-                return;
+                return true;
             }
 
             TabToRender [] tabLocations = _host._tabLocations;
@@ -1185,8 +1190,10 @@ public class TabView : View
                 }
 
                 tab.LineCanvas.Merge (lc);
-                tab.OnRenderLineCanvas ();
+                tab.DoDrawAdornments ();
             }
+
+            return true;
         }
 
         private int GetUnderlineYPosition ()
@@ -1273,7 +1280,7 @@ public class TabView : View
                 // BUGBUG: Layout should only be called from Mainloop iteration!
                 Layout ();
 
-                tab.OnDrawAdornments ();
+                tab.DoDrawAdornments ();
 
                 Attribute prevAttr = Driver?.GetAttribute () ?? Attribute.Default;
 
@@ -1298,7 +1305,8 @@ public class TabView : View
                                         ColorScheme.HotNormal
                                        );
 
-                tab.OnRenderLineCanvas ();
+                tab.DoDrawAdornments ();
+
 
                 Driver?.SetAttribute (GetNormalColor ());
             }

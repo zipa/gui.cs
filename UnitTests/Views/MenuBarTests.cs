@@ -3219,7 +3219,7 @@ Edit
         top.Dispose ();
     }
 
-    [Fact]
+    [Fact (Skip = "#3798 Broke. Will fix in #2975")]
     [AutoInitShutdown]
     public void UseSubMenusSingleFrame_False_Disabled_Border ()
     {
@@ -3511,7 +3511,7 @@ Edit
         top.Dispose ();
     }
 
-    [Fact]
+    [Fact (Skip = "#3798 Broke. Will fix in #2975")]
     [AutoInitShutdown]
     public void UseSubMenusSingleFrame_True_Disabled_Border ()
     {

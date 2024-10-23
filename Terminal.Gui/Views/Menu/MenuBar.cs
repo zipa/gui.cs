@@ -297,12 +297,8 @@ public class MenuBar : View, IDesignable
     public event EventHandler<MenuOpeningEventArgs>? MenuOpening;
 
     /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
-        Driver?.SetAttribute (GetNormalColor ());
-
-        Clear ();
-
         var pos = 0;
 
         for (var i = 0; i < Menus.Length; i++)
@@ -338,6 +334,7 @@ public class MenuBar : View, IDesignable
         }
 
         //PositionCursor ();
+        return true;
     }
 
     /// <summary>Virtual method that will invoke the <see cref="MenuAllClosed"/>.</summary>

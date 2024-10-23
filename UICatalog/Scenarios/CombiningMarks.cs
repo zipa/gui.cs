@@ -11,7 +11,7 @@ public class CombiningMarks : Scenario
         Application.Init ();
         var top = new Toplevel { ColorScheme = Colors.ColorSchemes [TopLevelColorScheme] };
 
-        top.DrawContentComplete += (s, e) =>
+        top.DrawComplete += (s, e) =>
                                    {
                                        Application.Driver?.Move (0, 0);
                                        Application.Driver?.AddStr ("Terminal.Gui only supports combining marks that normalize. See Issue #2616.");

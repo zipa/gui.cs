@@ -283,7 +283,7 @@ public class SyntaxHighlighting : Scenario
 
         _textView.TextChanged += (s, e) => HighlightTextBasedOnKeywords ();
         _textView.DrawContent += (s, e) => HighlightTextBasedOnKeywords ();
-        _textView.DrawContentComplete += (s, e) => HighlightTextBasedOnKeywords ();
+        _textView.DrawComplete += (s, e) => HighlightTextBasedOnKeywords ();
     }
 
     private void ClearAllEvents ()

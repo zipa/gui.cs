@@ -368,10 +368,8 @@ public class FileDialog : Dialog
     }
 
     /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
-        base.OnDrawContent (viewport);
-
         if (!string.IsNullOrWhiteSpace (_feedback))
         {
             int feedbackWidth = _feedback.EnumerateRunes ().Sum (c => c.GetColumns ());
@@ -391,6 +389,8 @@ public class FileDialog : Dialog
             Driver.AddStr (_feedback);
             Driver.AddStr (new string (' ', feedbackPadRight));
         }
+
+        return true;
     }
 
     /// <inheritdoc/>
@@ -461,7 +461,7 @@ public class FileDialog : Dialog
             AllowedTypeMenuClicked (0);
 
             // TODO: Using v1's menu bar here is a hack. Need to upgrade this.
-            _allowedTypeMenuBar.DrawContentComplete += (s, e) =>
+            _allowedTypeMenuBar.DrawComplete += (s, e) =>
                                                        {
                                                            _allowedTypeMenuBar.Move (e.NewViewport.Width - 1, 0);
                                                            Driver.AddRune (Glyphs.DownArrow);

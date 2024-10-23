@@ -82,10 +82,8 @@ internal abstract class ColorBar : View, IColorBar
     }
 
     /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
-        base.OnDrawContent (viewport);
-
         var xOffset = 0;
 
         if (!string.IsNullOrWhiteSpace (Text))
@@ -102,6 +100,8 @@ internal abstract class ColorBar : View, IColorBar
         _barStartsAt = xOffset;
 
         DrawBar (xOffset, 0, _barWidth);
+
+        return true;
     }
 
     /// <summary>

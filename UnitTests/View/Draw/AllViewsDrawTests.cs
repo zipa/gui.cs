@@ -22,8 +22,8 @@ public class AllViewsDrawTests (ITestOutputHelper _output) : TestsAllViews
             designable.EnableForDesign ();
         }
 
-        var drawContentCount = 0;
-        view.DrawContent += (s, e) => drawContentCount++;
+        var drawCompleteCount = 0;
+        view.DrawComplete += (s, e) => drawCompleteCount++;
 
         var layoutStartedCount = 0;
         view.LayoutStarted += (s, e) => layoutStartedCount++;
@@ -34,14 +34,14 @@ public class AllViewsDrawTests (ITestOutputHelper _output) : TestsAllViews
         view.SetLayoutNeeded ();
         view.Layout ();
 
-        Assert.Equal (0, drawContentCount);
+        Assert.Equal (0, drawCompleteCount);
         Assert.Equal (1, layoutStartedCount);
         Assert.Equal (1, layoutCompleteCount);
 
         view.SetNeedsDisplay ();
         view.Draw ();
 
-        Assert.Equal (1, drawContentCount);
+        Assert.Equal (1, drawCompleteCount);
         Assert.Equal (1, layoutStartedCount);
         Assert.Equal (1, layoutCompleteCount);
     }

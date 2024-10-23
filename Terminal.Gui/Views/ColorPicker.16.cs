@@ -131,7 +131,7 @@ public class ColorPicker16 : View
     }
 
     ///<inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
         base.OnDrawContent (viewport);
 
@@ -155,6 +155,8 @@ public class ColorPicker16 : View
                 colorIndex++;
             }
         }
+
+        return true;
     }
 
     /// <summary>Selected color.</summary>

@@ -139,7 +139,7 @@ public class ProgressBar : View, IDesignable
     }
 
     ///<inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
         Driver?.SetAttribute (GetHotNormalColor ());
 
@@ -192,6 +192,8 @@ public class ProgressBar : View, IDesignable
                       SuperView?.ViewportToScreen (SuperView.Viewport) ?? default (Rectangle)
                      );
         }
+
+        return true;
     }
 
     /// <summary>Notifies the <see cref="ProgressBar"/> that some progress has taken place.</summary>

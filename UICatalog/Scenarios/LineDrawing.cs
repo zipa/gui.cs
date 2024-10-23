@@ -268,17 +268,15 @@ public class DrawingArea : View
     public ITool CurrentTool { get; set; } = new DrawLineTool ();
     public DrawingArea () { AddLayer (); }
 
-    public override void OnDrawContentComplete (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
-        base.OnDrawContentComplete (viewport);
-
         foreach (LineCanvas canvas in Layers)
         {
             foreach (KeyValuePair<Point, Cell?> c in canvas.GetCellMap ())
             {
                 if (c.Value is { })
                 {
-                    Driver.SetAttribute (c.Value.Value.Attribute ?? ColorScheme.Normal);
+                    Driver?.SetAttribute (c.Value.Value.Attribute ?? ColorScheme.Normal);
 
                     // TODO: #2616 - Support combining sequences that don't normalize
                     AddRune (c.Key.X, c.Key.Y, c.Value.Value.Rune);
@@ -287,7 +285,10 @@ public class DrawingArea : View
         }
 
         // TODO: This is a hack to work around overlapped views not drawing correctly.
+        // without this the toolbox disappears
         SuperView?.SetLayoutNeeded();
+
+        return true;
     }
 
     //// BUGBUG: Why is this not handled by a key binding???
@@ -374,17 +375,15 @@ public class AttributeView : View
     }
 
     /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
-        base.OnDrawContent (viewport);
-
         Color fg = Value.Foreground;
         Color bg = Value.Background;
 
         bool isTransparentFg = fg == GetNormalColor ().Background;
         bool isTransparentBg = bg == GetNormalColor ().Background;
 
-        Driver.SetAttribute (new (fg, isTransparentFg ? Color.Gray : fg));
+        Driver?.SetAttribute (new (fg, isTransparentFg ? Color.Gray : fg));
 
         // Square of foreground color
         foreach ((int, int) point in ForegroundPoints)
@@ -406,7 +405,7 @@ public class AttributeView : View
             AddRune (point.Item1, point.Item2, rune);
         }
 
-        Driver.SetAttribute (new (bg, isTransparentBg ? Color.Gray : bg));
+        Driver?.SetAttribute (new (bg, isTransparentBg ? Color.Gray : bg));
 
         // Square of background color
         foreach ((int, int) point in BackgroundPoints)
@@ -427,6 +426,7 @@ public class AttributeView : View
 
             AddRune (point.Item1, point.Item2, rune);
         }
+        return true;
     }
 
     /// <inheritdoc/>

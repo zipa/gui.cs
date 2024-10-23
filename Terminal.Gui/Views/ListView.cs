@@ -213,6 +213,13 @@ public class ListView : View, IDesignable
         // Use the form of Add that lets us pass context to the handler
         KeyBindings.Add (Key.A.WithCtrl, new KeyBinding ([Command.SelectAll], KeyBindingScope.Focused, true));
         KeyBindings.Add (Key.U.WithCtrl, new KeyBinding ([Command.SelectAll], KeyBindingScope.Focused, false));
+
+        LayoutComplete += ListView_LayoutComplete;
+    }
+
+    private void ListView_LayoutComplete (object sender, LayoutEventArgs e)
+    {
+        SetContentSize (new Size (_source?.Length ?? Viewport.Width, _source?.Count ?? Viewport.Width));
     }
 
     /// <summary>Gets or sets whether this <see cref="ListView"/> allows items to be marked.</summary>
@@ -332,9 +339,9 @@ public class ListView : View, IDesignable
                 _source.CollectionChanged += Source_CollectionChanged;
             }
 
-            SetContentSize (new Size (_source?.Length ?? Viewport.Width, _source?.Count ?? Viewport.Width));
             if (IsInitialized)
             {
+                SetContentSize (new Size (_source?.Length ?? Viewport.Width, _source?.Count ?? Viewport.Width));
                 Viewport = Viewport with { Y = 0 };
             }
 
@@ -344,6 +351,7 @@ public class ListView : View, IDesignable
             SetNeedsDisplay ();
         }
     }
+
 
     private void Source_CollectionChanged (object sender, NotifyCollectionChangedEventArgs e)
     {
@@ -748,10 +756,8 @@ public class ListView : View, IDesignable
     }
 
     /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
-        base.OnDrawContent (viewport);
-
         Attribute current = ColorScheme?.Focus ?? Attribute.Default;
         Driver?.SetAttribute (current);
         Move (0, 0);
@@ -806,6 +812,7 @@ public class ListView : View, IDesignable
                 Source.Render (this, Driver, isSelected, item, col, row, f.Width - col, start);
             }
         }
+        return true;
     }
 
     /// <inheritdoc/>

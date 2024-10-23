@@ -1127,11 +1127,11 @@ public class TreeView<T> : View, ITreeView where T : class
     public event EventHandler<ObjectActivatedEventArgs<T>> ObjectActivated;
 
     ///<inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
         if (roots is null)
         {
-            return;
+            return true;
         }
 
         if (TreeBuilder is null)
@@ -1139,7 +1139,7 @@ public class TreeView<T> : View, ITreeView where T : class
             Move (0, 0);
             Driver?.AddStr (NoBuilderError);
 
-            return;
+            return true;
         }
 
         IReadOnlyCollection<Branch<T>> map = BuildLineMap ();
@@ -1162,6 +1162,8 @@ public class TreeView<T> : View, ITreeView where T : class
                 Driver?.AddStr (new string (' ', Viewport.Width));
             }
         }
+
+        return true;
     }
 
     ///<inheritdoc/>

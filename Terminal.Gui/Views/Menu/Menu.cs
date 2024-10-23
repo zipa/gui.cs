@@ -159,7 +159,7 @@ internal sealed class Menu : View
     {
         if (Application.Top is { })
         {
-            Application.Top.DrawContentComplete += Current_DrawContentComplete;
+            Application.Top.DrawComplete += Top_DrawComplete;
             Application.Top.SizeChanging += Current_TerminalResized;
         }
 
@@ -393,19 +393,34 @@ internal sealed class Menu : View
         return !item.IsEnabled () ? ColorScheme!.Disabled : GetNormalColor ();
     }
 
-    public override void OnDrawContent (Rectangle viewport)
+    /// <inheritdoc />
+    protected override bool OnDrawAdornments ()
     {
+        Margin?.SetNeedsDisplay ();
+        Border?.SetNeedsDisplay();
+        Padding?.SetNeedsDisplay ();
+        return false;
+    }
+
+    // By doing this we draw last, over everything else.
+    private void Top_DrawComplete (object? sender, DrawEventArgs e)
+    {
+        if (!Visible)
+        {
+            return;
+        }
+
         if (_barItems!.Children is null)
         {
             return;
         }
 
+        DoDrawAdornments ();
+        DoRenderLineCanvas ();
+
         Rectangle savedClip = Driver.Clip;
         Driver.Clip = new (0, 0, Driver.Cols, Driver.Rows);
         Driver.SetAttribute (GetNormalColor ());
-
-        OnDrawAdornments ();
-        OnRenderLineCanvas ();
 
         for (int i = Viewport.Y; i < _barItems!.Children.Length; i++)
         {
@@ -573,16 +588,6 @@ internal sealed class Menu : View
         }
 
         Driver.Clip = savedClip;
-
-        // PositionCursor ();
-    }
-
-    private void Current_DrawContentComplete (object? sender, DrawEventArgs e)
-    {
-        if (Visible)
-        {
-            OnDrawContent (Viewport);
-        }
     }
 
     public override Point? PositionCursor ()
@@ -959,7 +964,7 @@ internal sealed class Menu : View
 
         if (Application.Top is { })
         {
-            Application.Top.DrawContentComplete -= Current_DrawContentComplete;
+            Application.Top.DrawComplete -= Top_DrawComplete;
             Application.Top.SizeChanging -= Current_TerminalResized;
         }
 

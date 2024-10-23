@@ -713,8 +713,8 @@ public partial class ToplevelTests (ITestOutputHelper output)
         Assert.Equal (new (1, 3, 10, 5), view.Frame);
         Assert.Equal (new (0, 0, 10, 5), view._needsDisplayRect);
 
-        view.OnDrawContent (view.Viewport);
         view.Frame = new (1, 3, 10, 5);
+        top.Layout ();
         Assert.Equal (new (1, 3, 10, 5), view.Frame);
         Assert.Equal (new (0, 0, 10, 5), view._needsDisplayRect);
         top.Dispose ();
@@ -961,7 +961,7 @@ public partial class ToplevelTests (ITestOutputHelper output)
                                    BorderStyle = LineStyle.Single
                                };
                                Assert.Equal (testWindow, Application.Top);
-                               Application.Top!.DrawContentComplete += OnDrawContentComplete;
+                               Application.Top!.DrawComplete += OnDrawContentComplete;
                                top.Add (viewAddedToTop);
 
                                void OnDrawContentComplete (object sender, DrawEventArgs e)
@@ -977,7 +977,7 @@ public partial class ToplevelTests (ITestOutputHelper output)
                                    top.Move (2, 17);
                                    View.Driver.AddStr ("Three");
 
-                                   Application.Top!.DrawContentComplete -= OnDrawContentComplete;
+                                   Application.Top!.DrawComplete -= OnDrawContentComplete;
                                }
                            };
         RunState rsTestWindow = Application.Begin (testWindow);

@@ -157,49 +157,23 @@ public class Adornment : View, IDesignable
 
     /// <summary>Does nothing for Adornment</summary>
     /// <returns></returns>
-    public override bool OnDrawAdornments () { return false; }
+    protected override bool OnDrawAdornments () { return false; }
 
-    /// <summary>Redraws the Adornments that comprise the <see cref="Adornment"/>.</summary>
-    public override void OnDrawContent (Rectangle viewport)
+    /// <inheritdoc />
+    protected override bool OnClearViewport (Rectangle viewport)
     {
-        if (Thickness == Thickness.Empty)
-        {
-            return;
-        }
-
-        Rectangle prevClip = SetClip ();
-
-        Rectangle screen = ViewportToScreen (viewport);
         Attribute normalAttr = GetNormalColor ();
         Driver?.SetAttribute (normalAttr);
 
         // This just draws/clears the thickness, not the insides.
-        Thickness.Draw (screen, Diagnostics, ToString ());
+        Thickness.Draw (ViewportToScreen (viewport), Diagnostics, ToString ());
 
-        if (!string.IsNullOrEmpty (TextFormatter.Text))
-        {
-            TextFormatter.ConstrainToSize = Frame.Size;
-            TextFormatter.NeedsFormat = true;
-        }
-
-        TextFormatter?.Draw (screen, normalAttr, normalAttr, Rectangle.Empty);
-
-        if (Subviews.Count > 0)
-        {
-            base.OnDrawContent (viewport);
-        }
-
-        if (Driver is { })
-        {
-            Driver.Clip = prevClip;
-        }
-
-        ClearNeedsDisplay ();
+        return true;
     }
-
+    
     /// <summary>Does nothing for Adornment</summary>
     /// <returns></returns>
-    public override bool OnRenderLineCanvas () { return false; }
+    protected override bool OnRenderLineCanvas () { return false; }
 
     /// <summary>
     ///     Adornments only render to their <see cref="Parent"/>'s or Parent's SuperView's LineCanvas, so setting this

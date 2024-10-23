@@ -15,6 +15,7 @@ public class NumericUpDownDemo : Scenario
         Window app = new ()
         {
             Title = GetQuitKeyAndName (),
+            BorderStyle = LineStyle.None
         };
 
         var editor = new AdornmentsEditor

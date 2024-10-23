@@ -176,10 +176,8 @@ public class AnimationScenario : Scenario
         private Rectangle oldSize = Rectangle.Empty;
         public void NextFrame () { currentFrame = (currentFrame + 1) % frameCount; }
 
-        public override void OnDrawContent (Rectangle viewport)
+        protected override bool OnDrawContent (Rectangle viewport)
         {
-            base.OnDrawContent (viewport);
-
             if (oldSize != Viewport)
             {
                 // Invalidate cached images now size has changed
@@ -223,6 +221,8 @@ public class AnimationScenario : Scenario
                     AddRune (x, y, (Rune)line [x]);
                 }
             }
+
+            return true;
         }
 
         internal void SetImage (Image<Rgba32> image)

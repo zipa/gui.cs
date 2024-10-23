@@ -314,11 +314,9 @@ public class Snake : Scenario
 
         public SnakeState State { get; }
 
-        public override void OnDrawContent (Rectangle viewport)
+        protected override bool OnDrawContent (Rectangle viewport)
         {
-            base.OnDrawContent (viewport);
-
-            Driver.SetAttribute (white);
+            Driver?.SetAttribute (white);
             Clear ();
 
             var canvas = new LineCanvas ();
@@ -351,9 +349,11 @@ public class Snake : Scenario
                 AddRune (p.Key.X, p.Key.Y, p.Value);
             }
 
-            Driver.SetAttribute (red);
+            Driver?.SetAttribute (red);
             AddRune (State.Apple.X, State.Apple.Y, _appleRune);
-            Driver.SetAttribute (white);
+            Driver?.SetAttribute (white);
+
+            return true;
         }
 
         // BUGBUG: Should (can) this use key bindings instead.

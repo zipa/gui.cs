@@ -444,9 +444,9 @@ At 0,0
         var tvCalled = false;
 
         var view = new View { Width = 10, Height = 10, Text = "View" };
-        view.DrawContentComplete += (s, e) => viewCalled = true;
+        view.DrawComplete += (s, e) => viewCalled = true;
         var tv = new TextView { Y = 11, Width = 10, Height = 10 };
-        tv.DrawContentComplete += (s, e) => tvCalled = true;
+        tv.DrawComplete += (s, e) => tvCalled = true;
 
         var top = new Toplevel ();
         top.Add (view, tv);
@@ -1102,7 +1102,7 @@ At 0,0
         public bool IsKeyUp { get; set; }
         public override string Text { get; set; }
 
-        public override void OnDrawContent (Rectangle viewport)
+        protected override bool OnDrawContent (Rectangle viewport)
         {
             var idx = 0;
 
@@ -1131,6 +1131,8 @@ At 0,0
             }
 
             ClearNeedsDisplay ();
+
+            return true;
         }
 
         protected override bool OnKeyDown (Key keyEvent)

@@ -910,10 +910,8 @@ public class TableView : View
     }
 
     ///<inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
-        base.OnDrawContent (viewport);
-
         Move (0, 0);
 
         scrollRightPoint = null;
@@ -985,6 +983,8 @@ public class TableView : View
 
             RenderRow (line, rowToRender, columnsToRender);
         }
+
+        return true;
     }
 
     /// <inheritdoc/>

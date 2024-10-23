@@ -146,9 +146,7 @@ public class ShadowStyleTests (ITestOutputHelper output)
             ColorScheme = new (Attribute.Default)
         };
         superView.Add (view);
-        superView.BeginInit ();
-        superView.EndInit ();
-
+        superView.Layout ();
         superView.Draw ();
         TestHelpers.AssertDriverAttributesAre (expectedAttrs, output, Application.Driver, attributes);
     }

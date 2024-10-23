@@ -266,9 +266,9 @@ public class Border : Adornment
     {
         // BUGBUG: See https://github.com/gui-cs/Terminal.Gui/issues/3312
         if (!_dragPosition.HasValue && mouseEvent.Flags.HasFlag (MouseFlags.Button1Pressed)
-                                    // HACK: Prevents Window from being draggable if it's Top
-                                    //&& Parent is Toplevel { Modal: true }
-                                    )
+                                // HACK: Prevents Window from being draggable if it's Top
+                                //&& Parent is Toplevel { Modal: true }
+                                )
         {
             Parent!.SetFocus ();
 
@@ -605,19 +605,14 @@ public class Border : Adornment
     #endregion Mouse Support
 
     /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
-        base.OnDrawContent (viewport);
-
         if (Thickness == Thickness.Empty)
         {
-            return;
+            return true;
         }
 
-        //Driver.SetAttribute (Colors.ColorSchemes ["Error"].Normal);
         Rectangle screenBounds = ViewportToScreen (viewport);
-
-        //OnDrawSubviews (bounds); 
 
         // TODO: v2 - this will eventually be two controls: "BorderView" and "Label" (for the title)
 
@@ -681,7 +676,7 @@ public class Border : Adornment
             }
         }
 
-        if (Parent is {} && canDrawBorder && Thickness.Top > 0 && maxTitleWidth > 0 && Settings.FastHasFlags (BorderSettings.Title) && !string.IsNullOrEmpty (Parent?.Title))
+        if (Parent is { } && canDrawBorder && Thickness.Top > 0 && maxTitleWidth > 0 && Settings.FastHasFlags (BorderSettings.Title) && !string.IsNullOrEmpty (Parent?.Title))
         {
             Attribute focus = Parent.GetNormalColor ();
 
@@ -910,6 +905,8 @@ public class Border : Adornment
                 lc!.Fill = null;
             }
         }
+
+        return true;
     }
 
     private void SetupGradientLineCanvas (LineCanvas lc, Rectangle rect)

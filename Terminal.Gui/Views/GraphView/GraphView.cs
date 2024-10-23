@@ -197,7 +197,7 @@ public class GraphView : View
     }
 
     ///<inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
         if (CellSize.X == 0 || CellSize.Y == 0)
         {
@@ -212,13 +212,13 @@ public class GraphView : View
         for (var i = 0; i < Viewport.Height; i++)
         {
             Move (0, i);
-            Driver.AddStr (new string (' ', Viewport.Width));
+            Driver?.AddStr (new string (' ', Viewport.Width));
         }
 
         // If there is no data do not display a graph
         if (!Series.Any () && !Annotations.Any ())
         {
-            return;
+            return true;
         }
 
         // The drawable area of the graph (anything that isn't in the margins)
@@ -228,7 +228,7 @@ public class GraphView : View
         // if the margins take up the full draw bounds don't render
         if (graphScreenWidth < 0 || graphScreenHeight < 0)
         {
-            return;
+            return true;
         }
 
         // Draw 'before' annotations
@@ -275,6 +275,7 @@ public class GraphView : View
         {
             a.Render (this);
         }
+        return true;
     }
 
     /// <summary>Scrolls the graph down 1 page.</summary>

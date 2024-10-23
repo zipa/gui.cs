@@ -114,13 +114,11 @@ public class Images : Scenario
         private Image<Rgba32> _fullResImage;
         private Image<Rgba32> _matchSize;
 
-        public override void OnDrawContent (Rectangle bounds)
+        protected override bool OnDrawContent (Rectangle bounds)
         {
-            base.OnDrawContent (bounds);
-
             if (_fullResImage == null)
             {
-                return;
+                return true;
             }
 
             // if we have not got a cached resized image of this size
@@ -148,6 +146,7 @@ public class Images : Scenario
                     AddRune (x, y, (Rune)' ');
                 }
             }
+            return true;
         }
 
         internal void SetImage (Image<Rgba32> image)

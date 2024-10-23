@@ -132,10 +132,8 @@ internal class GradientsView : View
     private const int LABEL_HEIGHT = 1;
     private const int GRADIENT_WITH_LABEL_HEIGHT = GRADIENT_HEIGHT + LABEL_HEIGHT + 1; // +1 for spacing
 
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
-        base.OnDrawContent (viewport);
-
         DrawTopLineGradient (viewport);
 
         var x = 2;
@@ -160,6 +158,8 @@ internal class GradientsView : View
             DrawLabeledGradientArea (label, direction, x, y);
             x += GRADIENT_WIDTH + 2; // Move right for next gradient, +2 for spacing
         }
+
+        return true;
     }
 
     private void DrawLabeledGradientArea (string label, GradientDirection direction, int xOffset, int yOffset)

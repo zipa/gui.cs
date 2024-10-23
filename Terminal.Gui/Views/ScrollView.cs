@@ -372,7 +372,7 @@ public class ScrollView : View
     }
 
     /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawContent (Rectangle viewport)
     {
         SetViewsNeedsDisplay ();
 
@@ -385,6 +385,8 @@ public class ScrollView : View
         }
 
         DrawScrollBars ();
+
+        return true;
     }
 
     /// <inheritdoc/>

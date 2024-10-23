@@ -64,13 +64,12 @@ public class ListViewWithSelection : Scenario
             Title = "_ListView",
             X = 0,
             Y = Pos.Bottom(_allowMarkingCB),
-            Height = Dim.Fill (),
             Width = Dim.Func (() => _listView?.MaxLength ?? 10),
-
+            Height = Dim.Fill (),
             AllowsMarking = false,
             AllowsMultipleSelection = false
         };
-        _listView.Border.Thickness = new Thickness (0, 1, 0, 0);
+        //_listView.Border.Thickness = new Thickness (0, 1, 0, 0);
         _listView.RowRender += ListView_RowRender;
         _appWindow.Add (_listView);
 

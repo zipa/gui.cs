@@ -2267,7 +2267,7 @@ public class TableViewTests (ITestOutputHelper output)
         // should select that row
         Assert.Equal (2, tv.SelectedRow);
 
-        tv.OnDrawContent (tv.Viewport);
+        tv.Draw ();
 
         var expected =
             @"
@@ -2375,7 +2375,7 @@ A B C
         // should select that row
         Assert.Equal (2, tv.SelectedRow);
 
-        tv.OnDrawContent (tv.Viewport);
+        tv.Draw ();
 
         var expected =
             @"
