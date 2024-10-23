@@ -320,7 +320,7 @@ public class ListView : View, IDesignable
 
     /// <summary>Gets or sets the <see cref="IListDataSource"/> backing this <see cref="ListView"/>, enabling custom rendering.</summary>
     /// <value>The source.</value>
-    /// <remarks>Use <see cref="SetSource"/> to set a new <see cref="IList"/> source.</remarks>
+    /// <remarks>Use <see cref="SetSource{T}"/> to set a new <see cref="IList"/> source.</remarks>
     public IListDataSource Source
     {
         get => _source;
@@ -339,9 +339,9 @@ public class ListView : View, IDesignable
                 _source.CollectionChanged += Source_CollectionChanged;
             }
 
+            SetContentSize (new Size (_source?.Length ?? Viewport.Width, _source?.Count ?? Viewport.Width));
             if (IsInitialized)
             {
-                SetContentSize (new Size (_source?.Length ?? Viewport.Width, _source?.Count ?? Viewport.Width));
                 Viewport = Viewport with { Y = 0 };
             }
 

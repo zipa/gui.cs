@@ -275,7 +275,7 @@ public class TileView : View
             }
         }
 
-        return true;
+        return false;
     }
 
     //// BUGBUG: Why is this not handled by a key binding???
