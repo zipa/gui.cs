@@ -22,7 +22,7 @@ public class TileView : View
         CanFocus = true;
         RebuildForTileCount (tiles);
 
-        LayoutStarted += (_, _) =>
+        SubviewLayout += (_, _) =>
                          {
                              Rectangle viewport = Viewport;
 
@@ -57,7 +57,7 @@ public class TileView : View
             _orientation = value;
 
             SetNeedsDisplay ();
-            SetLayoutNeeded ();
+            SetNeedsLayout ();
 
         }
     }
@@ -151,7 +151,7 @@ public class TileView : View
         }
 
         SetNeedsDisplay ();
-        SetLayoutNeeded ();
+        SetNeedsLayout ();
 
         return toReturn;
     }
@@ -359,10 +359,10 @@ public class TileView : View
             Add (tile.ContentView);
 
             // BUGBUG: This should not be needed:
-            tile.TitleChanged += (s, e) => SetLayoutNeeded ();
+            tile.TitleChanged += (s, e) => SetNeedsLayout ();
         }
 
-        SetLayoutNeeded ();
+        SetNeedsLayout ();
     }
 
     /// <summary>
@@ -432,7 +432,7 @@ public class TileView : View
         _splitterDistances [idx] = value;
         OnSplitterMoved (idx);
         SetNeedsDisplay ();
-        SetLayoutNeeded ();
+        SetNeedsLayout ();
 
         return true;
     }
@@ -949,7 +949,7 @@ public class TileView : View
                     moveRuneRenderLocation = new Point (0, Math.Max (1, Math.Min (Viewport.Height - 2, mouseEvent.Position.Y)));
                 }
 
-                Parent.SetLayoutNeeded ();
+                Parent.SetNeedsLayout ();
 
                 return true;
             }
@@ -1034,7 +1034,7 @@ public class TileView : View
         {
             SetNeedsDisplay ();
 
-            SetLayoutNeeded ();
+            SetNeedsLayout ();
 
             if (oldValue is PosPercent)
             {

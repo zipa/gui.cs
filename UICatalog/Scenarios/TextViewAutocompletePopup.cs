@@ -120,7 +120,7 @@ public class TextViewAutocompletePopup : Scenario
                                       );
         appWindow.Add (statusBar);
 
-        appWindow.LayoutStarted += Win_LayoutStarted;
+        appWindow.SubviewLayout += Win_LayoutStarted;
 
         // Run - Start the application.
         Application.Run (appWindow);

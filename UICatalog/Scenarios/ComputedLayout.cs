@@ -50,7 +50,7 @@ public class ComputedLayout : Scenario
             Text = vrule
         };
 
-        app.LayoutComplete += (s, a) =>
+        app.SubviewsLaidOut += (s, a) =>
                                           {
                                               if (horizontalRuler.Viewport.Width == 0 || horizontalRuler.Viewport.Height == 0)
                                               {

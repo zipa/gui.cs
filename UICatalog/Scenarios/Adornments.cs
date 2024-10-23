@@ -99,10 +99,12 @@ public class Adornments : Scenario
         longLabel.TextFormatter.WordWrap = true;
         window.Add (tf1, color, button, label, btnButtonInWindow, labelAnchorEnd, longLabel);
 
-        editor.Initialized += (s, e) => { editor.ViewToEdit = window; };
-
         window.Initialized += (s, e) =>
                               {
+                                  editor.ViewToEdit = window;
+
+                                  editor.ShowViewIdentifier = true;
+
                                   var labelInPadding = new Label { X = 1, Y = 0, Title = "_Text:" };
                                   window.Padding.Add (labelInPadding);
 

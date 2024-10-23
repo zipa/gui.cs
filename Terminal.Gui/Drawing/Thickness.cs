@@ -82,7 +82,7 @@ public record struct Thickness
     /// <summary>Draws the <see cref="Thickness"/> rectangle with an optional diagnostics label.</summary>
     /// <remarks>
     ///     If <see cref="ViewDiagnosticFlags"/> is set to
-    ///     <see cref="ViewDiagnosticFlags.Padding"/> then 'T', 'L', 'R', and 'B' glyphs will be used instead of
+    ///     <see cref="ViewDiagnosticFlags.Thickness"/> then 'T', 'L', 'R', and 'B' glyphs will be used instead of
     ///     space. If <see cref="ViewDiagnosticFlags"/> is set to
     ///     <see cref="ViewDiagnosticFlags.Ruler"/> then a ruler will be drawn on the outer edge of the
     ///     Thickness.
@@ -104,7 +104,7 @@ public record struct Thickness
         Rune topChar = clearChar;
         Rune bottomChar = clearChar;
 
-        if (diagnosticFlags.HasFlag (ViewDiagnosticFlags.Padding))
+        if (diagnosticFlags.HasFlag (ViewDiagnosticFlags.Thickness))
         {
             leftChar = (Rune)'L';
             rightChar = (Rune)'R';
@@ -188,7 +188,7 @@ public record struct Thickness
             }
         }
 
-        if (diagnosticFlags.HasFlag (ViewDiagnosticFlags.Padding))
+        if (diagnosticFlags.HasFlag (ViewDiagnosticFlags.Thickness))
         {
             // Draw the diagnostics label on the bottom
             string text = label is null ? string.Empty : $"{label} {this}";

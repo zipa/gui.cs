@@ -43,7 +43,7 @@ public class DrawTests (ITestOutputHelper _output)
             Width = 3, Height = 3
         };
         view.Margin.Thickness = new (1);
-        view.Margin.Diagnostics = ViewDiagnosticFlags.Padding;
+        view.Margin.Diagnostics = ViewDiagnosticFlags.Thickness;
         view.BeginInit ();
         view.EndInit ();
         view.Draw ();
@@ -693,7 +693,7 @@ public class DrawTests (ITestOutputHelper _output)
 
         // BUGBUG: v2 - it's bogus to reference .Frame before BeginInit. And why is the clip being set anyway???
 
-        top.LayoutComplete += Top_LayoutComplete;
+        top.SubviewsLaidOut += Top_LayoutComplete;
         Application.Begin (top);
 
         Application.Refresh ();

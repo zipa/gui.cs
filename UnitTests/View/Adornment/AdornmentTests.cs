@@ -352,7 +352,7 @@ public class AdornmentTests (ITestOutputHelper output)
         parent.BeginInit ();
         parent.EndInit ();
 
-        parent.LayoutStarted += LayoutStarted;
+        parent.SubviewLayout += LayoutStarted;
         parent.Margin.Thickness = new Thickness (1, 2, 3, 4);
         Assert.True (parent.NeedsLayout);
         Assert.True (parent.Margin.NeedsLayout);
@@ -375,7 +375,7 @@ public class AdornmentTests (ITestOutputHelper output)
         parent.BeginInit ();
         parent.EndInit ();
 
-        parent.Margin.LayoutStarted += LayoutStarted;
+        parent.Margin.SubviewLayout += LayoutStarted;
         parent.Margin.Thickness = new Thickness (1, 2, 3, 4);
         Assert.True (parent.NeedsLayout);
         Assert.True (parent.Margin.NeedsLayout);

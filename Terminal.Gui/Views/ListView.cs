@@ -214,7 +214,7 @@ public class ListView : View, IDesignable
         KeyBindings.Add (Key.A.WithCtrl, new KeyBinding ([Command.SelectAll], KeyBindingScope.Focused, true));
         KeyBindings.Add (Key.U.WithCtrl, new KeyBinding ([Command.SelectAll], KeyBindingScope.Focused, false));
 
-        LayoutComplete += ListView_LayoutComplete;
+        SubviewsLaidOut += ListView_LayoutComplete;
     }
 
     private void ListView_LayoutComplete (object sender, LayoutEventArgs e)
@@ -454,11 +454,11 @@ public class ListView : View, IDesignable
                 Viewport = Viewport with { Y = _selected - Viewport.Height + 1 };
             }
 
-            LayoutStarted -= ListView_LayoutStarted;
+            SubviewLayout -= ListView_LayoutStarted;
         }
         else
         {
-            LayoutStarted += ListView_LayoutStarted;
+            SubviewLayout += ListView_LayoutStarted;
         }
     }
 

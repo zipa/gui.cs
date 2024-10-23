@@ -57,7 +57,7 @@ public class ComboBox : View, IDesignable
         Initialized += (s, e) => ProcessLayout ();
 
         // On resize
-        LayoutComplete += (sender, a) => ProcessLayout ();
+        SubviewsLaidOut += (sender, a) => ProcessLayout ();
 
         Added += (s, e) =>
                  {
@@ -72,7 +72,7 @@ public class ComboBox : View, IDesignable
                          }
                      }
 
-                     SetLayoutNeeded ();
+                     SetNeedsLayout ();
                      SetNeedsDisplay ();
                      ShowHideList (Text);
                  };

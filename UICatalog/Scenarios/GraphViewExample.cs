@@ -126,7 +126,7 @@ public class GraphViewExample : Scenario
                          {
                              Checked = View.Diagnostics
                                        == (ViewDiagnosticFlags
-                                               .Padding
+                                               .Thickness
                                            | ViewDiagnosticFlags
                                                .Ruler),
                              CheckType = MenuItemCheckStyle.Checked
@@ -211,7 +211,7 @@ public class GraphViewExample : Scenario
         _miDiags.Checked = !_miDiags.Checked;
 
         View.Diagnostics = _miDiags.Checked == true
-                               ? ViewDiagnosticFlags.Padding
+                               ? ViewDiagnosticFlags.Thickness
                                  | ViewDiagnosticFlags.Ruler
                                : ViewDiagnosticFlags.Off;
         Application.Refresh ();

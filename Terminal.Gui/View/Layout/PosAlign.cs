@@ -29,7 +29,7 @@ public record PosAlign : Pos
     /// <summary>
     ///     The cached location. Used to store the calculated location to minimize recalculating it.
     /// </summary>
-    public int? _cachedLocation;
+    internal int? _cachedLocation;
 
     private readonly Aligner? _aligner;
 

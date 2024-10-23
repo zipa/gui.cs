@@ -86,7 +86,7 @@ public class Sliders : Scenario
             AllowEmpty = false
         };
 
-        single.LayoutStarted += (s, e) =>
+        single.SubviewLayout += (s, e) =>
                                 {
                                     if (single.Orientation == Orientation.Horizontal)
                                     {

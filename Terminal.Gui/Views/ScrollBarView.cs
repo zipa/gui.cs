@@ -227,7 +227,7 @@ public class ScrollBarView : View
 
             if (IsInitialized)
             {
-                SetLayoutNeeded ();
+                SetNeedsLayout ();
 
                 if (value)
                 {
@@ -261,7 +261,7 @@ public class ScrollBarView : View
             {
                 SetRelativeLayout (SuperView?.Frame.Size ?? Host.Frame.Size);
                 ShowHideScrollBars (false);
-                SetLayoutNeeded ();
+                SetNeedsLayout ();
             }
         }
     }

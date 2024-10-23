@@ -564,7 +564,7 @@ public class UICatalogApp
                                              {
                                                  if (_statusBar.NeedsLayout)
                                                  {
-                                                    // throw new Exception ("DimFunc.Fn aborted because dependent View needs layout.");
+                                                    throw new LayoutException ("DimFunc.Fn aborted because dependent View needs layout.");
                                                  }
                                                  return _statusBar.Frame.Height;
                                              })),
@@ -590,7 +590,7 @@ public class UICatalogApp
                                              {
                                                  if (_statusBar.NeedsLayout)
                                                  {
-                                                    // throw new Exception ("DimFunc.Fn aborted because dependent View needs layout.");
+                                                     throw new LayoutException ("DimFunc.Fn aborted because dependent View needs layout.");
                                                  }
                                                  return _statusBar.Frame.Height;
                                              })),
@@ -792,7 +792,7 @@ public class UICatalogApp
         {
             const string OFF = "View Diagnostics: _Off";
             const string RULER = "View Diagnostics: _Ruler";
-            const string PADDING = "View Diagnostics: _Padding";
+            const string THICKNESS = "View Diagnostics: _Thickness";
             const string Hover = "View Diagnostics: _Hover";
             var index = 0;
 
@@ -809,7 +809,7 @@ public class UICatalogApp
 
                 if (GetDiagnosticsTitle (ViewDiagnosticFlags.Off) == item.Title)
                 {
-                    item.Checked = !_diagnosticFlags.HasFlag (ViewDiagnosticFlags.Padding)
+                    item.Checked = !_diagnosticFlags.HasFlag (ViewDiagnosticFlags.Thickness)
                                    && !_diagnosticFlags.HasFlag (ViewDiagnosticFlags.Ruler)
                                    && !_diagnosticFlags.HasFlag (ViewDiagnosticFlags.Hover);
                 }
@@ -824,12 +824,12 @@ public class UICatalogApp
 
                                    if (item.Title == t && item.Checked == false)
                                    {
-                                       _diagnosticFlags &= ~(ViewDiagnosticFlags.Padding | ViewDiagnosticFlags.Ruler | ViewDiagnosticFlags.Hover);
+                                       _diagnosticFlags &= ~(ViewDiagnosticFlags.Thickness | ViewDiagnosticFlags.Ruler | ViewDiagnosticFlags.Hover);
                                        item.Checked = true;
                                    }
                                    else if (item.Title == t && item.Checked == true)
                                    {
-                                       _diagnosticFlags |= ViewDiagnosticFlags.Padding | ViewDiagnosticFlags.Ruler | ViewDiagnosticFlags.Hover;
+                                       _diagnosticFlags |= ViewDiagnosticFlags.Thickness | ViewDiagnosticFlags.Ruler | ViewDiagnosticFlags.Hover;
                                        item.Checked = false;
                                    }
                                    else
@@ -851,7 +851,7 @@ public class UICatalogApp
                                        if (menuItem.Title == t)
                                        {
                                            menuItem.Checked = !_diagnosticFlags.HasFlag (ViewDiagnosticFlags.Ruler)
-                                                              && !_diagnosticFlags.HasFlag (ViewDiagnosticFlags.Padding)
+                                                              && !_diagnosticFlags.HasFlag (ViewDiagnosticFlags.Thickness)
                                                               && !_diagnosticFlags.HasFlag (ViewDiagnosticFlags.Hover);
                                        }
                                        else if (menuItem.Title != t)
@@ -873,7 +873,7 @@ public class UICatalogApp
                 {
                     "Off" => OFF,
                     "Ruler" => RULER,
-                    "Padding" => PADDING,
+                    "Thickness" => THICKNESS,
                     "Hover" => Hover,
                     _ => ""
                 };
@@ -884,7 +884,7 @@ public class UICatalogApp
                 return title switch
                 {
                     RULER => ViewDiagnosticFlags.Ruler,
-                    PADDING => ViewDiagnosticFlags.Padding,
+                    THICKNESS => ViewDiagnosticFlags.Thickness,
                     Hover => ViewDiagnosticFlags.Hover,
                     _ => null!
                 };
@@ -905,14 +905,14 @@ public class UICatalogApp
                         }
 
                         break;
-                    case ViewDiagnosticFlags.Padding:
+                    case ViewDiagnosticFlags.Thickness:
                         if (add)
                         {
-                            _diagnosticFlags |= ViewDiagnosticFlags.Padding;
+                            _diagnosticFlags |= ViewDiagnosticFlags.Thickness;
                         }
                         else
                         {
-                            _diagnosticFlags &= ~ViewDiagnosticFlags.Padding;
+                            _diagnosticFlags &= ~ViewDiagnosticFlags.Thickness;
                         }
 
                         break;

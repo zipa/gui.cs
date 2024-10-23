@@ -104,7 +104,7 @@ public class HexView : View, IDesignable
         KeyBindings.Remove (Key.Space);
         KeyBindings.Remove (Key.Enter);
 
-        LayoutComplete += HexView_LayoutComplete;
+        SubviewsLaidOut += HexView_LayoutComplete;
     }
 
     /// <summary>Initializes a <see cref="HexView"/> class.</summary>
@@ -198,7 +198,7 @@ public class HexView : View, IDesignable
                 Address = 0;
             }
 
-            SetLayoutNeeded ();
+            SetNeedsLayout ();
             SetNeedsDisplay ();
         }
     }
@@ -272,7 +272,7 @@ public class HexView : View, IDesignable
 
             _addressWidth = value;
             SetNeedsDisplay ();
-            SetLayoutNeeded ();
+            SetNeedsLayout ();
         }
     }
 

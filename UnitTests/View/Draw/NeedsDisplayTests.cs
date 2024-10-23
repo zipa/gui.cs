@@ -106,7 +106,7 @@ public class NeedsDisplayTests ()
         Assert.False (view.NeedsDisplay);
         Assert.False (view.NeedsLayout);
 
-        view.SetLayoutNeeded ();
+        view.SetNeedsLayout ();
         Assert.True (view.NeedsDisplay);
         Assert.True (view.NeedsLayout);
     }
@@ -126,7 +126,7 @@ public class NeedsDisplayTests ()
         view.SetRelativeLayout (Application.Screen.Size);
         Assert.False (view.NeedsDisplay);
 
-        view.SetLayoutNeeded ();
+        view.SetNeedsLayout ();
 
         // SRL won't change anything since the view is Absolute
         view.SetRelativeLayout (Application.Screen.Size);

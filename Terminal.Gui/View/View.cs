@@ -74,7 +74,7 @@ namespace Terminal.Gui;
 ///         To flag the entire view for redraw call <see cref="SetNeedsDisplay()"/>.
 ///     </para>
 ///     <para>
-///         The <see cref="SetLayoutNeeded"/> method is called when the size or layout of a view has changed. The <see cref="MainLoop"/> will
+///         The <see cref="SetNeedsLayout"/> method is called when the size or layout of a view has changed. The <see cref="MainLoop"/> will
 ///         cause <see cref="Layout()"/> to be called on the next <see cref="Application.Iteration"/> so there is normally no reason to direclty call
 ///         see <see cref="Layout()"/>.
 ///     </para>
@@ -231,7 +231,7 @@ public partial class View : Responder, ISupportInitializeNotification
         UpdateTextDirection (TextDirection);
         UpdateTextFormatterText ();
 
-        SetLayoutNeeded ();
+        SetNeedsLayout ();
 
         if (_subviews is { })
         {
@@ -296,18 +296,7 @@ public partial class View : Responder, ISupportInitializeNotification
 
             foreach (View view in _subviews)
             {
-                if (!_enabled)
-                {
-                    view._oldEnabled = view.Enabled;
-                    view.Enabled = _enabled;
-                }
-                else
-                {
-                    view.Enabled = view._oldEnabled;
-#if AUTO_CANFOCUS
-                    view._addingViewSoCanFocusAlsoUpdatesSuperView = _enabled;
-#endif
-                }
+                view.Enabled = Enabled;
             }
         }
     }
@@ -368,8 +357,8 @@ public partial class View : Responder, ISupportInitializeNotification
             OnVisibleChanged ();
             VisibleChanged?.Invoke (this, EventArgs.Empty);
 
-            SetLayoutNeeded ();
-            SuperView?.SetLayoutNeeded();
+            SetNeedsLayout ();
+            SuperView?.SetNeedsLayout();
             SetNeedsDisplay ();
             SuperView?.SetNeedsDisplay();
         }

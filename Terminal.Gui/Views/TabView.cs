@@ -147,7 +147,7 @@ public class TabView : View
 
                 OnSelectedTabChanged (old, value);
             }
-            SetLayoutNeeded ();
+            SetNeedsLayout ();
         }
     }
 
@@ -165,7 +165,7 @@ public class TabView : View
                 return;
             }
             _style = value;
-            SetLayoutNeeded ();
+            SetNeedsLayout ();
         }
     }
 
@@ -181,7 +181,7 @@ public class TabView : View
         set
         {
             _tabScrollOffset = EnsureValidScrollOffsets (value);
-            SetLayoutNeeded ();
+            SetNeedsLayout ();
         }
     }
 
@@ -207,7 +207,7 @@ public class TabView : View
             tab.View?.SetFocus ();
         }
 
-        SetLayoutNeeded ();
+        SetNeedsLayout ();
     }
 
     /// <summary>
@@ -264,7 +264,7 @@ public class TabView : View
             // Should be able to just use 0 but switching between top/bottom tabs repeatedly breaks in ValidatePosDim if just using the absolute value 0
         }
 
-        SetLayoutNeeded ();
+        SetNeedsLayout ();
     }
 
     /// <summary>Updates <see cref="TabScrollOffset"/> to ensure that <see cref="SelectedTab"/> is visible.</summary>
@@ -342,7 +342,7 @@ public class TabView : View
         }
 
         EnsureSelectedTabIsVisible ();
-        SetLayoutNeeded ();
+        SetNeedsLayout ();
     }
 
     /// <summary>Event for when <see cref="SelectedTab"/> changes.</summary>
@@ -622,7 +622,7 @@ public class TabView : View
                 {
                     _host.SwitchTabBy (scrollIndicatorHit);
 
-                    SetLayoutNeeded ();
+                    SetNeedsLayout ();
 
                     return true;
                 }
@@ -630,7 +630,7 @@ public class TabView : View
                 if (hit is { })
                 {
                     _host.SelectedTab = hit;
-                    SetLayoutNeeded ();
+                    SetNeedsLayout ();
 
                     return true;
                 }

@@ -175,7 +175,7 @@ public class RadioGroup : View, IDesignable, IOrientation
 
         SetupKeyBindings ();
 
-        LayoutStarted += RadioGroup_LayoutStarted;
+        SubviewLayout += RadioGroup_LayoutStarted;
 
         HighlightStyle = HighlightStyle.PressedOutside | HighlightStyle.Pressed;
 

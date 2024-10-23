@@ -1109,7 +1109,7 @@ public class ScrollViewTests (ITestOutputHelper output)
 
             labelFill = new () { Width = Dim.Fill (), Height = Dim.Fill (), Visible = false };
 
-            labelFill.LayoutComplete += (s, e) =>
+            labelFill.SubviewsLaidOut += (s, e) =>
                                         {
                                             var fillText = new StringBuilder ();
 

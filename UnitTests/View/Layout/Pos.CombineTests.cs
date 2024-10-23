@@ -120,7 +120,7 @@ public class PosCombineTests (ITestOutputHelper output)
         f.X = Pos.X (Application.Top) + Pos.X (v2) - Pos.X (v1);
         f.Y = Pos.Y (Application.Top) + Pos.Y (v2) - Pos.Y (v1);
 
-        Application.Top.LayoutComplete += (s, e) =>
+        Application.Top.SubviewsLaidOut += (s, e) =>
         {
             Assert.Equal (0, Application.Top.Frame.X);
             Assert.Equal (0, Application.Top.Frame.Y);

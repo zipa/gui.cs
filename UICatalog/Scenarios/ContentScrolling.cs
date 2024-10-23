@@ -108,7 +108,8 @@ public class ContentScrolling : Scenario
 
         var editor = new AdornmentsEditor
         {
-            AutoSelectViewToEdit = true
+            AutoSelectViewToEdit = true,
+            ShowViewIdentifier = true
         };
         app.Add (editor);
 
@@ -137,10 +138,10 @@ public class ContentScrolling : Scenario
         var cbAllowNegativeX = new CheckBox
         {
             Title = "Allow _X < 0",
-            Y = Pos.Bottom(frameLabel),
+            Y = Pos.Bottom (frameLabel),
             CanFocus = true
         };
-        cbAllowNegativeX.CheckedState = view.ViewportSettings.HasFlag(ViewportSettings.AllowNegativeX) ? CheckState.Checked : CheckState.UnChecked;
+        cbAllowNegativeX.CheckedState = view.ViewportSettings.HasFlag (ViewportSettings.AllowNegativeX) ? CheckState.Checked : CheckState.UnChecked;
         cbAllowNegativeX.CheckedStateChanging += AllowNegativeX_Toggle;
 
         void AllowNegativeX_Toggle (object sender, CancelEventArgs<CheckState> e)
@@ -164,7 +165,7 @@ public class ContentScrolling : Scenario
             Y = Pos.Bottom (frameLabel),
             CanFocus = true
         };
-        cbAllowNegativeY.CheckedState = view.ViewportSettings.HasFlag(ViewportSettings.AllowNegativeY) ? CheckState.Checked : CheckState.UnChecked;
+        cbAllowNegativeY.CheckedState = view.ViewportSettings.HasFlag (ViewportSettings.AllowNegativeY) ? CheckState.Checked : CheckState.UnChecked;
         cbAllowNegativeY.CheckedStateChanging += AllowNegativeY_Toggle;
 
         void AllowNegativeY_Toggle (object sender, CancelEventArgs<CheckState> e)
@@ -187,7 +188,7 @@ public class ContentScrolling : Scenario
             Y = Pos.Bottom (cbAllowNegativeX),
             CanFocus = true
         };
-        cbAllowXGreaterThanContentWidth.CheckedState = view.ViewportSettings.HasFlag(ViewportSettings.AllowXGreaterThanContentWidth) ? CheckState.Checked : CheckState.UnChecked;
+        cbAllowXGreaterThanContentWidth.CheckedState = view.ViewportSettings.HasFlag (ViewportSettings.AllowXGreaterThanContentWidth) ? CheckState.Checked : CheckState.UnChecked;
         cbAllowXGreaterThanContentWidth.CheckedStateChanging += AllowXGreaterThanContentWidth_Toggle;
 
         void AllowXGreaterThanContentWidth_Toggle (object sender, CancelEventArgs<CheckState> e)
@@ -211,7 +212,7 @@ public class ContentScrolling : Scenario
             Y = Pos.Bottom (cbAllowNegativeX),
             CanFocus = true
         };
-        cbAllowYGreaterThanContentHeight.CheckedState = view.ViewportSettings.HasFlag(ViewportSettings.AllowYGreaterThanContentHeight) ? CheckState.Checked : CheckState.UnChecked;
+        cbAllowYGreaterThanContentHeight.CheckedState = view.ViewportSettings.HasFlag (ViewportSettings.AllowYGreaterThanContentHeight) ? CheckState.Checked : CheckState.UnChecked;
         cbAllowYGreaterThanContentHeight.CheckedStateChanging += AllowYGreaterThanContentHeight_Toggle;
 
         void AllowYGreaterThanContentHeight_Toggle (object sender, CancelEventArgs<CheckState> e)
@@ -290,7 +291,7 @@ public class ContentScrolling : Scenario
             Y = Pos.Top (labelContentSize),
             CanFocus = true
         };
-        cbClearContentOnly.CheckedState = view.ViewportSettings.HasFlag(ViewportSettings.ClearContentOnly) ? CheckState.Checked : CheckState.UnChecked;
+        cbClearContentOnly.CheckedState = view.ViewportSettings.HasFlag (ViewportSettings.ClearContentOnly) ? CheckState.Checked : CheckState.UnChecked;
         cbClearContentOnly.CheckedStateChanging += ClearContentOnly_Toggle;
 
         void ClearContentOnly_Toggle (object sender, CancelEventArgs<CheckState> e)

@@ -289,7 +289,7 @@ public class ScenarioTests : TestsAllViews
             // Remove existing class, if any
             if (_curView != null)
             {
-                _curView.LayoutComplete -= LayoutCompleteHandler;
+                _curView.SubviewsLaidOut -= LayoutCompleteHandler;
                 _hostPane.Remove (_curView);
                 _curView.Dispose ();
                 _curView = null;
@@ -594,7 +594,7 @@ public class ScenarioTests : TestsAllViews
             UpdateSettings (view);
             UpdateTitle (view);
 
-            view.LayoutComplete += LayoutCompleteHandler;
+            view.SubviewsLaidOut += LayoutCompleteHandler;
 
             return view;
         }

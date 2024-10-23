@@ -130,7 +130,7 @@ public class Shortcut : View, IOrientation, IDesignable
 
         Action = action;
 
-        LayoutStarted += OnLayoutStarted;
+        SubviewLayout += OnLayoutStarted;
 
         ShowHide ();
     }
@@ -371,7 +371,7 @@ public class Shortcut : View, IOrientation, IDesignable
     public void OnOrientationChanged (Orientation newOrientation)
     {
         // TODO: Determine what, if anything, is opinionated about the orientation.
-        SetLayoutNeeded ();
+        SetNeedsLayout ();
     }
 
     #endregion
@@ -644,9 +644,9 @@ public class Shortcut : View, IOrientation, IDesignable
             SetKeyViewDefaultLayout ();
 
             // TODO: Prob not needed
-            CommandView.SetLayoutNeeded ();
-            HelpView.SetLayoutNeeded ();
-            KeyView.SetLayoutNeeded ();
+            CommandView.SetNeedsLayout ();
+            HelpView.SetNeedsLayout ();
+            KeyView.SetNeedsLayout ();
             SetSubViewNeedsDisplay ();
         }
     }

@@ -138,7 +138,7 @@ public class Bar : View, IOrientation, IDesignable
         {
             _alignmentModes = value;
             SetNeedsDisplay ();
-            SetLayoutNeeded ();
+            SetNeedsLayout ();
         }
     }
 
@@ -166,7 +166,7 @@ public class Bar : View, IOrientation, IDesignable
         }
 
         SetNeedsDisplay ();
-        SetLayoutNeeded ();
+        SetNeedsLayout ();
     }
 
     // TODO: Move this to View
@@ -190,17 +190,15 @@ public class Bar : View, IOrientation, IDesignable
         {
             Remove (toRemove);
             SetNeedsDisplay ();
-            SetLayoutNeeded ();
+            SetNeedsLayout ();
         }
 
         return toRemove as Shortcut;
     }
 
     /// <inheritdoc />
-    internal override void OnLayoutStarted (LayoutEventArgs args)
+    protected override void OnSubviewLayout (LayoutEventArgs args)
     {
-        base.OnLayoutStarted (args);
-
         LayoutBarItems (args.OldContentSize);
     }
 

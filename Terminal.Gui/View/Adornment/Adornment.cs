@@ -1,7 +1,5 @@
 ﻿#nullable enable
-using System.ComponentModel;
 using Terminal.Gui;
-using static Terminal.Gui.SpinnerStyle;
 using Attribute = Terminal.Gui.Attribute;
 
 /// <summary>
@@ -28,7 +26,7 @@ public class Adornment : View, IDesignable
     /// <param name="parent"></param>
     public Adornment (View parent)
     {
-        // By default Adornments can't get focus; has to be enabled specifically.
+        // By default, Adornments can't get focus; has to be enabled specifically.
         CanFocus = false;
         TabStop = TabBehavior.NoStop;
         Parent = parent;
@@ -44,9 +42,12 @@ public class Adornment : View, IDesignable
     #region Thickness
 
     /// <summary>
-    /// 
+    ///     Gets or sets whether the Adornment will draw diagnostic information. This is a bit-field of <see cref="ViewDiagnosticFlags"/>.
     /// </summary>
-    public ViewDiagnosticFlags Diagnostics { get; set; } = View.Diagnostics;
+    /// <remarks>
+    ///     The <see cref="View.Diagnostics"/> static property is used as the default value for this property.
+    /// </remarks>
+    public new ViewDiagnosticFlags Diagnostics { get; set; } = View.Diagnostics;
 
     private Thickness _thickness = Thickness.Empty;
 
@@ -63,9 +64,8 @@ public class Adornment : View, IDesignable
             if (current != _thickness)
             {
                 Parent?.SetAdornmentFrames ();
-                SetLayoutNeeded ();
+                SetNeedsLayout ();
                 SetNeedsDisplay ();
-                //Parent?.SetLayoutNeeded ();
 
                 OnThicknessChanged ();
             }
@@ -73,14 +73,10 @@ public class Adornment : View, IDesignable
     }
 
     /// <summary>Fired whenever the <see cref="Thickness"/> property changes.</summary>
-    [CanBeNull]
     public event EventHandler? ThicknessChanged;
 
     /// <summary>Called whenever the <see cref="Thickness"/> property changes.</summary>
-    public void OnThicknessChanged ()
-    {
-        ThicknessChanged?.Invoke (this, EventArgs.Empty);
-    }
+    public void OnThicknessChanged () { ThicknessChanged?.Invoke (this, EventArgs.Empty); }
 
     #endregion Thickness
 
@@ -91,24 +87,14 @@ public class Adornment : View, IDesignable
     ///     <see cref="InvalidOperationException"/>.
     /// </summary>
     /// <remarks>
-    ///     While there are no real use cases for an Adornment being a subview, it is not explicitly dis-allowed to support testing. E.g. in AllViewsTester.
+    ///     While there are no real use cases for an Adornment being a subview, it is not explicitly dis-allowed to support
+    ///     testing. E.g. in AllViewsTester.
     /// </remarks>
     public override View? SuperView
     {
         get => base.SuperView!;
         set => throw new InvalidOperationException (@"Adornments can not be Subviews or have SuperViews. Use Parent instead.");
     }
-
-    //internal override Adornment CreateAdornment (Type adornmentType)
-    //{
-    //    /* Do nothing - Adornments do not have Adornments */
-    //    return null;
-    //}
-
-    //internal override void LayoutAdornments ()
-    //{
-    //    /* Do nothing - Adornments do not have Adornments */
-    //}
 
     /// <summary>
     ///     Gets the rectangle that describes the area of the Adornment. The Location is always (0,0).
@@ -137,6 +123,7 @@ public class Adornment : View, IDesignable
 
                 return new (super, Frame.Size);
             }
+
             return Frame;
         }
 
@@ -150,16 +137,13 @@ public class Adornment : View, IDesignable
     }
 
     /// <inheritdoc/>
-    public override Point ScreenToFrame (in Point location)
-    {
-        return Parent!.ScreenToFrame (new (location.X - Frame.X, location.Y - Frame.Y));
-    }
+    public override Point ScreenToFrame (in Point location) { return Parent!.ScreenToFrame (new (location.X - Frame.X, location.Y - Frame.Y)); }
 
     /// <summary>Does nothing for Adornment</summary>
     /// <returns></returns>
     protected override bool OnDrawAdornments () { return false; }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     protected override bool OnClearViewport (Rectangle viewport)
     {
         Attribute normalAttr = GetNormalColor ();
@@ -170,7 +154,7 @@ public class Adornment : View, IDesignable
 
         return true;
     }
-    
+
     /// <summary>Does nothing for Adornment</summary>
     /// <returns></returns>
     protected override bool OnRenderLineCanvas () { return false; }
@@ -185,70 +169,48 @@ public class Adornment : View, IDesignable
         set => throw new InvalidOperationException (@"Adornment can only render to their Parent or Parent's Superview.");
     }
 
-    #endregion View Overrides
-
-    #region Mouse Support
-
-
     /// <summary>
-    /// Indicates whether the specified Parent's SuperView-relative coordinates are within the Adornment's Thickness.
+    ///     Indicates whether the specified Parent's SuperView-relative coordinates are within the Adornment's Thickness.
     /// </summary>
     /// <remarks>
     ///     The <paramref name="location"/> is relative to the PARENT's SuperView.
     /// </remarks>
     /// <param name="location"></param>
-    /// <returns><see langword="true"/> if the specified Parent's SuperView-relative coordinates are within the Adornment's Thickness. </returns>
+    /// <returns>
+    ///     <see langword="true"/> if the specified Parent's SuperView-relative coordinates are within the Adornment's
+    ///     Thickness.
+    /// </returns>
     public override bool Contains (in Point location)
     {
-        if (Parent is null)
+        View? parentOrSuperView = Parent;
+
+        if (parentOrSuperView is null)
         {
-            return false;
+            // While there are no real use cases for an Adornment being a subview, we support it for
+            // testing. E.g. in AllViewsTester.
+            parentOrSuperView = SuperView;
+
+            if (parentOrSuperView is null)
+            {
+                return false;
+            }
         }
 
         Rectangle outside = Frame;
-        outside.Offset (Parent.Frame.Location);
+        outside.Offset (parentOrSuperView.Frame.Location);
 
         return Thickness.Contains (outside, location);
     }
 
-    ///// <inheritdoc/>
-    //protected override bool OnMouseEnter (CancelEventArgs mouseEvent)
-    //{
-    //    // Invert Normal
-    //    if (Diagnostics.HasFlag (ViewDiagnosticFlags.MouseEnter) && ColorScheme != null)
-    //    {
-    //        var cs = new ColorScheme (ColorScheme)
-    //        {
-    //            Normal = new (ColorScheme.Normal.Background, ColorScheme.Normal.Foreground)
-    //        };
-    //        ColorScheme = cs;
-    //    }
-
-    //    return false;
-    //}
-
-    ///// <inheritdoc/>   
-    //protected override void OnMouseLeave ()
-    //{
-    //    // Invert Normal
-    //    if (Diagnostics.FastHasFlags (ViewDiagnosticFlags.MouseEnter) && ColorScheme != null)
-    //    {
-    //        var cs = new ColorScheme (ColorScheme)
-    //        {
-    //            Normal = new (ColorScheme.Normal.Background, ColorScheme.Normal.Foreground)
-    //        };
-    //        ColorScheme = cs;
-    //    }
-    //}
-    #endregion Mouse Support
-
+    #endregion View Overrides
 
     /// <inheritdoc/>
     bool IDesignable.EnableForDesign ()
     {
+        // This enables AllViewsTester to show something useful.
         Thickness = new (3);
         Frame = new (0, 0, 10, 10);
-        Diagnostics = ViewDiagnosticFlags.Padding;
+        Diagnostics = ViewDiagnosticFlags.Thickness;
 
         return true;
     }

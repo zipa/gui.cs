@@ -24,6 +24,8 @@ public class ShadowStyles : Scenario
         var editor = new AdornmentsEditor ()
         {
             AutoSelectViewToEdit = true,
+            ShowViewIdentifier = true,
+
         };
         app.Add (editor);
 

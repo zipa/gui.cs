@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Text;
 using Terminal.Gui;
 
@@ -36,7 +37,6 @@ public class ExpanderButton : Button
         Height = 1;
         NoDecorations = true;
         NoPadding = true;
-        ShadowStyle = ShadowStyle.None;
 
         AddCommand (Command.HotKey, Toggle);
         AddCommand (Command.Toggle, Toggle);
@@ -47,7 +47,12 @@ public class ExpanderButton : Button
         Initialized += ExpanderButton_Initialized;
     }
 
-    private void ExpanderButton_Initialized (object sender, EventArgs e) { ExpandOrCollapse (Collapsed); }
+    private void ExpanderButton_Initialized (object? sender, EventArgs e)
+    {
+        ShadowStyle = ShadowStyle.None;
+
+        ExpandOrCollapse (Collapsed);
+    }
 
     private Orientation _orientation = Orientation.Horizontal;
 
@@ -102,7 +107,7 @@ public class ExpanderButton : Button
     /// <summary>
     ///     Fired when the orientation has changed. Can be cancelled.
     /// </summary>
-    public event EventHandler<CancelEventArgs<Orientation>> OrientationChanging;
+    public event EventHandler<CancelEventArgs<Orientation>>? OrientationChanging;
 
     /// <summary>
     ///     The glyph to display when the view is collapsed.
@@ -146,7 +151,7 @@ public class ExpanderButton : Button
     /// <summary>
     ///     Fired when the orientation has changed. Can be cancelled.
     /// </summary>
-    public event EventHandler<CancelEventArgs<bool>> CollapsedChanging;
+    public event EventHandler<CancelEventArgs<bool>>? CollapsedChanging;
 
     /// <summary>
     ///     Collapses or Expands the view.
@@ -159,13 +164,13 @@ public class ExpanderButton : Button
         return true;
     }
 
-    private Dim _previousDim;
+    private Dim? _previousDim;
 
     private void ExpandOrCollapse (bool collapse)
     {
         Text = $"{(Collapsed ? CollapsedGlyph : ExpandedGlyph)}";
 
-        View superView = SuperView;
+        View? superView = SuperView;
 
         if (superView is Adornment adornment)
         {
@@ -182,12 +187,12 @@ public class ExpanderButton : Button
             // Collapse
             if (Orientation == Orientation.Vertical)
             {
-                _previousDim = superView.Height;
+                _previousDim = superView!.Height!;
                 superView.Height = 1;
             }
             else
             {
-                _previousDim = superView.Width;
+                _previousDim = superView!.Width!;
                 superView.Width = 1;
             }
         }

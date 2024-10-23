@@ -29,6 +29,7 @@ public class Arrangement : Scenario
             Y = 0,
             AutoSelectViewToEdit = true,
             TabStop = TabBehavior.NoStop,
+            ShowViewIdentifier = true
         };
 
         app.Add (adornmentsEditor);

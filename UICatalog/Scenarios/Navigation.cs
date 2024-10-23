@@ -26,6 +26,7 @@ public class Navigation : Scenario
             X = 0,
             Y = 0,
             AutoSelectViewToEdit = true,
+            ShowViewIdentifier = true,
             TabStop = TabBehavior.NoStop
         };
         app.Add (adornmentsEditor);

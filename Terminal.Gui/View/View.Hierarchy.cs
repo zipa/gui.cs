@@ -86,7 +86,7 @@ public partial class View // SuperView/SubView hierarchy management (SuperView, 
         }
 
         SetNeedsDisplay ();
-        SetLayoutNeeded ();
+        SetNeedsLayout ();
 
         return view;
     }
@@ -176,7 +176,7 @@ public partial class View // SuperView/SubView hierarchy management (SuperView, 
         }
         view._superView = null;
 
-        SetLayoutNeeded ();
+        SetNeedsLayout ();
         SetNeedsDisplay ();
 
         foreach (View v in _subviews)

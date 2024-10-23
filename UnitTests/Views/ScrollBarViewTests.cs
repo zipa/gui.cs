@@ -828,7 +828,7 @@ This is a test
                                                             textView.SetNeedsDisplay ();
                                                         };
 
-        textView.LayoutComplete += (s, e) =>
+        textView.SubviewsLaidOut += (s, e) =>
                                    {
                                        scrollBar.Size = textView.Lines;
                                        scrollBar.Position = textView.TopRow;

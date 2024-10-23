@@ -36,7 +36,7 @@ public static partial class Application // Screen related stuff
         foreach (Toplevel t in TopLevels)
         {
             t.OnSizeChanging (new (args.Size));
-            t.SetLayoutNeeded ();
+            t.SetNeedsLayout ();
         }
 
         Refresh ();

@@ -91,8 +91,8 @@ public class SetLayoutTests (ITestOutputHelper output)
         var view = new View { Id = "view" };
         bool layoutStartedRaised = false;
         bool layoutCompleteRaised = false;
-        superView.LayoutStarted += (sender, e) => layoutStartedRaised = true;
-        superView.LayoutComplete += (sender, e) => layoutCompleteRaised = true;
+        superView.SubviewLayout += (sender, e) => layoutStartedRaised = true;
+        superView.SubviewsLaidOut += (sender, e) => layoutCompleteRaised = true;
 
         superView.Add (view);
 
@@ -114,10 +114,10 @@ public class SetLayoutTests (ITestOutputHelper output)
         var superView = new View { Id = "superView" };
         int layoutStartedRaised = 0;
         int layoutCompleteRaised = 0;
-        superView.LayoutStarted += (sender, e) => layoutStartedRaised++;
-        superView.LayoutComplete += (sender, e) => layoutCompleteRaised++;
+        superView.SubviewLayout += (sender, e) => layoutStartedRaised++;
+        superView.SubviewsLaidOut += (sender, e) => layoutCompleteRaised++;
 
-        superView.SetLayoutNeeded ();
+        superView.SetNeedsLayout ();
         superView.LayoutSubviews ();
         Assert.Equal (1, layoutStartedRaised);
         Assert.Equal (1, layoutCompleteRaised);
@@ -208,11 +208,11 @@ public class SetLayoutTests (ITestOutputHelper output)
         var borderLayoutStartedCount = 0;
         var borderLayoutCompleteCount = 0;
 
-        view.LayoutStarted += (sender, e) => layoutStartedCount++;
-        view.LayoutComplete += (sender, e) => layoutCompleteCount++;
+        view.SubviewLayout += (sender, e) => layoutStartedCount++;
+        view.SubviewsLaidOut += (sender, e) => layoutCompleteCount++;
 
-        view.Border.LayoutStarted += (sender, e) => borderLayoutStartedCount++;
-        view.Border.LayoutComplete += (sender, e) => borderLayoutCompleteCount++;
+        view.Border.SubviewLayout += (sender, e) => borderLayoutStartedCount++;
+        view.Border.SubviewsLaidOut += (sender, e) => borderLayoutCompleteCount++;
 
 
         superView.Add (view);
@@ -239,10 +239,10 @@ public class SetLayoutTests (ITestOutputHelper output)
         Assert.Equal (1, layoutStartedCount);
         Assert.Equal (1, layoutCompleteCount);
 
-        superView.SetLayoutNeeded ();
+        superView.SetNeedsLayout ();
         superView.LayoutSubviews ();
-        Assert.Equal (2, borderLayoutStartedCount);
-        Assert.Equal (2, borderLayoutCompleteCount);
+        Assert.Equal (1, borderLayoutStartedCount);
+        Assert.Equal (1, borderLayoutCompleteCount);
         Assert.Equal (2, layoutStartedCount);
         Assert.Equal (2, layoutCompleteCount);
 
@@ -250,8 +250,9 @@ public class SetLayoutTests (ITestOutputHelper output)
     }
 
     [Fact]
-    public void LayoutSubviews__Honors_IsLayoutNeeded ()
+    public void LayoutSubviews_Honors_IsLayoutNeeded ()
     {
+        // No adornment subviews
         var superView = new View ();
         var view = new View ();
 
@@ -261,33 +262,53 @@ public class SetLayoutTests (ITestOutputHelper output)
         var borderLayoutStartedCount = 0;
         var borderLayoutCompleteCount = 0;
 
-        view.LayoutStarted += (sender, e) => layoutStartedCount++;
-        view.LayoutComplete += (sender, e) => layoutCompleteCount++;
+        view.SubviewLayout += (sender, e) => layoutStartedCount++;
+        view.SubviewsLaidOut += (sender, e) => layoutCompleteCount++;
 
-        view.Border.LayoutStarted += (sender, e) => borderLayoutStartedCount++;
-        view.Border.LayoutComplete += (sender, e) => borderLayoutCompleteCount++;
+        view.Border.SubviewLayout += (sender, e) => borderLayoutStartedCount++;
+        view.Border.SubviewsLaidOut += (sender, e) => borderLayoutCompleteCount++;
 
 
         superView.Add (view);
 
         superView.LayoutSubviews ();
-        Assert.Equal (1, borderLayoutStartedCount);
-        Assert.Equal (1, borderLayoutCompleteCount);
+        Assert.Equal (0, borderLayoutStartedCount);
+        Assert.Equal (0, borderLayoutCompleteCount);
         Assert.Equal (1, layoutStartedCount);
         Assert.Equal (1, layoutCompleteCount);
 
         superView.LayoutSubviews ();
-        Assert.Equal (1, borderLayoutStartedCount);
-        Assert.Equal (1, borderLayoutCompleteCount);
+        Assert.Equal (0, borderLayoutStartedCount);
+        Assert.Equal (0, borderLayoutCompleteCount);
         Assert.Equal (1, layoutStartedCount);
         Assert.Equal (1, layoutCompleteCount);
 
-        superView.SetLayoutNeeded ();
+        superView.SetNeedsLayout ();
+        superView.LayoutSubviews ();
+        Assert.Equal (0, borderLayoutStartedCount);
+        Assert.Equal (0, borderLayoutCompleteCount);
+        Assert.Equal (2, layoutStartedCount);
+        Assert.Equal (2, layoutCompleteCount);
+
+        // With Border subview
+        view.Border.Add (new View ());
+        superView.LayoutSubviews ();
+        Assert.Equal (1, borderLayoutStartedCount);
+        Assert.Equal (1, borderLayoutCompleteCount);
+        Assert.Equal (3, layoutStartedCount);
+        Assert.Equal (3, layoutCompleteCount);
+
+        superView.LayoutSubviews ();
+        Assert.Equal (1, borderLayoutStartedCount);
+        Assert.Equal (1, borderLayoutCompleteCount);
+        Assert.Equal (3, layoutStartedCount);
+        Assert.Equal (3, layoutCompleteCount);
+
+        superView.SetNeedsLayout ();
         superView.LayoutSubviews ();
         Assert.Equal (2, borderLayoutStartedCount);
         Assert.Equal (2, borderLayoutCompleteCount);
-        Assert.Equal (2, layoutStartedCount);
-        Assert.Equal (2, layoutCompleteCount);
+        Assert.Equal (4, layoutStartedCount);
 
         superView.Dispose ();
     }

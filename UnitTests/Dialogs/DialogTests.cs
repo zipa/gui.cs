@@ -1108,7 +1108,7 @@ public class DialogTests
                          switch (iterations)
                          {
                              case 0:
-                                 Top.SetLayoutNeeded();
+                                 Top.SetNeedsLayout();
                                  Top.SetNeedsDisplay();
                                  Refresh ();
 
@@ -1449,7 +1449,7 @@ public class DialogTests
         RunState runState = Begin (dlg);
 
         dlg.SetNeedsDisplay();
-        dlg.SetLayoutNeeded ();
+        dlg.SetNeedsLayout ();
         dlg.Layout ();
         dlg.Draw ();
 

@@ -491,13 +491,13 @@ At 0,0
 
         RunState runState = Application.Begin (top);
 
-        top.LayoutComplete += (s, e) => { Assert.Equal (new (0, 0, 80, 25), top._needsDisplayRect); };
+        top.SubviewsLaidOut += (s, e) => { Assert.Equal (new (0, 0, 80, 25), top._needsDisplayRect); };
 
-        frame.LayoutComplete += (s, e) => { Assert.Equal (new (0, 0, 40, 8), frame._needsDisplayRect); };
+        frame.SubviewsLaidOut += (s, e) => { Assert.Equal (new (0, 0, 40, 8), frame._needsDisplayRect); };
 
-        label.LayoutComplete += (s, e) => { Assert.Equal (new (0, 0, 38, 1), label._needsDisplayRect); };
+        label.SubviewsLaidOut += (s, e) => { Assert.Equal (new (0, 0, 38, 1), label._needsDisplayRect); };
 
-        view.LayoutComplete += (s, e) => { Assert.Equal (new (0, 0, 13, 1), view._needsDisplayRect); };
+        view.SubviewsLaidOut += (s, e) => { Assert.Equal (new (0, 0, 13, 1), view._needsDisplayRect); };
 
         Assert.Equal (new (0, 0, 80, 25), top.Frame);
         Assert.Equal (new (20, 8, 40, 8), frame.Frame);

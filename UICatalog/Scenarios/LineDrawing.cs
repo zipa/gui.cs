@@ -286,7 +286,7 @@ public class DrawingArea : View
 
         // TODO: This is a hack to work around overlapped views not drawing correctly.
         // without this the toolbox disappears
-        SuperView?.SetLayoutNeeded();
+        SuperView?.SetNeedsLayout();
 
         return true;
     }

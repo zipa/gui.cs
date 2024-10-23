@@ -57,7 +57,7 @@ public class AnimationScenario : Scenario
         }
 
         var f = new FileInfo (
-                              Path.Combine (dir.FullName, "Scenarios", "Spinning_globe_dark_small.gif")
+                              Path.Combine (dir.FullName, "Scenarios\\AnimationScenario", "Spinning_globe_dark_small.gif")
                              );
 
         if (!f.Exists)

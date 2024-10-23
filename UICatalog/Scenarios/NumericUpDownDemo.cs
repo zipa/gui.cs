@@ -23,6 +23,7 @@ public class NumericUpDownDemo : Scenario
             X = 0,
             Y = 0,
             AutoSelectViewToEdit = true,
+            ShowViewIdentifier = true,
         };
         app.Add (editor);
 

@@ -21,7 +21,7 @@ public class Margin : Adornment
         // BUGBUG: We should not set HighlightStyle.Pressed here, but wherever it is actually needed
         // HighlightStyle |= HighlightStyle.Pressed;
         Highlight += Margin_Highlight;
-        LayoutStarted += Margin_LayoutStarted;
+        SubviewLayout += Margin_LayoutStarted;
 
         // Margin should not be focusable
         CanFocus = false;

@@ -59,7 +59,7 @@ public class ThicknessTests (ITestOutputHelper output)
                                      new Rectangle (0, 0, Application.Driver!.Cols, Application.Driver!.Rows),
                                      (Rune)' '
                                     );
-        t.Draw (r, ViewDiagnosticFlags.Padding, "Test");
+        t.Draw (r, ViewDiagnosticFlags.Thickness, "Test");
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -74,7 +74,7 @@ public class ThicknessTests (ITestOutputHelper output)
                                      new Rectangle (0, 0, Application.Driver!.Cols, Application.Driver!.Rows),
                                      (Rune)' '
                                     );
-        t.Draw (r, ViewDiagnosticFlags.Padding, "Test");
+        t.Draw (r, ViewDiagnosticFlags.Thickness, "Test");
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -103,7 +103,7 @@ public class ThicknessTests (ITestOutputHelper output)
                                      new Rectangle (0, 0, Application.Driver!.Cols, Application.Driver!.Rows),
                                      (Rune)' '
                                     );
-        t.Draw (r, ViewDiagnosticFlags.Padding, "Test");
+        t.Draw (r, ViewDiagnosticFlags.Thickness, "Test");
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -132,7 +132,7 @@ public class ThicknessTests (ITestOutputHelper output)
                                      new Rectangle (0, 0, Application.Driver!.Cols, Application.Driver!.Rows),
                                      (Rune)' '
                                     );
-        t.Draw (r, ViewDiagnosticFlags.Padding, "Test");
+        t.Draw (r, ViewDiagnosticFlags.Thickness, "Test");
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"

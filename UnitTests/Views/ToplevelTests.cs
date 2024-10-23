@@ -695,12 +695,12 @@ public partial class ToplevelTests (ITestOutputHelper output)
         Assert.False (subTop.IsLoaded);
         Assert.Equal (new (0, 0, 20, 10), view.Frame);
 
-        view.LayoutStarted += ViewLayoutStarted;
+        view.SubviewLayout += ViewLayoutStarted;
 
         void ViewLayoutStarted (object sender, LayoutEventArgs e)
         {
             Assert.Equal (new (0, 0, 20, 10), view._needsDisplayRect);
-            view.LayoutStarted -= ViewLayoutStarted;
+            view.SubviewLayout -= ViewLayoutStarted;
         }
 
         Application.Begin (top);
@@ -749,7 +749,7 @@ public partial class ToplevelTests (ITestOutputHelper output)
 
         Application.RaiseMouseEvent (new () { ScreenPosition = new (9, 9), Flags = MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition });
         Assert.Equal (win.Border, Application.MouseGrabView);
-        top.SetLayoutNeeded ();
+        top.SetNeedsLayout ();
         top.LayoutSubviews ();
         Assert.Equal (new (6, 6, 191, 91), win.Frame);
         Application.Refresh ();
@@ -760,7 +760,7 @@ public partial class ToplevelTests (ITestOutputHelper output)
                                       ScreenPosition = new (5, 5), Flags = MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition
                                   });
         Assert.Equal (win.Border, Application.MouseGrabView);
-        top.SetLayoutNeeded ();
+        top.SetNeedsLayout ();
         top.LayoutSubviews ();
         Assert.Equal (new (2, 2, 195, 95), win.Frame);
         Application.Refresh ();

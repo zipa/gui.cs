@@ -189,7 +189,7 @@ public class FileDialog : Dialog
                                                   bool newState = !tile.ContentView.Visible;
                                                   tile.ContentView.Visible = newState;
                                                   _btnToggleSplitterCollapse.Text = GetToggleSplitterText (newState);
-                                                  SetLayoutNeeded();
+                                                  SetNeedsLayout();
                                               };
 
         _tbFind = new TextField
@@ -494,7 +494,7 @@ public class FileDialog : Dialog
             MoveSubviewTowardsStart (_btnCancel);
         }
 
-        SetLayoutNeeded();
+        SetNeedsLayout();
     }
 
     /// <inheritdoc/>

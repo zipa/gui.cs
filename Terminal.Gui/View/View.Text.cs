@@ -26,7 +26,7 @@ public partial class View // Text Property APIs
             {
                 TextFormatter.PreserveTrailingSpaces = value;
                 TextFormatter.NeedsFormat = true;
-                SetLayoutNeeded ();
+                SetNeedsLayout ();
             }
         }
     }
@@ -67,7 +67,7 @@ public partial class View // Text Property APIs
             _text = value;
 
             UpdateTextFormatterText ();
-            SetLayoutNeeded ();
+            SetNeedsLayout ();
 #if DEBUG
             if (_text is { } && string.IsNullOrEmpty (Id))
             {
@@ -97,7 +97,7 @@ public partial class View // Text Property APIs
         {
             TextFormatter.Alignment = value;
             UpdateTextFormatterText ();
-            SetLayoutNeeded ();
+            SetNeedsLayout ();
         }
     }
 
@@ -234,7 +234,7 @@ public partial class View // Text Property APIs
         {
             TextFormatter.ConstrainToWidth = null;
             TextFormatter.ConstrainToHeight = null;
-            SetLayoutNeeded ();
+            SetNeedsLayout ();
         }
 
         SetNeedsDisplay ();
