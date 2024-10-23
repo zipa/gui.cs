@@ -23,6 +23,7 @@ public class PopularityPaletteWithThreshold : IPaletteBuilder
         _mergeThreshold = mergeThreshold; // Set the threshold for merging similar colors
     }
 
+    /// <inheritdoc/>
     public List<Color> BuildPalette (List<Color> colors, int maxColors)
     {
         if (colors == null || colors.Count == 0 || maxColors <= 0)

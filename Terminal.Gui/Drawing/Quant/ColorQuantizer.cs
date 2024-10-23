@@ -55,6 +55,12 @@ public class ColorQuantizer
         Palette = PaletteBuildingAlgorithm.BuildPalette (allColors, MaxColors);
     }
 
+    /// <summary>
+    /// Returns the closest color in <see cref="Palette"/> that matches <paramref name="toTranslate"/>
+    /// based on the color comparison algorithm defined by <see cref="DistanceAlgorithm"/>
+    /// </summary>
+    /// <param name="toTranslate"></param>
+    /// <returns></returns>
     public int GetNearestColor (Color toTranslate)
     {
         if (_nearestColorCache.TryGetValue (toTranslate, out int cachedAnswer))
