@@ -100,16 +100,27 @@ public class Images : Scenario
         {
             X = Pos.Right (lblDriverName) + 2,
             Y = 1,
-            CheckedState = _sixelSupportResult.IsSupported
-                               ? CheckState.Checked
-                               : CheckState.UnChecked,
+            CheckedState = CheckState.UnChecked,
             Text = "Supports Sixel"
         };
 
+        var lblSupportsSixel = new Label ()
+        {
+
+            X = Pos.Right (lblDriverName) + 2,
+            Y = Pos.Bottom (cbSupportsSixel),
+            Text = "(Check if your terminal supports Sixel)"
+        };
+
+
+/*        CheckedState = _sixelSupportResult.IsSupported
+                           ? CheckState.Checked
+                           : CheckState.UnChecked;*/
         cbSupportsSixel.CheckedStateChanging += (s, e) =>
                                                 {
                                                     _sixelSupportResult.IsSupported = e.NewValue == CheckState.Checked;
                                                     SetupSixelSupported (e.NewValue == CheckState.Checked);
+                                                    ApplyShowTabViewHack ();
                                                 };
 
         _win.Add (cbSupportsSixel);
@@ -130,7 +141,7 @@ public class Images : Scenario
 
         _tabView = new ()
         {
-            Y = Pos.Bottom (btnOpenImage), Width = Dim.Fill (), Height = Dim.Fill ()
+            Y = Pos.Bottom (lblSupportsSixel), Width = Dim.Fill (), Height = Dim.Fill ()
         };
 
         _tabView.AddTab (tabBasic, true);
@@ -143,6 +154,7 @@ public class Images : Scenario
 
         btnOpenImage.Accepting += OpenImage;
 
+        _win.Add (lblSupportsSixel);
         _win.Add (_tabView);
         Application.Run (_win);
         _win.Dispose ();
@@ -275,7 +287,17 @@ public class Images : Scenario
         }
 
         _imageView.SetImage (img);
+        ApplyShowTabViewHack ();
         Application.Refresh ();
+    }
+
+    private void ApplyShowTabViewHack ()
+    {
+        // TODO HACK: This hack seems to be required to make tabview actually refresh itself
+        _tabView.SetNeedsDisplay();
+        var orig = _tabView.SelectedTab;
+        _tabView.SelectedTab = _tabView.Tabs.Except (new []{orig}).ElementAt (0);
+        _tabView.SelectedTab = orig;
     }
 
     private void BuildBasicTab (Tab tabBasic)
