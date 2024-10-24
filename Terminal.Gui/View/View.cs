@@ -231,8 +231,6 @@ public partial class View : Responder, ISupportInitializeNotification
         UpdateTextDirection (TextDirection);
         UpdateTextFormatterText ();
 
-        SetNeedsLayout ();
-
         if (_subviews is { })
         {
             foreach (View view in _subviews)
@@ -244,8 +242,9 @@ public partial class View : Responder, ISupportInitializeNotification
             }
         }
 
-        // TODO: Figure out how to move this out of here and just depend on IsLayoutNeeded in Mainloop
-        Layout ();
+        // TODO: Figure out how to move this out of here and just depend on LayoutNeeded in Mainloop
+        Layout (); // the EventLog in AllViewsTester fails to layout correctly if this is not here (convoluted Dim.Fill(Func)).
+        SetNeedsLayout ();
 
         Initialized?.Invoke (this, EventArgs.Empty);
     }

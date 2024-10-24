@@ -159,7 +159,6 @@ public partial class View // Layout APIs
     // helper for X, Y, Width, Height setters to ensure consistency
     private void PosDimSet ()
     {
-        _needsLayout = false;
         SetNeedsLayout ();
 
         if (_x is PosAbsolute && _y is PosAbsolute && _width is DimAbsolute && _height is DimAbsolute)
@@ -656,7 +655,7 @@ public partial class View // Layout APIs
     #region NeedsLayout
 
     // We expose no setter for this to ensure that the ONLY place it's changed is in SetNeedsLayout
-    private bool _needsLayout = false;
+    private bool _needsLayout = true;
 
     /// <summary>
     ///     Indicates the View's Frame or the layout of the View's subviews (including Adornments) have
@@ -683,12 +682,6 @@ public partial class View // Layout APIs
 
     public void SetNeedsLayout ()
     {
-        if (NeedsLayout)
-        {
-            // Prevent infinite recursion
-            return;
-        }
-
         _needsLayout = true;
 
         if (Margin is { Subviews.Count: > 0 })
@@ -735,9 +728,17 @@ public partial class View // Layout APIs
 
         TextFormatter.NeedsFormat = true;
 
-        SuperView?.SetNeedsLayout ();
+        if (SuperView is { NeedsLayout: false })
+        {
+            SuperView?.SetNeedsLayout ();
+        }
 
-        if (this is Adornment adornment)
+        if (this is not Adornment adornment)
+        {
+            return;
+        }
+
+        if (adornment.Parent is { NeedsLayout: false })
         {
             adornment.Parent?.SetNeedsLayout ();
         }

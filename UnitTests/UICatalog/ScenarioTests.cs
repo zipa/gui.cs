@@ -167,6 +167,8 @@ public class ScenarioTests : TestsAllViews
         int updatedCount = 0;
         int drawCompleteCount = 0;
 
+        int laidOutCount = 0;
+
         _output.WriteLine ($"Running Scenario '{scenarioType}'");
         var scenario = (Scenario)Activator.CreateInstance (scenarioType);
 
@@ -202,6 +204,7 @@ public class ScenarioTests : TestsAllViews
         _output.WriteLine ($"  called Driver.Refresh {refreshedCount} times.");
         _output.WriteLine ($"    which updated the screen {updatedCount} times.");
         _output.WriteLine ($"  called View.Draw {drawCompleteCount} times.");
+        _output.WriteLine ($"  called View.LayoutComplete {laidOutCount} times.");
 
         // Restore the configuration locations
         ConfigurationManager.Locations = savedConfigLocations;
@@ -250,8 +253,8 @@ public class ScenarioTests : TestsAllViews
             if (iterationCount > maxIterations)
             {
                 // Press QuitKey
-                _output.WriteLine ($"Attempting to quit with {Application.QuitKey}");
-                Application.RaiseKeyDownEvent (Application.QuitKey);
+                _output.WriteLine ($"Attempting to quit scenario with RequestStop");
+                Application.RequestStop ();
             }
         }
 
@@ -260,16 +263,17 @@ public class ScenarioTests : TestsAllViews
         {
             // Get a list of all subviews under Application.Top (and their subviews, etc.)
             // and subscribe to their DrawComplete event
-            void SubscribeToDrawComplete (View view)
+            void SubscribeAllSubviews (View view)
             {
                 view.DrawComplete += (s, a) => drawCompleteCount++;
+                view.SubviewsLaidOut += (s, a) => laidOutCount++;
                 foreach (View subview in view.Subviews)
                 {
-                    SubscribeToDrawComplete (subview);
+                    SubscribeAllSubviews (subview);
                 }
             }
 
-            SubscribeToDrawComplete (Application.Top);
+            SubscribeAllSubviews (Application.Top);
         }
 
         // If the scenario doesn't close within the abort time, this will force it to quit
@@ -287,11 +291,6 @@ public class ScenarioTests : TestsAllViews
                          $"'{scenario.GetName ()}' failed to Quit with {Application.QuitKey} after {abortTime}ms and {iterationCount} iterations. Force quit.");
 
             Application.RequestStop ();
-            //// Restore the configuration locations
-            //ConfigurationManager.Locations = savedConfigLocations;
-            //ConfigurationManager.Reset ();
-
-            //Application.ResetState (true);
 
             return false;
         }
