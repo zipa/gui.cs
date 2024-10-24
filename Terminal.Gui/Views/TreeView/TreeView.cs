@@ -1127,7 +1127,7 @@ public class TreeView<T> : View, ITreeView where T : class
     public event EventHandler<ObjectActivatedEventArgs<T>> ObjectActivated;
 
     ///<inheritdoc/>
-    protected override bool OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
         if (roots is null)
         {

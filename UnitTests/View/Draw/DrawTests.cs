@@ -189,7 +189,7 @@ public class DrawTests (ITestOutputHelper _output)
  └─┘",
                                                       _output);
 
-        view.Clear ();
+        view.ClearViewport ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -227,7 +227,7 @@ public class DrawTests (ITestOutputHelper _output)
  └─┘",
                                                       _output);
 
-        view.Clear ();
+        view.ClearViewport ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"

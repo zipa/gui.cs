@@ -394,7 +394,7 @@ internal sealed class Menu : View
     }
 
     /// <inheritdoc />
-    protected override bool OnDrawAdornments ()
+    protected override bool OnDrawingAdornments ()
     {
         Margin?.SetNeedsDisplay ();
         Border?.SetNeedsDisplay();

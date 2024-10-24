@@ -268,7 +268,7 @@ public class DrawingArea : View
     public ITool CurrentTool { get; set; } = new DrawLineTool ();
     public DrawingArea () { AddLayer (); }
 
-    protected override bool OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
         foreach (LineCanvas canvas in Layers)
         {
@@ -375,7 +375,7 @@ public class AttributeView : View
     }
 
     /// <inheritdoc/>
-    protected override bool OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
         Color fg = Value.Foreground;
         Color bg = Value.Background;

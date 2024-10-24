@@ -54,7 +54,7 @@ public class LineView : View
     public Rune? StartingAnchor { get; set; }
 
     /// <summary>Draws the line including any starting/ending anchors</summary>
-    protected override bool OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
         Move (0, 0);
         Driver?.SetAttribute (GetNormalColor ());

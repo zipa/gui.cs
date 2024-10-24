@@ -638,7 +638,7 @@ public class CsvEditor : Scenario
             tableView.SetNeedsDisplay ();
         };*/
 
-        _tableView.DrawContent += (s, e) =>
+        _tableView.DrawingContent += (s, e) =>
                                   {
                                       scrollBar.Size = _tableView.Table?.Rows ?? 0;
                                       scrollBar.Position = _tableView.RowOffset;

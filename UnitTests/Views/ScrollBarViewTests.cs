@@ -434,7 +434,7 @@ This is a test
 
                                                                                   };
 
-                                              listView.DrawContent += (s, e) =>
+                                              listView.DrawingContent += (s, e) =>
                                                                       {
                                                                           newScrollBarView.Size = listView.MaxLength;
                                                                           Assert.Equal (newScrollBarView.Size, listView.MaxLength);
@@ -515,7 +515,7 @@ This is a test
 
                                                                                         };
 
-                                                    listView.DrawContent += (s, e) =>
+                                                    listView.DrawingContent += (s, e) =>
                                                                             {
                                                                                 newScrollBarView.Size = listView.Source.Count;
                                                                                 Assert.Equal (newScrollBarView.Size, listView.Source.Count);
@@ -1327,7 +1327,7 @@ This is a test             ",
     {
         if (!_added)
         {
-            _hostView.DrawContent += _hostView_DrawContent;
+            _hostView.DrawingContent += _hostView_DrawContent;
             _scrollBar.ChangedPosition += _scrollBar_ChangedPosition;
             _scrollBar.OtherScrollBarView.ChangedPosition += _scrollBar_OtherScrollBarView_ChangedPosition;
         }
@@ -1339,7 +1339,7 @@ This is a test             ",
     {
         if (_added)
         {
-            _hostView.DrawContent -= _hostView_DrawContent;
+            _hostView.DrawingContent -= _hostView_DrawContent;
             _scrollBar.ChangedPosition -= _scrollBar_ChangedPosition;
             _scrollBar.OtherScrollBarView.ChangedPosition -= _scrollBar_OtherScrollBarView_ChangedPosition;
         }

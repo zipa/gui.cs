@@ -68,7 +68,7 @@ public class Margin : Adornment
     }
 
     /// <inheritdoc />
-    protected override bool OnClearViewport (Rectangle viewport)
+    protected override bool OnClearingViewport (Rectangle viewport)
     {
         if (Thickness == Thickness.Empty)
         {

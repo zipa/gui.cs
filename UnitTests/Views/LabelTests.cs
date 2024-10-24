@@ -1077,7 +1077,7 @@ e
         Assert.Equal (10, text.Length);
         label.Width = Dim.Fill () - text.Length;
         win.LayoutSubviews ();
-        win.Clear ();
+        win.ClearViewport ();
         win.Draw ();
 
         Assert.Equal (Rectangle.Empty, label.Frame);

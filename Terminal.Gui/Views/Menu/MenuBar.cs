@@ -297,7 +297,7 @@ public class MenuBar : View, IDesignable
     public event EventHandler<MenuOpeningEventArgs>? MenuOpening;
 
     /// <inheritdoc/>
-    protected override bool OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
         var pos = 0;
 

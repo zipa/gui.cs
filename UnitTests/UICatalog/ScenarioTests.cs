@@ -748,7 +748,7 @@ public class ScenarioTests : TestsAllViews
 
             //DimPosChanged ();
             _hostPane.LayoutSubviews ();
-            _hostPane.Clear ();
+            _hostPane.ClearViewport ();
             _hostPane.SetNeedsDisplay ();
             UpdateSettings (view);
             UpdateTitle (view);

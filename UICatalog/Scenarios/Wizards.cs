@@ -326,7 +326,7 @@ public class Wizards : Scenario
                                                                             someText.SetNeedsDisplay ();
                                                                         };
 
-                                           someText.DrawContent += (s, e) =>
+                                           someText.DrawingContent += (s, e) =>
                                                                    {
                                                                        scrollBar.Size = someText.Lines;
                                                                        scrollBar.Position = someText.TopRow;

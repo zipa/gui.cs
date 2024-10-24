@@ -294,7 +294,7 @@ public class ComboBox : View, IDesignable
     public virtual void OnCollapsed () { Collapsed?.Invoke (this, EventArgs.Empty); }
 
     /// <inheritdoc/>
-    protected override bool OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
 
         if (!_autoHide)
@@ -505,7 +505,7 @@ public class ComboBox : View, IDesignable
         }
 
         Reset (true);
-        _listview.Clear ();
+        _listview.ClearViewport ();
         _listview.TabStop = TabBehavior.NoStop;
         SuperView?.MoveSubviewToStart (this);
 
@@ -806,7 +806,7 @@ public class ComboBox : View, IDesignable
         _listview.SetSource (_searchSet);
         _listview.ResumeSuspendCollectionChangedEvent ();
 
-        _listview.Clear ();
+        _listview.ClearViewport ();
         _listview.Height = CalculateHeight ();
         SuperView?.MoveSubviewToStart (this);
     }
@@ -886,7 +886,7 @@ public class ComboBox : View, IDesignable
             return res;
         }
 
-        protected override bool OnDrawContent (Rectangle viewport)
+        protected override bool OnDrawingContent (Rectangle viewport)
         {
             Attribute current = ColorScheme?.Focus ?? Attribute.Default;
             Driver?.SetAttribute (current);

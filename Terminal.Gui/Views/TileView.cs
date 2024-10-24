@@ -174,10 +174,10 @@ public class TileView : View
     // QUESTION: Does this need to be fixed before events are refactored?
     /// <summary>Overridden so no Frames get drawn</summary>
     /// <returns></returns>
-    protected override bool OnDrawAdornments () { return true; }
+    protected override bool OnDrawingAdornments () { return true; }
 
     /// <inheritdoc/>
-    protected override bool OnRenderLineCanvas () { return false; }
+    protected override bool OnRenderingLineCanvas () { return false; }
 
     /// <inheritdoc/>
     protected override bool OnDrawComplete (Rectangle viewport)
@@ -973,9 +973,9 @@ public class TileView : View
         }
 
         /// <inheritdoc/>
-        protected override bool OnClearViewport (Rectangle viewport) { return true; }
+        protected override bool OnClearingViewport (Rectangle viewport) { return true; }
 
-        protected override bool OnDrawContent (Rectangle viewport)
+        protected override bool OnDrawingContent (Rectangle viewport)
         {
             DrawSplitterSymbol ();
 

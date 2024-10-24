@@ -131,9 +131,9 @@ public class ColorPicker16 : View
     }
 
     ///<inheritdoc/>
-    protected override bool OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
-        base.OnDrawContent (viewport);
+        base.OnDrawingContent (viewport);
 
         Driver?.SetAttribute (HasFocus ? ColorScheme.Focus : GetNormalColor ());
         var colorIndex = 0;

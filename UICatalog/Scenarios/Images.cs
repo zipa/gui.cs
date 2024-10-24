@@ -114,7 +114,7 @@ public class Images : Scenario
         private Image<Rgba32> _fullResImage;
         private Image<Rgba32> _matchSize;
 
-        protected override bool OnDrawContent (Rectangle bounds)
+        protected override bool OnDrawingContent (Rectangle bounds)
         {
             if (_fullResImage == null)
             {

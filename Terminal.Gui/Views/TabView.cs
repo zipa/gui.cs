@@ -290,7 +290,7 @@ public class TabView : View
     public int EnsureValidScrollOffsets (int value) { return Math.Max (Math.Min (value, Tabs.Count - 1), 0); }
 
     /// <inheritdoc/>
-    protected override bool OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
         if (Tabs.Any ())
         {
@@ -640,15 +640,15 @@ public class TabView : View
         }
 
         /// <inheritdoc />
-        protected override bool OnClearViewport (Rectangle viewport)
+        protected override bool OnClearingViewport (Rectangle viewport)
         {
             // clear any old text
-            Clear ();
+            ClearViewport ();
 
             return true;
         }
 
-        protected override bool OnDrawContent (Rectangle viewport)
+        protected override bool OnDrawingContent (Rectangle viewport)
         {
             _host._tabLocations = _host.CalculateViewport (Viewport).ToArray ();
 

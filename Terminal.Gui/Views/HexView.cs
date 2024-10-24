@@ -421,7 +421,7 @@ public class HexView : View, IDesignable
     }
 
     ///<inheritdoc/>
-    protected override bool OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
         if (Source is null)
         {

@@ -314,10 +314,10 @@ public class Snake : Scenario
 
         public SnakeState State { get; }
 
-        protected override bool OnDrawContent (Rectangle viewport)
+        protected override bool OnDrawingContent (Rectangle viewport)
         {
             Driver?.SetAttribute (white);
-            Clear ();
+            ClearViewport ();
 
             var canvas = new LineCanvas ();
 

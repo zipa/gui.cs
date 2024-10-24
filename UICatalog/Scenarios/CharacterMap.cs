@@ -657,14 +657,14 @@ internal class CharMap : View
     private static int RowWidth => RowLabelWidth + COLUMN_WIDTH * 16;
     public event EventHandler<ListViewItemEventArgs> Hover;
 
-    protected override bool OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
         if (viewport.Height == 0 || viewport.Width == 0)
         {
             return true;
         }
 
-        Clear ();
+        ClearViewport ();
 
         int cursorCol = Cursor.X + Viewport.X - RowLabelWidth - 1;
         int cursorRow = Cursor.Y + Viewport.Y - 1;

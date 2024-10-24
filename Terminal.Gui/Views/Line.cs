@@ -64,7 +64,7 @@ public class Line : View, IOrientation
     }
 
     /// <inheritdoc/>
-    protected override bool OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
         LineCanvas lc = LineCanvas;
 

@@ -132,7 +132,7 @@ internal class GradientsView : View
     private const int LABEL_HEIGHT = 1;
     private const int GRADIENT_WITH_LABEL_HEIGHT = GRADIENT_HEIGHT + LABEL_HEIGHT + 1; // +1 for spacing
 
-    protected override bool OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
         DrawTopLineGradient (viewport);
 

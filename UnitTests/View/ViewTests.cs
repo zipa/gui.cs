@@ -12,7 +12,7 @@ public class ViewTests (ITestOutputHelper output)
     {
         var view = new FrameView { Width = Dim.Fill (), Height = Dim.Fill () };
 
-        view.DrawContent += (s, e) =>
+        view.DrawingContent += (s, e) =>
                             {
                                 Rectangle savedClip = Application.Driver!.Clip;
                                 Application.Driver!.Clip = new (1, 1, view.Viewport.Width, view.Viewport.Height);
@@ -76,7 +76,7 @@ public class ViewTests (ITestOutputHelper output)
     {
         var view = new FrameView { Width = Dim.Fill (), Height = Dim.Fill () };
 
-        view.DrawContent += (s, e) =>
+        view.DrawingContent += (s, e) =>
                             {
                                 Rectangle savedClip = Application.Driver!.Clip;
                                 Application.Driver!.Clip = new (1, 1, view.Viewport.Width, view.Viewport.Height);
@@ -1102,7 +1102,7 @@ At 0,0
         public bool IsKeyUp { get; set; }
         public override string Text { get; set; }
 
-        protected override bool OnDrawContent (Rectangle viewport)
+        protected override bool OnDrawingContent (Rectangle viewport)
         {
             var idx = 0;
 

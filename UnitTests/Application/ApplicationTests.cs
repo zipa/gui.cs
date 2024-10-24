@@ -840,7 +840,7 @@ public class ApplicationTests
         // Don't use Dialog here as it has more layout logic. Use Window instead.
         Dialog d = null;
         Toplevel top = new ();
-        top.DrawContent += (s, a) => count++;
+        top.DrawingContent += (s, a) => count++;
         int iteration = -1;
 
         Application.Iteration += (s, a) =>
@@ -851,7 +851,7 @@ public class ApplicationTests
                                      {
                                          // TODO: Don't use Dialog here as it has more layout logic. Use Window instead.
                                          d = new ();
-                                         d.DrawContent += (s, a) => count++;
+                                         d.DrawingContent += (s, a) => count++;
                                          Application.Run (d);
                                      }
                                      else if (iteration < 3)

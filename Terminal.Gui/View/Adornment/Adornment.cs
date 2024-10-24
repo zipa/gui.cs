@@ -157,11 +157,16 @@ public class Adornment : View, IDesignable
 
     /// <summary>Does nothing for Adornment</summary>
     /// <returns></returns>
-    protected override bool OnDrawAdornments () { return false; }
+    protected override bool OnDrawingAdornments () { return false; }
 
     /// <inheritdoc/>
-    protected override bool OnClearViewport (Rectangle viewport)
+    protected override bool OnClearingViewport (Rectangle viewport)
     {
+        if (Thickness == Thickness.Empty)
+        {
+            return true;
+        }
+
         Attribute normalAttr = GetNormalColor ();
         Driver?.SetAttribute (normalAttr);
 
@@ -172,14 +177,20 @@ public class Adornment : View, IDesignable
     }
 
     /// <inheritdoc />
-    protected override bool OnDrawSubviews (Rectangle viewport)
+    protected override bool OnDrawingText (Rectangle viewport)
     {
-        return false;
+        return Thickness == Thickness.Empty;
+    }
+
+    /// <inheritdoc />
+    protected override bool OnDrawingSubviews (Rectangle viewport)
+    {
+        return Thickness == Thickness.Empty;
     }
 
     /// <summary>Does nothing for Adornment</summary>
     /// <returns></returns>
-    protected override bool OnRenderLineCanvas () { return true; }
+    protected override bool OnRenderingLineCanvas () { return true; }
 
     /// <summary>
     ///     Adornments only render to their <see cref="Parent"/>'s or Parent's SuperView's LineCanvas, so setting this
@@ -194,9 +205,7 @@ public class Adornment : View, IDesignable
     /// <inheritdoc />
     protected override bool OnDrawComplete (Rectangle viewport)
     {
-
-
-        return false;
+        return Thickness == Thickness.Empty;
     }
 
     /// <summary>

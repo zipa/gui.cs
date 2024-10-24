@@ -350,7 +350,7 @@ public class ListColumns : Scenario
         };
         */
 
-        _listColView.DrawContent += (s, e) =>
+        _listColView.DrawingContent += (s, e) =>
                                     {
                                         scrollBar.Size = _listColView.Table?.Rows ?? 0;
                                         scrollBar.Position = _listColView.RowOffset;

@@ -606,7 +606,7 @@ public class Border : Adornment
     #endregion Mouse Support
 
     /// <inheritdoc/>
-    protected override bool OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
         if (Thickness == Thickness.Empty)
         {

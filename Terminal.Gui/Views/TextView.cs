@@ -3550,7 +3550,7 @@ public class TextView : View
     }
 
     /// <inheritdoc/>
-    protected override bool OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
         _isDrawing = true;
 

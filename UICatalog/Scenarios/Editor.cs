@@ -296,7 +296,7 @@ public class Editor : Scenario
                                                              _textView.SetNeedsDisplay ();
                                                          };
 
-        _textView.DrawContent += (s, e) =>
+        _textView.DrawingContent += (s, e) =>
                                  {
                                      _scrollBar.Size = _textView.Lines;
                                      _scrollBar.Position = _textView.TopRow;

@@ -15,7 +15,7 @@ public abstract partial class PopupAutocomplete
 
         private readonly PopupAutocomplete _autoComplete;
 
-        protected override bool OnDrawContent (Rectangle viewport)
+        protected override bool OnDrawingContent (Rectangle viewport)
         {
             if (!_autoComplete.LastPopupPos.HasValue)
             {

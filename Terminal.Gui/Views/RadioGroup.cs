@@ -360,7 +360,7 @@ public class RadioGroup : View, IDesignable, IOrientation
     }
 
     /// <inheritdoc/>
-    protected override bool OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
         Driver?.SetAttribute (GetNormalColor ());
 

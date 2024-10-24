@@ -395,7 +395,7 @@ public class TreeViewFileSystem : Scenario
                                                             _treeViewFiles.SetNeedsDisplay ();
                                                         };
 
-        _treeViewFiles.DrawContent += (s, e) =>
+        _treeViewFiles.DrawingContent += (s, e) =>
                                       {
                                           scrollBar.Size = _treeViewFiles.ContentHeight;
                                           scrollBar.Position = _treeViewFiles.ScrollOffsetVertical;

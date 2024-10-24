@@ -99,7 +99,7 @@ public class ListViewWithSelection : Scenario
             _listView.SetNeedsDisplay ();
         };
 
-        _listView.DrawContent += (s, e) =>
+        _listView.DrawingContent += (s, e) =>
         {
             scrollBar.Size = _listView.Source.Count;
             scrollBar.Position = _listView.TopItem;

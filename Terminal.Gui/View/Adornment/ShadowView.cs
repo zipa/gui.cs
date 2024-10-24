@@ -37,14 +37,14 @@ internal class ShadowView : View
     }
 
     /// <inheritdoc />
-    protected override bool OnClearViewport (Rectangle viewport)
+    protected override bool OnClearingViewport (Rectangle viewport)
     {
         // Prevent clearing (so we can have transparency)
         return true;
     }
 
     /// <inheritdoc/>
-    protected override bool OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
         switch (ShadowStyle)
         {

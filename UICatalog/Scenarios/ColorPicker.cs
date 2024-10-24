@@ -249,7 +249,7 @@ public class ColorPickers : Scenario
     /// <summary>Update a color label from his ColorPicker.</summary>
     private void UpdateColorLabel (Label label, Color color)
     {
-        label.Clear ();
+        label.ClearViewport ();
 
         label.Text =
             $"{color} ({(int)color}) #{color.R:X2}{color.G:X2}{color.B:X2}";

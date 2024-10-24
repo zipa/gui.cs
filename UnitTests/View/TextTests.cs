@@ -278,7 +278,7 @@ Y
         Assert.Equal (new (12, 1), view.TextFormatter.ConstrainToSize);
         Assert.Equal (new (0, 0, 12, 1), view.Frame);
 
-        top.Clear ();
+        top.ClearViewport ();
         view.SetNeedsDisplay ();
         view.Draw ();
         expected = @" HelloWorlds";

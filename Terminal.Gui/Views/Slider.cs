@@ -775,7 +775,7 @@ public class Slider<T> : View, IOrientation
     #region Drawing
 
     /// <inheritdoc/>
-    protected override bool OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
         // TODO: make this more surgical to reduce repaint
 
@@ -841,7 +841,7 @@ public class Slider<T> : View, IOrientation
     private void DrawSlider ()
     {
         // TODO: be more surgical on clear
-        Clear ();
+        ClearViewport ();
 
         // Attributes
 

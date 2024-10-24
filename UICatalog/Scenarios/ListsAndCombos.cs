@@ -80,7 +80,7 @@ public class ListsAndCombos : Scenario
                                                             listview.SetNeedsDisplay ();
                                                         };
 
-        listview.DrawContent += (s, e) =>
+        listview.DrawingContent += (s, e) =>
                                 {
                                     scrollBar.Size = listview.Source.Count - 1;
                                     scrollBar.Position = listview.TopItem;
@@ -137,7 +137,7 @@ public class ListsAndCombos : Scenario
                                                                comboBox.SetNeedsDisplay ();
                                                            };
 
-        comboBox.DrawContent += (s, e) =>
+        comboBox.DrawingContent += (s, e) =>
                                 {
                                     scrollBarCbx.Size = comboBox.Source.Count;
                                     scrollBarCbx.Position = ((ListView)comboBox.Subviews [1]).TopItem;

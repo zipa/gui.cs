@@ -23,7 +23,7 @@ public class LayoutTests (ITestOutputHelper _output) : TestsAllViews
         }
 
         var drawContentCount = 0;
-        view.DrawContent += (s, e) => drawContentCount++;
+        view.DrawingContent += (s, e) => drawContentCount++;
 
         var layoutStartedCount = 0;
         view.SubviewLayout += (s, e) => layoutStartedCount++;
