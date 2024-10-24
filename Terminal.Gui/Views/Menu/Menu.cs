@@ -393,15 +393,6 @@ internal sealed class Menu : View
         return !item.IsEnabled () ? ColorScheme!.Disabled : GetNormalColor ();
     }
 
-    /// <inheritdoc />
-    protected override bool OnDrawingAdornments ()
-    {
-        Margin?.SetNeedsDisplay ();
-        Border?.SetNeedsDisplay();
-        Padding?.SetNeedsDisplay ();
-        return false;
-    }
-
     // By doing this we draw last, over everything else.
     private void Top_DrawComplete (object? sender, DrawEventArgs e)
     {
@@ -415,8 +406,8 @@ internal sealed class Menu : View
             return;
         }
 
-        DoDrawAdornments ();
-        DoRenderLineCanvas ();
+        DrawAdornments ();
+        RenderLineCanvas ();
 
         Rectangle savedClip = Driver.Clip;
         Driver.Clip = new (0, 0, Driver.Cols, Driver.Rows);

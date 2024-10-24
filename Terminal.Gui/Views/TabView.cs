@@ -1190,7 +1190,7 @@ public class TabView : View
                 }
 
                 tab.LineCanvas.Merge (lc);
-                tab.DoDrawAdornments ();
+                tab.DrawAdornments ();
             }
 
             return true;
@@ -1280,7 +1280,7 @@ public class TabView : View
                 // BUGBUG: Layout should only be called from Mainloop iteration!
                 Layout ();
 
-                tab.DoDrawAdornments ();
+                tab.DrawAdornments ();
 
                 Attribute prevAttr = Driver?.GetAttribute () ?? Attribute.Default;
 
@@ -1305,7 +1305,7 @@ public class TabView : View
                                         ColorScheme.HotNormal
                                        );
 
-                tab.DoDrawAdornments ();
+                tab.DrawAdornments ();
 
 
                 Driver?.SetAttribute (GetNormalColor ());

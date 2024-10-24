@@ -5,180 +5,6 @@ namespace Terminal.Gui;
 
 public partial class View // Drawing APIs
 {
-    #region Drawing Primitives
-
-    /// <summary>Moves the drawing cursor to the specified <see cref="Viewport"/>-relative location in the view.</summary>
-    /// <remarks>
-    ///     <para>
-    ///         If the provided coordinates are outside the visible content area, this method does nothing.
-    ///     </para>
-    ///     <para>
-    ///         The top-left corner of the visible content area is <c>ViewPort.Location</c>.
-    ///     </para>
-    /// </remarks>
-    /// <param name="col">Column (viewport-relative).</param>
-    /// <param name="row">Row (viewport-relative).</param>
-    public bool Move (int col, int row)
-    {
-        if (Driver is null || Driver?.Rows == 0)
-        {
-            return false;
-        }
-
-        if (col < 0 || row < 0 || col >= Viewport.Width || row >= Viewport.Height)
-        {
-            return false;
-        }
-
-        Point screen = ViewportToScreen (new Point (col, row));
-        Driver?.Move (screen.X, screen.Y);
-
-        return true;
-    }
-
-    /// <summary>Draws the specified character in the specified viewport-relative column and row of the View.</summary>
-    /// <para>
-    ///     If the provided coordinates are outside the visible content area, this method does nothing.
-    /// </para>
-    /// <remarks>
-    ///     The top-left corner of the visible content area is <c>ViewPort.Location</c>.
-    /// </remarks>
-    /// <param name="col">Column (viewport-relative).</param>
-    /// <param name="row">Row (viewport-relative).</param>
-    /// <param name="rune">The Rune.</param>
-    public void AddRune (int col, int row, Rune rune)
-    {
-        if (Move (col, row))
-        {
-            Driver?.AddRune (rune);
-        }
-    }
-
-    /// <summary>Utility function to draw strings that contain a hotkey.</summary>
-    /// <param name="text">String to display, the hotkey specifier before a letter flags the next letter as the hotkey.</param>
-    /// <param name="hotColor">Hot color.</param>
-    /// <param name="normalColor">Normal color.</param>
-    /// <remarks>
-    ///     <para>
-    ///         The hotkey is any character following the hotkey specifier, which is the underscore ('_') character by
-    ///         default.
-    ///     </para>
-    ///     <para>The hotkey specifier can be changed via <see cref="HotKeySpecifier"/></para>
-    /// </remarks>
-    public void DrawHotString (string text, Attribute hotColor, Attribute normalColor)
-    {
-        Rune hotkeySpec = HotKeySpecifier == (Rune)0xffff ? (Rune)'_' : HotKeySpecifier;
-        Application.Driver?.SetAttribute (normalColor);
-
-        foreach (Rune rune in text.EnumerateRunes ())
-        {
-            if (rune == new Rune (hotkeySpec.Value))
-            {
-                Application.Driver?.SetAttribute (hotColor);
-
-                continue;
-            }
-
-            Application.Driver?.AddRune (rune);
-            Application.Driver?.SetAttribute (normalColor);
-        }
-    }
-
-    /// <summary>
-    ///     Utility function to draw strings that contains a hotkey using a <see cref="ColorScheme"/> and the "focused"
-    ///     state.
-    /// </summary>
-    /// <param name="text">String to display, the underscore before a letter flags the next letter as the hotkey.</param>
-    /// <param name="focused">
-    ///     If set to <see langword="true"/> this uses the focused colors from the color scheme, otherwise
-    ///     the regular ones.
-    /// </param>
-    public void DrawHotString (string text, bool focused)
-    {
-        if (focused)
-        {
-            DrawHotString (text, GetHotFocusColor (), GetFocusColor ());
-        }
-        else
-        {
-            DrawHotString (
-                           text,
-                           Enabled ? GetHotNormalColor () : ColorScheme!.Disabled,
-                           Enabled ? GetNormalColor () : ColorScheme!.Disabled
-                          );
-        }
-    }
-
-    /// <summary>Fills the specified <see cref="Viewport"/>-relative rectangle with the specified color.</summary>
-    /// <param name="rect">The Viewport-relative rectangle to clear.</param>
-    /// <param name="color">The color to use to fill the rectangle. If not provided, the Normal background color will be used.</param>
-    public void FillRect (Rectangle rect, Color? color = null)
-    {
-        if (Driver is null)
-        {
-            return;
-        }
-
-        // Get screen-relative coords
-        Rectangle toClear = ViewportToScreen (rect);
-
-        Rectangle prevClip = Driver.Clip;
-
-        Driver.Clip = Rectangle.Intersect (prevClip, ViewportToScreen (Viewport with { Location = new (0, 0) }));
-
-        Attribute prev = Driver.SetAttribute (new (color ?? GetNormalColor ().Background));
-        Driver.FillRect (toClear);
-        Driver.SetAttribute (prev);
-
-        Driver.Clip = prevClip;
-    }
-
-    #endregion Drawing Primitives
-
-    #region Clipping
-
-    /// <summary>Sets the <see cref="ConsoleDriver"/>'s clip region to <see cref="Viewport"/>.</summary>
-    /// <remarks>
-    ///     <para>
-    ///         By default, the clip rectangle is set to the intersection of the current clip region and the
-    ///         <see cref="Viewport"/>. This ensures that drawing is constrained to the viewport, but allows
-    ///         content to be drawn beyond the viewport.
-    ///     </para>
-    ///     <para>
-    ///         If <see cref="ViewportSettings"/> has <see cref="Gui.ViewportSettings.ClipContentOnly"/> set, clipping will be
-    ///         applied to just the visible content area.
-    ///     </para>
-    /// </remarks>
-    /// <returns>
-    ///     The current screen-relative clip region, which can be then re-applied by setting
-    ///     <see cref="ConsoleDriver.Clip"/>.
-    /// </returns>
-    public Rectangle SetClip ()
-    {
-        if (Driver is null)
-        {
-            return Rectangle.Empty;
-        }
-
-        Rectangle previous = Driver.Clip;
-
-        // Clamp the Clip to the entire visible area
-        Rectangle clip = Rectangle.Intersect (ViewportToScreen (Viewport with { Location = Point.Empty }), previous);
-
-        if (ViewportSettings.HasFlag (ViewportSettings.ClipContentOnly))
-        {
-            // Clamp the Clip to the just content area that is within the viewport
-            Rectangle visibleContent = ViewportToScreen (new Rectangle (new (-Viewport.X, -Viewport.Y), GetContentSize ()));
-            clip = Rectangle.Intersect (clip, visibleContent);
-        }
-
-        Driver.Clip = clip;
-
-        return previous;
-    }
-
-    #endregion Clipping
-
     #region Drawing Engine
 
     /// <summary>
@@ -280,8 +106,7 @@ public partial class View // Drawing APIs
         }
     }
 
-    // TODO: Make private and change menuBar and Tab to not use
-    internal void DoDrawAdornments ()
+    private void DoDrawAdornments ()
     {
         if (OnDrawingAdornments ())
         {
@@ -290,8 +115,14 @@ public partial class View // Drawing APIs
 
         // TODO: add event.
 
-        // TODO: add a DrawAdornments method
+        DrawAdornments ();
+    }
 
+    /// <summary>
+    ///     Causes each of the View's Adornments to be drawn. This includes the <see cref="Margin"/>, <see cref="Border"/>, and <see cref="Padding"/>.
+    /// </summary>
+    public void DrawAdornments ()
+    {
         // Each of these renders lines to either this View's LineCanvas 
         // Those lines will be finally rendered in OnRenderLineCanvas
         Margin?.Draw ();
@@ -453,7 +284,7 @@ public partial class View // Drawing APIs
     #endregion DrawText
 
     #region DrawContent
-
+    
     private void DoDrawContent (Rectangle viewport)
     {
         Debug.Assert (viewport == Viewport);
@@ -552,7 +383,7 @@ public partial class View // Drawing APIs
 
     #region DrawLineCanvas
 
-    internal void DoRenderLineCanvas ()
+    private void DoRenderLineCanvas ()
     {
         if (OnRenderingLineCanvas ())
         {
