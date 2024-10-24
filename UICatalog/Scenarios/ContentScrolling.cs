@@ -17,6 +17,7 @@ public class ContentScrolling : Scenario
     {
         public ScrollingDemoView ()
         {
+            Id = "ScrollingDemoView";
             Width = Dim.Fill ();
             Height = Dim.Fill ();
             ColorScheme = Colors.ColorSchemes ["Base"];
@@ -163,7 +164,7 @@ public class ContentScrolling : Scenario
             Title = "Allow _Y < 0",
             X = Pos.Right (cbAllowNegativeX) + 1,
             Y = Pos.Bottom (frameLabel),
-            CanFocus = true
+            CanFocus = true,
         };
         cbAllowNegativeY.CheckedState = view.ViewportSettings.HasFlag (ViewportSettings.AllowNegativeY) ? CheckState.Checked : CheckState.UnChecked;
         cbAllowNegativeY.CheckedStateChanging += AllowNegativeY_Toggle;

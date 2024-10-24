@@ -93,11 +93,16 @@ public class NumericUpDown<T> : View where T : notnull
 
         AddCommand (
                     Command.ScrollUp,
-                    () =>
+                    (ctx) =>
                     {
                         if (type == typeof (object))
                         {
                             return false;
+                        }
+
+                        if (RaiseSelecting (ctx) is true)
+                        {
+                            return true;
                         }
 
                         if (Value is { } && Increment is { })
@@ -110,11 +115,16 @@ public class NumericUpDown<T> : View where T : notnull
 
         AddCommand (
                     Command.ScrollDown,
-                    () =>
+                    (ctx) =>
                     {
                         if (type == typeof (object))
                         {
                             return false;
+                        }
+
+                        if (RaiseSelecting (ctx) is true)
+                        {
+                            return true;
                         }
 
                         if (Value is { } && Increment is { })

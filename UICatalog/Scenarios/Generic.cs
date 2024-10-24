@@ -14,12 +14,24 @@ public sealed class MyScenario : Scenario
         // Setup - Create a top-level application window and configure it.
         Window appWindow = new ()
         {
+            Id = "appWindow",
             Title = GetQuitKeyAndName (),
+            Arrangement = ViewArrangement.Fixed
         };
 
-        var button = new Button { X = Pos.Center (), Y = Pos.Center (), Text = "_Press me!" };
+        var button = new Button
+        {
+            Id = "button",
+            X = Pos.AnchorEnd(), Y = 0, Text = "_Press me!"
+        };
         button.Accepting += (s, e) => MessageBox.ErrorQuery ("Error", "You pressed the button!", "_Ok");
-        appWindow.Add (button);
+
+        button.HighlightStyle = HighlightStyle.None;
+        button.ShadowStyle = ShadowStyle.None;
+
+        appWindow.Border.Add (button);
+
+        //appWindow.Border.LineStyle = LineStyle.None;
 
         // Run - Start the application.
         Application.Run (appWindow);

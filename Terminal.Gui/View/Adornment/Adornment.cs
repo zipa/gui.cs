@@ -137,7 +137,23 @@ public class Adornment : View, IDesignable
     }
 
     /// <inheritdoc/>
-    public override Point ScreenToFrame (in Point location) { return Parent!.ScreenToFrame (new (location.X - Frame.X, location.Y - Frame.Y)); }
+    public override Point ScreenToFrame (in Point location)
+    {
+        View? parentOrSuperView = Parent;
+
+        if (parentOrSuperView is null)
+        {
+            // While there are no real use cases for an Adornment being a subview, we support it for
+            // testing. E.g. in AllViewsTester.
+            parentOrSuperView = SuperView;
+
+            if (parentOrSuperView is null)
+            {
+                return Point.Empty;
+            }
+        }
+        return parentOrSuperView.ScreenToFrame (new (location.X - Frame.X, location.Y - Frame.Y));
+    }
 
     /// <summary>Does nothing for Adornment</summary>
     /// <returns></returns>
@@ -155,9 +171,15 @@ public class Adornment : View, IDesignable
         return true;
     }
 
+    /// <inheritdoc />
+    protected override bool OnDrawSubviews (Rectangle viewport)
+    {
+        return false;
+    }
+
     /// <summary>Does nothing for Adornment</summary>
     /// <returns></returns>
-    protected override bool OnRenderLineCanvas () { return false; }
+    protected override bool OnRenderLineCanvas () { return true; }
 
     /// <summary>
     ///     Adornments only render to their <see cref="Parent"/>'s or Parent's SuperView's LineCanvas, so setting this
@@ -167,6 +189,14 @@ public class Adornment : View, IDesignable
     {
         get => false;
         set => throw new InvalidOperationException (@"Adornment can only render to their Parent or Parent's Superview.");
+    }
+
+    /// <inheritdoc />
+    protected override bool OnDrawComplete (Rectangle viewport)
+    {
+
+
+        return false;
     }
 
     /// <summary>

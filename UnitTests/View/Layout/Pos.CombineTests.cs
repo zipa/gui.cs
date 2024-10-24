@@ -54,7 +54,7 @@ public class PosCombineTests (ITestOutputHelper output)
         f.X = Pos.X (v2) - Pos.X (v1);
         f.Y = Pos.Y (v2) - Pos.Y (v1);
 
-        Assert.Throws<InvalidOperationException> (() => Application.Run (t));
+        Assert.Throws<LayoutException> (() => Application.Run (t));
         t.Dispose ();
         Application.Shutdown ();
 
@@ -136,7 +136,7 @@ public class PosCombineTests (ITestOutputHelper output)
 
         Application.Iteration += (s, a) => Application.RequestStop ();
 
-        Assert.Throws<InvalidOperationException> (() => Application.Run ());
+        Assert.Throws<LayoutException> (() => Application.Run ());
         top.Dispose ();
         Application.ResetState (ignoreDisposed: true);
     }

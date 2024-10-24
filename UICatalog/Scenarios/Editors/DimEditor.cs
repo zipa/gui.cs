@@ -29,7 +29,8 @@ public class DimEditor : View
         };
 
 
-        TabStop = TabBehavior.TabGroup;
+        TabStop = TabBehavior.TabStop;
+
 
         Initialized += DimEditor_Initialized;
 

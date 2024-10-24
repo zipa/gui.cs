@@ -29,7 +29,7 @@ public class PosEditor : View
         };
 
 
-        TabStop = TabBehavior.TabGroup;
+        TabStop = TabBehavior.TabStop;
 
         Initialized += PosEditor_Initialized;
 

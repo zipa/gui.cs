@@ -123,11 +123,24 @@ public class ListView : View, IDesignable
 
         // Things this view knows how to do
         // 
-        // BUGBUG: Should return false if selection doesn't change (to support nav to next view)
-        AddCommand (Command.Up, () => MoveUp ());
-        // BUGBUG: Should return false if selection doesn't change (to support nav to next view)
-        AddCommand (Command.Down, () => MoveDown ());
+        AddCommand (Command.Up, (ctx) =>
+                                {
+                                    if (RaiseSelecting (ctx) == true)
+                                    {
+                                        return true;
+                                    }
+                                    return MoveUp ();
+                                });
+        AddCommand (Command.Down, (ctx) =>
+                                  {
+                                      if (RaiseSelecting (ctx) == true)
+                                      {
+                                          return true;
+                                      }
+                                      return MoveDown ();
+                                  });
 
+        // TODO: add RaiseSelecting to all of these
         AddCommand (Command.ScrollUp, () => ScrollVertical (-1));
         AddCommand (Command.ScrollDown, () => ScrollVertical (1));
         AddCommand (Command.PageUp, () => MovePageUp ());
@@ -342,7 +355,7 @@ public class ListView : View, IDesignable
             SetContentSize (new Size (_source?.Length ?? Viewport.Width, _source?.Count ?? Viewport.Width));
             if (IsInitialized)
             {
-                Viewport = Viewport with { Y = 0 };
+               // Viewport = Viewport with { Y = 0 };
             }
 
             KeystrokeNavigator.Collection = _source?.ToList ();

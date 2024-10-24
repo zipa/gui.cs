@@ -1,4 +1,7 @@
 ﻿#nullable enable
+using System.Diagnostics;
+using System.Reflection.Metadata;
+
 namespace Terminal.Gui;
 
 public partial class View // Drawing APIs
@@ -233,10 +236,40 @@ public partial class View // Drawing APIs
 
         DoRenderLineCanvas ();
 
+        DoDrawAdornmentSubViews ();
+
         ClearNeedsDisplay ();
 
         // We're done
         DoDrawComplete (Viewport);
+    }
+
+    private void DoDrawAdornmentSubViews ()
+    {
+        if (Margin?.Subviews is { })
+        {
+            foreach (View subview in Margin.Subviews)
+            {
+                subview.SetNeedsDisplay ();
+            }
+            Margin?.DoDrawSubviews (Margin.Viewport);
+        }
+        if (Border?.Subviews is { })
+        {
+            foreach (View subview in Border.Subviews)
+            {
+                subview.SetNeedsDisplay ();
+            }
+            Border?.DoDrawSubviews (Border.Viewport);
+        }
+        if (Padding?.Subviews is { })
+        {
+            foreach (View subview in Padding.Subviews)
+            {
+                subview.SetNeedsDisplay ();
+            }
+            Padding?.DoDrawSubviews (Padding.Viewport);
+        }
     }
 
     internal void DoDrawAdornments ()
@@ -270,6 +303,8 @@ public partial class View // Drawing APIs
 
     private void DoClearViewport (Rectangle viewport)
     {
+        Debug.Assert (viewport == Viewport);
+
         if (OnClearViewport (Viewport))
         {
             return;
@@ -303,6 +338,9 @@ public partial class View // Drawing APIs
 
     private void DoDrawText (Rectangle viewport)
     {
+        Debug.Assert(viewport == Viewport);
+
+
         if (OnDrawText (Viewport))
         {
             return;
@@ -320,6 +358,10 @@ public partial class View // Drawing APIs
         // TODO: If the output is not in the Viewport, do nothing
         var drawRect = new Rectangle (ContentToScreen (Point.Empty), GetContentSize ());
 
+        if (Id == "ScrollingDemoView")
+        {
+
+        }
         TextFormatter?.Draw (
                              drawRect,
                              HasFocus ? GetFocusColor () : GetNormalColor (),
@@ -347,6 +389,7 @@ public partial class View // Drawing APIs
 
     private void DoDrawContent (Rectangle viewport)
     {
+        Debug.Assert (viewport == Viewport);
         if (OnDrawContent (Viewport))
         {
             return;
@@ -407,6 +450,7 @@ public partial class View // Drawing APIs
 
     internal void DoDrawSubviews (Rectangle viewport)
     {
+        Debug.Assert (viewport == Viewport);
         if (OnDrawSubviews (Viewport))
         {
             return;
@@ -469,6 +513,7 @@ public partial class View // Drawing APIs
 
     private void DoDrawComplete (Rectangle viewport)
     {
+        Debug.Assert (viewport == Viewport);
         if (OnDrawComplete (Viewport))
         {
             return;

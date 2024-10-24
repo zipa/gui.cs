@@ -81,7 +81,7 @@ public class CharacterMap : Scenario
 
         _categoryList = new () { X = Pos.Right (_charMap), Y = Pos.Bottom (jumpLabel), Height = Dim.Fill () };
         _categoryList.FullRowSelect = true;
-
+        _categoryList.MultiSelect = false;
         //jumpList.Style.ShowHeaders = false;
         //jumpList.Style.ShowHorizontalHeaderOverline = false;
         //jumpList.Style.ShowHorizontalHeaderUnderline = false;

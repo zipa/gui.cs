@@ -604,6 +604,11 @@ public class HexView : View, IDesignable
             return false;
         }
 
+        if (keyEvent.IsAlt)
+        {
+            return false;
+        }
+
         if (_leftSideHasFocus)
         {
             int value;

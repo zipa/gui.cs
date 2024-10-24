@@ -44,6 +44,8 @@ public class ExpanderButton : Button
 
         Orientation = Orientation.Vertical;
 
+        HighlightStyle = HighlightStyle.None;
+
         Initialized += ExpanderButton_Initialized;
     }
 
@@ -87,15 +89,15 @@ public class ExpanderButton : Button
             {
                 X = Pos.AnchorEnd ();
                 Y = 0;
-                CollapsedGlyph = new ('\u21d1'); // ⇑
-                ExpandedGlyph = new ('\u21d3'); // ⇓
+                CollapseGlyph = new ('\u21d1'); // ⇑
+                ExpandGlyph = new ('\u21d3'); // ⇓
             }
             else
             {
                 X = 0;
                 Y = Pos.AnchorEnd ();
-                CollapsedGlyph = new ('\u21d0'); // ⇐
-                ExpandedGlyph = new ('\u21d2'); // ⇒
+                CollapseGlyph = new ('\u21d0'); // ⇐
+                ExpandGlyph = new ('\u21d2'); // ⇒
             }
 
             ExpandOrCollapse (Collapsed);
@@ -110,14 +112,14 @@ public class ExpanderButton : Button
     public event EventHandler<CancelEventArgs<Orientation>>? OrientationChanging;
 
     /// <summary>
-    ///     The glyph to display when the view is collapsed.
+    ///     The glyph that indicates the button will collapse the view.
     /// </summary>
-    public Rune CollapsedGlyph { get; set; }
+    public Rune CollapseGlyph { get; set; }
 
     /// <summary>
-    ///     The glyph to display when the view is expanded.
+    ///     The glyph that indicates the button will expand the view.
     /// </summary>
-    public Rune ExpandedGlyph { get; set; }
+    public Rune ExpandGlyph { get; set; }
 
     private bool _collapsed;
 
@@ -168,7 +170,7 @@ public class ExpanderButton : Button
 
     private void ExpandOrCollapse (bool collapse)
     {
-        Text = $"{(Collapsed ? CollapsedGlyph : ExpandedGlyph)}";
+        Text = $"{(Collapsed ? ExpandGlyph : CollapseGlyph)}";
 
         View? superView = SuperView;
 

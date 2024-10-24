@@ -169,7 +169,7 @@ public class SetLayoutTests (ITestOutputHelper output)
         var sub = new View ();
         super.Add (sub);
         super.Width = Dim.Width (sub);
-        Assert.Throws<InvalidOperationException> (() => root.LayoutSubviews ());
+        Assert.Throws<LayoutException> (() => root.Layout ());
         root.Dispose ();
         super.Dispose ();
     }

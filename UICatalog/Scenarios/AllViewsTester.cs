@@ -28,6 +28,7 @@ public class AllViewsTester : Scenario
 
     private FrameView _hostPane;
     private View _curView;
+    private EventLog _eventLog;
 
     public override void Main ()
     {
@@ -76,6 +77,12 @@ public class AllViewsTester : Scenario
                                                   }
                                               };
 
+        _classListView.Accepting += (sender, args) =>
+                                    {
+                                        _curView.SetFocus ();
+                                        args.Cancel = true;
+                                    };
+
         _adornmentsEditor = new ()
         {
             Title = "Adornments [_2]",
@@ -85,7 +92,7 @@ public class AllViewsTester : Scenario
             Height = Dim.Fill (),
             ColorScheme = Colors.ColorSchemes ["TopLevel"],
             BorderStyle = LineStyle.Single,
-            AutoSelectViewToEdit = true,
+            AutoSelectViewToEdit = false,
             AutoSelectAdornments = false,
         };
 
@@ -101,7 +108,7 @@ public class AllViewsTester : Scenario
             Title = "Layout [_3]",
             X = Pos.Right (_adornmentsEditor),
             Y = 0,
-            Width = Dim.Fill (),
+            //Width = Dim.Fill (), // set below
             Height = Dim.Auto (),
             CanFocus = true,
             ColorScheme = Colors.ColorSchemes ["TopLevel"],
@@ -113,7 +120,7 @@ public class AllViewsTester : Scenario
             Title = "Settings [_4]",
             X = Pos.Right (_adornmentsEditor),
             Y = Pos.Bottom (_layoutEditor),
-            Width = Dim.Fill (),
+            Width = Dim.Width(_layoutEditor),
             Height = Dim.Auto (),
             CanFocus = true,
             ColorScheme = Colors.ColorSchemes ["TopLevel"],
@@ -162,30 +169,60 @@ public class AllViewsTester : Scenario
 
         _settingsPane.Add (label, _demoTextView);
 
+        _eventLog = new EventLog ()
+        {
+           // X = Pos.Right(_layoutEditor)
+        };
+        _eventLog.X = Pos.AnchorEnd ();
+        _eventLog.Y = 0;
+
+        _eventLog.Height = Dim.Height (_classListView);
+        //_eventLog.Width = 30;
+
+        _layoutEditor.Width = Dim.Fill (Dim.Func ((() =>
+                                                   {
+                                                       if (_eventLog.NeedsLayout)
+                                                       {
+                                                           // We have two choices:
+                                                           // 1) Call Layout explicitly
+                                                           // 2) Throw LayoutException so Layout tries again
+                                                           _eventLog.Layout ();
+                                                           // new LayoutException ("_eventLog");
+                                                       }
+                                                       return _eventLog.Frame.Width;
+                                                   })));
+
         _hostPane = new ()
         {
             X = Pos.Right (_adornmentsEditor),
             Y = Pos.Bottom (_settingsPane),
-            Width = Dim.Fill (),
-            Height = Dim.Fill (), // + 1 for status bar
+            Width = Dim.Width (_layoutEditor),
+            Height = Dim.Fill (),
             CanFocus = true,
-            TabStop = TabBehavior.TabGroup,
-            ColorScheme = Colors.ColorSchemes ["Base"]
+            TabStop = TabBehavior.TabStop,
+            ColorScheme = Colors.ColorSchemes ["Base"],
+            Arrangement = ViewArrangement.Resizable,
+            BorderStyle = LineStyle.RoundedDotted
         };
+        _hostPane.Border.ColorScheme = app.ColorScheme;
         _hostPane.Padding.Thickness = new (1);
         _hostPane.Padding.Diagnostics = ViewDiagnosticFlags.Ruler;
-        _hostPane.Padding.ColorScheme = Colors.ColorSchemes ["Error"];
+        _hostPane.Padding.ColorScheme = app.ColorScheme;
 
-        app.Add (_classListView, _adornmentsEditor, _layoutEditor, _settingsPane, _hostPane);
+        app.Add (_classListView, _adornmentsEditor, _layoutEditor, _settingsPane, _eventLog, _hostPane);
 
-        _classListView.SelectedItem = 0;
-        _classListView.SetFocus ();
+        app.Initialized += App_Initialized;
 
         Application.Run (app);
         app.Dispose ();
         Application.Shutdown ();
     }
 
+    private void App_Initialized (object sender, EventArgs e)
+    {
+        _classListView.SelectedItem = 0;
+        _classListView.SetFocus ();
+    }
 
     // TODO: Add Command.HotKey handler (pop a message box?)
     private void CreateCurrentView (Type type)
@@ -235,6 +272,8 @@ public class AllViewsTester : Scenario
 
         view.Id = "_curView";
         _curView = view;
+
+        _eventLog.ViewToLog = _curView;
         _hostPane.Add (_curView);
         _layoutEditor.ViewToEdit = _curView;
         _curView.SetNeedsLayout ();
@@ -277,7 +316,7 @@ public class AllViewsTester : Scenario
         UpdateHostTitle (_curView);
     }
 
-    private void UpdateHostTitle (View view) { _hostPane.Title = $"Demo of {view.GetType ().Name} [_0]"; }
+    private void UpdateHostTitle (View view) { _hostPane.Title = $"{view.GetType ().Name} [_0]"; }
 
     private void CurrentView_Initialized (object sender, EventArgs e)
     {

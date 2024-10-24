@@ -56,6 +56,7 @@ public class Border : Adornment
     public Border (View parent) : base (parent)
     {
         Parent = parent;
+        Id = $"{Parent.Id}.{Border}";
         CanFocus = false;
         TabStop = TabBehavior.TabGroup;
 
@@ -683,13 +684,13 @@ public class Border : Adornment
             if (Parent.SuperView is { } && Parent.SuperView?.Subviews!.Count (s => s.CanFocus) > 1)
             {
                 // Only use focus color if there are multiple focusable views
-                focus = Parent.GetFocusColor ();
+                focus = GetFocusColor ();
             }
 
             Parent.TitleTextFormatter.Draw (
                                             new (borderBounds.X + 2, titleY, maxTitleWidth, 1),
-                                            Parent.HasFocus ? focus : Parent.GetNormalColor (),
-                                            Parent.HasFocus ? focus : Parent.GetHotNormalColor ());
+                                            Parent.HasFocus ? focus : GetNormalColor (),
+                                            Parent.HasFocus ? focus : GetHotNormalColor ());
         }
 
         if (canDrawBorder && LineStyle != LineStyle.None)

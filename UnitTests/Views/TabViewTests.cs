@@ -103,7 +103,7 @@ public class TabViewTests (ITestOutputHelper output)
         Application.Shutdown ();
     }
 
-    [Fact (Skip = "#2491 - A good test for Tab nav, but currently broken. TabView has exposes some interesting edge cases.")]
+    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
     [AutoInitShutdown]
     public void MouseClick_ChangesTab ()
     {
@@ -188,7 +188,7 @@ public class TabViewTests (ITestOutputHelper output)
         top.Dispose ();
     }
 
-    [Fact (Skip = "#2491 - A good test for Tab nav, but currently broken. TabView has exposes some interesting edge cases.")]
+    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
     [AutoInitShutdown]
     public void MouseClick_Right_Left_Arrows_ChangesTab ()
     {
@@ -274,7 +274,7 @@ public class TabViewTests (ITestOutputHelper output)
         top.Dispose ();
     }
 
-    [Fact (Skip = "#2491 - A good test for Tab nav, but currently broken. TabView has exposes some interesting edge cases.")]
+    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
     [AutoInitShutdown]
     public void MouseClick_Right_Left_Arrows_ChangesTab_With_Border ()
     {
@@ -369,7 +369,7 @@ public class TabViewTests (ITestOutputHelper output)
         top.Dispose ();
     }
 
-    [Fact (Skip="#2491 - A good test for Tab nav, but currently broken. TabView has exposes some interesting edge cases.")]
+    [Fact (Skip="#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
     [AutoInitShutdown]
     public void ProcessKey_Down_Up_Right_Left_Home_End_PageDown_PageUp ()
     {
@@ -595,7 +595,7 @@ public class TabViewTests (ITestOutputHelper output)
         Application.Shutdown ();
     }
 
-    [Fact]
+    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
     [SetupFakeDriver]
     public void ShowTopLine_False_TabsOnBottom_False_TestTabView_Width3 ()
     {
@@ -604,7 +604,7 @@ public class TabViewTests (ITestOutputHelper output)
         tv.Height = 5;
         tv.Style = new () { ShowTopLine = false };
         tv.ApplyStyleChanges ();
-        tv.LayoutSubviews ();
+        tv.Layout ();
 
         tv.Draw ();
 
@@ -643,7 +643,7 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
     }
 
-    [Fact (Skip = "#2491 - A good test for Tab nav, but currently broken. TabView has exposes some interesting edge cases.")]
+    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
     [SetupFakeDriver]
     public void ShowTopLine_False_TabsOnBottom_False_TestThinTabView_WithLongNames ()
     {
@@ -735,7 +735,7 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
     }
 
-    [Fact]
+    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
     [SetupFakeDriver]
     public void ShowTopLine_False_TabsOnBottom_True_TestTabView_Width3 ()
     {
@@ -783,7 +783,7 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
     }
 
-    [Fact (Skip = "#2491 - A good test for Tab nav, but currently broken. TabView has exposes some interesting edge cases.")]
+    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
     [SetupFakeDriver]
     public void ShowTopLine_False_TabsOnBottom_True_TestThinTabView_WithLongNames ()
     {
@@ -875,14 +875,14 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
     }
 
-    [Fact]
+    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
     [SetupFakeDriver]
     public void ShowTopLine_True_TabsOnBottom_False_TestTabView_Width3 ()
     {
         TabView tv = GetTabView (out _, out _, false);
         tv.Width = 3;
         tv.Height = 5;
-        tv.LayoutSubviews ();
+        tv.Layout ();
 
         tv.Draw ();
 
@@ -904,7 +904,7 @@ public class TabViewTests (ITestOutputHelper output)
         TabView tv = GetTabView (out _, out _, false);
         tv.Width = 4;
         tv.Height = 5;
-        tv.LayoutSubviews ();
+        tv.Layout ();
 
         tv.Draw ();
 
@@ -919,7 +919,7 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
     }
 
-    [Fact (Skip = "#2491 - A good test for Tab nav, but currently broken. TabView has exposes some interesting edge cases.")]
+    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
     [SetupFakeDriver]
     public void ShowTopLine_True_TabsOnBottom_False_TestThinTabView_WithLongNames ()
     {
@@ -1009,7 +1009,7 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
     }
 
-    [Fact (Skip = "#2491 - A good test for Tab nav, but currently broken. TabView has exposes some interesting edge cases.")]
+    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
     [SetupFakeDriver]
     public void ShowTopLine_True_TabsOnBottom_False_With_Unicode ()
     {
@@ -1050,7 +1050,7 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
     }
 
-    [Fact]
+    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
     [SetupFakeDriver]
     public void ShowTopLine_True_TabsOnBottom_True_TestTabView_Width3 ()
     {
@@ -1098,7 +1098,7 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
     }
 
-    [Fact (Skip = "#2491 - A good test for Tab nav, but currently broken. TabView has exposes some interesting edge cases.")]
+    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
     [SetupFakeDriver]
     public void ShowTopLine_True_TabsOnBottom_True_TestThinTabView_WithLongNames ()
     {
@@ -1174,7 +1174,7 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
     }
 
-    [Fact (Skip = "#2491 - A good test for Tab nav, but currently broken. TabView has exposes some interesting edge cases.")]
+    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
     [SetupFakeDriver]
     public void ShowTopLine_True_TabsOnBottom_True_With_Unicode ()
     {

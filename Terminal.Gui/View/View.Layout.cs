@@ -470,7 +470,7 @@ public partial class View // Layout APIs
         }
         catch (LayoutException le)
         {
-            Debug.WriteLine ($"A Dim/PosFunc function threw (typically this is because a dependent View was not laid out)\n{le}.");
+            //Debug.WriteLine ($"A Dim/PosFunc function threw (typically this is because a dependent View was not laid out)\n{le}.");
             return false;
         }
 
@@ -581,11 +581,22 @@ public partial class View // Layout APIs
         }
 
         bool layoutStillNeeded = false;
-        foreach (View v in redo)
+        //foreach (View v in redo)
+        //{
+        //    if (!v.Layout (contentSize))
+        //    {
+        //        layoutStillNeeded = true;
+        //    }
+        //}
+        if (redo.Count > 0)
         {
-            if (!v.Layout (contentSize))
+            foreach (View v in ordered)
             {
-                layoutStillNeeded = true;
+                if (!v.Layout (contentSize))
+                {
+                    layoutStillNeeded = true;
+                    Debug.Fail("ugh");
+                }
             }
         }
 
