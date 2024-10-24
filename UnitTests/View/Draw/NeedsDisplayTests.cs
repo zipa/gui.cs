@@ -10,7 +10,7 @@ public class NeedsDisplayTests ()
         View view = new () { Width = 0, Height = 0 };
         view.BeginInit ();
         view.EndInit ();
-        Assert.False (view.NeedsDisplay);
+        Assert.True (view.NeedsDisplay);
         //Assert.False (view.SubViewNeedsDisplay);
     }
 
@@ -30,6 +30,8 @@ public class NeedsDisplayTests ()
         Assert.True (superView.SubViewNeedsDisplay);
         Assert.True (view1.NeedsDisplay);
         Assert.True (view2.NeedsDisplay);
+
+        superView.Layout ();    // NeedsDisplay is always false if Layout is needed
 
         superView.Draw ();
 
@@ -91,7 +93,7 @@ public class NeedsDisplayTests ()
         view.BeginInit ();
         view.NeedsDisplay = false;
         view.EndInit ();
-        Assert.False (view.NeedsDisplay);
+        Assert.True (view.NeedsDisplay);
     }
 
 

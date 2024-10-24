@@ -779,12 +779,26 @@ public partial class View // Drawing APIs
 
     #region NeedsDisplay
 
+    // TODO: Make _needsDisplayRect nullable instead of relying on Empty
+    // TODO: If null, it means ?
+    // TODO: If Empty, it means no need to redraw
+    // TODO: If not Empty, it means the region that needs to be redrawn
     // The viewport-relative region that needs to be redrawn. Marked internal for unit tests.
     internal Rectangle _needsDisplayRect = Rectangle.Empty;
 
     /// <summary>Gets or sets whether the view needs to be redrawn.</summary>
+    /// <remarks>
+    ///     <para>
+    ///         Will be <see langword="true"/> if the <see cref="NeedsLayout"/> property is <see langword="true"/> or if 
+    ///         any part of the view's <see cref="Viewport"/> needs to be redrawn.
+    ///     </para>
+    ///     <para>
+    ///         Setting has no effect on <see cref="NeedsLayout"/>.
+    ///     </para>
+    /// </remarks>
     public bool NeedsDisplay
     {
+        // TODO: Figure out if we can decouple NeedsDisplay from NeedsLayout. This is a temporary fix.
         get => _needsDisplayRect != Rectangle.Empty || NeedsLayout;
         set
         {

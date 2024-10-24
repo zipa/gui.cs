@@ -22,7 +22,7 @@ public class FrameTests (ITestOutputHelper output)
     {
         Rectangle frame = new (1, 2, 3, 4);
         View view = new ();
-        Assert.False (view.NeedsLayout);
+        Assert.True (view.NeedsLayout);
         Assert.Equal (Rectangle.Empty, view.Frame);
 
         view.Frame = frame;

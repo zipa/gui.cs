@@ -412,6 +412,7 @@ public class MenuBarTests (ITestOutputHelper output)
                                         new () { Position = new (0, 2), Flags = MouseFlags.Button1Clicked, View = top.Subviews [1] }
                                        )
                     );
+        top.Subviews [1].Layout();
         top.Subviews [1].Draw ();
 
         TestHelpers.AssertDriverAttributesAre (

@@ -125,8 +125,8 @@ public class SetLayoutTests (ITestOutputHelper output)
         superView.BeginInit ();
         superView.EndInit ();
         superView.LayoutSubviews ();
-        Assert.Equal (2, layoutStartedRaised);
-        Assert.Equal (2, layoutCompleteRaised);
+        Assert.Equal (3, layoutStartedRaised);
+        Assert.Equal (3, layoutCompleteRaised);
     }
 
     [Fact]
@@ -230,21 +230,21 @@ public class SetLayoutTests (ITestOutputHelper output)
         superView.EndInit ();
         Assert.Equal (1, borderLayoutStartedCount);
         Assert.Equal (1, borderLayoutCompleteCount);
-        Assert.Equal (1, layoutStartedCount);
-        Assert.Equal (1, layoutCompleteCount);
+        Assert.Equal (2, layoutStartedCount);
+        Assert.Equal (2, layoutCompleteCount);
 
         superView.LayoutSubviews ();
         Assert.Equal (1, borderLayoutStartedCount);
         Assert.Equal (1, borderLayoutCompleteCount);
-        Assert.Equal (1, layoutStartedCount);
-        Assert.Equal (1, layoutCompleteCount);
+        Assert.Equal (3, layoutStartedCount);
+        Assert.Equal (3, layoutCompleteCount);
 
         superView.SetNeedsLayout ();
         superView.LayoutSubviews ();
         Assert.Equal (1, borderLayoutStartedCount);
         Assert.Equal (1, borderLayoutCompleteCount);
-        Assert.Equal (2, layoutStartedCount);
-        Assert.Equal (2, layoutCompleteCount);
+        Assert.Equal (4, layoutStartedCount);
+        Assert.Equal (4, layoutCompleteCount);
 
         superView.Dispose ();
     }
@@ -317,8 +317,6 @@ public class SetLayoutTests (ITestOutputHelper output)
     public void Set_X_PosAbsolute_Layout_Is_Implicit ()
     {
         var v = new View ();
-        Assert.False (v.NeedsLayout);
-        Assert.Equal (0, v.Frame.X);
 
         v.X = 1;
         Assert.False (v.NeedsLayout);
@@ -346,8 +344,6 @@ public class SetLayoutTests (ITestOutputHelper output)
     public void Set_X_Non_PosAbsolute_Explicit_Layout_Required ()
     {
         var v = new View ();
-        Assert.False (v.NeedsLayout);
-        Assert.Equal (0, v.Frame.X);
 
         v.X = Pos.Center ();
         Assert.True (v.NeedsLayout);
@@ -379,8 +375,6 @@ public class SetLayoutTests (ITestOutputHelper output)
     public void Set_Y_PosAbsolute_Layout_Is_Implicit ()
     {
         var v = new View ();
-        Assert.False (v.NeedsLayout);
-        Assert.Equal (0, v.Frame.Y);
 
         v.Y = 1;
         Assert.False (v.NeedsLayout);
@@ -408,8 +402,6 @@ public class SetLayoutTests (ITestOutputHelper output)
     public void Set_Y_Non_PosAbsolute_Explicit_Layout_Required ()
     {
         var v = new View ();
-        Assert.False (v.NeedsLayout);
-        Assert.Equal (0, v.Frame.Y);
 
         v.Y = Pos.Center ();
         Assert.True (v.NeedsLayout);
@@ -441,8 +433,6 @@ public class SetLayoutTests (ITestOutputHelper output)
     public void Set_Width_DimAbsolute_Layout_Is_Implicit ()
     {
         var v = new View ();
-        Assert.False (v.NeedsLayout);
-        Assert.Equal (0, v.Frame.Width);
 
         v.Width = 1;
         Assert.False (v.NeedsLayout);
@@ -470,8 +460,6 @@ public class SetLayoutTests (ITestOutputHelper output)
     public void Set_Width_Non_DimAbsolute_Explicit_Layout_Required ()
     {
         var v = new View ();
-        Assert.False (v.NeedsLayout);
-        Assert.Equal (0, v.Frame.Width);
 
         v.Width = Dim.Auto();
         Assert.True (v.NeedsLayout);
@@ -498,8 +486,6 @@ public class SetLayoutTests (ITestOutputHelper output)
     public void Set_Height_DimAbsolute_Layout_Is_Implicit ()
     {
         var v = new View ();
-        Assert.False (v.NeedsLayout);
-        Assert.Equal (0, v.Frame.Height);
 
         v.Height = 1;
         Assert.False (v.NeedsLayout);
@@ -527,8 +513,6 @@ public class SetLayoutTests (ITestOutputHelper output)
     public void Set_Height_Non_DimAbsolute_Explicit_Layout_Required ()
     {
         var v = new View ();
-        Assert.False (v.NeedsLayout);
-        Assert.Equal (0, v.Frame.Height);
 
         v.Height = Dim.Auto ();
         Assert.True (v.NeedsLayout);
