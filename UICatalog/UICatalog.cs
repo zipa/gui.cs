@@ -294,6 +294,7 @@ public class UICatalogApp
         _homeDirWatcher.Created -= ConfigFileChanged;
     }
 
+
     private static void UICatalogMain (Options options)
     {
         StartConfigFileWatcher ();
@@ -316,14 +317,8 @@ public class UICatalogApp
                                                                        )!);
             _selectedScenario = (Scenario)Activator.CreateInstance (_scenarios [item].GetType ())!;
 
-            Application.Init (driverName: _forceDriver);
-            _selectedScenario.TopLevelColorScheme = _topLevelColorScheme;
-            _selectedScenario.Main ();
-            _selectedScenario.Dispose ();
-            _selectedScenario = null;
+            BenchmarkScenario ();
 
-            // TODO: Throw if shutdown was not called already
-            Application.Shutdown ();
             VerifyObjectsWereDisposed ();
 
             return;
@@ -375,6 +370,143 @@ public class UICatalogApp
 
         return;
 
+
+    }
+
+    private static void BenchmarkScenario ()
+    {
+        object _timeoutLock = new ();
+
+        uint maxIterations = 1000;
+        uint abortTime = 5000;
+        object timeout = null;
+        var initialized = false;
+        var shutdown = false;
+
+        int iterationCount = 0;
+        int clearedContentCount = 0;
+        int refreshedCount = 0;
+        int updatedCount = 0;
+        int drawCompleteCount = 0;
+
+        int laidOutCount = 0;
+
+        Console.WriteLine ($"Scenario {_selectedScenario.GetName ()}");
+
+        Stopwatch stopwatch = null;
+
+        Application.InitializedChanged += OnApplicationOnInitializedChanged;
+
+        Application.Init (driverName: _forceDriver);
+        _selectedScenario.TopLevelColorScheme = _topLevelColorScheme;
+
+        _selectedScenario.Main ();
+
+        Application.InitializedChanged -= OnApplicationOnInitializedChanged;
+
+        Console.WriteLine ($"  ran for {iterationCount} iterations.");
+        Console.WriteLine ($"  took {stopwatch?.ElapsedMilliseconds} ms to run.");
+        Console.WriteLine ($"  called Driver.ClearContents {clearedContentCount} times.");
+        Console.WriteLine ($"  called Driver.Refresh {refreshedCount} times.");
+        Console.WriteLine ($"    which updated the screen {updatedCount} times.");
+        Console.WriteLine ($"  called View.Draw {drawCompleteCount} times.");
+        Console.WriteLine ($"  called View.LayoutComplete {laidOutCount} times.");
+
+        _selectedScenario.Dispose ();
+        _selectedScenario = null;
+
+        lock (_timeoutLock)
+        {
+            if (timeout is { })
+            {
+                timeout = null;
+            }
+        }
+
+        // TODO: Throw if shutdown was not called already
+        Application.Shutdown ();
+
+        return;
+
+
+        void OnApplicationOnInitializedChanged (object s, EventArgs<bool> a)
+        {
+            if (a.CurrentValue)
+            {
+                lock (_timeoutLock)
+                {
+                    timeout = Application.AddTimeout (TimeSpan.FromMilliseconds (abortTime), ForceCloseCallback);
+                }
+
+                initialized = true;
+                Application.Iteration += OnApplicationOnIteration;
+                Application.Driver!.ClearedContents += (sender, args) => clearedContentCount++;
+                Application.Driver!.Refreshed += (sender, args) =>
+                {
+                    refreshedCount++;
+
+                    if (args.CurrentValue)
+                    {
+                        updatedCount++;
+                    }
+                };
+                Application.NotifyNewRunState += OnApplicationNotifyNewRunState;
+
+                stopwatch = Stopwatch.StartNew ();
+            }
+            else
+            {
+                shutdown = true;
+                Application.NotifyNewRunState -= OnApplicationNotifyNewRunState;
+                Application.Iteration -= OnApplicationOnIteration;
+                stopwatch?.Stop ();
+            }
+        }
+
+        void OnApplicationOnIteration (object s, IterationEventArgs a)
+        {
+            iterationCount++;
+            if (iterationCount > maxIterations)
+            {
+                Application.RequestStop ();
+            }
+        }
+
+
+        void OnApplicationNotifyNewRunState (object sender, RunStateEventArgs e)
+        {
+            // Get a list of all subviews under Application.Top (and their subviews, etc.)
+            // and subscribe to their DrawComplete event
+            void SubscribeAllSubviews (View view)
+            {
+                view.DrawComplete += (s, a) => drawCompleteCount++;
+                view.SubviewsLaidOut += (s, a) => laidOutCount++;
+                foreach (View subview in view.Subviews)
+                {
+                    SubscribeAllSubviews (subview);
+                }
+            }
+
+            SubscribeAllSubviews (Application.Top);
+        }
+
+        // If the scenario doesn't close within the abort time, this will force it to quit
+        bool ForceCloseCallback ()
+        {
+            lock (_timeoutLock)
+            {
+                if (timeout is { })
+                {
+                    timeout = null;
+                }
+            }
+
+            Console.WriteLine ($"  Failed to Quit with {Application.QuitKey} after {abortTime}ms and {iterationCount} iterations. Force quit.");
+
+            Application.RequestStop ();
+
+            return false;
+        }
 
     }
 

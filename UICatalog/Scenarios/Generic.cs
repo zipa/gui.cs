@@ -19,9 +19,6 @@ public sealed class Generic : Scenario
 
         var button = new Button { Id = "button", X = Pos.Center (), Y = 1, Text = "_Press me!" };
 
-        button.ShadowStyle = ShadowStyle.None;
-        button.HighlightStyle = HighlightStyle.None;
-
         button.Accepting += (s, e) => MessageBox.ErrorQuery ("Error", "You pressed the button!", "_Ok");
         appWindow.Add (button);
 
