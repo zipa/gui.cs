@@ -6,8 +6,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Threading", "Demonstration of how to use threading in different ways")]
-[ScenarioCategory ("Threading")]
+[Scenario.ScenarioMetadata ("Threading", "Demonstration of how to use threading in different ways")]
+[Scenario.ScenarioCategory ("Threading")]
 public class Threading : Scenario
 {
     private readonly ObservableCollection<string> _log = [];

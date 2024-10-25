@@ -4,11 +4,11 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Wizards", "Demonstrates the Wizard class")]
-[ScenarioCategory ("Dialogs")]
-[ScenarioCategory ("Overlapped")]
-[ScenarioCategory ("Wizards")]
-[ScenarioCategory ("Runnable")]
+[Scenario.ScenarioMetadata ("Wizards", "Demonstrates the Wizard class")]
+[Scenario.ScenarioCategory ("Dialogs")]
+[Scenario.ScenarioCategory ("Overlapped")]
+[Scenario.ScenarioCategory ("Wizards")]
+[Scenario.ScenarioCategory ("Runnable")]
 
 public class Wizards : Scenario
 {

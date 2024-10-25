@@ -8,9 +8,9 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Snake", "The game of apple eating.")]
-[ScenarioCategory ("Colors")]
-[ScenarioCategory ("Drawing")]
+[Scenario.ScenarioMetadata ("Snake", "The game of apple eating.")]
+[Scenario.ScenarioCategory ("Colors")]
+[Scenario.ScenarioCategory ("Drawing")]
 public class Snake : Scenario
 {
     private bool isDisposed;

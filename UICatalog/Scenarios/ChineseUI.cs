@@ -2,8 +2,8 @@
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("ChineseUI", "Chinese UI")]
-[ScenarioCategory ("Text and Formatting")]
+[Scenario.ScenarioMetadata ("ChineseUI", "Chinese UI")]
+[Scenario.ScenarioCategory ("Text and Formatting")]
 public class ChineseUI : Scenario
 {
     public override void Main ()

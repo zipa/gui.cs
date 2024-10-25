@@ -4,9 +4,9 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Tree View", "Simple tree view examples.")]
-[ScenarioCategory ("Controls")]
-[ScenarioCategory ("TreeView")]
+[Scenario.ScenarioMetadata ("Tree View", "Simple tree view examples.")]
+[Scenario.ScenarioCategory ("Controls")]
+[Scenario.ScenarioCategory ("TreeView")]
 public class TreeUseCases : Scenario
 {
     private View _currentTree;

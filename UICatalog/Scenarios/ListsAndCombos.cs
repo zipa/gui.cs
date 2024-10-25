@@ -6,10 +6,10 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("ListView & ComboBox", "Demonstrates a ListView populating a ComboBox that acts as a filter.")]
-[ScenarioCategory ("Controls")]
-[ScenarioCategory ("ListView")]
-[ScenarioCategory ("ComboBox")]
+[Scenario.ScenarioMetadata ("ListView & ComboBox", "Demonstrates a ListView populating a ComboBox that acts as a filter.")]
+[Scenario.ScenarioCategory ("Controls")]
+[Scenario.ScenarioCategory ("ListView")]
+[Scenario.ScenarioCategory ("ComboBox")]
 public class ListsAndCombos : Scenario
 {
     public override void Main ()

@@ -3,11 +3,11 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("View Experiments", "v2 View Experiments")]
-[ScenarioCategory ("Controls")]
-[ScenarioCategory ("Adornments")]
-[ScenarioCategory ("Layout")]
-[ScenarioCategory ("Proof of Concept")]
+[Scenario.ScenarioMetadata ("View Experiments", "v2 View Experiments")]
+[Scenario.ScenarioCategory ("Controls")]
+[Scenario.ScenarioCategory ("Adornments")]
+[Scenario.ScenarioCategory ("Layout")]
+[Scenario.ScenarioCategory ("Proof of Concept")]
 public class ViewExperiments : Scenario
 {
     public override void Main ()

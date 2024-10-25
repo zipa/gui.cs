@@ -101,9 +101,9 @@ internal class DrawLineTool : ITool
     }
 }
 
-[ScenarioMetadata ("Line Drawing", "Demonstrates LineCanvas.")]
-[ScenarioCategory ("Controls")]
-[ScenarioCategory ("Drawing")]
+[Scenario.ScenarioMetadata ("Line Drawing", "Demonstrates LineCanvas.")]
+[Scenario.ScenarioCategory ("Controls")]
+[Scenario.ScenarioCategory ("Drawing")]
 public class LineDrawing : Scenario
 {
     public override void Main ()

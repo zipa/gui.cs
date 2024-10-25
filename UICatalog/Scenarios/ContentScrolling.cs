@@ -5,10 +5,10 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Content Scrolling", "Demonstrates using View.Viewport and View.GetContentSize () to scroll content.")]
-[ScenarioCategory ("Layout")]
-[ScenarioCategory ("Drawing")]
-[ScenarioCategory ("Scrolling")]
+[Scenario.ScenarioMetadata ("Content Scrolling", "Demonstrates using View.Viewport and View.GetContentSize () to scroll content.")]
+[Scenario.ScenarioCategory ("Layout")]
+[Scenario.ScenarioCategory ("Drawing")]
+[Scenario.ScenarioCategory ("Scrolling")]
 public class ContentScrolling : Scenario
 {
     private ViewDiagnosticFlags _diagnosticFlags;

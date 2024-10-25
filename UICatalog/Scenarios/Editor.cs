@@ -12,14 +12,14 @@ using static UICatalog.Scenarios.DynamicMenuBar;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Editor", "A Text Editor using the TextView control.")]
-[ScenarioCategory ("Controls")]
-[ScenarioCategory ("Dialogs")]
-[ScenarioCategory ("Text and Formatting")]
-[ScenarioCategory ("Overlapped")]
-[ScenarioCategory ("Files and IO")]
-[ScenarioCategory ("TextView")]
-[ScenarioCategory ("Menus")]
+[Scenario.ScenarioMetadata ("Editor", "A Text Editor using the TextView control.")]
+[Scenario.ScenarioCategory ("Controls")]
+[Scenario.ScenarioCategory ("Dialogs")]
+[Scenario.ScenarioCategory ("Text and Formatting")]
+[Scenario.ScenarioCategory ("Overlapped")]
+[Scenario.ScenarioCategory ("Files and IO")]
+[Scenario.ScenarioCategory ("TextView")]
+[Scenario.ScenarioCategory ("Menus")]
 public class Editor : Scenario
 {
     private Window _appWindow;

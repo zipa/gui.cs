@@ -9,8 +9,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Dynamic StatusBar", "Demonstrates how to add and remove a StatusBar and change items dynamically.")]
-[ScenarioCategory ("Overlapped")]
+[Scenario.ScenarioMetadata ("Dynamic StatusBar", "Demonstrates how to add and remove a StatusBar and change items dynamically.")]
+[Scenario.ScenarioCategory ("Overlapped")]
 public class DynamicStatusBar : Scenario
 {
     public override void Main ()

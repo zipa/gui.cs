@@ -3,10 +3,10 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("RuneWidthGreaterThanOne", "Test rune width greater than one")]
-[ScenarioCategory ("Controls")]
-[ScenarioCategory ("Text and Formatting")]
-[ScenarioCategory ("Tests")]
+[Scenario.ScenarioMetadata ("RuneWidthGreaterThanOne", "Test rune width greater than one")]
+[Scenario.ScenarioCategory ("Controls")]
+[Scenario.ScenarioCategory ("Text and Formatting")]
+[Scenario.ScenarioCategory ("Tests")]
 public class RuneWidthGreaterThanOne : Scenario
 {
     private Button _button;

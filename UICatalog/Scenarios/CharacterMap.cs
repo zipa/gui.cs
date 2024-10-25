@@ -21,12 +21,12 @@ namespace UICatalog.Scenarios;
 ///     "Character Map" application (like Windows' charmap.exe). - Helps test unicode character rendering in Terminal.Gui -
 ///     Illustrates how to do infinite scrolling
 /// </summary>
-[ScenarioMetadata ("Character Map", "Unicode viewer demonstrating infinite content, scrolling, and Unicode.")]
-[ScenarioCategory ("Text and Formatting")]
-[ScenarioCategory ("Drawing")]
-[ScenarioCategory ("Controls")]
-[ScenarioCategory ("Layout")]
-[ScenarioCategory ("Scrolling")]
+[Scenario.ScenarioMetadata ("Character Map", "Unicode viewer demonstrating infinite content, scrolling, and Unicode.")]
+[Scenario.ScenarioCategory ("Text and Formatting")]
+[Scenario.ScenarioCategory ("Drawing")]
+[Scenario.ScenarioCategory ("Controls")]
+[Scenario.ScenarioCategory ("Layout")]
+[Scenario.ScenarioCategory ("Scrolling")]
 
 public class CharacterMap : Scenario
 {

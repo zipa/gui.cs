@@ -4,9 +4,9 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("MessageBoxes", "Demonstrates how to use the MessageBox class.")]
-[ScenarioCategory ("Controls")]
-[ScenarioCategory ("Dialogs")]
+[Scenario.ScenarioMetadata ("MessageBoxes", "Demonstrates how to use the MessageBox class.")]
+[Scenario.ScenarioCategory ("Controls")]
+[Scenario.ScenarioCategory ("Dialogs")]
 public class MessageBoxes : Scenario
 {
     public override void Main ()

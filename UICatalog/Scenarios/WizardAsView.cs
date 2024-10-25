@@ -2,8 +2,8 @@
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("WizardAsView", "Shows using the Wizard class in an non-modal way")]
-[ScenarioCategory ("Wizards")]
+[Scenario.ScenarioMetadata ("WizardAsView", "Shows using the Wizard class in an non-modal way")]
+[Scenario.ScenarioCategory ("Wizards")]
 public class WizardAsView : Scenario
 {
     public override void Main ()

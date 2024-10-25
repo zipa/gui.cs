@@ -3,9 +3,9 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Text Effects", "Text Effects.")]
-[ScenarioCategory ("Colors")]
-[ScenarioCategory ("Text and Formatting")]
+[Scenario.ScenarioMetadata ("Text Effects", "Text Effects.")]
+[Scenario.ScenarioCategory ("Colors")]
+[Scenario.ScenarioCategory ("Text and Formatting")]
 public class TextEffectsScenario : Scenario
 {
     private TabView _tabView;

@@ -2,10 +2,10 @@
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("LineCanvas Experiments", "Experiments with LineCanvas")]
-[ScenarioCategory ("Drawing")]
-[ScenarioCategory ("Adornments")]
-[ScenarioCategory ("Proof of Concept")]
+[Scenario.ScenarioMetadata ("LineCanvas Experiments", "Experiments with LineCanvas")]
+[Scenario.ScenarioCategory ("Drawing")]
+[Scenario.ScenarioCategory ("Adornments")]
+[Scenario.ScenarioCategory ("Proof of Concept")]
 public class LineCanvasExperiment : Scenario
 {
     public override void Main ()

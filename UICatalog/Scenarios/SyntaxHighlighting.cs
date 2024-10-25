@@ -11,10 +11,10 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Syntax Highlighting", "Text editor with keyword highlighting using the TextView control.")]
-[ScenarioCategory ("Text and Formatting")]
-[ScenarioCategory ("Controls")]
-[ScenarioCategory ("TextView")]
+[Scenario.ScenarioMetadata ("Syntax Highlighting", "Text editor with keyword highlighting using the TextView control.")]
+[Scenario.ScenarioCategory ("Text and Formatting")]
+[Scenario.ScenarioCategory ("Controls")]
+[Scenario.ScenarioCategory ("TextView")]
 public class SyntaxHighlighting : Scenario
 {
     private readonly HashSet<string> _keywords = new (StringComparer.CurrentCultureIgnoreCase)

@@ -3,9 +3,9 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Color Picker", "Color Picker.")]
-[ScenarioCategory ("Colors")]
-[ScenarioCategory ("Controls")]
+[Scenario.ScenarioMetadata ("Color Picker", "Color Picker.")]
+[Scenario.ScenarioCategory ("Colors")]
+[Scenario.ScenarioCategory ("Controls")]
 public class ColorPickers : Scenario
 {
     /// <summary>Background color Label.</summary>

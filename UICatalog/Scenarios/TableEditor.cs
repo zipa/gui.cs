@@ -9,12 +9,12 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("TableEditor", "Implements data table editor using the TableView control.")]
-[ScenarioCategory ("TableView")]
-[ScenarioCategory ("Controls")]
-[ScenarioCategory ("Dialogs")]
-[ScenarioCategory ("Text and Formatting")]
-[ScenarioCategory ("Overlapped")]
+[Scenario.ScenarioMetadata ("TableEditor", "Implements data table editor using the TableView control.")]
+[Scenario.ScenarioCategory ("TableView")]
+[Scenario.ScenarioCategory ("Controls")]
+[Scenario.ScenarioCategory ("Dialogs")]
+[Scenario.ScenarioCategory ("Text and Formatting")]
+[Scenario.ScenarioCategory ("Overlapped")]
 public class TableEditor : Scenario
 {
     private readonly HashSet<FileSystemInfo> _checkedFileSystemInfos = new ();

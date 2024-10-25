@@ -6,8 +6,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Mouse", "Demonstrates how to capture mouse events")]
-[ScenarioCategory ("Mouse and Keyboard")]
+[Scenario.ScenarioMetadata ("Mouse", "Demonstrates how to capture mouse events")]
+[Scenario.ScenarioCategory ("Mouse and Keyboard")]
 public class Mouse : Scenario
 {
     public override void Main ()

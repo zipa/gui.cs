@@ -9,10 +9,10 @@ using Terminal.Gui.TextValidateProviders;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Text Input Controls", "Tests all text input controls")]
-[ScenarioCategory ("Controls")]
-[ScenarioCategory ("Mouse and Keyboard")]
-[ScenarioCategory ("Text and Formatting")]
+[Scenario.ScenarioMetadata ("Text Input Controls", "Tests all text input controls")]
+[Scenario.ScenarioCategory ("Controls")]
+[Scenario.ScenarioCategory ("Mouse and Keyboard")]
+[Scenario.ScenarioCategory ("Text and Formatting")]
 public class Text : Scenario
 {
     private Label _labelMirroringTimeField;

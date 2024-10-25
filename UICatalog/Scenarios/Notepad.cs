@@ -4,10 +4,10 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Notepad", "Multi-tab text editor using the TabView control.")]
-[ScenarioCategory ("Controls")]
-[ScenarioCategory ("TabView")]
-[ScenarioCategory ("TextView")]
+[Scenario.ScenarioMetadata ("Notepad", "Multi-tab text editor using the TabView control.")]
+[Scenario.ScenarioCategory ("Controls")]
+[Scenario.ScenarioCategory ("TabView")]
+[Scenario.ScenarioCategory ("TextView")]
 public class Notepad : Scenario
 {
     private TabView _focusedTabView;

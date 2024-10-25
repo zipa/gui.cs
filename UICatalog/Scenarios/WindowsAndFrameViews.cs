@@ -4,8 +4,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Windows & FrameViews", "Stress Tests Windows, sub-Windows, and FrameViews.")]
-[ScenarioCategory ("Layout")]
+[Scenario.ScenarioMetadata ("Windows & FrameViews", "Stress Tests Windows, sub-Windows, and FrameViews.")]
+[Scenario.ScenarioCategory ("Layout")]
 public class WindowsAndFrameViews : Scenario
 {
     public override void Main ()

@@ -4,10 +4,10 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Line View", "Demonstrates drawing lines using the LineView control.")]
-[ScenarioCategory ("Controls")]
-[ScenarioCategory ("LineView")]
-[ScenarioCategory ("Adornments")]
+[Scenario.ScenarioMetadata ("Line View", "Demonstrates drawing lines using the LineView control.")]
+[Scenario.ScenarioCategory ("Controls")]
+[Scenario.ScenarioCategory ("LineView")]
+[Scenario.ScenarioCategory ("Adornments")]
 public class LineViewExample : Scenario
 {
     public override void Main ()

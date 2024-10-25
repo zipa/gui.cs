@@ -4,9 +4,9 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Tab View", "Demos TabView control with limited screen space in Absolute layout.")]
-[ScenarioCategory ("Controls")]
-[ScenarioCategory ("TabView")]
+[Scenario.ScenarioMetadata ("Tab View", "Demos TabView control with limited screen space in Absolute layout.")]
+[Scenario.ScenarioCategory ("Controls")]
+[Scenario.ScenarioCategory ("TabView")]
 public class TabViewExample : Scenario
 {
     private MenuItem _miShowBorder;

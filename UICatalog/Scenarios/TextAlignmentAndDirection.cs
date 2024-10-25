@@ -6,8 +6,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Text Alignment and Direction", "Demos horizontal and vertical text alignment and direction.")]
-[ScenarioCategory ("Text and Formatting")]
+[Scenario.ScenarioMetadata ("Text Alignment and Direction", "Demos horizontal and vertical text alignment and direction.")]
+[Scenario.ScenarioCategory ("Text and Formatting")]
 public class TextAlignmentAndDirection : Scenario
 {
     public override void Main ()

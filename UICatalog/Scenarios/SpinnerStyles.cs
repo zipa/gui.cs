@@ -6,9 +6,9 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("SpinnerView Styles", "Shows the SpinnerView Styles.")]
-[ScenarioCategory ("Controls")]
-[ScenarioCategory ("Progress")]
+[Scenario.ScenarioMetadata ("SpinnerView Styles", "Shows the SpinnerView Styles.")]
+[Scenario.ScenarioCategory ("Controls")]
+[Scenario.ScenarioCategory ("Progress")]
 public class SpinnerViewStyles : Scenario
 {
     public override void Main ()

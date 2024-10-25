@@ -5,8 +5,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("ContextMenus", "Context Menu Sample.")]
-[ScenarioCategory ("Menus")]
+[Scenario.ScenarioMetadata ("ContextMenus", "Context Menu Sample.")]
+[Scenario.ScenarioCategory ("Menus")]
 public class ContextMenus : Scenario
 {
     private readonly List<CultureInfo> _cultureInfos = Application.SupportedCultures;

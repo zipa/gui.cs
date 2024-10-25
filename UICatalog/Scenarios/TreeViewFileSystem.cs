@@ -7,10 +7,10 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("File System Explorer", "Hierarchical file system explorer demonstrating TreeView.")]
-[ScenarioCategory ("Controls")]
-[ScenarioCategory ("TreeView")]
-[ScenarioCategory ("Files and IO")]
+[Scenario.ScenarioMetadata ("File System Explorer", "Hierarchical file system explorer demonstrating TreeView.")]
+[Scenario.ScenarioCategory ("Controls")]
+[Scenario.ScenarioCategory ("TreeView")]
+[Scenario.ScenarioCategory ("Files and IO")]
 public class TreeViewFileSystem : Scenario
 {
     private readonly FileSystemIconProvider _iconProvider = new ();

@@ -6,11 +6,11 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Configuration Editor", "Edits Terminal.Gui Config Files.")]
-[ScenarioCategory ("TabView")]
-[ScenarioCategory ("Colors")]
-[ScenarioCategory ("Files and IO")]
-[ScenarioCategory ("TextView")]
+[Scenario.ScenarioMetadata ("Configuration Editor", "Edits Terminal.Gui Config Files.")]
+[Scenario.ScenarioCategory ("TabView")]
+[Scenario.ScenarioCategory ("Colors")]
+[Scenario.ScenarioCategory ("Files and IO")]
+[Scenario.ScenarioCategory ("TextView")]
 public class ConfigurationEditor : Scenario
 {
     private static ColorScheme _editorColorScheme = new ()

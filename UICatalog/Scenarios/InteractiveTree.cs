@@ -3,9 +3,9 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Interactive Tree", "Create nodes and child nodes in TreeView.")]
-[ScenarioCategory ("Controls")]
-[ScenarioCategory ("TreeView")]
+[Scenario.ScenarioMetadata ("Interactive Tree", "Create nodes and child nodes in TreeView.")]
+[Scenario.ScenarioCategory ("Controls")]
+[Scenario.ScenarioCategory ("TreeView")]
 public class InteractiveTree : Scenario
 {
     private TreeView _treeView;

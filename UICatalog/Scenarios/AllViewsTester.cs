@@ -1,34 +1,33 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("All Views Tester", "Provides a test UI for all classes derived from View.")]
-[ScenarioCategory ("Layout")]
-[ScenarioCategory ("Tests")]
-[ScenarioCategory ("Controls")]
-[ScenarioCategory ("Adornments")]
+[Scenario.ScenarioMetadata ("All Views Tester", "Provides a test UI for all classes derived from View.")]
+[Scenario.ScenarioCategory ("Layout")]
+[Scenario.ScenarioCategory ("Tests")]
+[Scenario.ScenarioCategory ("Controls")]
+[Scenario.ScenarioCategory ("Adornments")]
 public class AllViewsTester : Scenario
 {
 
-    private Dictionary<string, Type> _viewClasses;
-    private ListView _classListView;
-    private AdornmentsEditor _adornmentsEditor;
+    private Dictionary<string, Type>? _viewClasses;
+    private ListView? _classListView;
+    private AdornmentsEditor? _adornmentsEditor;
 
-    private LayoutEditor _layoutEditor;
-    private FrameView _settingsPane;
-    private RadioGroup _orientation;
+    private LayoutEditor? _layoutEditor;
+    private FrameView? _settingsPane;
+    private RadioGroup? _orientation;
     private string _demoText = "This, that, and the other thing.";
-    private TextView _demoTextView;
+    private TextView? _demoTextView;
 
-    private FrameView _hostPane;
-    private View _curView;
-    private EventLog _eventLog;
+    private FrameView? _hostPane;
+    private View? _curView;
+    private EventLog? _eventLog;
 
     public override void Main ()
     {
@@ -79,7 +78,7 @@ public class AllViewsTester : Scenario
 
         _classListView.Accepting += (sender, args) =>
                                     {
-                                        _curView.SetFocus ();
+                                        _curView?.SetFocus ();
                                         args.Cancel = true;
                                     };
 
@@ -120,7 +119,7 @@ public class AllViewsTester : Scenario
             Title = "Settings [_4]",
             X = Pos.Right (_adornmentsEditor),
             Y = Pos.Bottom (_layoutEditor),
-            Width = Dim.Width(_layoutEditor),
+            Width = Dim.Width (_layoutEditor),
             Height = Dim.Auto (),
             CanFocus = true,
             ColorScheme = Colors.ColorSchemes ["TopLevel"],
@@ -171,7 +170,7 @@ public class AllViewsTester : Scenario
 
         _eventLog = new EventLog ()
         {
-           // X = Pos.Right(_layoutEditor)
+            // X = Pos.Right(_layoutEditor)
         };
         _eventLog.X = Pos.AnchorEnd ();
         _eventLog.Y = 0;
@@ -218,9 +217,9 @@ public class AllViewsTester : Scenario
         Application.Shutdown ();
     }
 
-    private void App_Initialized (object sender, EventArgs e)
+    private void App_Initialized (object? sender, EventArgs e)
     {
-        _classListView.SelectedItem = 0;
+        _classListView!.SelectedItem = 0;
         _classListView.SetFocus ();
     }
 
@@ -246,7 +245,7 @@ public class AllViewsTester : Scenario
         }
 
         // Instantiate view
-        var view = (View)Activator.CreateInstance (type);
+        var view = (View)Activator.CreateInstance (type)!;
         if (view is IDesignable designable)
         {
             designable.EnableForDesign (ref _demoText);
@@ -259,12 +258,12 @@ public class AllViewsTester : Scenario
 
         if (view is IOrientation orientatedView)
         {
-            _orientation.SelectedItem = (int)orientatedView.Orientation;
+            _orientation!.SelectedItem = (int)orientatedView.Orientation;
             _orientation.Enabled = true;
         }
         else
         {
-            _orientation.Enabled = false;
+            _orientation!.Enabled = false;
         }
 
         view.Initialized += CurrentView_Initialized;
@@ -273,9 +272,9 @@ public class AllViewsTester : Scenario
         view.Id = "_curView";
         _curView = view;
 
-        _eventLog.ViewToLog = _curView;
-        _hostPane.Add (_curView);
-        _layoutEditor.ViewToEdit = _curView;
+        _eventLog!.ViewToLog = _curView;
+        _hostPane!.Add (_curView);
+        _layoutEditor!.ViewToEdit = _curView;
         _curView.SetNeedsLayout ();
     }
 
@@ -285,8 +284,8 @@ public class AllViewsTester : Scenario
         {
             _curView.Initialized -= CurrentView_Initialized;
             _curView.SubviewsLaidOut -= CurrentView_LayoutComplete;
-            _hostPane.Remove (_curView);
-            _layoutEditor.ViewToEdit = null;
+            _hostPane!.Remove (_curView);
+            _layoutEditor!.ViewToEdit = null;
 
             _curView.Dispose ();
             _curView = null;
@@ -295,30 +294,24 @@ public class AllViewsTester : Scenario
 
     private static List<Type> GetAllViewClassesCollection ()
     {
-        List<Type> types = new ();
-
-        foreach (Type type in typeof (View).Assembly.GetTypes ()
-                                           .Where (
-                                                   myType =>
-                                                       myType.IsClass && !myType.IsAbstract && myType.IsPublic && myType.IsSubclassOf (typeof (View))
-                                                  ))
-        {
-            types.Add (type);
-        }
+        List<Type> types = typeof (View).Assembly.GetTypes ()
+                                        .Where (myType => myType is { IsClass: true, IsAbstract: false, IsPublic: true }
+                                                          && myType.IsSubclassOf (typeof (View)))
+                                        .ToList ();
 
         types.Add (typeof (View));
 
         return types;
     }
 
-    private void CurrentView_LayoutComplete (object sender, LayoutEventArgs args)
+    private void CurrentView_LayoutComplete (object? sender, LayoutEventArgs args)
     {
         UpdateHostTitle (_curView);
     }
 
-    private void UpdateHostTitle (View view) { _hostPane.Title = $"{view.GetType ().Name} [_0]"; }
+    private void UpdateHostTitle (View? view) { _hostPane!.Title = $"{view!.GetType ().Name} [_0]"; }
 
-    private void CurrentView_Initialized (object sender, EventArgs e)
+    private void CurrentView_Initialized (object? sender, EventArgs e)
     {
         if (sender is not View view)
         {

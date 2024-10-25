@@ -2,8 +2,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection.Metadata;
+using System.Text;
+using System.Threading;
 using Terminal.Gui;
 
 namespace UICatalog;
@@ -84,7 +87,13 @@ namespace UICatalog;
 public class Scenario : IDisposable
 {
     private static int _maxScenarioNameLen = 30;
-    public string TopLevelColorScheme = "Base";
+    public string TopLevelColorScheme { get; set; } = "Base";
+
+    public BenchmarkResults BenchmarkResults
+    {
+        get { return _benchmarkResults; }
+    }
+
     private bool _disposedValue;
 
     /// <summary>
@@ -142,6 +151,114 @@ public class Scenario : IDisposable
     /// </summary>
     public virtual void Main () { }
 
+    private readonly object _timeoutLock = new ();
+    private object? _timeout;
+    private const uint ABORT_TIME = 1000;
+
+    private Stopwatch? _stopwatch;
+
+    private const uint MAX_ITERATIONS = 500;
+
+    private readonly BenchmarkResults _benchmarkResults = new BenchmarkResults ();
+
+    public void StartBenchmark ()
+    {
+        BenchmarkResults.Scenario = GetName ();
+        Application.InitializedChanged += OnApplicationOnInitializedChanged;
+    }
+
+    public BenchmarkResults EndBenchmark ()
+    {
+        Application.InitializedChanged -= OnApplicationOnInitializedChanged;
+
+        lock (_timeoutLock)
+        {
+            if (_timeout is { })
+            {
+                _timeout = null;
+            }
+        }
+        
+        return _benchmarkResults;
+    }
+
+    private void OnApplicationOnInitializedChanged (object? s, EventArgs<bool> a)
+    {
+        if (a.CurrentValue)
+        {
+            lock (_timeoutLock!)
+            {
+                _timeout = Application.AddTimeout (TimeSpan.FromMilliseconds (ABORT_TIME), ForceCloseCallback);
+            }
+
+            Application.Iteration += OnApplicationOnIteration;
+            Application.Driver!.ClearedContents += (sender, args) => BenchmarkResults.ClearedContentCount++;
+            Application.Driver!.Refreshed += (sender, args) =>
+            {
+                BenchmarkResults.RefreshedCount++;
+
+                if (args.CurrentValue)
+                {
+                    BenchmarkResults.UpdatedCount++;
+                }
+            };
+            Application.NotifyNewRunState += OnApplicationNotifyNewRunState;
+
+            _stopwatch = Stopwatch.StartNew ();
+        }
+        else
+        {
+            Application.NotifyNewRunState -= OnApplicationNotifyNewRunState;
+            Application.Iteration -= OnApplicationOnIteration;
+            BenchmarkResults.Duration = _stopwatch!.Elapsed;
+            _stopwatch?.Stop ();
+        }
+    }
+
+    private void OnApplicationOnIteration (object? s, IterationEventArgs a)
+    {
+        BenchmarkResults.IterationCount++;
+        if (BenchmarkResults.IterationCount > MAX_ITERATIONS)
+        {
+            Application.RequestStop ();
+        }
+    }
+
+    private void OnApplicationNotifyNewRunState (object? sender, RunStateEventArgs e)
+    {
+        // Get a list of all subviews under Application.Top (and their subviews, etc.)
+        // and subscribe to their DrawComplete event
+        void SubscribeAllSubviews (View view)
+        {
+            view.DrawComplete += (s, a) => BenchmarkResults.DrawCompleteCount++;
+            view.SubviewsLaidOut += (s, a) => BenchmarkResults.LaidOutCount++;
+            foreach (View subview in view.Subviews)
+            {
+                SubscribeAllSubviews (subview);
+            }
+        }
+
+        SubscribeAllSubviews (Application.Top!);
+    }
+
+    // If the scenario doesn't close within the abort time, this will force it to quit
+    private bool ForceCloseCallback ()
+    {
+        lock (_timeoutLock)
+        {
+            if (_timeout is { })
+            {
+                _timeout = null;
+            }
+        }
+
+        Console.WriteLine ($@"  Failed to Quit with {Application.QuitKey} after {ABORT_TIME}ms and {BenchmarkResults.IterationCount} iterations. Force quit.");
+
+        Application.RequestStop ();
+
+        return false;
+    }
+
     /// <summary>Gets the Scenario Name + Description with the Description padded based on the longest known Scenario name.</summary>
     /// <returns></returns>
     public override string ToString () { return $"{GetName ().PadRight (_maxScenarioNameLen)}{GetDescription ()}"; }
@@ -183,7 +300,7 @@ public class Scenario : IDisposable
                                                    (current, attrs) => current
                                                                        .Union (
                                                                                attrs.Where (a => a is ScenarioCategory)
-                                                                                    .Select (a => ((ScenarioCategory)a).Name))
+                                                                                    .Select (a => ((Scenario.ScenarioCategory)a).Name))
                                                                        .ToList ());
 
         // Sort
@@ -206,8 +323,8 @@ public class Scenario : IDisposable
         {
             return GetCustomAttributes (t)
                    .ToList ()
-                   .Where (a => a is ScenarioCategory)
-                   .Select (a => ((ScenarioCategory)a).Name)
+                   .Where (a => a is Scenario.ScenarioCategory)
+                   .Select (a => ((Scenario.ScenarioCategory)a).Name)
                    .ToList ();
         }
 
@@ -216,7 +333,7 @@ public class Scenario : IDisposable
         /// <returns>Name of the category</returns>
         public static string GetName (Type t)
         {
-            if (GetCustomAttributes (t).FirstOrDefault (a => a is ScenarioMetadata) is ScenarioMetadata { } metadata)
+            if (GetCustomAttributes (t).FirstOrDefault (a => a is Scenario.ScenarioMetadata) is Scenario.ScenarioMetadata { } metadata)
             {
                 return metadata.Name;
             }
@@ -240,7 +357,7 @@ public class Scenario : IDisposable
         /// <returns></returns>
         public static string GetDescription (Type t)
         {
-            if (GetCustomAttributes (t).FirstOrDefault (a => a is ScenarioMetadata) is ScenarioMetadata { } metadata)
+            if (GetCustomAttributes (t).FirstOrDefault (a => a is Scenario.ScenarioMetadata) is Scenario.ScenarioMetadata { } metadata)
             {
                 return metadata.Description;
             }
@@ -253,7 +370,7 @@ public class Scenario : IDisposable
         /// <returns></returns>
         public static string GetName (Type t)
         {
-            if (GetCustomAttributes (t).FirstOrDefault (a => a is ScenarioMetadata) is ScenarioMetadata { } metadata)
+            if (GetCustomAttributes (t).FirstOrDefault (a => a is Scenario.ScenarioMetadata) is Scenario.ScenarioMetadata { } metadata)
             {
                 return metadata.Name;
             }

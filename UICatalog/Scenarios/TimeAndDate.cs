@@ -3,9 +3,9 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Time And Date", "Illustrates TimeField and time & date handling")]
-[ScenarioCategory ("Controls")]
-[ScenarioCategory ("DateTime")]
+[Scenario.ScenarioMetadata ("Time And Date", "Illustrates TimeField and time & date handling")]
+[Scenario.ScenarioCategory ("Controls")]
+[Scenario.ScenarioCategory ("DateTime")]
 public class TimeAndDate : Scenario
 {
     private Label _lblDateFmt;

@@ -9,8 +9,8 @@ namespace UICatalog.Scenarios;
 /// <summary>
 ///     This Scenario demonstrates how to use Terminal.Gui's Dim and Pos Layout System. 
 /// </summary>
-[ScenarioMetadata ("Computed Layout", "Demonstrates the Computed (Dim and Pos) Layout System.")]
-[ScenarioCategory ("Layout")]
+[Scenario.ScenarioMetadata ("Computed Layout", "Demonstrates the Computed (Dim and Pos) Layout System.")]
+[Scenario.ScenarioCategory ("Layout")]
 public class ComputedLayout : Scenario
 {
     public override void Main ()

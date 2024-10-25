@@ -2,9 +2,9 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("HotKeys", "Demonstrates how HotKeys work.")]
-[ScenarioCategory ("Controls")]
-[ScenarioCategory ("Mouse and Keyboard")]
+[Scenario.ScenarioMetadata ("HotKeys", "Demonstrates how HotKeys work.")]
+[Scenario.ScenarioCategory ("Controls")]
+[Scenario.ScenarioCategory ("Mouse and Keyboard")]
 public class HotKeys : Scenario
 {
     public override void Main ()

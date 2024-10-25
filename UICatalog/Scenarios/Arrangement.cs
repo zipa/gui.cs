@@ -5,10 +5,10 @@ using Timer = System.Timers.Timer;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Arrangement", "Arrangement Tester")]
-[ScenarioCategory ("Mouse and Keyboard")]
-[ScenarioCategory ("Layout")]
-[ScenarioCategory ("Overlapped")]
+[Scenario.ScenarioMetadata ("Arrangement", "Arrangement Tester")]
+[Scenario.ScenarioCategory ("Mouse and Keyboard")]
+[Scenario.ScenarioCategory ("Layout")]
+[Scenario.ScenarioCategory ("Overlapped")]
 public class Arrangement : Scenario
 {
     private int _hotkeyCount;

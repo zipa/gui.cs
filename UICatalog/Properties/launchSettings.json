@@ -23,10 +23,6 @@
       "commandLineArgs": "dotnet UICatalog.dll --driver NetDriver",
       "distributionName": ""
     },
-    "Sliders": {
-      "commandName": "Project",
-      "commandLineArgs": "Sliders"
-    },
     "Buttons": {
       "commandName": "Project",
       "commandLineArgs": "Buttons"
@@ -68,11 +64,15 @@
     },
     "Generic": {
       "commandName": "Project",
-      "commandLineArgs": "Generic"
+      "commandLineArgs": "--benchmark Generic"
     },
     "Arrangement": {
       "commandName": "Project",
       "commandLineArgs": "Arrangement"
+    },
+    "Benchmark All": {
+      "commandName": "Project",
+      "commandLineArgs": "--benchmark"
     }
   }
 }

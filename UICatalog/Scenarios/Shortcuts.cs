@@ -11,8 +11,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Shortcuts", "Illustrates Shortcut class.")]
-[ScenarioCategory ("Controls")]
+[Scenario.ScenarioMetadata ("Shortcuts", "Illustrates Shortcut class.")]
+[Scenario.ScenarioCategory ("Controls")]
 public class Shortcuts : Scenario
 {
     public override void Main ()

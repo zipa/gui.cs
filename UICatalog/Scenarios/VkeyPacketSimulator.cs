@@ -7,8 +7,8 @@ using Terminal.Gui.ConsoleDrivers;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("VkeyPacketSimulator", "Simulates the Virtual Key Packet")]
-[ScenarioCategory ("Mouse and Keyboard")]
+[Scenario.ScenarioMetadata ("VkeyPacketSimulator", "Simulates the Virtual Key Packet")]
+[Scenario.ScenarioCategory ("Mouse and Keyboard")]
 public class VkeyPacketSimulator : Scenario
 {
     private static readonly ManualResetEventSlim _stopOutput = new (false);

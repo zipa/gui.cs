@@ -1401,6 +1401,7 @@ internal class WindowsDriver : ConsoleDriver
                     Size winSize = WinConsole.GetConsoleOutputWindow (out Point pos);
                     Cols = winSize.Width;
                     Rows = winSize.Height;
+                    OnSizeChanged (new SizeChangedEventArgs (new (Cols, Rows)));
                 }
 
                 WindowsConsole.SmallRect.MakeEmpty (ref _damageRegion);

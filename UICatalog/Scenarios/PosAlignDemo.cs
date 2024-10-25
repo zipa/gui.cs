@@ -5,8 +5,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Pos.Align", "Demonstrates Pos.Align")]
-[ScenarioCategory ("Layout")]
+[Scenario.ScenarioMetadata ("Pos.Align", "Demonstrates Pos.Align")]
+[Scenario.ScenarioCategory ("Layout")]
 public sealed class PosAlignDemo : Scenario
 {
     private readonly Aligner _horizAligner = new () { AlignmentModes = AlignmentModes.StartToEnd | AlignmentModes.AddSpaceBetweenItems};

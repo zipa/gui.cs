@@ -5,8 +5,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Dialogs", "Demonstrates how to the Dialog class")]
-[ScenarioCategory ("Dialogs")]
+[Scenario.ScenarioMetadata ("Dialogs", "Demonstrates how to the Dialog class")]
+[Scenario.ScenarioCategory ("Dialogs")]
 public class Dialogs : Scenario
 {
     private static readonly int CODE_POINT = '你'; // We know this is a wide char

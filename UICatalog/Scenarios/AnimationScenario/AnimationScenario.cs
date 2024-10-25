@@ -10,9 +10,9 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Animation", "Demonstration of how to render animated images with threading.")]
-[ScenarioCategory ("Threading")]
-[ScenarioCategory ("Drawing")]
+[Scenario.ScenarioMetadata ("Animation", "Demonstration of how to render animated images with threading.")]
+[Scenario.ScenarioCategory ("Threading")]
+[Scenario.ScenarioCategory ("Drawing")]
 public class AnimationScenario : Scenario
 {
     private bool _isDisposed;

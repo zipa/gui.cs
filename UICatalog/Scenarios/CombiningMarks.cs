@@ -2,14 +2,14 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Combining Marks", "Illustrates how Unicode Combining Marks work (or don't).")]
-[ScenarioCategory ("Text and Formatting")]
+[Scenario.ScenarioMetadata ("Combining Marks", "Illustrates how Unicode Combining Marks work (or don't).")]
+[Scenario.ScenarioCategory ("Text and Formatting")]
 public class CombiningMarks : Scenario
 {
     public override void Main ()
     {
         Application.Init ();
-        var top = new Toplevel { ColorScheme = Colors.ColorSchemes [TopLevelColorScheme] };
+        var top = new Toplevel ();
 
         top.DrawComplete += (s, e) =>
                                    {

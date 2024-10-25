@@ -3,13 +3,35 @@ namespace Terminal.Gui;
 
 public static partial class Application // Screen related stuff
 {
+    private static Rectangle? _screen;
+
     /// <summary>
-    ///     Gets the size of the screen. This is the size of the screen as reported by the <see cref="ConsoleDriver"/>.
+    ///     Gets or sets the size of the screen. By default, this is the size of the screen as reported by the <see cref="ConsoleDriver"/>.
     /// </summary>
     /// <remarks>
+    /// <para>
     ///     If the <see cref="ConsoleDriver"/> has not been initialized, this will return a default size of 2048x2048; useful for unit tests.
+    /// </para>
     /// </remarks>
-    public static Rectangle Screen => Driver?.Screen ?? new (new (0, 0), new (2048, 2048));
+    public static Rectangle Screen
+    {
+        get
+        {
+            if (_screen == null)
+            {
+                _screen = Driver?.Screen ?? new (new (0, 0), new (2048, 2048));
+            }
+            return _screen.Value;
+        }
+        set
+        {
+            if (value is {} && (value.X != 0 || value.Y != 0))
+            {
+                throw new NotImplementedException ($"Screen locations other than 0, 0 are not yet supported");
+            }
+            _screen = value;
+        }
+    }
 
     /// <summary>Invoked when the terminal's size changed. The new size of the terminal is provided.</summary>
     /// <remarks>
@@ -32,6 +54,8 @@ public static partial class Application // Screen related stuff
         {
             return false;
         }
+
+        Screen = new (Point.Empty, args.Size.Value);
 
         foreach (Toplevel t in TopLevels)
         {
