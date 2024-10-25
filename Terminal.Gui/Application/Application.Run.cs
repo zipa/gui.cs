@@ -510,7 +510,7 @@ public static partial class Application // Run (Begin, Run, End, Stop)
 
         if (clear || forceRedraw)
         {
-            Driver?.ClearContents ();
+            //Driver?.ClearContents ();
         }
 
         foreach (Toplevel tl in TopLevels.Reverse ())
@@ -519,6 +519,7 @@ public static partial class Application // Run (Begin, Run, End, Stop)
             {
                 tl.SetNeedsDisplay ();
             }
+
             tl.Draw ();
         }
 

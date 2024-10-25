@@ -5,8 +5,6 @@ namespace Terminal.Gui;
 
 public partial class View // Drawing APIs
 {
-    #region Drawing Engine
-
     /// <summary>
     ///     Draws the view if it needs to be drawn.
     /// </summary>
@@ -22,18 +20,14 @@ public partial class View // Drawing APIs
     /// </remarks>
     public void Draw ()
     {
-        if (!CanBeVisible (this))
-        {
-            return;
-        }
-
-        if (!NeedsDisplay && !SubViewNeedsDisplay)
+        if (!CanBeVisible (this) || (!NeedsDisplay && !SubViewNeedsDisplay))
         {
             return;
         }
 
         DoDrawAdornments ();
 
+        // Set the color scheme for the view after adornments have been drawn
         if (ColorScheme is { })
         {
             Driver?.SetAttribute (GetNormalColor ());
@@ -44,27 +38,20 @@ public partial class View // Drawing APIs
         // so via settings. SetClip honors the ViewportSettings.DisableVisibleContentClipping flag.
         Rectangle prevClip = SetClip ();
 
-        // Clear Viewport
         DoClearViewport (Viewport);
-
-        // Draw Text
         DoDrawText (Viewport);
-
-        // Draw Content
         DoDrawContent (Viewport);
-
-        // Draw Subviews
         DoDrawSubviews (Viewport);
 
+        // Restore the clip before rendering the line canvas and adornment subviews
+        // because they may draw outside the viewport.
         if (Driver is { })
         {
             Driver.Clip = prevClip;
         }
 
         DoRenderLineCanvas ();
-
         DoDrawAdornmentSubViews ();
-
         ClearNeedsDisplay ();
 
         // We're done
@@ -75,6 +62,8 @@ public partial class View // Drawing APIs
 
     private void DoDrawAdornmentSubViews ()
     {
+        // This causes the Adornment's subviews to be REDRAWN
+        // TODO: Figure out how to make this more efficient
         if (Margin?.Subviews is { })
         {
             foreach (View subview in Margin.Subviews)
@@ -279,6 +268,8 @@ public partial class View // Drawing APIs
 
         // We assume that the text has been drawn over the entire area; ensure that the subviews are redrawn.
         SetSubViewNeedsDisplay ();
+        
+        Debug.WriteLine($"DrawText: {Id}");
     }
 
     #endregion DrawText
@@ -646,6 +637,4 @@ public partial class View // Drawing APIs
     }
 
     #endregion NeedsDisplay
-
-    #endregion Drawing Engine
 }

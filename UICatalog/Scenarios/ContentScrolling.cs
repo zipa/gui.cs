@@ -373,8 +373,9 @@ public class ContentScrolling : Scenario
 
         var buttonAnchored = new Button
         {
-            X = Pos.AnchorEnd (), Y = Pos.AnchorEnd (), Text = "Bottom Right"
+            X = Pos.AnchorEnd (), Y = Pos.AnchorEnd (), Text = "Bottom Rig_ht"
         };
+        buttonAnchored.Accepting += (sender, args) => MessageBox.Query ("Hi", $"You pressed {((Button)sender)?.Text}", "_Ok");
 
         view.Margin.Data = "Margin";
         view.Margin.Thickness = new (0);

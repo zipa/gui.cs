@@ -155,11 +155,11 @@ public class Adornment : View, IDesignable
         return parentOrSuperView.ScreenToFrame (new (location.X - Frame.X, location.Y - Frame.Y));
     }
 
-    /// <summary>Does nothing for Adornment</summary>
-    /// <returns></returns>
-    protected override bool OnDrawingAdornments () { return false; }
-
-    /// <inheritdoc/>
+    /// <summary>
+    ///     Called when the <see cref="Thickness"/> of the Adornment is to be cleared.
+    /// </summary>
+    /// <param name="viewport"></param>
+    /// <returns><see langword="true"/> to stop further clearing.</returns>
     protected override bool OnClearingViewport (Rectangle viewport)
     {
         if (Thickness == Thickness.Empty)
