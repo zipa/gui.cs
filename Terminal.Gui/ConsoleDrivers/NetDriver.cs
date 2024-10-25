@@ -256,75 +256,83 @@ internal class NetEvents : IDisposable
                         return;
                     }
 
-                    if ((consoleKeyInfo.KeyChar == (char)KeyCode.Esc && !_isEscSeq)
-                        || (consoleKeyInfo.KeyChar != (char)KeyCode.Esc && _isEscSeq))
+                    // Parse
+                    foreach (var released in Parser.ProcessInput (Tuple.Create (consoleKeyInfo.KeyChar, consoleKeyInfo)))
                     {
-                        if (_cki is null && consoleKeyInfo.KeyChar != (char)KeyCode.Esc && _isEscSeq)
-                        {
-                            _cki = EscSeqUtils.ResizeArray (
-                                                            new ConsoleKeyInfo (
-                                                                                (char)KeyCode.Esc,
-                                                                                0,
-                                                                                false,
-                                                                                false,
-                                                                                false
-                                                                               ),
-                                                            _cki
-                                                           );
-                        }
-
-                        _isEscSeq = true;
-                        newConsoleKeyInfo = consoleKeyInfo;
-                        _cki = EscSeqUtils.ResizeArray (consoleKeyInfo, _cki);
-
-                        if (Console.KeyAvailable)
-                        {
-                            continue;
-                        }
-
-                        ProcessRequestResponse (ref newConsoleKeyInfo, ref key, _cki, ref mod);
-                        _cki = null;
-                        _isEscSeq = false;
-
-                        break;
+                        ProcessInputAfterParsing (released.Item2, ref key, ref mod, ref newConsoleKeyInfo);
                     }
-
-                    if (consoleKeyInfo.KeyChar == (char)KeyCode.Esc && _isEscSeq && _cki is { })
-                    {
-                        ProcessRequestResponse (ref newConsoleKeyInfo, ref key, _cki, ref mod);
-                        _cki = null;
-
-                        if (Console.KeyAvailable)
-                        {
-                            _cki = EscSeqUtils.ResizeArray (consoleKeyInfo, _cki);
-                        }
-                        else
-                        {
-                            ProcessMapConsoleKeyInfo (consoleKeyInfo);
-                        }
-
-                        break;
-                    }
-
-                    ProcessMapConsoleKeyInfo (consoleKeyInfo);
-
-                    break;
                 }
             }
-
             _inputReady.Set ();
         }
 
-        void ProcessMapConsoleKeyInfo (ConsoleKeyInfo consoleKeyInfo)
+    }
+    private void ProcessInputAfterParsing(ConsoleKeyInfo consoleKeyInfo,
+                                            ref ConsoleKey key,
+                                            ref ConsoleModifiers mod,
+                                            ref ConsoleKeyInfo newConsoleKeyInfo)
+    {
+
+        if ((consoleKeyInfo.KeyChar == (char)KeyCode.Esc && !_isEscSeq)
+            || (consoleKeyInfo.KeyChar != (char)KeyCode.Esc && _isEscSeq))
         {
-            _inputQueue.Enqueue (
-                                 new InputResult
-                                 {
-                                     EventType = EventType.Key, ConsoleKeyInfo = EscSeqUtils.MapConsoleKeyInfo (consoleKeyInfo)
-                                 }
-                                );
+            if (_cki is null && consoleKeyInfo.KeyChar != (char)KeyCode.Esc && _isEscSeq)
+            {
+                _cki = EscSeqUtils.ResizeArray (
+                                                new ConsoleKeyInfo (
+                                                                    (char)KeyCode.Esc,
+                                                                    0,
+                                                                    false,
+                                                                    false,
+                                                                    false
+                                                                   ),
+                                                _cki
+                                               );
+            }
+
+            _isEscSeq = true;
+            newConsoleKeyInfo = consoleKeyInfo;
+            _cki = EscSeqUtils.ResizeArray (consoleKeyInfo, _cki);
+
+            if (Console.KeyAvailable)
+            {
+                return;
+            }
+
+            ProcessRequestResponse (ref newConsoleKeyInfo, ref key, _cki, ref mod);
+            _cki = null;
             _isEscSeq = false;
+            return;
         }
+
+        if (consoleKeyInfo.KeyChar == (char)KeyCode.Esc && _isEscSeq && _cki is { })
+        {
+            ProcessRequestResponse (ref newConsoleKeyInfo, ref key, _cki, ref mod);
+            _cki = null;
+
+            if (Console.KeyAvailable)
+            {
+                _cki = EscSeqUtils.ResizeArray (consoleKeyInfo, _cki);
+            }
+            else
+            {
+                ProcessMapConsoleKeyInfo (consoleKeyInfo);
+            }
+            return;
+        }
+
+        ProcessMapConsoleKeyInfo (consoleKeyInfo);
+    }
+
+    void ProcessMapConsoleKeyInfo (ConsoleKeyInfo consoleKeyInfo)
+    {
+        _inputQueue.Enqueue (
+                             new InputResult
+                             {
+                                 EventType = EventType.Key, ConsoleKeyInfo = EscSeqUtils.MapConsoleKeyInfo (consoleKeyInfo)
+                             }
+                            );
+        _isEscSeq = false;
     }
 
     private void CheckWindowSizeChange ()
@@ -407,7 +415,7 @@ internal class NetEvents : IDisposable
         return true;
     }
 
-    public AnsiResponseParser Parser { get; private set; } = new ();
+    public AnsiResponseParser<ConsoleKeyInfo> Parser { get; private set; } = new ();
 
     // Process a CSI sequence received by the driver (key pressed, mouse event, or request/response event)
     private void ProcessRequestResponse (
@@ -417,15 +425,6 @@ internal class NetEvents : IDisposable
         ref ConsoleModifiers mod
     )
     {
-        if (cki != null)
-        {
-            // If the response is fully consumed by parser
-            if(cki.Length > 1 && string.IsNullOrEmpty(Parser.ProcessInput (new string(cki.Select (k=>k.KeyChar).ToArray ()))))
-            {
-                // Lets not double process
-                return;
-            }
-        }
 
         // isMouse is true if it's CSI<, false otherwise
         EscSeqUtils.DecodeEscSeq (
