@@ -136,13 +136,16 @@ public class UICatalogApp
                         .Select (d => d!.Name)
                         .ToArray ()
             );
-
         driverOption.AddAlias ("-d");
         driverOption.AddAlias ("--d");
 
         Option<bool> benchmarkFlag = new Option<bool> ("--benchmark", "Enables benchmarking.");
         benchmarkFlag.AddAlias ("-b");
         benchmarkFlag.AddAlias ("--b");
+
+        Option<string> resultsFile = new Option<string> ("--file", "The file to save benchmark results to. If not specified with --benchmark, the results will be displayed in a TableView.");
+        resultsFile.AddAlias ("-f");
+        resultsFile.AddAlias ("--f");
 
         Argument<string> scenarioArgument = new Argument<string> (
                                                                   "scenario",
@@ -155,17 +158,20 @@ public class UICatalogApp
                                                                              );
 
 
-        var rootCommand =
-            new RootCommand ("A comprehensive sample library for Terminal.Gui") { scenarioArgument, benchmarkFlag, driverOption };
+        var rootCommand = new RootCommand ("A comprehensive sample library for Terminal.Gui")
+        {
+            scenarioArgument, benchmarkFlag, resultsFile, driverOption,
+        };
 
         rootCommand.SetHandler (
                                 context =>
                                 {
                                     var options = new Options
                                     {
+                                        Scenario = context.ParseResult.GetValueForArgument (scenarioArgument),
                                         Driver = context.ParseResult.GetValueForOption (driverOption) ?? string.Empty,
                                         Benchmark = context.ParseResult.GetValueForOption (benchmarkFlag),
-                                        Scenario = context.ParseResult.GetValueForArgument (scenarioArgument),
+                                        ResultsFile = context.ParseResult.GetValueForOption (resultsFile) ?? string.Empty,
                                         /* etc. */
                                     };
 
@@ -175,6 +181,7 @@ public class UICatalogApp
                                );
 
         rootCommand.Invoke (args);
+
 
         UICatalogMain (_options);
 
@@ -404,7 +411,7 @@ public class UICatalogApp
         Application.Init (driverName: _forceDriver);
         scenario.TopLevelColorScheme = _topLevelColorScheme;
 
-        Application.Screen = new (0, 0,120, 50);
+        Application.Screen = new (0, 0, 120, 50);
         scenario.Main ();
 
         BenchmarkResults? results = null;
@@ -435,19 +442,26 @@ public class UICatalogApp
 
             if (maxScenarios == 0)
             {
-                //break;
+                break;
             }
         }
 
         if (resultsList.Count > 0)
         {
-            var output = JsonSerializer.Serialize (
-                                                   resultsList,
-                                                   new JsonSerializerOptions ()
-                                                   {
-                                                       WriteIndented = true
-                                                   });
-            Console.WriteLine (output);
+            if (!string.IsNullOrEmpty (_options.ResultsFile))
+            {
+                var output = JsonSerializer.Serialize (
+                                                       resultsList,
+                                                       new JsonSerializerOptions ()
+                                                       {
+                                                           WriteIndented = true
+                                                       });
+
+                using var file = File.CreateText (_options.ResultsFile);
+                file.Write (output);
+                file.Close ();
+                return;
+            }
 
             Application.Init ();
 
@@ -542,7 +556,7 @@ public class UICatalogApp
                 UpdatedCount = resultsList.Sum (r => r.UpdatedCount),
                 IterationCount = resultsList.Sum (r => r.IterationCount),
             };
-            dt.Rows.Add(
+            dt.Rows.Add (
                         totalRow.Scenario,
                         totalRow.Duration,
                         totalRow.RefreshedCount,
@@ -1316,11 +1330,15 @@ public class UICatalogApp
 
     private struct Options
     {
+        public bool Version;
+
         public string Driver;
 
         public string Scenario;
 
         public bool Benchmark;
+
+        public string ResultsFile;
         /* etc. */
     }
 }

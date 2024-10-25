@@ -151,14 +151,12 @@ public class Scenario : IDisposable
     /// </summary>
     public virtual void Main () { }
 
-    private readonly object _timeoutLock = new ();
-    private object? _timeout;
     private const uint ABORT_TIME = 1000;
-
-    private Stopwatch? _stopwatch;
-
     private const uint MAX_ITERATIONS = 500;
 
+    private readonly object _timeoutLock = new ();
+    private object? _timeout;
+    private Stopwatch? _stopwatch;
     private readonly BenchmarkResults _benchmarkResults = new BenchmarkResults ();
 
     public void StartBenchmark ()
@@ -178,7 +176,7 @@ public class Scenario : IDisposable
                 _timeout = null;
             }
         }
-        
+
         return _benchmarkResults;
     }
 
@@ -252,7 +250,7 @@ public class Scenario : IDisposable
             }
         }
 
-        Console.WriteLine ($@"  Failed to Quit with {Application.QuitKey} after {ABORT_TIME}ms and {BenchmarkResults.IterationCount} iterations. Force quit.");
+        Debug.WriteLine ($@"  Failed to Quit with {Application.QuitKey} after {ABORT_TIME}ms and {BenchmarkResults.IterationCount} iterations. Force quit.");
 
         Application.RequestStop ();
 
