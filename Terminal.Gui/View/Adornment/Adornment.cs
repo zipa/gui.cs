@@ -42,7 +42,8 @@ public class Adornment : View, IDesignable
     #region Thickness
 
     /// <summary>
-    ///     Gets or sets whether the Adornment will draw diagnostic information. This is a bit-field of <see cref="ViewDiagnosticFlags"/>.
+    ///     Gets or sets whether the Adornment will draw diagnostic information. This is a bit-field of
+    ///     <see cref="ViewDiagnosticFlags"/>.
     /// </summary>
     /// <remarks>
     ///     The <see cref="View.Diagnostics"/> static property is used as the default value for this property.
@@ -152,6 +153,7 @@ public class Adornment : View, IDesignable
                 return Point.Empty;
             }
         }
+
         return parentOrSuperView.ScreenToFrame (new (location.X - Frame.X, location.Y - Frame.Y));
     }
 
@@ -176,17 +178,11 @@ public class Adornment : View, IDesignable
         return true;
     }
 
-    /// <inheritdoc />
-    protected override bool OnDrawingText (Rectangle viewport)
-    {
-        return Thickness == Thickness.Empty;
-    }
+    /// <inheritdoc/>
+    protected override bool OnDrawingText (Rectangle viewport) { return Thickness == Thickness.Empty; }
 
-    /// <inheritdoc />
-    protected override bool OnDrawingSubviews (Rectangle viewport)
-    {
-        return Thickness == Thickness.Empty;
-    }
+    /// <inheritdoc/>
+    protected override bool OnDrawingSubviews (Rectangle viewport) { return Thickness == Thickness.Empty; }
 
     /// <summary>Does nothing for Adornment</summary>
     /// <returns></returns>
@@ -202,11 +198,8 @@ public class Adornment : View, IDesignable
         set => throw new InvalidOperationException (@"Adornment can only render to their Parent or Parent's Superview.");
     }
 
-    /// <inheritdoc />
-    protected override bool OnDrawComplete (Rectangle viewport)
-    {
-        return Thickness == Thickness.Empty;
-    }
+    /// <inheritdoc/>
+    protected override bool OnDrawComplete (Rectangle viewport) { return Thickness == Thickness.Empty; }
 
     /// <summary>
     ///     Indicates whether the specified Parent's SuperView-relative coordinates are within the Adornment's Thickness.

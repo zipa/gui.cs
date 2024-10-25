@@ -1,7 +1,6 @@
 ﻿#nullable enable
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
@@ -9,17 +8,11 @@ namespace UICatalog.Scenarios;
 /// <summary>
 ///     Provides an editor UI for the Margin, Border, and Padding of a View.
 /// </summary>
-public sealed class ArrangementEditor : View
+public sealed class ArrangementEditor : EditorBase
 {
     public ArrangementEditor ()
     {
         Title = "ArrangementEditor";
-
-        Width = Dim.Auto (DimAutoStyle.Content);
-        Height = Dim.Auto (DimAutoStyle.Content);
-
-        CanFocus = true;
-
         TabStop = TabBehavior.TabGroup;
 
         Initialized += ArrangementEditor_Initialized;
@@ -61,181 +54,74 @@ public sealed class ArrangementEditor : View
                 Legend = ViewArrangement.Overlapped.ToString (),
                 Data = ViewArrangement.Overlapped
             }
-
         ];
 
         Add (_arrangementSlider);
     }
 
-    private View? _viewToEdit;
-
-    private Label? _lblView; // Text describing the view being edited
-
-    private readonly Slider<ViewArrangement> _arrangementSlider = new Slider<ViewArrangement> ()
+    private readonly Slider<ViewArrangement> _arrangementSlider = new()
     {
         Orientation = Orientation.Vertical,
         UseMinimumSize = true,
         Type = SliderType.Multiple,
         AllowEmpty = true,
         BorderStyle = LineStyle.Dotted,
-        Title = "_Arrangement",
+        Title = "_Arrangement"
     };
 
-    /// <summary>
-    ///     Gets or sets whether the ArrangementEditor should automatically select the View to edit
-    ///     based on the values of <see cref="AutoSelectSuperView"/>.
-    /// </summary>
-    public bool AutoSelectViewToEdit { get; set; }
-
-    /// <summary>
-    ///     Gets or sets the View that will scope the behavior of <see cref="AutoSelectViewToEdit"/>.
-    /// </summary>
-    public View? AutoSelectSuperView { get; set; }
-
-    public View? ViewToEdit
+    protected override void OnViewToEditChanged ()
     {
-        get => _viewToEdit;
-        set
+        _arrangementSlider.OptionsChanged -= ArrangementSliderOnOptionsChanged;
+
+        // Set the appropriate options in the slider based on _viewToEdit.Arrangement
+        if (ViewToEdit is { })
         {
-            if (_viewToEdit == value)
-            {
-                return;
-            }
-
-            _arrangementSlider.OptionsChanged -= ArrangementSliderOnOptionsChanged;
-
-            _viewToEdit = value;
-            // Set the appropriate options in the slider based on _viewToEdit.Arrangement
-            if (_viewToEdit is { })
-            {
-                _arrangementSlider.Options.ForEach (option =>
-                                                    {
-                                                        _arrangementSlider.ChangeOption (_arrangementSlider.Options.IndexOf (option), (_viewToEdit.Arrangement & option.Data) == option.Data);
-                                                    });
-            }
-
-            _arrangementSlider.OptionsChanged += ArrangementSliderOnOptionsChanged;
-
-            if (_lblView is { })
-            {
-                _lblView.Text = $"{_viewToEdit?.GetType ().Name}: {_viewToEdit?.Id}" ?? string.Empty;
-            }
+            _arrangementSlider.Options.ForEach (
+                                                option =>
+                                                {
+                                                    _arrangementSlider.ChangeOption (
+                                                                                     _arrangementSlider.Options.IndexOf (option),
+                                                                                     (ViewToEdit.Arrangement & option.Data) == option.Data);
+                                                });
         }
-    }
-
-
-    private void NavigationOnFocusedChanged (object? sender, EventArgs e)
-    {
-        if (AutoSelectSuperView is null)
-        {
-            return;
-        }
-
-        View? view = Application.Navigation!.GetFocused ();
-
-        if (ApplicationNavigation.IsInHierarchy (this, view))
-        {
-            return;
-        }
-
-        if (!ApplicationNavigation.IsInHierarchy (AutoSelectSuperView, view))
-        {
-            return;
-        }
-
-        if (view is { } and not Adornment)
-        {
-            ViewToEdit = view;
-        }
-    }
-
-    private void ApplicationOnMouseEvent (object? sender, MouseEventArgs e)
-    {
-        if (e.Flags != MouseFlags.Button1Clicked || !AutoSelectViewToEdit)
-        {
-            return;
-        }
-
-        if ((AutoSelectSuperView is { } && !AutoSelectSuperView.FrameToScreen ().Contains (e.Position))
-            || FrameToScreen ().Contains (e.Position))
-        {
-            return;
-        }
-
-        View? view = e.View;
-
-        if (view is Adornment adornment)
-        {
-            view = adornment.Parent;
-        }
-
-        if (view is { } and not Adornment)
-        {
-            ViewToEdit = view;
-        }
-    }
-
-    private void ArrangementEditor_Initialized (object? sender, EventArgs e)
-    {
-        BorderStyle = LineStyle.Dotted;
-
-        var expandButton = new ExpanderButton
-        {
-            Orientation = Orientation.Horizontal
-        };
-        Border.Add (expandButton);
-
-        _lblView = new ()
-        {
-            X = 0,
-            Y = 0,
-            Height = 2
-        };
-        _lblView.TextFormatter.WordWrap = true;
-        _lblView.TextFormatter.MultiLine = true;
-        _lblView.HotKeySpecifier = (Rune)'\uffff';
-        _lblView.Width = Dim.Width (_arrangementSlider);
-        Add (_lblView);
-
-        _arrangementSlider.Y = Pos.Bottom (_lblView);
 
         _arrangementSlider.OptionsChanged += ArrangementSliderOnOptionsChanged;
-
-        Application.MouseEvent += ApplicationOnMouseEvent;
-        Application.Navigation!.FocusedChanged += NavigationOnFocusedChanged;
     }
+
+    private void ArrangementEditor_Initialized (object? sender, EventArgs e) { _arrangementSlider.OptionsChanged += ArrangementSliderOnOptionsChanged; }
 
     private void ArrangementSliderOnOptionsChanged (object? sender, SliderEventArgs<ViewArrangement> e)
     {
-        if (_viewToEdit is { })
+        if (ViewToEdit is { })
         {
             // Set the arrangement based on the selected options
-            ViewArrangement arrangement = ViewArrangement.Fixed;
-            foreach (var option in e.Options)
+            var arrangement = ViewArrangement.Fixed;
+
+            foreach (KeyValuePair<int, SliderOption<ViewArrangement>> option in e.Options)
             {
                 arrangement |= option.Value.Data;
             }
 
-            _viewToEdit.Arrangement = arrangement;
+            ViewToEdit.Arrangement = arrangement;
 
-            if (_viewToEdit.Arrangement.HasFlag (ViewArrangement.Overlapped))
+            if (ViewToEdit.Arrangement.HasFlag (ViewArrangement.Overlapped))
             {
-                _viewToEdit.ShadowStyle = ShadowStyle.Transparent;
-                _viewToEdit.ColorScheme = Colors.ColorSchemes ["Toplevel"];
+                ViewToEdit.ShadowStyle = ShadowStyle.Transparent;
+                ViewToEdit.ColorScheme = Colors.ColorSchemes ["Toplevel"];
             }
             else
             {
-                _viewToEdit.ShadowStyle = ShadowStyle.None;
-                _viewToEdit.ColorScheme = _viewToEdit!.SuperView!.ColorScheme;
+                ViewToEdit.ShadowStyle = ShadowStyle.None;
+                ViewToEdit.ColorScheme = ViewToEdit!.SuperView!.ColorScheme;
             }
 
-            if (_viewToEdit.Arrangement.HasFlag (ViewArrangement.Movable))
+            if (ViewToEdit.Arrangement.HasFlag (ViewArrangement.Movable))
             {
-                _viewToEdit.BorderStyle = LineStyle.Double;
+                ViewToEdit.BorderStyle = LineStyle.Double;
             }
             else
             {
-                _viewToEdit.BorderStyle = LineStyle.Single;
+                ViewToEdit.BorderStyle = LineStyle.Single;
             }
         }
     }

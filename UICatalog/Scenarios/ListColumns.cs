@@ -11,7 +11,6 @@ namespace UICatalog.Scenarios;
 [Scenario.ScenarioCategory ("Controls")]
 [Scenario.ScenarioCategory ("Dialogs")]
 [Scenario.ScenarioCategory ("Text and Formatting")]
-[Scenario.ScenarioCategory ("Overlapped")]
 [Scenario.ScenarioCategory ("Scrolling")]
 public class ListColumns : Scenario
 {

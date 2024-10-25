@@ -9,7 +9,7 @@ using Terminal.Gui;
 namespace UICatalog.Scenarios;
 
 [Scenario.ScenarioMetadata ("Dynamic MenuBar", "Demonstrates how to change a MenuBar dynamically.")]
-[Scenario.ScenarioCategory ("Overlapped")]
+[Scenario.ScenarioCategory ("Arrangement")]
 [Scenario.ScenarioCategory ("Menus")]
 public class DynamicMenuBar : Scenario
 {

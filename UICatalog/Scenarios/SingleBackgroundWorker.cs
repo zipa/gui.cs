@@ -9,7 +9,7 @@ namespace UICatalog.Scenarios;
 
 [Scenario.ScenarioMetadata ("Single BackgroundWorker", "A single BackgroundWorker threading opening another Toplevel")]
 [Scenario.ScenarioCategory ("Threading")]
-[Scenario.ScenarioCategory ("Overlapped")]
+[Scenario.ScenarioCategory ("Arrangement")]
 [Scenario.ScenarioCategory ("Runnable")]
 public class SingleBackgroundWorker : Scenario
 {

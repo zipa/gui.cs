@@ -7,14 +7,14 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("All Views Tester", "Provides a test UI for all classes derived from View.")]
-[Scenario.ScenarioCategory ("Layout")]
-[Scenario.ScenarioCategory ("Tests")]
-[Scenario.ScenarioCategory ("Controls")]
-[Scenario.ScenarioCategory ("Adornments")]
+[ScenarioMetadata ("All Views Tester", "Provides a test UI for all classes derived from View.")]
+[ScenarioCategory ("Layout")]
+[ScenarioCategory ("Tests")]
+[ScenarioCategory ("Controls")]
+[ScenarioCategory ("Adornments")]
+[ScenarioCategory ("Arrangement")]
 public class AllViewsTester : Scenario
 {
-
     private Dictionary<string, Type>? _viewClasses;
     private ListView? _classListView;
     private AdornmentsEditor? _adornmentsEditor;
@@ -92,7 +92,7 @@ public class AllViewsTester : Scenario
             ColorScheme = Colors.ColorSchemes ["TopLevel"],
             BorderStyle = LineStyle.Single,
             AutoSelectViewToEdit = false,
-            AutoSelectAdornments = false,
+            AutoSelectAdornments = false
         };
 
         var expandButton = new ExpanderButton
@@ -107,13 +107,14 @@ public class AllViewsTester : Scenario
             Title = "Layout [_3]",
             X = Pos.Right (_adornmentsEditor),
             Y = 0,
+
             //Width = Dim.Fill (), // set below
             Height = Dim.Auto (),
             CanFocus = true,
             ColorScheme = Colors.ColorSchemes ["TopLevel"],
             BorderStyle = LineStyle.Rounded,
             AutoSelectViewToEdit = false,
-            AutoSelectAdornments = false,
+            AutoSelectAdornments = false
         };
 
         _settingsPane = new ()
@@ -170,7 +171,7 @@ public class AllViewsTester : Scenario
 
         _settingsPane.Add (label, _demoTextView);
 
-        _eventLog = new EventLog ()
+        _eventLog = new()
         {
             // X = Pos.Right(_layoutEditor)
         };
@@ -178,20 +179,24 @@ public class AllViewsTester : Scenario
         _eventLog.Y = 0;
 
         _eventLog.Height = Dim.Height (_classListView);
+
         //_eventLog.Width = 30;
 
-        _layoutEditor.Width = Dim.Fill (Dim.Func ((() =>
-                                                   {
-                                                       if (_eventLog.NeedsLayout)
-                                                       {
-                                                           // We have two choices:
-                                                           // 1) Call Layout explicitly
-                                                           // 2) Throw LayoutException so Layout tries again
-                                                           //_eventLog.Layout ();
-                                                           throw new LayoutException ("_eventLog");
-                                                       }
-                                                       return _eventLog.Frame.Width;
-                                                   })));
+        _layoutEditor.Width = Dim.Fill (
+                                        Dim.Func (
+                                                  () =>
+                                                  {
+                                                      if (_eventLog.NeedsLayout)
+                                                      {
+                                                          // We have two choices:
+                                                          // 1) Call Layout explicitly
+                                                          // 2) Throw LayoutException so Layout tries again
+                                                          //_eventLog.Layout ();
+                                                          throw new LayoutException ("_eventLog");
+                                                      }
+
+                                                      return _eventLog.Frame.Width;
+                                                  }));
 
         _hostPane = new ()
         {
@@ -248,6 +253,7 @@ public class AllViewsTester : Scenario
 
         // Instantiate view
         var view = (View)Activator.CreateInstance (type)!;
+
         if (view is IDesignable designable)
         {
             designable.EnableForDesign (ref _demoText);
@@ -297,7 +303,8 @@ public class AllViewsTester : Scenario
     private static List<Type> GetAllViewClassesCollection ()
     {
         List<Type> types = typeof (View).Assembly.GetTypes ()
-                                        .Where (myType => myType is { IsClass: true, IsAbstract: false, IsPublic: true }
+                                        .Where (
+                                                myType => myType is { IsClass: true, IsAbstract: false, IsPublic: true }
                                                           && myType.IsSubclassOf (typeof (View)))
                                         .ToList ();
 
@@ -306,10 +313,7 @@ public class AllViewsTester : Scenario
         return types;
     }
 
-    private void CurrentView_LayoutComplete (object? sender, LayoutEventArgs args)
-    {
-        UpdateHostTitle (_curView);
-    }
+    private void CurrentView_LayoutComplete (object? sender, LayoutEventArgs args) { UpdateHostTitle (_curView); }
 
     private void UpdateHostTitle (View? view) { _hostPane!.Title = $"{view!.GetType ().Name} [_0]"; }
 
@@ -320,12 +324,12 @@ public class AllViewsTester : Scenario
             return;
         }
 
-        if (!view.Width!.Has<DimAuto> (out _) || (view.Width is null))
+        if (!view.Width!.Has<DimAuto> (out _) || view.Width is null)
         {
             view.Width = Dim.Fill ();
         }
 
-        if (!view.Height!.Has<DimAuto> (out _) || (view.Height is null))
+        if (!view.Height!.Has<DimAuto> (out _) || view.Height is null)
         {
             view.Height = Dim.Fill ();
         }

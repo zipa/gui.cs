@@ -16,7 +16,7 @@ namespace UICatalog.Scenarios;
 [Scenario.ScenarioCategory ("Dialogs")]
 [Scenario.ScenarioCategory ("Text and Formatting")]
 [Scenario.ScenarioCategory ("Dialogs")]
-[Scenario.ScenarioCategory ("Overlapped")]
+[Scenario.ScenarioCategory ("Arrangement")]
 [Scenario.ScenarioCategory ("Files and IO")]
 public class CsvEditor : Scenario
 {

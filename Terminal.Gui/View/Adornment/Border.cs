@@ -56,7 +56,6 @@ public class Border : Adornment
     public Border (View parent) : base (parent)
     {
         Parent = parent;
-        Id = $"{Parent.Id}.{Border}";
         CanFocus = false;
         TabStop = TabBehavior.TabGroup;
 

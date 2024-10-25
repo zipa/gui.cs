@@ -6,7 +6,6 @@ namespace UICatalog.Scenarios;
 
 [Scenario.ScenarioMetadata ("Wizards", "Demonstrates the Wizard class")]
 [Scenario.ScenarioCategory ("Dialogs")]
-[Scenario.ScenarioCategory ("Overlapped")]
 [Scenario.ScenarioCategory ("Wizards")]
 [Scenario.ScenarioCategory ("Runnable")]
 

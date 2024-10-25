@@ -1,14 +1,12 @@
-﻿using System.Threading;
-using System.Timers;
-using Terminal.Gui;
+﻿using Terminal.Gui;
 using Timer = System.Timers.Timer;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Arrangement", "Arrangement Tester")]
-[Scenario.ScenarioCategory ("Mouse and Keyboard")]
-[Scenario.ScenarioCategory ("Layout")]
-[Scenario.ScenarioCategory ("Overlapped")]
+[ScenarioMetadata ("Arrangement", "Arrangement Tester")]
+[ScenarioCategory ("Mouse and Keyboard")]
+[ScenarioCategory ("Layout")]
+[ScenarioCategory ("Arrangement")]
 public class Arrangement : Scenario
 {
     private int _hotkeyCount;
@@ -34,9 +32,11 @@ public class Arrangement : Scenario
 
         app.Add (adornmentsEditor);
 
-        adornmentsEditor.ExpanderButton!.Collapsed = true;
+        adornmentsEditor.ExpanderButton.Orientation = Orientation.Horizontal;
 
-        var arrangementEditor = new ArrangementEditor ()
+        //  adornmentsEditor.ExpanderButton!.Collapsed = true;
+
+        var arrangementEditor = new ArrangementEditor
         {
             X = Pos.Right (adornmentsEditor),
             Y = 0,
@@ -233,8 +233,9 @@ public class Arrangement : Scenario
             BorderStyle = LineStyle.Single,
             CanFocus = true,
             TabStop = TabBehavior.TabStop,
-            Arrangement = ViewArrangement.Resizable,
-//            SuperViewRendersLineCanvas = true
+            Arrangement = ViewArrangement.Resizable
+
+            //            SuperViewRendersLineCanvas = true
         };
 
         return tiled;

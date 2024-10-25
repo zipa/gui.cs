@@ -288,6 +288,11 @@ public partial class View : Responder, ISupportInitializeNotification
             OnEnabledChanged ();
             SetNeedsDisplay ();
 
+            if (Border is { })
+            {
+                Border.Enabled = _enabled;
+            }
+
             if (_subviews is null)
             {
                 return;

@@ -20,42 +20,30 @@ public class AdornmentsEditor : EditorBase
         Initialized += AdornmentsEditor_Initialized;
     }
 
-    private MarginEditor? _marginEditor;
-    private BorderEditor? _borderEditor;
-    private PaddingEditor? _paddingEditor;
+    public MarginEditor? MarginEditor { get; set; }
+    public BorderEditor? BorderEditor { get; private set; }
+    public PaddingEditor? PaddingEditor { get; private set; }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     protected override void OnViewToEditChanged ()
     {
-
-        if (_marginEditor is { })
+        if (MarginEditor is { })
         {
-            _marginEditor.AdornmentToEdit = ViewToEdit?.Margin ?? null;
+            MarginEditor.AdornmentToEdit = ViewToEdit?.Margin ?? null;
         }
 
-        if (_borderEditor is { })
+        if (BorderEditor is { })
         {
-            _borderEditor.AdornmentToEdit = ViewToEdit?.Border ?? null;
+            BorderEditor.AdornmentToEdit = ViewToEdit?.Border ?? null;
         }
 
-        if (_paddingEditor is { })
+        if (PaddingEditor is { })
         {
-            _paddingEditor.AdornmentToEdit = ViewToEdit?.Padding ?? null;
-        }
-
-        if (ViewToEdit is not Adornment)
-        {
-            Enabled = true;
-        }
-        else
-        {
-            Enabled = false;
+            PaddingEditor.AdornmentToEdit = ViewToEdit?.Padding ?? null;
         }
 
         Padding.Text = $"View: {GetIdentifyingString (ViewToEdit)}";
     }
-
-
 
     private string GetIdentifyingString (View? view)
     {
@@ -100,34 +88,36 @@ public class AdornmentsEditor : EditorBase
 
     private void AdornmentsEditor_Initialized (object? sender, EventArgs e)
     {
-        _marginEditor = new ()
+        MarginEditor = new ()
         {
             X = 0,
             Y = 0,
-            SuperViewRendersLineCanvas = true,
-        };
-        Add (_marginEditor);
-
-        _borderEditor = new ()
-        {
-            X = Pos.Left (_marginEditor),
-            Y = Pos.Bottom (_marginEditor),
             SuperViewRendersLineCanvas = true
         };
-        Add (_borderEditor);
+        Add (MarginEditor);
 
-        _paddingEditor = new ()
+        BorderEditor = new ()
         {
-            X = Pos.Left (_borderEditor),
-            Y = Pos.Bottom (_borderEditor),
+            X = Pos.Left (MarginEditor),
+            Y = Pos.Bottom (MarginEditor),
             SuperViewRendersLineCanvas = true
         };
-        Add (_paddingEditor);
+        Add (BorderEditor);
 
+        PaddingEditor = new ()
+        {
+            X = Pos.Left (BorderEditor),
+            Y = Pos.Bottom (BorderEditor),
+            SuperViewRendersLineCanvas = true
+        };
+        Add (PaddingEditor);
 
-        _marginEditor.AdornmentToEdit = ViewToEdit?.Margin ?? null;
-        _borderEditor.AdornmentToEdit = ViewToEdit?.Border ?? null;
-        _paddingEditor.AdornmentToEdit = ViewToEdit?.Padding ?? null;
+        MarginEditor.ExpanderButton.Collapsed = true;
+        BorderEditor.ExpanderButton.Collapsed = true;
+        PaddingEditor.ExpanderButton.Collapsed = true;
 
+        MarginEditor.AdornmentToEdit = ViewToEdit?.Margin ?? null;
+        BorderEditor.AdornmentToEdit = ViewToEdit?.Border ?? null;
+        PaddingEditor.AdornmentToEdit = ViewToEdit?.Padding ?? null;
     }
 }

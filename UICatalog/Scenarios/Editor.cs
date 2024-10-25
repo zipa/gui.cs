@@ -16,7 +16,7 @@ namespace UICatalog.Scenarios;
 [Scenario.ScenarioCategory ("Controls")]
 [Scenario.ScenarioCategory ("Dialogs")]
 [Scenario.ScenarioCategory ("Text and Formatting")]
-[Scenario.ScenarioCategory ("Overlapped")]
+[Scenario.ScenarioCategory ("Arrangement")]
 [Scenario.ScenarioCategory ("Files and IO")]
 [Scenario.ScenarioCategory ("TextView")]
 [Scenario.ScenarioCategory ("Menus")]

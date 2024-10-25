@@ -6,7 +6,7 @@ namespace UICatalog.Scenarios;
 [Scenario.ScenarioMetadata ("Navigation", "Navigation Tester")]
 [Scenario.ScenarioCategory ("Mouse and Keyboard")]
 [Scenario.ScenarioCategory ("Layout")]
-[Scenario.ScenarioCategory ("Overlapped")]
+[Scenario.ScenarioCategory ("Navigation")]
 public class Navigation : Scenario
 {
     private int _hotkeyCount;

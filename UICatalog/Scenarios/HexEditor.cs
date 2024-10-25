@@ -8,7 +8,7 @@ namespace UICatalog.Scenarios;
 [Scenario.ScenarioCategory ("Controls")]
 [Scenario.ScenarioCategory ("Dialogs")]
 [Scenario.ScenarioCategory ("Text and Formatting")]
-[Scenario.ScenarioCategory ("Overlapped")]
+[Scenario.ScenarioCategory ("Navigation")]
 [Scenario.ScenarioCategory ("Files and IO")]
 public class HexEditor : Scenario
 {

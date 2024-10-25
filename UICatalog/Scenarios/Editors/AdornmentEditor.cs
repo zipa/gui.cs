@@ -15,7 +15,7 @@ public class AdornmentEditor : EditorBase
         BoxWidth = 1,
         BoxHeight = 1,
         BorderStyle = LineStyle.Single,
-        SuperViewRendersLineCanvas = true,
+        SuperViewRendersLineCanvas = true
     };
 
     private readonly ColorPicker16 _foregroundColorPicker = new ()
@@ -24,28 +24,27 @@ public class AdornmentEditor : EditorBase
         BoxWidth = 1,
         BoxHeight = 1,
         BorderStyle = LineStyle.Single,
-        SuperViewRendersLineCanvas = true,
+        SuperViewRendersLineCanvas = true
     };
-
 
     private CheckBox? _diagThicknessCheckBox;
     private CheckBox? _diagRulerCheckBox;
 
-
     private Adornment? _adornment;
+
     public Adornment? AdornmentToEdit
     {
         get => _adornment;
         set
         {
+            Enabled = value is { };
+
             if (value == _adornment)
             {
                 return;
             }
 
             _adornment = value;
-
-            Enabled = _adornment is { };
 
             if (_adornment is null)
             {
@@ -61,10 +60,9 @@ public class AdornmentEditor : EditorBase
 
                 _adornment.Initialized += (sender, args) =>
                                           {
-                                              var cs = _adornment.ColorScheme;
+                                              ColorScheme? cs = _adornment.ColorScheme;
                                               _foregroundColorPicker.SelectedColor = cs.Normal.Foreground.GetClosestNamedColor16 ();
                                               _backgroundColorPicker.SelectedColor = cs.Normal.Background.GetClosestNamedColor16 ();
-
                                           };
             }
 
@@ -74,16 +72,10 @@ public class AdornmentEditor : EditorBase
 
     public event EventHandler<EventArgs>? AdornmentChanged;
 
-    public void OnAdornmentChanged ()
-    {
-        AdornmentChanged?.Invoke (this, EventArgs.Empty);
-    }
+    public void OnAdornmentChanged () { AdornmentChanged?.Invoke (this, EventArgs.Empty); }
 
-    /// <inheritdoc />
-    protected override void OnViewToEditChanged ()
-    {
-        AdornmentToEdit = ViewToEdit as Adornment;
-    }
+    /// <inheritdoc/>
+    protected override void OnViewToEditChanged () { AdornmentToEdit = ViewToEdit as Adornment; }
 
     private NumericUpDown<int>? _topEdit;
     private NumericUpDown<int>? _leftEdit;
@@ -101,7 +93,7 @@ public class AdornmentEditor : EditorBase
         _topEdit = new ()
         {
             X = Pos.Center (), Y = 0,
-            Format = "{0, 2}",
+            Format = "{0, 2}"
         };
 
         _topEdit.ValueChanging += Top_ValueChanging;
@@ -110,7 +102,7 @@ public class AdornmentEditor : EditorBase
         _leftEdit = new ()
         {
             X = Pos.Left (_topEdit) - Pos.Func (() => _topEdit.Text.Length) - 2, Y = Pos.Bottom (_topEdit),
-            Format = _topEdit.Format,
+            Format = _topEdit.Format
         };
 
         _leftEdit.ValueChanging += Left_ValueChanging;
@@ -119,7 +111,7 @@ public class AdornmentEditor : EditorBase
         _rightEdit = new ()
         {
             X = Pos.Right (_leftEdit) + 5, Y = Pos.Bottom (_topEdit),
-            Format = _topEdit.Format,
+            Format = _topEdit.Format
         };
 
         _rightEdit.ValueChanging += Right_ValueChanging;
@@ -128,7 +120,7 @@ public class AdornmentEditor : EditorBase
         _bottomEdit = new ()
         {
             X = Pos.Center (), Y = Pos.Bottom (_leftEdit),
-            Format = _topEdit.Format,
+            Format = _topEdit.Format
         };
 
         _bottomEdit.ValueChanging += Bottom_ValueChanging;
@@ -136,14 +128,14 @@ public class AdornmentEditor : EditorBase
 
         var copyTop = new Button
         {
-            X = Pos.Center (), Y = Pos.Bottom (_bottomEdit), Text = "Cop_y Top",
+            X = Pos.Center (), Y = Pos.Bottom (_bottomEdit), Text = "Cop_y Top"
         };
 
         copyTop.Accepting += (s, e) =>
-                          {
-                              AdornmentToEdit!.Thickness = new (_topEdit.Value);
-                              _leftEdit.Value = _rightEdit.Value = _bottomEdit.Value = _topEdit.Value;
-                          };
+                             {
+                                 AdornmentToEdit!.Thickness = new (_topEdit.Value);
+                                 _leftEdit.Value = _rightEdit.Value = _bottomEdit.Value = _topEdit.Value;
+                             };
         Add (copyTop);
 
         // Foreground ColorPicker.
@@ -166,9 +158,11 @@ public class AdornmentEditor : EditorBase
         _bottomEdit.Value = AdornmentToEdit?.Thickness.Bottom ?? 0;
 
         _diagThicknessCheckBox = new () { Text = "_Thickness Diag." };
+
         if (AdornmentToEdit is { })
         {
-            _diagThicknessCheckBox.CheckedState = AdornmentToEdit.Diagnostics.FastHasFlags (ViewDiagnosticFlags.Thickness) ? CheckState.Checked : CheckState.UnChecked;
+            _diagThicknessCheckBox.CheckedState =
+                AdornmentToEdit.Diagnostics.FastHasFlags (ViewDiagnosticFlags.Thickness) ? CheckState.Checked : CheckState.UnChecked;
         }
         else
         {
@@ -176,21 +170,22 @@ public class AdornmentEditor : EditorBase
         }
 
         _diagThicknessCheckBox.CheckedStateChanging += (s, e) =>
-                                                     {
-                                                         if (e.NewValue == CheckState.Checked)
-                                                         {
-                                                             AdornmentToEdit!.Diagnostics |= ViewDiagnosticFlags.Thickness;
-                                                         }
-                                                         else
-                                                         {
-                                                             AdornmentToEdit!.Diagnostics &= ~ViewDiagnosticFlags.Thickness;
-                                                         }
-                                                     };
+                                                       {
+                                                           if (e.NewValue == CheckState.Checked)
+                                                           {
+                                                               AdornmentToEdit!.Diagnostics |= ViewDiagnosticFlags.Thickness;
+                                                           }
+                                                           else
+                                                           {
+                                                               AdornmentToEdit!.Diagnostics &= ~ViewDiagnosticFlags.Thickness;
+                                                           }
+                                                       };
 
         Add (_diagThicknessCheckBox);
         _diagThicknessCheckBox.Y = Pos.Bottom (_backgroundColorPicker);
 
         _diagRulerCheckBox = new () { Text = "_Ruler" };
+
         if (AdornmentToEdit is { })
         {
             _diagRulerCheckBox.CheckedState = AdornmentToEdit.Diagnostics.FastHasFlags (ViewDiagnosticFlags.Ruler) ? CheckState.Checked : CheckState.UnChecked;
@@ -224,6 +219,7 @@ public class AdornmentEditor : EditorBase
                    {
                        return;
                    }
+
                    AdornmentToEdit.ColorScheme = new (AdornmentToEdit.ColorScheme)
                    {
                        Normal = new (_foregroundColorPicker.SelectedColor, _backgroundColorPicker.SelectedColor)
