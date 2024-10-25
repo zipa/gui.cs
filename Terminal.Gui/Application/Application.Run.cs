@@ -169,11 +169,17 @@ public static partial class Application // Run (Begin, Run, End, Stop)
                     Top.HasFocus = false;
                 }
 
+                // Force leave events for any entered views in the old Top
+                if (GetLastMousePosition () is { })
+                {
+                    RaiseMouseEnterLeaveEvents (GetLastMousePosition ()!.Value, new List<View?> ());
+                }
+
                 Top?.OnDeactivate (toplevel);
-                Toplevel previousCurrent = Top!;
+                Toplevel previousTop = Top!;
 
                 Top = toplevel;
-                Top.OnActivate (previousCurrent);
+                Top.OnActivate (previousTop);
             }
         }
 
@@ -182,10 +188,6 @@ public static partial class Application // Run (Begin, Run, End, Stop)
         {
             toplevel.BeginInit ();
             toplevel.EndInit (); // Calls Layout
-
-            //// Force a layout - normally this is done each iteration of the main loop but we prime it here.
-            //toplevel.SetLayoutNeeded ();
-            //toplevel.Layout (Screen.Size);
         }
 
         // Try to set initial focus to any TabStop
@@ -193,11 +195,6 @@ public static partial class Application // Run (Begin, Run, End, Stop)
         {
             toplevel.SetFocus ();
         }
-
-        // DEBATE: Should Begin call Refresh (or Draw) here? It previously did.
-        //   FOR: the screen has something on it after Begin is called.
-        //   AGAINST: the screen is cleared and then redrawn in RunLoop. We don't want to draw twice.
-        //Refresh ();
 
         toplevel.OnLoaded ();
 
@@ -513,14 +510,26 @@ public static partial class Application // Run (Begin, Run, End, Stop)
             //Driver?.ClearContents ();
         }
 
-        foreach (Toplevel tl in TopLevels.Reverse ())
+        Stack<Toplevel> redrawStack = new (TopLevels);
+
+        while  (redrawStack.Count > 0)
         {
+            Toplevel? tlToDraw = redrawStack.Pop ();
+
             if (clear || forceRedraw)
             {
-                tl.SetNeedsDisplay ();
+                tlToDraw.SetNeedsDisplay ();
             }
 
-            tl.Draw ();
+            if (!(!View.CanBeVisible (tlToDraw) || tlToDraw is { NeedsDisplay: false, SubViewNeedsDisplay: false }))
+            {
+                tlToDraw.Draw ();
+
+                if (redrawStack.TryPeek (out var nexToplevel))
+                {
+                    nexToplevel.SetNeedsDisplay();
+                }
+            }
         }
 
         Driver?.Refresh ();

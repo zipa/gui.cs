@@ -249,6 +249,15 @@ public static partial class Application // Mouse handling
                 View = deepestViewUnderMouse
             };
         }
+
+        // TODO: There should be a clearner way to to this
+        // Add a timeout to ensure at least one application iteration happens after each
+        // mouse event, enabling Refresh to be called.
+        Application.AddTimeout(new (0,0,0,0, 200),
+                               () =>
+                               {
+                                   return false;
+                               });
     }
 
 

@@ -494,6 +494,7 @@ public class FileDialog : Dialog
             MoveSubviewTowardsStart (_btnCancel);
         }
 
+        SetNeedsDisplay();
         SetNeedsLayout();
     }
 
