@@ -268,8 +268,6 @@ public partial class View // Drawing APIs
 
         // We assume that the text has been drawn over the entire area; ensure that the subviews are redrawn.
         SetSubViewNeedsDisplay ();
-        
-        Debug.WriteLine($"DrawText: {Id}");
     }
 
     #endregion DrawText

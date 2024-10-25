@@ -382,7 +382,6 @@ public static class MessageBox
 
         var d = new Dialog
         {
-            Id = "MessageBox",
             Title = title,
             ButtonAlignment = MessageBox.DefaultButtonAlignment,
             ButtonAlignmentModes = AlignmentModes.StartToEnd | AlignmentModes.AddSpaceBetweenItems,

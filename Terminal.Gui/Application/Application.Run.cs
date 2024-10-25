@@ -498,7 +498,6 @@ public static partial class Application // Run (Begin, Run, End, Stop)
     /// <param name="forceRedraw">If <see langword="true"/> the entire View hierarchy will be redrawn. The default is <see langword="false"/> and should only be overriden for testing.</param>
     public static void Refresh (bool forceRedraw = false)
     {
-        Debug.WriteLine($"Refresh Top = {Top.Id}");
         bool clear = false;
         foreach (Toplevel tl in TopLevels.Reverse ())
         {
