@@ -10,101 +10,26 @@ namespace UICatalog.Scenarios;
 /// <summary>
 ///     Provides an editor UI for the Margin, Border, and Padding of a View.
 /// </summary>
-public class DimEditor : View
+public class DimEditor : EditorBase
 {
     public DimEditor ()
     {
         Title = "Dim";
-
-        BorderStyle = LineStyle.Rounded;
-
-        Width = Dim.Auto (DimAutoStyle.Content);
-        Height = Dim.Auto (DimAutoStyle.Content);
-
-        CanFocus = true;
-
-        _expandButton = new ()
-        {
-            Orientation = Orientation.Vertical
-        };
-
-
-        TabStop = TabBehavior.TabStop;
-
-
         Initialized += DimEditor_Initialized;
-
-        AddCommand (Command.Accept, () => true);
     }
-
-    private View? _viewToEdit;
 
     private int _value;
     private RadioGroup? _dimRadioGroup;
     private TextField? _valueEdit;
 
-    /// <summary>
-    ///     Gets or sets whether the DimEditor should automatically select the View to edit
-    ///     based on the values of <see cref="AutoSelectSuperView"/> and <see cref="AutoSelectAdornments"/>.
-    /// </summary>
-    public bool AutoSelectViewToEdit { get; set; }
-
-    /// <summary>
-    ///     Gets or sets the View that will scope the behavior of <see cref="AutoSelectViewToEdit"/>.
-    /// </summary>
-    public View? AutoSelectSuperView { get; set; }
-
-    /// <summary>
-    ///     Gets or sets whether auto select with the mouse will select Adornments or just Views.
-    /// </summary>
-    public bool AutoSelectAdornments { get; set; }
-
-    public View? ViewToEdit
-    {
-        get => _viewToEdit;
-        set
-        {
-            if (_viewToEdit == value)
-            {
-                return;
-            }
-
-            if (value is null && _viewToEdit is { })
-            {
-                _viewToEdit.SubviewsLaidOut -= View_LayoutComplete;
-            }
-
-            _viewToEdit = value;
-
-            if (_viewToEdit is { })
-            {
-                _viewToEdit.SubviewsLaidOut += View_LayoutComplete;
-
-                _viewToEdit.SubviewLayout += (sender, args) =>
-                                             {
-
-                                             };
-            }
-        }
-    }
-
-    private void View_LayoutComplete (object? sender, LayoutEventArgs args)
-    {
-        UpdateSettings ();
-    }
-
-    private bool _updatingSettings = false;
-
-    private void UpdateSettings ()
+    protected override void OnUpdateSettings ()
     {
         if (ViewToEdit is null)
         {
             return;
         }
 
-        _updatingSettings = true;
-
-        Dim? dim;
+        Dim dim;
         if (Dimension == Dimension.Width)
         {
             dim = ViewToEdit.Width;
@@ -116,7 +41,7 @@ public class DimEditor : View
 
         try
         {
-            _dimRadioGroup!.SelectedItem = _dimNames.IndexOf (_dimNames.First (s => dim!.ToString ().StartsWith(s)));
+            _dimRadioGroup!.SelectedItem = _dimNames.IndexOf (Enumerable.First<string> (_dimNames, s => dim!.ToString ().StartsWith (s)));
         }
         catch (InvalidOperationException e)
         {
@@ -134,7 +59,7 @@ public class DimEditor : View
                 break;
             case DimFill fill:
                 var margin = fill.Margin as DimAbsolute;
-                _valueEdit.Enabled = margin is {};
+                _valueEdit.Enabled = margin is { };
                 _value = margin?.Size ?? 0;
                 _valueEdit!.Text = _value.ToString ();
                 break;
@@ -152,76 +77,12 @@ public class DimEditor : View
                 _valueEdit!.Text = dim!.ToString ();
                 break;
         }
-
-        _updatingSettings = false;
     }
-
-    private void NavigationOnFocusedChanged (object? sender, EventArgs e)
-    {
-        if (AutoSelectSuperView is null)
-        {
-            return;
-        }
-
-        if (ApplicationNavigation.IsInHierarchy (this, Application.Navigation!.GetFocused ()))
-        {
-            return;
-        }
-
-        if (!ApplicationNavigation.IsInHierarchy (AutoSelectSuperView, Application.Navigation!.GetFocused ()))
-        {
-            return;
-        }
-
-        ViewToEdit = Application.Navigation!.GetFocused ();
-    }
-
-    private void ApplicationOnMouseEvent (object? sender, MouseEventArgs e)
-    {
-        if (e.Flags != MouseFlags.Button1Clicked || !AutoSelectViewToEdit)
-        {
-            return;
-        }
-
-        if ((AutoSelectSuperView is { } && !AutoSelectSuperView.FrameToScreen ().Contains (e.Position))
-            || FrameToScreen ().Contains (e.Position))
-        {
-            return;
-        }
-
-        View? view = e.View;
-
-        if (view is null)
-        {
-            return;
-        }
-
-        if (view is Adornment adornment)
-        {
-            ViewToEdit = AutoSelectAdornments ? adornment : adornment.Parent;
-        }
-        else
-        {
-            ViewToEdit = view;
-        }
-    }
-
-    /// <inheritdoc/>
-    protected override void Dispose (bool disposing)
-    {
-        base.Dispose (disposing);
-    }
-
-    private readonly ExpanderButton? _expandButton;
-
-    public ExpanderButton? ExpandButton => _expandButton;
 
     public Dimension Dimension { get; set; }
 
     private void DimEditor_Initialized (object? sender, EventArgs e)
     {
-        Border.Add (_expandButton!);
-
         var label = new Label
         {
             X = 0, Y = 0,
@@ -254,9 +115,6 @@ public class DimEditor : View
         Add (_valueEdit);
 
         Add (_dimRadioGroup);
-
-        Application.MouseEvent += ApplicationOnMouseEvent;
-        Application.Navigation!.FocusedChanged += NavigationOnFocusedChanged;
     }
 
     private void OnRadioGroupOnSelectedItemChanged (object? s, SelectedItemChangedArgs selected) { DimChanged (); }
@@ -267,7 +125,7 @@ public class DimEditor : View
 
     private void DimChanged ()
     {
-        if (ViewToEdit == null || _updatingSettings)
+        if (ViewToEdit == null || UpdatingSettings)
         {
             return;
         }

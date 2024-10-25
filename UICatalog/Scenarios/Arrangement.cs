@@ -33,7 +33,8 @@ public class Arrangement : Scenario
         };
 
         app.Add (adornmentsEditor);
-        adornmentsEditor.ExpandButton!.Collapsed = true;
+
+        adornmentsEditor.ExpanderButton!.Collapsed = true;
 
         var arrangementEditor = new ArrangementEditor ()
         {

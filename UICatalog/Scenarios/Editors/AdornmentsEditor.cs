@@ -7,88 +7,55 @@ namespace UICatalog.Scenarios;
 /// <summary>
 ///     Provides an editor UI for the Margin, Border, and Padding of a View.
 /// </summary>
-public class AdornmentsEditor : View
+public class AdornmentsEditor : EditorBase
 {
     public AdornmentsEditor ()
     {
         Title = "AdornmentsEditor";
 
-        Width = Dim.Auto (DimAutoStyle.Content);
-        Height = Dim.Auto (DimAutoStyle.Content);
-
-        CanFocus = true;
-
         TabStop = TabBehavior.TabGroup;
 
-        ExpandButton = new ()
-        {
-            Orientation = Orientation.Horizontal
-        };
+        ExpanderButton.Orientation = Orientation.Horizontal;
 
         Initialized += AdornmentsEditor_Initialized;
     }
-
-    private View? _viewToEdit;
 
     private MarginEditor? _marginEditor;
     private BorderEditor? _borderEditor;
     private PaddingEditor? _paddingEditor;
 
-    /// <summary>
-    ///     Gets or sets whether the AdornmentsEditor should automatically select the View to edit
-    ///     based on the values of <see cref="AutoSelectSuperView"/> and <see cref="AutoSelectAdornments"/>.
-    /// </summary>
-    public bool AutoSelectViewToEdit { get; set; }
-
-    /// <summary>
-    ///     Gets or sets the View that will scope the behavior of <see cref="AutoSelectViewToEdit"/>.
-    /// </summary>
-    public View? AutoSelectSuperView { get; set; }
-
-    /// <summary>
-    ///     Gets or sets whether auto select with the mouse will select Adornments or just Views.
-    /// </summary>
-    public bool AutoSelectAdornments { get; set; }
-
-    public View? ViewToEdit
+    /// <inheritdoc />
+    protected override void OnViewToEditChanged ()
     {
-        get => _viewToEdit;
-        set
+
+        if (_marginEditor is { })
         {
-            if (_viewToEdit == value)
-            {
-                return;
-            }
-
-            _viewToEdit = value;
-
-            if (_marginEditor is { })
-            {
-                _marginEditor.AdornmentToEdit = _viewToEdit?.Margin ?? null;
-            }
-
-            if (_borderEditor is { })
-            {
-                _borderEditor.AdornmentToEdit = _viewToEdit?.Border ?? null;
-            }
-
-            if (_paddingEditor is { })
-            {
-                _paddingEditor.AdornmentToEdit = _viewToEdit?.Padding ?? null;
-            }
-
-            if (_viewToEdit is not Adornment)
-            {
-                Enabled = true;
-            }
-            else
-            {
-                Enabled = false;
-            }
-
-            Padding.Text = $"View: {GetIdentifyingString(_viewToEdit)}";
+            _marginEditor.AdornmentToEdit = ViewToEdit?.Margin ?? null;
         }
+
+        if (_borderEditor is { })
+        {
+            _borderEditor.AdornmentToEdit = ViewToEdit?.Border ?? null;
+        }
+
+        if (_paddingEditor is { })
+        {
+            _paddingEditor.AdornmentToEdit = ViewToEdit?.Padding ?? null;
+        }
+
+        if (ViewToEdit is not Adornment)
+        {
+            Enabled = true;
+        }
+        else
+        {
+            Enabled = false;
+        }
+
+        Padding.Text = $"View: {GetIdentifyingString (ViewToEdit)}";
     }
+
+
 
     private string GetIdentifyingString (View? view)
     {
@@ -115,59 +82,6 @@ public class AdornmentsEditor : View
         return view.GetType ().Name;
     }
 
-    private void NavigationOnFocusedChanged (object? sender, EventArgs e)
-    {
-        if (AutoSelectSuperView is null)
-        {
-            return;
-        }
-
-        if (ApplicationNavigation.IsInHierarchy (this, Application.Navigation!.GetFocused ()))
-        {
-            return;
-        }
-
-        if (!ApplicationNavigation.IsInHierarchy (AutoSelectSuperView, Application.Navigation!.GetFocused ()))
-        {
-            return;
-        }
-
-        ViewToEdit = Application.Navigation!.GetFocused ();
-    }
-
-    private void ApplicationOnMouseEvent (object? sender, MouseEventArgs e)
-    {
-        if (e.Flags != MouseFlags.Button1Clicked || !AutoSelectViewToEdit)
-        {
-            return;
-        }
-
-        if ((AutoSelectSuperView is { } && !AutoSelectSuperView.FrameToScreen ().Contains (e.Position))
-            || FrameToScreen ().Contains (e.Position))
-        {
-            return;
-        }
-
-        View view = e.View;
-
-        if (view is { })
-        {
-            if (view is Adornment adornment)
-            {
-                ViewToEdit = AutoSelectAdornments ? adornment : adornment.Parent;
-            }
-            else
-            {
-                ViewToEdit = view;
-            }
-        }
-    }
-
-    /// <inheritdoc/>
-    protected override void Dispose (bool disposing) { base.Dispose (disposing); }
-
-    public ExpanderButton? ExpandButton { get; }
-
     public bool ShowViewIdentifier
     {
         get => Padding.Thickness != Thickness.Empty;
@@ -179,22 +93,18 @@ public class AdornmentsEditor : View
             }
             else
             {
-                Padding.Thickness =Thickness.Empty;
+                Padding.Thickness = Thickness.Empty;
             }
         }
     }
 
     private void AdornmentsEditor_Initialized (object? sender, EventArgs e)
     {
-        BorderStyle = LineStyle.Dotted;
-
-        Border.Add (ExpandButton!);
-
         _marginEditor = new ()
         {
             X = 0,
             Y = 0,
-            SuperViewRendersLineCanvas = true
+            SuperViewRendersLineCanvas = true,
         };
         Add (_marginEditor);
 
@@ -215,11 +125,9 @@ public class AdornmentsEditor : View
         Add (_paddingEditor);
 
 
-        _marginEditor.AdornmentToEdit = _viewToEdit?.Margin ?? null;
-        _borderEditor.AdornmentToEdit = _viewToEdit?.Border ?? null;
-        _paddingEditor.AdornmentToEdit = _viewToEdit?.Padding ?? null;
+        _marginEditor.AdornmentToEdit = ViewToEdit?.Margin ?? null;
+        _borderEditor.AdornmentToEdit = ViewToEdit?.Border ?? null;
+        _paddingEditor.AdornmentToEdit = ViewToEdit?.Padding ?? null;
 
-        Application.MouseEvent += ApplicationOnMouseEvent;
-        Application.Navigation!.FocusedChanged += NavigationOnFocusedChanged;
     }
 }

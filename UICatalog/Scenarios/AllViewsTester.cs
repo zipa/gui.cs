@@ -111,7 +111,9 @@ public class AllViewsTester : Scenario
             Height = Dim.Auto (),
             CanFocus = true,
             ColorScheme = Colors.ColorSchemes ["TopLevel"],
-            BorderStyle = LineStyle.Rounded
+            BorderStyle = LineStyle.Rounded,
+            AutoSelectViewToEdit = false,
+            AutoSelectAdornments = false,
         };
 
         _settingsPane = new ()

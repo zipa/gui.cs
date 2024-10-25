@@ -7,7 +7,7 @@ namespace UICatalog.Scenarios;
 /// <summary>
 ///     Provides a composable UI for editing the settings of an Adornment.
 /// </summary>
-public class AdornmentEditor : View
+public class AdornmentEditor : EditorBase
 {
     private readonly ColorPicker16 _backgroundColorPicker = new ()
     {
@@ -79,6 +79,12 @@ public class AdornmentEditor : View
         AdornmentChanged?.Invoke (this, EventArgs.Empty);
     }
 
+    /// <inheritdoc />
+    protected override void OnViewToEditChanged ()
+    {
+        AdornmentToEdit = ViewToEdit as Adornment;
+    }
+
     private NumericUpDown<int>? _topEdit;
     private NumericUpDown<int>? _leftEdit;
     private NumericUpDown<int>? _bottomEdit;
@@ -86,21 +92,12 @@ public class AdornmentEditor : View
 
     public AdornmentEditor ()
     {
-        Width = Dim.Auto (DimAutoStyle.Content);
-        Height = Dim.Auto (DimAutoStyle.Content);
-
-        BorderStyle = LineStyle.Dashed;
-        Initialized += AdornmentEditor_Initialized;
-
         CanFocus = true;
-        TabStop = TabBehavior.TabStop;
+        Initialized += AdornmentEditor_Initialized;
     }
 
     private void AdornmentEditor_Initialized (object? sender, EventArgs e)
     {
-        ExpanderButton? expandButton;
-        Border.Add (expandButton = new ExpanderButton ());
-
         _topEdit = new ()
         {
             X = Pos.Center (), Y = 0,
