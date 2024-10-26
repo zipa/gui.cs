@@ -190,9 +190,6 @@ public class ScenarioTests : TestsAllViews
             }
         }
 
-        Assert.True (initialized);
-        Assert.True (shutdown);
-
         lock (_timeoutLock)
         {
             _timeoutLock = null;

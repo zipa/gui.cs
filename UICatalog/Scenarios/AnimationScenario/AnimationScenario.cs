@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -15,11 +16,11 @@ namespace UICatalog.Scenarios;
 [ScenarioCategory ("Drawing")]
 public class AnimationScenario : Scenario
 {
-    private bool _isDisposed;
+    private bool _closed;
 
     public override void Main ()
     {
-        Application.Init();
+        Application.Init ();
 
         var win = new Window
         {
@@ -39,7 +40,7 @@ public class AnimationScenario : Scenario
 
         var lbl2 = new Label
         {
-           X = Pos.AnchorEnd(), Y = Pos.AnchorEnd (), Text = "https://commons.wikimedia.org/wiki/File:Spinning_globe.gif"
+            X = Pos.AnchorEnd (), Y = Pos.AnchorEnd (), Text = "https://commons.wikimedia.org/wiki/File:Spinning_globe.gif"
         };
         win.Add (lbl2);
 
@@ -72,7 +73,7 @@ public class AnimationScenario : Scenario
         Task.Run (
                   () =>
                   {
-                      while (!_isDisposed)
+                      while (!_closed)
                       {
                           // When updating from a Thread/Task always use Invoke
                           Application.Invoke (
@@ -88,15 +89,12 @@ public class AnimationScenario : Scenario
                   }
                  );
 
+        win.Closing += (sender, args) => _closed = true;
+
+        _closed = false;
         Application.Run (win);
         win.Dispose ();
         Application.Shutdown ();
-    }
-
-    protected override void Dispose (bool disposing)
-    {
-        _isDisposed = true;
-        base.Dispose (disposing);
     }
 
     // This is a C# port of https://github.com/andraaspar/bitmap-to-braille by Andraaspar

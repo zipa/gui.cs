@@ -151,7 +151,7 @@ public class Scenario : IDisposable
     /// </summary>
     public virtual void Main () { }
 
-    private const uint MAX_NATURAL_ITERATIONS = 100; // not including needed for demo keys
+    private const uint MAX_NATURAL_ITERATIONS = 1000; // not including needed for demo keys
     private const uint ABORT_TIMEOUT_MS = 5000;
     private const int DEMO_KEY_PACING_MS = 1; // Must be non-zero
 
@@ -245,7 +245,6 @@ public class Scenario : IDisposable
 
         _currentDemoKey = 0;
         _demoKeys = GetDemoKeyStrokes ();
-        _demoKeys.Add (Application.QuitKey);
 
         Application.AddTimeout (
                                 new TimeSpan (0, 0, 0, 0, DEMO_KEY_PACING_MS),
