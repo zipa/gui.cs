@@ -11,7 +11,7 @@ namespace Terminal.Gui;
 ///     By default animation only occurs when you call <see cref="SpinnerView.AdvanceAnimation()"/>. Use
 ///     <see cref="AutoSpin"/> to make the automate calls to <see cref="SpinnerView.AdvanceAnimation()"/>.
 /// </remarks>
-public class SpinnerView : View
+public class SpinnerView : View, IDesignable
 {
     private const int DEFAULT_DELAY = 130;
     private static readonly SpinnerStyle DEFAULT_STYLE = new SpinnerStyle.Line ();
@@ -288,5 +288,13 @@ public class SpinnerView : View
             _bounce = style.SpinBounce;
             Width = GetSpinnerWidth ();
         }
+    }
+
+    bool IDesignable.EnableForDesign ()
+    {
+        Style = new SpinnerStyle.Points ();
+        SpinReverse = true;
+        AutoSpin = true;
+        return true;
     }
 }

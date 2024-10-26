@@ -191,8 +191,8 @@ public class AllViewsTester : Scenario
                                                           // We have two choices:
                                                           // 1) Call Layout explicitly
                                                           // 2) Throw LayoutException so Layout tries again
-                                                          //_eventLog.Layout ();
-                                                          throw new LayoutException ("_eventLog");
+                                                          _eventLog.Layout ();
+                                                          //throw new LayoutException ("_eventLog");
                                                       }
 
                                                       return _eventLog.Frame.Width;
