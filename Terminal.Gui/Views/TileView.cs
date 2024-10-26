@@ -180,11 +180,9 @@ public class TileView : View
     protected override bool OnRenderingLineCanvas () { return false; }
 
     /// <inheritdoc/>
-    protected override bool OnDrawComplete (Rectangle viewport)
+    protected override void OnDrawComplete ()
     {
         Driver?.SetAttribute (ColorScheme.Normal);
-
-        //Clear ();
 
         var lc = new LineCanvas ();
 
@@ -275,7 +273,7 @@ public class TileView : View
             }
         }
 
-        return false;
+        return;
     }
 
     //// BUGBUG: Why is this not handled by a key binding???

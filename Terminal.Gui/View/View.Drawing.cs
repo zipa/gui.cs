@@ -51,7 +51,7 @@ public partial class View // Drawing APIs
         ClearNeedsDisplay ();
 
         // We're done
-        DoDrawComplete (Viewport);
+        DoDrawComplete ();
     }
 
     #region DrawAdornments

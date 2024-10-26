@@ -964,7 +964,7 @@ public partial class ToplevelTests (ITestOutputHelper output)
                                Application.Top!.DrawComplete += OnDrawContentComplete;
                                top.Add (viewAddedToTop);
 
-                               void OnDrawContentComplete (object sender, DrawEventArgs e)
+                               void OnDrawContentComplete (object sender, EventArgs _)
                                {
                                    Assert.Equal (new (1, 3, 18, 16), viewAddedToTop.Frame);
 

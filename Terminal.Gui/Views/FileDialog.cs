@@ -461,7 +461,7 @@ public class FileDialog : Dialog
             AllowedTypeMenuClicked (0);
 
             // TODO: Using v1's menu bar here is a hack. Need to upgrade this.
-            _allowedTypeMenuBar.DrawComplete += (s, e) =>
+            _allowedTypeMenuBar.DrawingContent += (s, e) =>
                                                        {
                                                            _allowedTypeMenuBar.Move (e.NewViewport.Width - 1, 0);
                                                            Driver.AddRune (Glyphs.DownArrow);

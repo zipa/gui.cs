@@ -199,7 +199,7 @@ public class Adornment : View, IDesignable
     }
 
     /// <inheritdoc/>
-    protected override bool OnDrawComplete (Rectangle viewport) { return Thickness == Thickness.Empty; }
+    protected override void OnDrawComplete () { }
 
     /// <summary>
     ///     Indicates whether the specified Parent's SuperView-relative coordinates are within the Adornment's Thickness.

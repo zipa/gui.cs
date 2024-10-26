@@ -660,11 +660,11 @@ public class TabView : View
             return true;
         }
 
-        protected override bool OnDrawComplete (Rectangle viewport)
+        protected override void OnDrawComplete ()
         {
             if (_host._tabLocations is null)
             {
-                return true;
+                return;
             }
 
             TabToRender [] tabLocations = _host._tabLocations;
@@ -1193,7 +1193,7 @@ public class TabView : View
                 tab.DrawAdornments ();
             }
 
-            return true;
+            return;
         }
 
         private int GetUnderlineYPosition ()
