@@ -70,26 +70,29 @@ public class AnimationScenario : Scenario
 
         imageView.SetImage (Image.Load<Rgba32> (File.ReadAllBytes (f.FullName)));
 
-        Task.Run (
-                  () =>
-                  {
-                      while (!_closed)
-                      {
-                          // When updating from a Thread/Task always use Invoke
-                          Application.Invoke (
-                                              () =>
-                                              {
-                                                  imageView.NextFrame ();
-                                                  imageView.SetNeedsDisplay ();
-                                              }
-                                             );
+        win.Initialized += (sender, args) =>
+                           {
+                               Task.Run (
+                                         () =>
+                                         {
+                                             while (!_closed)
+                                             {
+                                                 // When updating from a Thread/Task always use Invoke
+                                                 Application.Invoke (
+                                                                     () =>
+                                                                     {
+                                                                         imageView.NextFrame ();
+                                                                         imageView.SetNeedsDisplay ();
+                                                                     }
+                                                                    );
 
-                          Task.Delay (100).Wait ();
-                      }
-                  }
-                 );
+                                                 Task.Delay (100).Wait ();
+                                             }
+                                         }
+                                        );
+                           };
 
-        win.Closing += (sender, args) => _closed = true;
+        Application.NotifyStopRunState += (sender, args) => _closed = true;
 
         _closed = false;
         Application.Run (win);
