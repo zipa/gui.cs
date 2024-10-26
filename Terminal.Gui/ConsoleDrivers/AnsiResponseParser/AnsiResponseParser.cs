@@ -171,7 +171,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
         if (MatchResponse (cur,
                            expectedResponses,
                            invokeCallback: true,
-                           removeExpectation:true))
+                           removeExpectation: true))
         {
             return false;
         }
@@ -180,7 +180,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
         if (MatchResponse (cur,
                            lateResponses,
                            invokeCallback: false,
-                           removeExpectation:true))
+                           removeExpectation: true))
         {
             return false;
         }
@@ -189,7 +189,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
         if (MatchResponse (cur,
                            persistentExpectations,
                            invokeCallback: true,
-                           removeExpectation:false))
+                           removeExpectation: false))
         {
             return false;
         }
@@ -209,7 +209,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     private bool MatchResponse (string cur, List<AnsiResponseExpectation> collection, bool invokeCallback, bool removeExpectation)
     {
         // Check for expected responses
-        var matchingResponse = collection.FirstOrDefault (r => r.Matches(cur));
+        var matchingResponse = collection.FirstOrDefault (r => r.Matches (cur));
 
         if (matchingResponse?.Response != null)
         {
@@ -247,7 +247,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     public bool IsExpecting (string terminator)
     {
         // If any of the new terminator matches any existing terminators characters it's a collision so true.
-        return expectedResponses.Any (r => r.Terminator.Intersect (terminator).Any());
+        return expectedResponses.Any (r => r.Terminator.Intersect (terminator).Any ());
     }
 
     /// <inheritdoc />
@@ -255,7 +255,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     {
         if (persistent)
         {
-            persistentExpectations.RemoveAll (r=>r.Matches (terminator));
+            persistentExpectations.RemoveAll (r => r.Matches (terminator));
         }
         else
         {

@@ -4,9 +4,9 @@ using System.Diagnostics;
 
 namespace Terminal.Gui;
 
-public class AnsiRequestScheduler(IAnsiResponseParser parser)
+public class AnsiRequestScheduler (IAnsiResponseParser parser)
 {
-    private readonly List<Tuple<AnsiEscapeSequenceRequest,DateTime>> _requests = new  ();
+    private readonly List<Tuple<AnsiEscapeSequenceRequest, DateTime>> _requests = new ();
 
     /// <summary>
     ///<para>
@@ -38,10 +38,10 @@ public class AnsiRequestScheduler(IAnsiResponseParser parser)
     /// </summary>
     /// <param name="request"></param>
     /// <returns><see langword="true"/> if request was sent immediately. <see langword="false"/> if it was queued.</returns>
-    public bool SendOrSchedule (AnsiEscapeSequenceRequest request )
+    public bool SendOrSchedule (AnsiEscapeSequenceRequest request)
     {
 
-        if (CanSend(request, out var reason))
+        if (CanSend (request, out var reason))
         {
             Send (request);
             return true;
@@ -59,7 +59,7 @@ public class AnsiRequestScheduler(IAnsiResponseParser parser)
             }
         }
 
-        _requests.Add (Tuple.Create(request,DateTime.Now));
+        _requests.Add (Tuple.Create (request, DateTime.Now));
         return false;
     }
 
@@ -76,7 +76,7 @@ public class AnsiRequestScheduler(IAnsiResponseParser parser)
         {
             if (DateTime.Now - dt > _staleTimeout)
             {
-                parser.StopExpecting (withTerminator,false);
+                parser.StopExpecting (withTerminator, false);
 
                 return true;
             }
@@ -102,7 +102,7 @@ public class AnsiRequestScheduler(IAnsiResponseParser parser)
             return false;
         }
 
-        var opportunity = _requests.FirstOrDefault (r=>CanSend(r.Item1, out _));
+        var opportunity = _requests.FirstOrDefault (r => CanSend (r.Item1, out _));
 
         if (opportunity != null)
         {
@@ -117,8 +117,8 @@ public class AnsiRequestScheduler(IAnsiResponseParser parser)
 
     private void Send (AnsiEscapeSequenceRequest r)
     {
-        _lastSend.AddOrUpdate (r.Terminator,(s)=>DateTime.Now,(s,v)=>DateTime.Now);
-        parser.ExpectResponse (r.Terminator,r.ResponseReceived,false);
+        _lastSend.AddOrUpdate (r.Terminator, (s) => DateTime.Now, (s, v) => DateTime.Now);
+        parser.ExpectResponse (r.Terminator, r.ResponseReceived, false);
         r.Send ();
     }
 
