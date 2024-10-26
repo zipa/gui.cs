@@ -151,8 +151,8 @@ public class Scenario : IDisposable
     /// </summary>
     public virtual void Main () { }
 
-    private const uint MAX_NATURAL_ITERATIONS = 1000; // not including needed for demo keys
-    private const uint ABORT_TIMEOUT_MS = 5000;
+    private const uint MAX_NATURAL_ITERATIONS = 500; // not including needed for demo keys
+    private const uint ABORT_TIMEOUT_MS = 2500;
     private const int DEMO_KEY_PACING_MS = 1; // Must be non-zero
 
     private readonly object _timeoutLock = new ();

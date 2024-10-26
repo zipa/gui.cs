@@ -11,7 +11,7 @@
       "commandName": "Project",
       "commandLineArgs": "--driver WindowsDriver"
     },
-    "WSL : UICatalog": {
+    "WSL: UICatalog": {
       "commandName": "Executable",
       "executablePath": "wsl",
       "commandLineArgs": "dotnet UICatalog.dll",
@@ -23,56 +23,30 @@
       "commandLineArgs": "dotnet UICatalog.dll --driver NetDriver",
       "distributionName": ""
     },
-    "WizardAsView": {
+    "Benchmark All": {
       "commandName": "Project",
-      "commandLineArgs": "WizardAsView"
+      "commandLineArgs": "--benchmark"
     },
-    "CollectionNavigatorTester": {
+    "Benchmark All --driver NetDriver": {
       "commandName": "Project",
-      "commandLineArgs": "\"Search Collection Nav\""
+      "commandLineArgs": "--driver NetDriver --benchmark"
     },
-    "Charmap": {
-      "commandName": "Project",
-      "commandLineArgs": "\"Character Map\" -b"
+    "WSL: Benchmark All": {
+      "commandName": "Executable",
+      "executablePath": "wsl",
+      "commandLineArgs": "dotnet UICatalog.dll --benchmark",
+      "distributionName": ""
+    },
+    "Docker": {
+      "commandName": "Docker"
     },
     "All Views Tester": {
       "commandName": "Project",
       "commandLineArgs": "\"All Views Tester\" -b"
     },
-    "Windows & FrameViews": {
+    "Charmap": {
       "commandName": "Project",
-      "commandLineArgs": "\"Windows & FrameViews\""
-    },
-    "Docker": {
-      "commandName": "Docker"
-    },
-    "MenuBarScenario": {
-      "commandName": "Project",
-      "commandLineArgs": "MenuBar"
-    },
-    "ListView & ComboBox": {
-      "commandName": "Project",
-      "commandLineArgs": "\"ListView & ComboBox\""
-    },
-    "Generic": {
-      "commandName": "Project",
-      "commandLineArgs": "--benchmark Generic"
-    },
-    "Arrangement": {
-      "commandName": "Project",
-      "commandLineArgs": "Arrangement"
-    },
-    "Benchmark All": {
-      "commandName": "Project",
-      "commandLineArgs": "--benchmark"
-    },
-    "ContextMenus": {
-      "commandName": "Project",
-      "commandLineArgs": "ContextMenus -b"
-    },
-    "Animation": {
-      "commandName": "Project",
-      "commandLineArgs": "Animation -b"
+      "commandLineArgs": "\"Character Map\" -b"
     }
   }
 }

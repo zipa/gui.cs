@@ -4,6 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.CommandLine;
+using System.CommandLine.Builder;
+using System.CommandLine.Help;
+using System.CommandLine.Parsing;
 using System.Data;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -139,17 +142,17 @@ public class UICatalogApp
         driverOption.AddAlias ("-d");
         driverOption.AddAlias ("--d");
 
-        Option<bool> benchmarkFlag = new Option<bool> ("--benchmark", "Enables benchmarking.");
+        Option<bool> benchmarkFlag = new Option<bool> ("--benchmark", "Enables benchmarking. If a Scenario is specified, just that Scenario will be benchmarked.");
         benchmarkFlag.AddAlias ("-b");
         benchmarkFlag.AddAlias ("--b");
 
-        Option<string> resultsFile = new Option<string> ("--file", "The file to save benchmark results to. If not specified with --benchmark, the results will be displayed in a TableView.");
+        Option<string> resultsFile = new Option<string> ("--file", "The file to save benchmark results to. If not specified, the results will be displayed in a TableView.");
         resultsFile.AddAlias ("-f");
         resultsFile.AddAlias ("--f");
 
         Argument<string> scenarioArgument = new Argument<string> (
-                                                                  "scenario",
-                                                                  description: "The name of the scenario to run.",
+                                                                  name: "scenario",
+                                                                  description: "The name of the Scenario to run. If not provided, the UI Catalog UI will be shown.",
                                                                   getDefaultValue: () => "none"
                                                                  ).FromAmong (
                                                                               _scenarios.Select (s => s.GetName ())
@@ -180,8 +183,17 @@ public class UICatalogApp
                                 }
                                );
 
-        rootCommand.Invoke (args);
+        bool helpShown = false;
+        var parser = new CommandLineBuilder (rootCommand)
+                     .UseHelp (ctx => helpShown = true)
+                     .Build ();
 
+        parser.Invoke (args);
+
+        if (helpShown)
+        {
+            return 0;
+        }
 
         UICatalogMain (_options);
 
@@ -401,9 +413,9 @@ public class UICatalogApp
         return;
     }
 
-    private static BenchmarkResults? RunScenario (Scenario scenario, bool benchsmark)
+    private static BenchmarkResults? RunScenario (Scenario scenario, bool benchmark)
     {
-        if (benchsmark)
+        if (benchmark)
         {
             scenario.StartBenchmark ();
         }
@@ -411,12 +423,16 @@ public class UICatalogApp
         Application.Init (driverName: _forceDriver);
         scenario.TopLevelColorScheme = _topLevelColorScheme;
 
-        Application.Screen = new (0, 0, 120, 40);
+        if (benchmark)
+        {
+            Application.Screen = new (0, 0, 120, 40);
+        }
+
         scenario.Main ();
 
         BenchmarkResults? results = null;
 
-        if (benchsmark)
+        if (benchmark)
         {
             results = scenario.EndBenchmark ();
         }
@@ -442,7 +458,7 @@ public class UICatalogApp
 
             if (maxScenarios == 0)
             {
-               // break;
+                // break;
             }
         }
 

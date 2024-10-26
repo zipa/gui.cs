@@ -16,12 +16,10 @@ namespace UICatalog.Scenarios;
 [ScenarioCategory ("Drawing")]
 public class AnimationScenario : Scenario
 {
-    private bool _appInitialized;
+    private ImageView _imageView;
 
     public override void Main ()
     {
-        Application.InitializedChanged += OnAppInitializedChanged;
-
         Application.Init ();
 
         var win = new Window
@@ -33,9 +31,9 @@ public class AnimationScenario : Scenario
             Height = Dim.Fill (),
         };
 
-        var imageView = new ImageView { Width = Dim.Fill (), Height = Dim.Fill () - 2 };
+        _imageView = new ImageView { Width = Dim.Fill (), Height = Dim.Fill () - 2 };
 
-        win.Add (imageView);
+        win.Add (_imageView);
 
         var lbl = new Label { Y = Pos.AnchorEnd (), Text = "Image by Wikiscient" };
         win.Add (lbl);
@@ -52,59 +50,55 @@ public class AnimationScenario : Scenario
         Application.Run (win);
         win.Dispose ();
         Application.Shutdown ();
-        Debug.Assert (!_appInitialized);
+        Debug.Assert (!Application.IsInitialized);
+    }
 
-        Application.InitializedChanged -= OnAppInitializedChanged;
 
-        return;
+    private void OnWinOnInitialized (object sender, EventArgs args)
+    {
+        DirectoryInfo dir;
 
-        void OnWinOnInitialized (object sender, EventArgs args)
+        string assemblyLocation = Assembly.GetExecutingAssembly ().Location;
+
+        if (!string.IsNullOrEmpty (assemblyLocation))
         {
-            DirectoryInfo dir;
-
-            string assemblyLocation = Assembly.GetExecutingAssembly ().Location;
-
-            if (!string.IsNullOrEmpty (assemblyLocation))
-            {
-                dir = new DirectoryInfo (Path.GetDirectoryName (assemblyLocation));
-            }
-            else
-            {
-                dir = new DirectoryInfo (AppContext.BaseDirectory);
-            }
-
-            var f = new FileInfo (
-                                  Path.Combine (dir.FullName, "Scenarios/AnimationScenario", "Spinning_globe_dark_small.gif")
-                                 );
-
-            if (!f.Exists)
-            {
-                Debug.WriteLine ($"Could not find {f.FullName}");
-                MessageBox.ErrorQuery ("Could not find gif", $"Could not find\n{f.FullName}", "Ok");
-
-                return;
-            }
-
-            imageView.SetImage (Image.Load<Rgba32> (File.ReadAllBytes (f.FullName)));
-
-            Task.Run (
-                      () =>
-                      {
-                          while (_appInitialized)
-                          {
-                              // When updating from a Thread/Task always use Invoke
-                              Application.Invoke (
-                                                  () =>
-                                                  {
-                                                      imageView.NextFrame ();
-                                                      imageView.SetNeedsDisplay ();
-                                                  });
-
-                              Task.Delay (100).Wait ();
-                          }
-                      });
+            dir = new DirectoryInfo (Path.GetDirectoryName (assemblyLocation));
         }
-        void OnAppInitializedChanged (object sender, EventArgs<bool> args) => _appInitialized = args.CurrentValue;
+        else
+        {
+            dir = new DirectoryInfo (AppContext.BaseDirectory);
+        }
+
+        var f = new FileInfo (
+                              Path.Combine (dir.FullName, "Scenarios/AnimationScenario", "Spinning_globe_dark_small.gif")
+                             );
+
+        if (!f.Exists)
+        {
+            Debug.WriteLine ($"Could not find {f.FullName}");
+            MessageBox.ErrorQuery ("Could not find gif", $"Could not find\n{f.FullName}", "Ok");
+
+            return;
+        }
+
+        _imageView.SetImage (Image.Load<Rgba32> (File.ReadAllBytes (f.FullName)));
+
+        Task.Run (
+                  () =>
+                  {
+                      while (Application.IsInitialized)
+                      {
+                          // When updating from a Thread/Task always use Invoke
+                          Application.Invoke (
+                                              () =>
+                                              {
+                                                  _imageView.NextFrame ();
+                                                  _imageView.SetNeedsDisplay ();
+                                              });
+
+                          Task.Delay (100).Wait ();
+                      }
+                  });
     }
 
     // This is a C# port of https://github.com/andraaspar/bitmap-to-braille by Andraaspar

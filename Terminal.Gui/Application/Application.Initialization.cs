@@ -39,7 +39,15 @@ public static partial class Application // Initialization (Init/Shutdown)
     [RequiresDynamicCode ("AOT")]
     public static void Init (ConsoleDriver? driver = null, string? driverName = null) { InternalInit (driver, driverName); }
 
-    internal static bool IsInitialized { get; set; }
+    /// <summary>
+    ///     Gets whether the application has been initialized with <see cref="Init"/> and not yet shutdown with <see cref="Shutdown"/>.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    ///     The <see cref="InitializedChanged"/> event is raised after the <see cref="Init"/> and <see cref="Shutdown"/> methods have been called.
+    /// </para>
+    /// </remarks>
+    public static bool IsInitialized { get; private set; }
     internal static int MainThreadId { get; set; } = -1;
 
     // INTERNAL function for initializing an app with a Toplevel factory object, driver, and mainloop.
