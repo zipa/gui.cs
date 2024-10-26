@@ -17,6 +17,8 @@ public class AllViewsDrawTests (ITestOutputHelper _output) : TestsAllViews
             return;
         }
 
+        _output.WriteLine ($"Testing {viewType}");
+
         if (view is IDesignable designable)
         {
             designable.EnableForDesign ();

@@ -580,13 +580,7 @@ public partial class View // Layout APIs
         }
 
         bool layoutStillNeeded = false;
-        //foreach (View v in redo)
-        //{
-        //    if (!v.Layout (contentSize))
-        //    {
-        //        layoutStillNeeded = true;
-        //    }
-        //}
+
         if (redo.Count > 0)
         {
             foreach (View v in ordered)
@@ -594,7 +588,6 @@ public partial class View // Layout APIs
                 if (!v.Layout (contentSize))
                 {
                     layoutStillNeeded = true;
-                    Debug.Fail("ugh");
                 }
             }
         }
