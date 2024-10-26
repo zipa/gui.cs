@@ -1,7 +1,7 @@
 ﻿#nullable enable
 namespace Terminal.Gui;
 
-public record AnsiResponseExpectation (string Terminator, Action<string> Response)
+internal record AnsiResponseExpectation (string Terminator, Action<IHeld> Response)
 {
     public bool Matches (string cur)
     {

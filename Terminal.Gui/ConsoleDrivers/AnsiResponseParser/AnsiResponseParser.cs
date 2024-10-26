@@ -213,7 +213,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
         {
             if (invokeCallback)
             {
-                matchingResponse.Response?.Invoke (heldContent.HeldToString ());
+                matchingResponse.Response.Invoke (heldContent);
             }
             ResetState ();
 
@@ -233,11 +233,11 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     {
         if (persistent)
         {
-            persistentExpectations.Add (new (terminator, response));
+            persistentExpectations.Add (new (terminator, (h)=>response.Invoke (h.HeldToString ())));
         }
         else
         {
-            expectedResponses.Add (new (terminator, response));
+            expectedResponses.Add (new (terminator, (h) => response.Invoke (h.HeldToString ())));
         }
     }
 
@@ -287,12 +287,36 @@ internal class AnsiResponseParser<T> : AnsiResponseParserBase
 
     public IEnumerable<Tuple<char, T>> Release ()
     {
-        foreach (Tuple<char, T> h in (IEnumerable<Tuple<char, T>>)heldContent.HeldToObjects ())
+        foreach (Tuple<char, T> h in HeldToEnumerable())
         {
             yield return h;
         }
 
         ResetState ();
+    }
+
+    private IEnumerable<Tuple<char, T>> HeldToEnumerable ()
+    {
+        return (IEnumerable<Tuple<char, T>>)heldContent.HeldToObjects ();
+    }
+
+    /// <summary>
+    /// 'Overload' for specifying an expectation that requires the metadata as well as characters. Has
+    /// a unique name because otherwise most lamdas will give ambiguous overload errors.
+    /// </summary>
+    /// <param name="terminator"></param>
+    /// <param name="response"></param>
+    /// <param name="persistent"></param>
+    public void ExpectResponseT (string terminator, Action<IEnumerable<Tuple<char,T>>> response, bool persistent)
+    {
+        if (persistent)
+        {
+            persistentExpectations.Add (new (terminator, (h) => response.Invoke (HeldToEnumerable ())));
+        }
+        else
+        {
+            expectedResponses.Add (new (terminator, (h) => response.Invoke (HeldToEnumerable ())));
+        }
     }
 }
 

@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using Xunit.Abstractions;
 
@@ -372,6 +374,44 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
         // Assert - Verify that counters reflect the expected counts of each terminator
         Assert.Equal (2, m);  // Expected two `m` responses
         Assert.Equal (4, M);  // Expected three `M` responses plus the initial value of 1
+    }
+
+    [Fact]
+    public void TestPersistentResponses_WithMetadata ()
+    {
+        var p = new AnsiResponseParser<int> ();
+
+        int m = 0;
+
+        var result = new List<Tuple<char,int>> ();
+
+        p.ExpectResponseT ("m", (r) =>
+                               {
+                                   result = r.ToList ();
+                                   m++;
+                               }, true);
+
+        // Act - Feed input strings containing ANSI sequences
+        p.ProcessInput (StringToBatch("\u001b[<0;10;10m"));  // Should match and increment `m`
+
+        // Prepare expected result: 
+        var expected = new List<Tuple<char, int>>
+        {
+            Tuple.Create('\u001b', 0), // Escape character
+            Tuple.Create('[', 1),
+            Tuple.Create('<', 2),
+            Tuple.Create('0', 3),
+            Tuple.Create(';', 4),
+            Tuple.Create('1', 5),
+            Tuple.Create('0', 6),
+            Tuple.Create(';', 7),
+            Tuple.Create('1', 8),
+            Tuple.Create('0', 9),
+            Tuple.Create('m', 10)
+        };
+
+        Assert.Equal (expected.Count, result.Count); // Ensure the count is as expected
+        Assert.True (expected.SequenceEqual (result), "The result does not match the expected output."); // Check the actual content
     }
 
     private Tuple<char, int> [] StringToBatch (string batch)
