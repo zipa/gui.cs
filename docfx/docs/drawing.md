@@ -6,13 +6,13 @@ Color is supported on all platforms, including Windows, Mac, and Linux. The defa
 
 ## View Drawing API
 
-A @Terminal.Gui.View will typically draw text when the @Terminal.Gui.Border.OnDrawContent(System.Drawing.Rectangle) is called (or the `DrawContent` event is received).
+Terminal.Gui apps draw using the @Terminal.Gui.View.Move and @Terminal.Gui.View.AddRune APIs. @Terminal.Gui.View.Move selects the column and row of the @Terminal.Gui.Cell and @Terminal.Gui.AddRune places the specified glyph in that cell using the @Terminal.Gui.Attribute that was most recently set via @Terminal.Gui.SetAttribute. The @Terminal.Gui.ConsoleDriver caches all changed Cells and efficiently outputs them to the terminal each iteration of the Application. In other words, Terminal.Gui uses deferred rendering. 
 
 Outputting unformatted text involves:
 
-a) Moving the draw cursor using the `Move` API.
-b) Setting the attributes using `SetAttribute`.
-c) Outputting glyphs by calling `AddRune` or `AddStr`.
+a) Moving the draw cursor using @Terminal.Gui.ViewMove.
+b) Setting the attributes using @Terminal.Gui.ViewSetAttribute`
+c) Outputting glyphs by calling @Terminal.Gui.View.AddRune or @Terminal.Gui.View.AddStr
 
 Outputting formatted text involves:
 
@@ -25,9 +25,21 @@ Line drawing is accomplished using the @Terminal.Gui.LineCanvas API:
 a) Add the lines via @Terminal.Gui.LineCanvas.Add.
 b) Either render the line canvas via @Terminal.Gui.LineCanvas.GetMap() or let the @Terminal.Gui.View do so automatically (which enables automatic line joining across Views).
 
+The @Terminal.Gui.Application MainLoop will iterate over all Views in an application looking for views have their @Terminal.Gui.View.NeedsDisplay property set. The @Terminal.Gui.View.Draw method will be called which, in turn.
+
+1) Draws the Adornments (e.g. @Terminal.Gui.View.Border).
+2) Sets the Normal color scheme.
+3) Clears the @Terminal.Gui.View.Viewport.
+4) Draws @Terminal.Gui.View.Text.
+5) Draws any non-text or Subview content.
+6) Draws @Terminal.Gui.View.Subviews.
+7) Draws @Terminal.Gui.View.LineCanvas (which may have been added to by any of the steps above).
+
+Each of these steps can be overridden by developers using the standard [Terminal.Gui cancellable event pattern](events.md). For example, the base @Terminal.Gui.View always clears the viewport. To override this, a subclass can override @Terminal.Gui.View.OnClearingViewport to simply return `true`. Or, a user of `View` can subscribe to the @Terminal.Gui.View.ClearingViewport event and set the `Cancel` argument to `true`.
+
 ## Coordinate System for Drawing
 
-The @Terminal.Gui.View draw APIs, including the `OnDrawContent` method, the `DrawContent` event, and the @Terminal.Gui.View.Move method, all take coordinates specified in *Viewport-Relative* coordinates. That is, `0, 0` is the top-left cell visible to the user.
+The @Terminal.Gui.View draw APIs all take coordinates specified in *Viewport-Relative* coordinates. That is, `0, 0` is the top-left cell visible to the user.
 
 See [Layout](layout.md) for more details of the Terminal.Gui coordinate system.
 

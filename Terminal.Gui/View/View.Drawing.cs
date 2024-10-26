@@ -1,4 +1,5 @@
 ﻿#nullable enable
+using System.ComponentModel;
 using System.Diagnostics;
 
 namespace Terminal.Gui;
@@ -26,12 +27,7 @@ public partial class View // Drawing APIs
         }
 
         DoDrawAdornments ();
-
-        // Set the color scheme for the view after adornments have been drawn
-        if (ColorScheme is { })
-        {
-            Driver?.SetAttribute (GetNormalColor ());
-        }
+        DoSetAttribute ();
 
         // By default, we clip to the viewport preventing drawing outside the viewport
         // We also clip to the content, but if a developer wants to draw outside the viewport, they can do
@@ -130,6 +126,52 @@ public partial class View // Drawing APIs
 
     #endregion DrawAdornments
 
+    #region SetAttribute
+
+    private void DoSetAttribute ()
+    {
+        if (OnSettingAttribute ())
+        {
+            return;
+        }
+
+        var args = new CancelEventArgs ();
+        SettingAttribute?.Invoke (this, args);
+
+        if (args.Cancel)
+        {
+            return;
+        }
+
+        SetNormalAttribute ();
+    }
+
+
+    /// <summary>
+    ///     Called when the normal attribute for the View is to be set. This is called before the View is drawn.
+    /// </summary>
+    /// <returns><see langword="true"/> to stop default behavior.</returns>
+    protected virtual bool OnSettingAttribute () { return false; }
+
+    /// <summary>Raised  when the normal attribute for the View is to be set. This is raised before the View is drawn.</summary>
+    /// <returns>
+    ///     Set <see cref="CancelEventArgs.Cancel"/> to <see langword="true"/> to stop default behavior.
+    /// </returns>
+    public event EventHandler<CancelEventArgs>? SettingAttribute;
+
+    /// <summary>
+    ///     Sets the attribute for the View. This is called before the View is drawn.
+    /// </summary>
+    public void SetNormalAttribute ()
+    {
+        if (ColorScheme is { })
+        {
+            Driver?.SetAttribute (GetNormalColor ());
+        }
+    }
+
+
+    #endregion
     #region ClearViewport
 
     private void DoClearViewport (Rectangle viewport)
@@ -465,20 +507,11 @@ public partial class View // Drawing APIs
 
     #region DrawComplete
 
-    private void DoDrawComplete (Rectangle viewport)
+    private void DoDrawComplete ()
     {
-        Debug.Assert (viewport == Viewport);
+        OnDrawComplete ();
 
-        if (OnDrawComplete (Viewport))
-        {
-            return;
-        }
-
-        var dev = new DrawEventArgs (Viewport, Rectangle.Empty);
-        DrawComplete?.Invoke (this, dev);
-
-        if (dev.Cancel)
-        { }
+        DrawComplete?.Invoke (this, EventArgs.Empty);
 
         // Default implementation does nothing.
     }
@@ -486,13 +519,12 @@ public partial class View // Drawing APIs
     /// <summary>
     ///     Called when the View is completed drawing.
     /// </summary>
-    /// <param name="viewport"></param>
-    protected virtual bool OnDrawComplete (Rectangle viewport) { return false; }
+    protected virtual void OnDrawComplete () { }
 
     /// <summary>Raised when the View is completed drawing.</summary>
     /// <remarks>
     /// </remarks>
-    public event EventHandler<DrawEventArgs>? DrawComplete;
+    public event EventHandler<EventArgs>? DrawComplete;
 
     #endregion DrawComplete
 
