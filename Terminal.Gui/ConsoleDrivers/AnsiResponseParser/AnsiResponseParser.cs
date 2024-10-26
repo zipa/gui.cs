@@ -196,13 +196,38 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
         // then we can release it back to input processing stream
         if (_knownTerminators.Contains (cur.Last ()) && cur.StartsWith (EscSeqUtils.CSI))
         {
-            // Detected a response that was not expected
+            // We have found a terminator so bail
+            State = AnsiResponseParserState.Normal;
+
+            // Maybe swallow anyway if user has custom delegate
+            var swallow =  ShouldSwallowUnexpectedResponse ();
+
+            if (swallow)
+            {
+                heldContent.ClearHeld ();
+                // Do not send back to input stream
+                return false;
+            }
+
+            // Do release back to input stream
             return true;
         }
 
         return false; // Continue accumulating
     }
 
+    /// <summary>
+    /// <para>
+    /// When overriden in a derived class, indicates whether the unexpected response
+    /// currently in <see cref="heldContent"/> should be released or swallowed.
+    /// Use this to enable default event for escape codes.
+    /// </para>
+    /// 
+    /// <remarks>Note this is only called for complete responses.
+    /// Based on <see cref="_knownTerminators"/></remarks>
+    /// </summary>
+    /// <returns></returns>
+    protected abstract bool ShouldSwallowUnexpectedResponse ();
 
     private bool MatchResponse (string cur, List<AnsiResponseExpectation> collection, bool invokeCallback, bool removeExpectation)
     {
@@ -272,6 +297,11 @@ internal class AnsiResponseParser<T> : AnsiResponseParserBase
 {
     public AnsiResponseParser () : base (new GenericHeld<T> ()) { }
 
+
+    /// <inheritdoc cref="AnsiResponseParser.UnknownResponseHandler"/>
+    public Func<IEnumerable<Tuple<char, T>>, bool> UnexpectedResponseHandler { get; set; } = (_) => false;
+
+
     public IEnumerable<Tuple<char, T>> ProcessInput (params Tuple<char, T> [] input)
     {
         List<Tuple<char, T>> output = new List<Tuple<char, T>> ();
@@ -318,10 +348,29 @@ internal class AnsiResponseParser<T> : AnsiResponseParserBase
             expectedResponses.Add (new (terminator, (h) => response.Invoke (HeldToEnumerable ())));
         }
     }
+
+    /// <inheritdoc />
+    protected override bool ShouldSwallowUnexpectedResponse ()
+    {
+        return UnexpectedResponseHandler.Invoke (HeldToEnumerable ());
+    }
 }
 
 internal class AnsiResponseParser : AnsiResponseParserBase
 {
+    /// <summary>
+    /// <para>
+    /// Delegate for handling unrecognized escape codes. Default behaviour
+    /// is to return <see langword="false"/> which simply releases the
+    /// characters back to input stream for downstream processing.
+    /// </para>
+    /// <para>
+    /// Implement a method to handle if you want and return <see langword="true"/> if you want the
+    /// keystrokes 'swallowed' (i.e. not returned to input stream).
+    /// </para>
+    /// </summary>
+    public Func<string, bool> UnknownResponseHandler { get; set; } = (_) => false;
+
     public AnsiResponseParser () : base (new StringHeld ()) { }
 
     public string ProcessInput (string input)
@@ -343,5 +392,11 @@ internal class AnsiResponseParser : AnsiResponseParserBase
         ResetState ();
 
         return output;
+    }
+
+    /// <inheritdoc />
+    protected override bool ShouldSwallowUnexpectedResponse ()
+    {
+        return UnknownResponseHandler.Invoke (heldContent.HeldToString ());
     }
 }
