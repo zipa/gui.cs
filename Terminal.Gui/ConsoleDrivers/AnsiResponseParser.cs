@@ -4,17 +4,24 @@ using System.Runtime.ConstrainedExecution;
 
 namespace Terminal.Gui;
 
+
 internal abstract class AnsiResponseParserBase : IAnsiResponseParser
 {
     /// <summary>
     /// Responses we are expecting to come in.
     /// </summary>
-    protected readonly List<(string terminator, Action<string> response)> expectedResponses = new ();
+    protected readonly List<AnsiResponseExpectation> expectedResponses = new ();
 
     /// <summary>
     /// Collection of responses that we <see cref="StopExpecting"/>.
     /// </summary>
-    protected readonly List<(string terminator, Action<string> response)> lateResponses = new ();
+    protected readonly List<AnsiResponseExpectation> lateResponses = new ();
+
+    /// <summary>
+    /// Responses that you want to look out for that will come in continuously e.g. mouse events.
+    /// Key is the terminator.
+    /// </summary>
+    protected readonly List<AnsiResponseExpectation> persistentExpectations = new ();
 
     private AnsiResponseParserState _state = AnsiResponseParserState.Normal;
 
@@ -208,13 +215,28 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
         string cur = HeldToString ();
 
         // Look for an expected response for what is accumulated so far (since Esc)
-        if (MatchResponse (cur, expectedResponses, true))
+        if (MatchResponse (cur,
+                           expectedResponses,
+                           invokeCallback: true,
+                           removeExpectation:true))
         {
             return false;
         }
 
         // Also try looking for late requests - in which case we do not invoke but still swallow content to avoid corrupting downstream
-        if (MatchResponse (cur, lateResponses, false))
+        if (MatchResponse (cur,
+                           lateResponses,
+                           invokeCallback: false,
+                           removeExpectation:true))
+        {
+            return false;
+        }
+
+        // Look for persistent requests
+        if (MatchResponse (cur,
+                           persistentExpectations,
+                           invokeCallback: true,
+                           removeExpectation:false))
         {
             return false;
         }
@@ -230,20 +252,24 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
         return false; // Continue accumulating
     }
 
-    private bool MatchResponse (string cur, List<(string terminator, Action<string> response)> collection, bool invokeCallback)
+
+    private bool MatchResponse (string cur, List<AnsiResponseExpectation> collection, bool invokeCallback, bool removeExpectation)
     {
         // Check for expected responses
-        var matchingResponse = collection.FirstOrDefault (r => cur.EndsWith (r.terminator));
+        var matchingResponse = collection.FirstOrDefault (r => r.Matches(cur));
 
-        if (matchingResponse.response != null)
+        if (matchingResponse?.Response != null)
         {
-
             if (invokeCallback)
             {
-                matchingResponse.response?.Invoke (HeldToString ());
+                matchingResponse.Response?.Invoke (HeldToString ());
             }
             ResetState ();
-            collection.Remove (matchingResponse);
+
+            if (removeExpectation)
+            {
+                collection.Remove (matchingResponse);
+            }
 
             return true;
         }
@@ -252,24 +278,41 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     }
 
     /// <inheritdoc />
-    public void ExpectResponse (string terminator, Action<string> response) { expectedResponses.Add ((terminator, response)); }
-
-    /// <inheritdoc />
-    public bool IsExpecting (string requestTerminator)
+    public void ExpectResponse (string terminator, Action<string> response, bool persistent)
     {
-        // If any of the new terminator matches any existing terminators characters it's a collision so true.
-        return expectedResponses.Any (r => r.terminator.Intersect (requestTerminator).Any());
+        if (persistent)
+        {
+            persistentExpectations.Add (new (terminator, response));
+        }
+        else
+        {
+            expectedResponses.Add (new (terminator, response));
+        }
     }
 
     /// <inheritdoc />
-    public void StopExpecting (string requestTerminator)
+    public bool IsExpecting (string terminator)
     {
-        var removed = expectedResponses.Where (r => r.terminator == requestTerminator).ToArray ();
+        // If any of the new terminator matches any existing terminators characters it's a collision so true.
+        return expectedResponses.Any (r => r.Terminator.Intersect (terminator).Any());
+    }
 
-        foreach (var r in removed)
+    /// <inheritdoc />
+    public void StopExpecting (string terminator, bool persistent)
+    {
+        if (persistent)
         {
-            expectedResponses.Remove (r);
-            lateResponses.Add (r);
+            persistentExpectations.RemoveAll (r=>r.Matches (terminator));
+        }
+        else
+        {
+            var removed = expectedResponses.Where (r => r.Terminator == terminator).ToArray ();
+
+            foreach (var r in removed)
+            {
+                expectedResponses.Remove (r);
+                lateResponses.Add (r);
+            }
         }
     }
 }

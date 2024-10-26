@@ -27,8 +27,8 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
         int i = 0;
 
         // Imagine that we are expecting a DAR
-        _parser1.ExpectResponse ("c",(s)=> response1 = s);
-        _parser2.ExpectResponse ("c", (s) => response2 = s);
+        _parser1.ExpectResponse ("c",(s)=> response1 = s, false);
+        _parser2.ExpectResponse ("c", (s) => response2 = s , false);
 
         // First char is Escape which we must consume incase what follows is the DAR
         AssertConsumed (ansiStream, ref i); // Esc
@@ -118,8 +118,8 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
             string response2 = string.Empty;
 
             // Register the expected response with the given terminator
-            _parser1.ExpectResponse (expectedTerminator, s => response1 = s);
-            _parser2.ExpectResponse (expectedTerminator, s => response2 = s);
+            _parser1.ExpectResponse (expectedTerminator, s => response1 = s, false);
+            _parser2.ExpectResponse (expectedTerminator, s => response2 = s, false);
 
             // Process the input
             StringBuilder actualOutput1 = new StringBuilder ();
@@ -225,7 +225,7 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
 
         if (terminator.HasValue)
         {
-            parser.ExpectResponse (terminator.Value.ToString (),(s)=> response = s);
+            parser.ExpectResponse (terminator.Value.ToString (),(s)=> response = s, false);
         }
         foreach (var state in expectedStates)
         {
@@ -326,13 +326,13 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
         string? responseA = null;
         string? responseB = null;
 
-        p.ExpectResponse ("z",(r)=>responseA=r);
+        p.ExpectResponse ("z",(r)=>responseA=r, false);
 
         // Some time goes by without us seeing a response
-        p.StopExpecting ("z");
+        p.StopExpecting ("z", false);
 
         // Send our new request
-        p.ExpectResponse ("z", (r) => responseB = r);
+        p.ExpectResponse ("z", (r) => responseB = r, false);
 
         // Because we gave up on getting A, we should expect the response to be to our new request
         Assert.Empty(p.ProcessInput ("\u001b[<1;2z"));
@@ -349,6 +349,29 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
         // We now have no outstanding requests (late or otherwise) so new ansi codes should just fall through
         Assert.Equal ("\u001b[111z", p.ProcessInput ("\u001b[111z"));
 
+    }
+
+    [Fact]
+    public void TestPersistentResponses ()
+    {
+        var p = new AnsiResponseParser ();
+
+        int m = 0;
+        int M = 1;
+
+        p.ExpectResponse ("m", _ => m++, true);
+        p.ExpectResponse ("M", _ => M++, true);
+
+        // Act - Feed input strings containing ANSI sequences
+        p.ProcessInput ("\u001b[<0;10;10m");  // Should match and increment `m`
+        p.ProcessInput ("\u001b[<0;20;20m");  // Should match and increment `m`
+        p.ProcessInput ("\u001b[<0;30;30M");  // Should match and increment `M`
+        p.ProcessInput ("\u001b[<0;40;40M");  // Should match and increment `M`
+        p.ProcessInput ("\u001b[<0;50;50M");  // Should match and increment `M`
+
+        // Assert - Verify that counters reflect the expected counts of each terminator
+        Assert.Equal (2, m);  // Expected two `m` responses
+        Assert.Equal (4, M);  // Expected three `M` responses plus the initial value of 1
     }
 
     private Tuple<char, int> [] StringToBatch (string batch)
@@ -394,8 +417,6 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
             }
         }
     }
-
-
 
     private void AssertIgnored (string ansiStream,char expected, ref int i)
     {
