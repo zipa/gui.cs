@@ -328,7 +328,7 @@ public static partial class Application // Run (Begin, Run, End, Stop)
     public static T Run<T> (Func<Exception, bool>? errorHandler = null, ConsoleDriver? driver = null)
         where T : Toplevel, new()
     {
-        if (!IsInitialized)
+        if (!Initialized)
         {
             // Init() has NOT been called.
             InternalInit (driver, null, true);
@@ -383,7 +383,7 @@ public static partial class Application // Run (Begin, Run, End, Stop)
     {
         ArgumentNullException.ThrowIfNull (view);
 
-        if (IsInitialized)
+        if (Initialized)
         {
             if (Driver is null)
             {

@@ -131,7 +131,7 @@ public class ApplicationTests
             Thread.Sleep ((int)timeoutTime / 10);
 
             // Worst case scenario - something went wrong
-            if (Application.IsInitialized && iteration > 25)
+            if (Application.Initialized && iteration > 25)
             {
                 _output.WriteLine ($"Too many iterations ({iteration}): Calling Application.RequestStop.");
                 Application.RequestStop ();
@@ -279,7 +279,7 @@ public class ApplicationTests
         // Set some values
 
         Application.Init (driverName: driverType.Name);
-        Application.IsInitialized = true;
+       // Application.IsInitialized = true;
 
         // Reset
         Application.ResetState ();
@@ -307,7 +307,7 @@ public class ApplicationTests
             Assert.Equal (Key.Esc, Application.QuitKey);
 
             // Internal properties
-            Assert.False (Application.IsInitialized);
+            Assert.False (Application.Initialized);
             Assert.Equal (Application.GetSupportedCultures (), Application.SupportedCultures);
             Assert.Equal (Application.GetAvailableCulturesFromEmbeddedResources (), Application.SupportedCultures);
             Assert.False (Application._forceFakeConsole);
@@ -341,7 +341,7 @@ public class ApplicationTests
         CheckReset ();
 
         // Set the values that can be set
-        Application.IsInitialized = true;
+        Application.Initialized = true;
         Application._forceFakeConsole = true;
         Application.MainThreadId = 1;
 
@@ -524,7 +524,7 @@ public class ApplicationTests
     [AutoInitShutdown (verifyShutdown: true)]
     public void Internal_Properties_Correct ()
     {
-        Assert.True (Application.IsInitialized);
+        Assert.True (Application.Initialized);
         Assert.Null (Application.Top);
         RunState rs = Application.Begin (new ());
         Assert.Equal (Application.Top, rs.Toplevel);

@@ -128,7 +128,7 @@ public class ScenarioTests : TestsAllViews
         void OnApplicationOnIteration (object s, IterationEventArgs a)
         {
             iterationCount++;
-            if (Application.IsInitialized)
+            if (Application.Initialized)
             {
                 // Press QuitKey 
                 _output.WriteLine ($"Attempting to quit with {Application.QuitKey}");

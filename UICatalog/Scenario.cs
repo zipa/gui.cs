@@ -4,9 +4,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection.Metadata;
-using System.Text;
-using System.Threading;
 using Terminal.Gui;
 
 namespace UICatalog;

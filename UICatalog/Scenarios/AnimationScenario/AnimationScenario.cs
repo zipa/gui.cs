@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
@@ -16,7 +17,7 @@ namespace UICatalog.Scenarios;
 [ScenarioCategory ("Drawing")]
 public class AnimationScenario : Scenario
 {
-    private ImageView _imageView;
+    private ImageView? _imageView;
 
     public override void Main ()
     {
@@ -50,11 +51,11 @@ public class AnimationScenario : Scenario
         Application.Run (win);
         win.Dispose ();
         Application.Shutdown ();
-        Debug.Assert (!Application.IsInitialized);
+        Debug.Assert (!Application.Initialized);
     }
 
 
-    private void OnWinOnInitialized (object sender, EventArgs args)
+    private void OnWinOnInitialized (object? sender, EventArgs args)
     {
         DirectoryInfo dir;
 
@@ -81,12 +82,12 @@ public class AnimationScenario : Scenario
             return;
         }
 
-        _imageView.SetImage (Image.Load<Rgba32> (File.ReadAllBytes (f.FullName)));
+        _imageView!.SetImage (Image.Load<Rgba32> (File.ReadAllBytes (f.FullName)));
 
         Task.Run (
                   () =>
                   {
-                      while (Application.IsInitialized)
+                      while (Application.Initialized)
                       {
                           // When updating from a Thread/Task always use Invoke
                           Application.Invoke (

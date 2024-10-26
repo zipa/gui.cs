@@ -196,7 +196,7 @@ public static partial class Application
         NotifyNewRunState = null;
         NotifyStopRunState = null;
         MouseGrabView = null;
-        IsInitialized = false;
+        Initialized = false;
 
         // Mouse
         _lastMousePosition = null;
