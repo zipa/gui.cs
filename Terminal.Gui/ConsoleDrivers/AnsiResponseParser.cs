@@ -36,6 +36,8 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
         }
     }
 
+    protected readonly IHeld heldContent;
+
     /// <summary>
     ///     When <see cref="State"/> was last changed.
     /// </summary>
@@ -55,17 +57,16 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
         'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
     });
 
+    protected AnsiResponseParserBase (IHeld heldContent)
+    {
+        this.heldContent = heldContent;
+    }
 
     protected void ResetState ()
     {
         State = AnsiResponseParserState.Normal;
-        ClearHeld ();
+        heldContent.ClearHeld ();
     }
-
-    public abstract void ClearHeld ();
-    protected abstract string HeldToString ();
-    protected abstract IEnumerable<object> HeldToObjects ();
-    protected abstract void AddToHeld (object o);
 
     /// <summary>
     ///     Processes an input collection of objects <paramref name="inputLength"/> long.
@@ -102,7 +103,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
                     {
                         // Escape character detected, move to ExpectingBracket state
                         State = AnsiResponseParserState.ExpectingBracket;
-                        AddToHeld (currentObj); // Hold the escape character
+                        heldContent.AddToHeld (currentObj); // Hold the escape character
                     }
                     else
                     {
@@ -117,13 +118,13 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
                     {
                         // Second escape so we must release first
                         ReleaseHeld (appendOutput, AnsiResponseParserState.ExpectingBracket);
-                        AddToHeld (currentObj); // Hold the new escape
+                        heldContent.AddToHeld (currentObj); // Hold the new escape
                     }
                     else if (currentChar == '[')
                     {
                         // Detected '[', transition to InResponse state
                         State = AnsiResponseParserState.InResponse;
-                        AddToHeld (currentObj); // Hold the '['
+                        heldContent.AddToHeld (currentObj); // Hold the '['
                     }
                     else
                     {
@@ -135,7 +136,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
                     break;
 
                 case AnsiResponseParserState.InResponse:
-                    AddToHeld (currentObj);
+                    heldContent.AddToHeld (currentObj);
 
                     // Check if the held content should be released
                     if (ShouldReleaseHeldContent ())
@@ -152,19 +153,19 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
 
     private void ReleaseHeld (Action<object> appendOutput, AnsiResponseParserState newState = AnsiResponseParserState.Normal)
     {
-        foreach (object o in HeldToObjects ())
+        foreach (object o in heldContent.HeldToObjects ())
         {
             appendOutput (o);
         }
 
         State = newState;
-        ClearHeld ();
+        heldContent.ClearHeld ();
     }
 
     // Common response handler logic
     protected bool ShouldReleaseHeldContent ()
     {
-        string cur = HeldToString ();
+        string cur = heldContent.HeldToString ();
 
         // Look for an expected response for what is accumulated so far (since Esc)
         if (MatchResponse (cur,
@@ -214,7 +215,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
         {
             if (invokeCallback)
             {
-                matchingResponse.Response?.Invoke (HeldToString ());
+                matchingResponse.Response?.Invoke (heldContent.HeldToString ());
             }
             ResetState ();
 
@@ -269,9 +270,37 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     }
 }
 
-internal class AnsiResponseParser<T> : AnsiResponseParserBase
+internal interface IHeld
+{
+    void ClearHeld ();
+    string HeldToString ();
+    IEnumerable<object> HeldToObjects ();
+    void AddToHeld (object o);
+}
+
+internal class StringHeld : IHeld
+{
+    private readonly StringBuilder held = new ();
+
+    public void ClearHeld () => held.Clear ();
+    public string HeldToString () => held.ToString ();
+    public IEnumerable<object> HeldToObjects () => held.ToString ().Select (c => (object)c);
+    public void AddToHeld (object o) => held.Append ((char)o);
+}
+
+internal class GenericHeld<T> : IHeld
 {
     private readonly List<Tuple<char, T>> held = new ();
+
+    public void ClearHeld () => held.Clear ();
+    public string HeldToString () => new (held.Select (h => h.Item1).ToArray ());
+    public IEnumerable<object> HeldToObjects () => held;
+    public void AddToHeld (object o) => held.Add ((Tuple<char, T>)o);
+}
+
+internal class AnsiResponseParser<T> : AnsiResponseParserBase
+{
+    public AnsiResponseParser () : base (new GenericHeld<T> ()) { }
 
     public IEnumerable<Tuple<char, T>> ProcessInput (params Tuple<char, T> [] input)
     {
@@ -288,26 +317,18 @@ internal class AnsiResponseParser<T> : AnsiResponseParserBase
 
     public IEnumerable<Tuple<char, T>> Release ()
     {
-        foreach (Tuple<char, T> h in held.ToArray ())
+        foreach (Tuple<char, T> h in (IEnumerable<Tuple<char, T>>)heldContent.HeldToObjects ())
         {
             yield return h;
         }
 
         ResetState ();
     }
-
-    public override void ClearHeld () { held.Clear (); }
-
-    protected override string HeldToString () { return new (held.Select (h => h.Item1).ToArray ()); }
-
-    protected override IEnumerable<object> HeldToObjects () { return held; }
-
-    protected override void AddToHeld (object o) { held.Add ((Tuple<char, T>)o); }
 }
 
 internal class AnsiResponseParser : AnsiResponseParserBase
 {
-    private readonly StringBuilder held = new ();
+    public AnsiResponseParser () : base (new StringHeld ()) { }
 
     public string ProcessInput (string input)
     {
@@ -324,17 +345,9 @@ internal class AnsiResponseParser : AnsiResponseParserBase
 
     public string Release ()
     {
-        var output = held.ToString ();
+        var output = heldContent.HeldToString ();
         ResetState ();
 
         return output;
     }
-
-    public override void ClearHeld () { held.Clear (); }
-
-    protected override string HeldToString () { return held.ToString (); }
-
-    protected override IEnumerable<object> HeldToObjects () { return held.ToString ().Select (c => (object)c).ToArray (); }
-
-    protected override void AddToHeld (object o) { held.Append ((char)o); }
 }
