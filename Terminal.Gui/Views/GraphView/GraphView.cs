@@ -2,7 +2,7 @@
 namespace Terminal.Gui;
 
 /// <summary>View for rendering graphs (bar, scatter, etc...).</summary>
-public class GraphView : View
+public class GraphView : View, IDesignable
 {
     /// <summary>Creates a new graph with a 1 to 1 graph space with absolute layout.</summary>
     public GraphView ()
@@ -346,4 +346,48 @@ public class GraphView : View
     ///     <see cref="ColorScheme"/> otherwise.
     /// </summary>
     public void SetDriverColorToGraphColor () { Driver?.SetAttribute (GraphColor ?? GetNormalColor ()); }
+
+    bool IDesignable.EnableForDesign ()
+    {
+        Title = "Sine Wave";
+
+        var points = new ScatterSeries ();
+        var line = new PathAnnotation ();
+
+        // Draw line first so it does not draw over top of points or axis labels
+        line.BeforeSeries = true;
+
+        // Generate line graph with 2,000 points
+        for (float x = -500; x < 500; x += 0.5f)
+        {
+            points.Points.Add (new (x, (float)Math.Sin (x)));
+            line.Points.Add (new (x, (float)Math.Sin (x)));
+        }
+
+        Series.Add (points);
+        Annotations.Add (line);
+
+        // How much graph space each cell of the console depicts
+        CellSize = new (0.1f, 0.1f);
+
+        // leave space for axis labels
+        MarginBottom = 2;
+        MarginLeft = 3;
+
+        // One axis tick/label per
+        AxisX.Increment = 0.5f;
+        AxisX.ShowLabelsEvery = 2;
+        AxisX.Text = "X →";
+        AxisX.LabelGetter = v => v.Value.ToString ("N2");
+
+        AxisY.Increment = 0.2f;
+        AxisY.ShowLabelsEvery = 2;
+        AxisY.Text = "↑Y";
+        AxisY.LabelGetter = v => v.Value.ToString ("N2");
+
+        ScrollOffset = new (-2.5f, -1);
+
+        return true;
+    }
+
 }
