@@ -421,7 +421,7 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
         int i = 0;
 
         // Swallow all unknown escape codes
-        _parser1.UnknownResponseHandler = _ => true;
+        _parser1.UnexpectedResponseHandler = _ => true;
         _parser2.UnknownResponseHandler = _ => true;
 
 
@@ -437,6 +437,47 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
                         6,
                         28,
                         29);
+    }
+
+    [Fact]
+    public void UnknownResponses_ParameterShouldMatch ()
+    {
+        int i = 0;
+
+        // Track unknown responses passed to the UnexpectedResponseHandler
+        var unknownResponses = new List<string> ();
+
+        // Set up the UnexpectedResponseHandler to log each unknown response
+        _parser1.UnexpectedResponseHandler = r1 =>
+                                          {
+                                              unknownResponses.Add (BatchToString (r1));
+                                              return true; // Return true to swallow unknown responses
+                                          };
+
+        _parser2.UnknownResponseHandler = r2 =>
+                                          {
+                                              // parsers should be agreeing on what these responses are!
+                                              Assert.Equal(unknownResponses.Last(),r2);
+                                              return true; // Return true to swallow unknown responses
+                                          };
+
+        // Input with known and unknown responses
+        AssertReleased (
+                        "Just te\u001b[<0;0;0M\u001b[3c\u001b[2c\u001b[4cst",
+                        "Just test");
+
+        // Expected unknown responses (ANSI sequences that are unknown)
+        var expectedUnknownResponses = new List<string>
+        {
+            "\u001b[<0;0;0M",
+            "\u001b[3c",
+            "\u001b[2c",
+            "\u001b[4c"
+        };
+
+        // Assert that the UnexpectedResponseHandler was called with the correct unknown responses
+        Assert.Equal (expectedUnknownResponses.Count, unknownResponses.Count);
+        Assert.Equal (expectedUnknownResponses, unknownResponses);
     }
 
     private Tuple<char, int> [] StringToBatch (string batch)

@@ -200,7 +200,17 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
             State = AnsiResponseParserState.Normal;
 
             // Maybe swallow anyway if user has custom delegate
-            return ShouldReleaseUnexpectedResponse ();
+            var swallow =  ShouldSwallowUnexpectedResponse ();
+
+            if (swallow)
+            {
+                heldContent.ClearHeld ();
+                // Do not send back to input stream
+                return false;
+            }
+
+            // Do release back to input stream
+            return true;
         }
 
         return false; // Continue accumulating
@@ -217,7 +227,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     /// Based on <see cref="_knownTerminators"/></remarks>
     /// </summary>
     /// <returns></returns>
-    protected abstract bool ShouldReleaseUnexpectedResponse ();
+    protected abstract bool ShouldSwallowUnexpectedResponse ();
 
     private bool MatchResponse (string cur, List<AnsiResponseExpectation> collection, bool invokeCallback, bool removeExpectation)
     {
@@ -289,7 +299,7 @@ internal class AnsiResponseParser<T> : AnsiResponseParserBase
 
 
     /// <inheritdoc cref="AnsiResponseParser.UnknownResponseHandler"/>
-    public Func<IEnumerable<Tuple<char, T>>, bool> UnknownResponseHandler { get; set; } = (_) => false;
+    public Func<IEnumerable<Tuple<char, T>>, bool> UnexpectedResponseHandler { get; set; } = (_) => false;
 
 
     public IEnumerable<Tuple<char, T>> ProcessInput (params Tuple<char, T> [] input)
@@ -340,9 +350,9 @@ internal class AnsiResponseParser<T> : AnsiResponseParserBase
     }
 
     /// <inheritdoc />
-    protected override bool ShouldReleaseUnexpectedResponse ()
+    protected override bool ShouldSwallowUnexpectedResponse ()
     {
-        return !UnknownResponseHandler.Invoke (HeldToEnumerable ());
+        return UnexpectedResponseHandler.Invoke (HeldToEnumerable ());
     }
 }
 
@@ -385,8 +395,8 @@ internal class AnsiResponseParser : AnsiResponseParserBase
     }
 
     /// <inheritdoc />
-    protected override bool ShouldReleaseUnexpectedResponse ()
+    protected override bool ShouldSwallowUnexpectedResponse ()
     {
-        return !UnknownResponseHandler.Invoke (heldContent.ToString () ?? string.Empty);
+        return UnknownResponseHandler.Invoke (heldContent.HeldToString ());
     }
 }
