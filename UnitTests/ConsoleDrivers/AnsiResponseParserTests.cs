@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using Xunit.Abstractions;
 
@@ -414,6 +415,30 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
         Assert.True (expected.SequenceEqual (result), "The result does not match the expected output."); // Check the actual content
     }
 
+    [Fact]
+    public void ShouldSwallowUnknownResponses_WhenDelegateSaysSo ()
+    {
+        int i = 0;
+
+        // Swallow all unknown escape codes
+        _parser1.UnknownResponseHandler = _ => true;
+        _parser2.UnknownResponseHandler = _ => true;
+
+
+        AssertReleased (
+                        "Just te\u001b[<0;0;0M\u001b[3c\u001b[2c\u001b[4cst",
+                        "Just test",
+                        0,
+                        1,
+                        2,
+                        3,
+                        4,
+                        5,
+                        6,
+                        28,
+                        29);
+    }
+
     private Tuple<char, int> [] StringToBatch (string batch)
     {
         return batch.Select ((k) => Tuple.Create (k, tIndex++)).ToArray ();
@@ -480,6 +505,54 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
         Assert.Empty (_parser2.ProcessInput (c2.ToString()));
     }
 
+    /// <summary>
+    /// Overload that fully exhausts <paramref name="ansiStream"/> and asserts
+    /// that the final released content across whole processing is <paramref name="expectedRelease"/>
+    /// </summary>
+    /// <param name="ansiStream"></param>
+    /// <param name="expectedRelease"></param>
+    /// <param name="expectedTValues"></param>
+    private void AssertReleased (string ansiStream, string expectedRelease, params int [] expectedTValues)
+    {
+        var sb = new StringBuilder ();
+        var tValues = new List<int> ();
+
+        int i = 0;
+
+        while (i < ansiStream.Length)
+        {
+            var c2 = ansiStream [i];
+            var c1 = NextChar (ansiStream, ref i);
+
+            var released1 = _parser1.ProcessInput (c1).ToArray ();
+            tValues.AddRange(released1.Select (kv => kv.Item2));
+
+
+            var released2 = _parser2.ProcessInput (c2.ToString ());
+
+            // Both parsers should have same chars so release chars consistently with each other
+            Assert.Equal (BatchToString(released1),released2);
+
+            sb.Append (released2);
+        }
+
+        Assert.Equal (expectedRelease, sb.ToString());
+
+        if (expectedTValues.Length > 0)
+        {
+            Assert.True (expectedTValues.SequenceEqual (tValues));
+        }
+    }
+
+    /// <summary>
+    /// Asserts that <paramref name="i"/> index of <see cref="ansiStream"/> when consumed will release
+    /// <paramref name="expectedRelease"/>. Results in implicit increment of <paramref name="i"/>.
+    /// <remarks>Note that this does NOT iteratively consume all the stream, only 1 char at <paramref name="i"/></remarks>
+    /// </summary>
+    /// <param name="ansiStream"></param>
+    /// <param name="i"></param>
+    /// <param name="expectedRelease"></param>
+    /// <param name="expectedTValues"></param>
     private void AssertReleased (string ansiStream, ref int i, string expectedRelease, params int[] expectedTValues)
     {
         var c2 = ansiStream [i];
