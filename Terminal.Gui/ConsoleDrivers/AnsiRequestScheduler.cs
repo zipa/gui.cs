@@ -76,7 +76,7 @@ public class AnsiRequestScheduler(IAnsiResponseParser parser)
         {
             if (DateTime.Now - dt > _staleTimeout)
             {
-                parser.StopExpecting (withTerminator);
+                parser.StopExpecting (withTerminator,false);
 
                 return true;
             }
@@ -118,7 +118,7 @@ public class AnsiRequestScheduler(IAnsiResponseParser parser)
     private void Send (AnsiEscapeSequenceRequest r)
     {
         _lastSend.AddOrUpdate (r.Terminator,(s)=>DateTime.Now,(s,v)=>DateTime.Now);
-        parser.ExpectResponse (r.Terminator,r.ResponseReceived);
+        parser.ExpectResponse (r.Terminator,r.ResponseReceived,false);
         r.Send ();
     }
 

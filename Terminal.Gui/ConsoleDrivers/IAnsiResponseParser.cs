@@ -19,16 +19,21 @@ public interface IAnsiResponseParser
     /// sent an ANSI request out).
     /// </summary>
     /// <param name="terminator">The terminator you expect to see on response.</param>
+    /// <param name="persistent"><see langword="true"/> if you want this to persist permanently
+    /// and be raised for every event matching the <paramref name="terminator"/>.</param>
     /// <param name="response">Callback to invoke when the response is seen in console input.</param>
-    void ExpectResponse (string terminator, Action<string> response);
+    /// <exception cref="ArgumentException">If trying to register a persistent request for a terminator
+    /// that already has one.
+    /// exists.</exception>
+    void ExpectResponse (string terminator, Action<string> response, bool persistent);
 
     /// <summary>
     /// Returns true if there is an existing expectation (i.e. we are waiting a response
-    /// from console) for the given <paramref name="requestTerminator"/>.
+    /// from console) for the given <paramref name="terminator"/>.
     /// </summary>
-    /// <param name="requestTerminator"></param>
+    /// <param name="terminator"></param>
     /// <returns></returns>
-    bool IsExpecting (string requestTerminator);
+    bool IsExpecting (string terminator);
 
     /// <summary>
     /// Removes callback and expectation that we will get a response for the
@@ -36,5 +41,7 @@ public interface IAnsiResponseParser
     /// requests e.g. if you want to send a different one with the same terminator.
     /// </summary>
     /// <param name="requestTerminator"></param>
-    void StopExpecting (string requestTerminator);
+    /// <param name="persistent"><see langword="true"/> if you want to remove a persistent
+    /// request listener.</param>
+    void StopExpecting (string requestTerminator, bool persistent);
 }
