@@ -44,7 +44,6 @@ public class TreeView : TreeView<ITreeNode>, IDesignable
 
     bool IDesignable.EnableForDesign ()
     {
-
         var root1 = new TreeNode ("Root1");
         root1.Children.Add (new TreeNode ("Child1.1"));
         root1.Children.Add (new TreeNode ("Child1.2"));
@@ -55,6 +54,8 @@ public class TreeView : TreeView<ITreeNode>, IDesignable
 
         AddObject (root1);
         AddObject (root2);
+
+        ExpandAll ();
         return true;
     }
 }
