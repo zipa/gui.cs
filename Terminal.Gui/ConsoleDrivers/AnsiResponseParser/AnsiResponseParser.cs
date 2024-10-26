@@ -1,7 +1,5 @@
 ﻿#nullable enable
 
-using System.Runtime.ConstrainedExecution;
-
 namespace Terminal.Gui;
 
 

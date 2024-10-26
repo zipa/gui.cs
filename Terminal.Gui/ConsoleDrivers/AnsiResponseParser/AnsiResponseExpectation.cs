@@ -1,6 +1,4 @@
 ﻿#nullable enable
-using Terminal;
-
 namespace Terminal.Gui;
 
 public record AnsiResponseExpectation (string Terminator, Action<string> Response)
