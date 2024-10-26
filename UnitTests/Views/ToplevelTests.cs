@@ -1018,8 +1018,6 @@ public partial class ToplevelTests (ITestOutputHelper output)
         top.Dispose ();
     }
 
-    private void OnDrawContentComplete (object sender, DrawEventArgs e) { throw new NotImplementedException (); }
-
     [Fact]
     [AutoInitShutdown]
     public void Activating_MenuBar_By_Alt_Key_Does_Not_Throw ()
