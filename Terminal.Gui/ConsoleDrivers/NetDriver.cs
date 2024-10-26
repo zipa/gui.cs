@@ -149,6 +149,8 @@ internal class NetEvents : IDisposable
 #endif
     public EscSeqRequests EscSeqRequests { get; } = new ();
 
+    public AnsiResponseParser<ConsoleKeyInfo> Parser { get; private set; } = new ();
+
     public NetEvents (ConsoleDriver consoleDriver)
     {
         _consoleDriver = consoleDriver ?? throw new ArgumentNullException (nameof (consoleDriver));
@@ -157,7 +159,11 @@ internal class NetEvents : IDisposable
         Task.Run (ProcessInputQueue, _inputReadyCancellationTokenSource.Token);
 
         Task.Run (CheckWindowSizeChange, _inputReadyCancellationTokenSource.Token);
+
+        Parser.ExpectResponseT ("m",ProcessRequestResponse,true);
+        Parser.ExpectResponseT ("M", ProcessRequestResponse, true);
     }
+
 
     public InputResult? DequeueInput ()
     {
@@ -239,10 +245,6 @@ internal class NetEvents : IDisposable
 
             if (_inputQueue.Count == 0)
             {
-                ConsoleKey key = 0;
-                ConsoleModifiers mod = 0;
-                ConsoleKeyInfo newConsoleKeyInfo = default;
-
                 while (_inputReadyCancellationTokenSource is { IsCancellationRequested: false })
                 {
                     ConsoleKeyInfo consoleKeyInfo;
@@ -257,9 +259,9 @@ internal class NetEvents : IDisposable
                     }
 
                     // Parse
-                    foreach (var released in Parser.ProcessInput (Tuple.Create (consoleKeyInfo.KeyChar, consoleKeyInfo)))
+                    foreach (var k in Parser.ProcessInput (Tuple.Create (consoleKeyInfo.KeyChar, consoleKeyInfo)))
                     {
-                        ProcessInputAfterParsing (released.Item2, ref key, ref mod, ref newConsoleKeyInfo);
+                        ProcessMapConsoleKeyInfo (k.Item2);
                     }
                 }
             }
@@ -415,7 +417,15 @@ internal class NetEvents : IDisposable
         return true;
     }
 
-    public AnsiResponseParser<ConsoleKeyInfo> Parser { get; private set; } = new ();
+    private void ProcessRequestResponse (IEnumerable<Tuple<char, ConsoleKeyInfo>> obj)
+    {
+        // Added for signature compatibility with existing method, not sure what they are even for.
+        ConsoleKeyInfo newConsoleKeyInfo = default;
+        ConsoleKey key = default;
+        ConsoleModifiers mod = default;
+
+        ProcessRequestResponse (ref newConsoleKeyInfo, ref key, obj.Select (v=>v.Item2).ToArray (),ref mod);
+    }
 
     // Process a CSI sequence received by the driver (key pressed, mouse event, or request/response event)
     private void ProcessRequestResponse (
