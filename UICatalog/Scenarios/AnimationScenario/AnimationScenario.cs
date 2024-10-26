@@ -16,10 +16,12 @@ namespace UICatalog.Scenarios;
 [ScenarioCategory ("Drawing")]
 public class AnimationScenario : Scenario
 {
-    private bool _closed;
+    private bool _appInitialized;
 
     public override void Main ()
     {
+        Application.InitializedChanged += OnAppInitializedChanged;
+
         Application.Init ();
 
         var win = new Window
@@ -75,7 +77,7 @@ public class AnimationScenario : Scenario
                                Task.Run (
                                          () =>
                                          {
-                                             while (!_closed)
+                                             while (_appInitialized)
                                              {
                                                  // When updating from a Thread/Task always use Invoke
                                                  Application.Invoke (
@@ -92,12 +94,16 @@ public class AnimationScenario : Scenario
                                         );
                            };
 
-        Application.NotifyStopRunState += (sender, args) => _closed = true;
 
-        _closed = false;
         Application.Run (win);
         win.Dispose ();
         Application.Shutdown ();
+        Debug.Assert (!_appInitialized);
+
+        return;
+
+        void OnAppInitializedChanged (object sender, EventArgs<bool> args) => _appInitialized = args.CurrentValue;
+        Application.InitializedChanged += OnAppInitializedChanged;
     }
 
     // This is a C# port of https://github.com/andraaspar/bitmap-to-braille by Andraaspar
