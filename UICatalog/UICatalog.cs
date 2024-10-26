@@ -411,7 +411,7 @@ public class UICatalogApp
         Application.Init (driverName: _forceDriver);
         scenario.TopLevelColorScheme = _topLevelColorScheme;
 
-        Application.Screen = new (0, 0, 120, 50);
+        Application.Screen = new (0, 0, 120, 40);
         scenario.Main ();
 
         BenchmarkResults? results = null;
