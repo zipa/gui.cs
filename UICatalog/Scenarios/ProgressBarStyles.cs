@@ -9,10 +9,10 @@ using static UICatalog.Scenarios.Adornments;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("ProgressBar Styles", "Shows the ProgressBar Styles.")]
-[Scenario.ScenarioCategory ("Controls")]
-[Scenario.ScenarioCategory ("Progress")]
-[Scenario.ScenarioCategory ("Threading")]
+[ScenarioMetadata ("ProgressBar Styles", "Shows the ProgressBar Styles.")]
+[ScenarioCategory ("Controls")]
+[ScenarioCategory ("Progress")]
+[ScenarioCategory ("Threading")]
 
 // TODO: Add enable/disable to show that that is working
 // TODO: Clean up how FramesEditor works 

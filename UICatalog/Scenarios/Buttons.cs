@@ -7,9 +7,9 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Buttons", "Demonstrates all sorts of Buttons.")]
-[Scenario.ScenarioCategory ("Controls")]
-[Scenario.ScenarioCategory ("Layout")]
+[ScenarioMetadata ("Buttons", "Demonstrates all sorts of Buttons.")]
+[ScenarioCategory ("Controls")]
+[ScenarioCategory ("Layout")]
 public class Buttons : Scenario
 {
     public override void Main ()

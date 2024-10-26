@@ -2,8 +2,8 @@
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Run<T> Example", "Illustrates using Application.Run<T> to run a custom class")]
-[Scenario.ScenarioCategory ("Runnable")]
+[ScenarioMetadata ("Run<T> Example", "Illustrates using Application.Run<T> to run a custom class")]
+[ScenarioCategory ("Runnable")]
 public class RunTExample : Scenario
 {
     public override void Main ()

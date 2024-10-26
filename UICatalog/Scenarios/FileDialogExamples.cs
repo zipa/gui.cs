@@ -7,9 +7,9 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("FileDialog", "Demonstrates how to the FileDialog class")]
-[Scenario.ScenarioCategory ("Dialogs")]
-[Scenario.ScenarioCategory ("Files and IO")]
+[ScenarioMetadata ("FileDialog", "Demonstrates how to the FileDialog class")]
+[ScenarioCategory ("Dialogs")]
+[ScenarioCategory ("Files and IO")]
 public class FileDialogExamples : Scenario
 {
     private CheckBox _cbAllowMultipleSelection;

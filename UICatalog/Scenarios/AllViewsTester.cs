@@ -336,4 +336,16 @@ public class AllViewsTester : Scenario
 
         UpdateHostTitle (view);
     }
+
+    public override List<Key> GetDemoKeyStrokes ()
+    {
+        var keys = new List<Key> ();
+
+        for (int i = 0; i < GetAllViewClassesCollection ().Count; i++)
+        {
+            keys.Add (Key.CursorDown);
+        }
+
+        return keys;
+    }
 }

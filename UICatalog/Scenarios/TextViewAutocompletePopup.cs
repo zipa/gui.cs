@@ -4,10 +4,10 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("TextView Autocomplete Popup", "Shows five TextView Autocomplete Popup effects")]
-[Scenario.ScenarioCategory ("TextView")]
-[Scenario.ScenarioCategory ("Controls")]
-[Scenario.ScenarioCategory ("Mouse and Keyboard")]
+[ScenarioMetadata ("TextView Autocomplete Popup", "Shows five TextView Autocomplete Popup effects")]
+[ScenarioCategory ("TextView")]
+[ScenarioCategory ("Controls")]
+[ScenarioCategory ("Mouse and Keyboard")]
 public class TextViewAutocompletePopup : Scenario
 {
     private int _height = 10;

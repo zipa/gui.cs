@@ -21,12 +21,12 @@ namespace UICatalog.Scenarios;
 ///     "Character Map" application (like Windows' charmap.exe). - Helps test unicode character rendering in Terminal.Gui -
 ///     Illustrates how to do infinite scrolling
 /// </summary>
-[Scenario.ScenarioMetadata ("Character Map", "Unicode viewer demonstrating infinite content, scrolling, and Unicode.")]
-[Scenario.ScenarioCategory ("Text and Formatting")]
-[Scenario.ScenarioCategory ("Drawing")]
-[Scenario.ScenarioCategory ("Controls")]
-[Scenario.ScenarioCategory ("Layout")]
-[Scenario.ScenarioCategory ("Scrolling")]
+[ScenarioMetadata ("Character Map", "Unicode viewer demonstrating infinite content, scrolling, and Unicode.")]
+[ScenarioCategory ("Text and Formatting")]
+[ScenarioCategory ("Drawing")]
+[ScenarioCategory ("Controls")]
+[ScenarioCategory ("Layout")]
+[ScenarioCategory ("Scrolling")]
 
 public class CharacterMap : Scenario
 {
@@ -306,9 +306,33 @@ public class CharacterMap : Scenario
         return item;
     }
 
+    public override List<Key> GetDemoKeyStrokes ()
+    {
+        var keys = new List<Key> ();
+
+        for (int i = 0; i < 200; i++)
+        {
+            keys.Add (Key.CursorDown);
+        }
+
+        // Category table
+        keys.Add (Key.Tab.WithShift);
+
+        // Block elements
+        keys.Add (Key.B);
+        keys.Add (Key.L);
+
+        keys.Add (Key.Tab);
+
+        for (int i = 0; i < 200; i++)
+        {
+            keys.Add (Key.CursorLeft);
+        }
+        return keys;
+    }
 }
 
-internal class CharMap : View
+internal class CharMap : View, IDesignable
 {
     private const int COLUMN_WIDTH = 3;
 

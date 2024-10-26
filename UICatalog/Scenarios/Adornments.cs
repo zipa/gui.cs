@@ -2,9 +2,9 @@
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Adornments Demo", "Demonstrates Margin, Border, and Padding on Views.")]
-[Scenario.ScenarioCategory ("Layout")]
-[Scenario.ScenarioCategory ("Adornments")]
+[ScenarioMetadata ("Adornments Demo", "Demonstrates Margin, Border, and Padding on Views.")]
+[ScenarioCategory ("Layout")]
+[ScenarioCategory ("Adornments")]
 public class Adornments : Scenario
 {
     public override void Main ()

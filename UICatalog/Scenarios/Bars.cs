@@ -8,8 +8,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Bars", "Illustrates Bar views (e.g. StatusBar)")]
-[Scenario.ScenarioCategory ("Controls")]
+[ScenarioMetadata ("Bars", "Illustrates Bar views (e.g. StatusBar)")]
+[ScenarioCategory ("Controls")]
 public class Bars : Scenario
 {
     public override void Main ()

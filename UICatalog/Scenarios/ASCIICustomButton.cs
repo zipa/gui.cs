@@ -7,8 +7,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("ASCIICustomButtonTest", "ASCIICustomButton sample")]
-[Scenario.ScenarioCategory ("Controls")]
+[ScenarioMetadata ("ASCIICustomButtonTest", "ASCIICustomButton sample")]
+[ScenarioCategory ("Controls")]
 public class ASCIICustomButtonTest : Scenario
 {
     private static bool _smallerWindow;

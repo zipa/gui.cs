@@ -3,9 +3,9 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Tile View Nesting", "Demonstrates recursive nesting of TileViews")]
-[Scenario.ScenarioCategory ("Controls")]
-[Scenario.ScenarioCategory ("LineView")]
+[ScenarioMetadata ("Tile View Nesting", "Demonstrates recursive nesting of TileViews")]
+[ScenarioCategory ("Controls")]
+[ScenarioCategory ("LineView")]
 public class TileViewNesting : Scenario
 {
     private CheckBox _cbBorder;

@@ -2,8 +2,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Combining Marks", "Illustrates how Unicode Combining Marks work (or don't).")]
-[Scenario.ScenarioCategory ("Text and Formatting")]
+[ScenarioMetadata ("Combining Marks", "Illustrates how Unicode Combining Marks work (or don't).")]
+[ScenarioCategory ("Text and Formatting")]
 public class CombiningMarks : Scenario
 {
     public override void Main ()

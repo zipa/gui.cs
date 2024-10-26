@@ -10,9 +10,9 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("List View With Selection", "ListView with columns and selection")]
-[Scenario.ScenarioCategory ("Controls")]
-[Scenario.ScenarioCategory ("ListView")]
+[ScenarioMetadata ("List View With Selection", "ListView with columns and selection")]
+[ScenarioCategory ("Controls")]
+[ScenarioCategory ("ListView")]
 public class ListViewWithSelection : Scenario
 {
     private CheckBox _allowMarkingCB;

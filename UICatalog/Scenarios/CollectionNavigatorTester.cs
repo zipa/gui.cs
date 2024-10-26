@@ -6,15 +6,15 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata (
+[ScenarioMetadata (
                                "Collection Navigator",
                                "Demonstrates keyboard navigation in ListView & TreeView (CollectionNavigator)."
                            )]
-[Scenario.ScenarioCategory ("Controls")]
-[Scenario.ScenarioCategory ("ListView")]
-[Scenario.ScenarioCategory ("TreeView")]
-[Scenario.ScenarioCategory ("Text and Formatting")]
-[Scenario.ScenarioCategory ("Mouse and Keyboard")]
+[ScenarioCategory ("Controls")]
+[ScenarioCategory ("ListView")]
+[ScenarioCategory ("TreeView")]
+[ScenarioCategory ("Text and Formatting")]
+[ScenarioCategory ("Mouse and Keyboard")]
 public class CollectionNavigatorTester : Scenario
 {
     private ObservableCollection<string> _items = new ObservableCollection<string> (new ObservableCollection<string> ()

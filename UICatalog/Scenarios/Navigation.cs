@@ -3,10 +3,10 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Navigation", "Navigation Tester")]
-[Scenario.ScenarioCategory ("Mouse and Keyboard")]
-[Scenario.ScenarioCategory ("Layout")]
-[Scenario.ScenarioCategory ("Navigation")]
+[ScenarioMetadata ("Navigation", "Navigation Tester")]
+[ScenarioCategory ("Mouse and Keyboard")]
+[ScenarioCategory ("Layout")]
+[ScenarioCategory ("Navigation")]
 public class Navigation : Scenario
 {
     private int _hotkeyCount;

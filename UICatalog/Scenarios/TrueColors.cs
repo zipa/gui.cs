@@ -3,8 +3,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("True Colors", "Demonstration of true color support.")]
-[Scenario.ScenarioCategory ("Colors")]
+[ScenarioMetadata ("True Colors", "Demonstration of true color support.")]
+[ScenarioCategory ("Colors")]
 public class TrueColors : Scenario
 {
     public override void Main ()

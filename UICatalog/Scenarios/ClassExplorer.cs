@@ -7,9 +7,9 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Class Explorer", "Tree view explorer for classes by namespace based on TreeView.")]
-[Scenario.ScenarioCategory ("Controls")]
-[Scenario.ScenarioCategory ("TreeView")]
+[ScenarioMetadata ("Class Explorer", "Tree view explorer for classes by namespace based on TreeView.")]
+[ScenarioCategory ("Controls")]
+[ScenarioCategory ("TreeView")]
 public class ClassExplorer : Scenario
 {
     private MenuItem _highlightModelTextOnly;

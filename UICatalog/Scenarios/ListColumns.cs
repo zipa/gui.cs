@@ -6,12 +6,12 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("ListColumns", "Implements a columned list via a data table.")]
-[Scenario.ScenarioCategory ("TableView")]
-[Scenario.ScenarioCategory ("Controls")]
-[Scenario.ScenarioCategory ("Dialogs")]
-[Scenario.ScenarioCategory ("Text and Formatting")]
-[Scenario.ScenarioCategory ("Scrolling")]
+[ScenarioMetadata ("ListColumns", "Implements a columned list via a data table.")]
+[ScenarioCategory ("TableView")]
+[ScenarioCategory ("Controls")]
+[ScenarioCategory ("Dialogs")]
+[ScenarioCategory ("Text and Formatting")]
+[ScenarioCategory ("Scrolling")]
 public class ListColumns : Scenario
 {
     private ColorScheme _alternatingColorScheme;

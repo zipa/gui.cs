@@ -1,4 +1,5 @@
-﻿using Terminal.Gui;
+﻿using System.Collections.Generic;
+using Terminal.Gui;
 using Timer = System.Timers.Timer;
 
 namespace UICatalog.Scenarios;
@@ -68,8 +69,10 @@ public class Arrangement : Scenario
         View overlappedView1 = CreateOverlappedView (2, 0, 13);
         overlappedView1.Title = "Movable _& Sizable";
         View tiledSubView = CreateTiledView (4, 0, 2);
+        tiledSubView.Arrangement = ViewArrangement.Fixed;
         overlappedView1.Add (tiledSubView);
         tiledSubView = CreateTiledView (5, Pos.Right (tiledSubView), Pos.Top (tiledSubView));
+        tiledSubView.Arrangement = ViewArrangement.Fixed;
         overlappedView1.Add (tiledSubView);
 
         ProgressBar progressBar = new ()
@@ -242,4 +245,57 @@ public class Arrangement : Scenario
     }
 
     private char GetNextHotKey () { return (char)('A' + _hotkeyCount++); }
+
+    public override List<Key> GetDemoKeyStrokes ()
+    {
+        var keys = new List<Key> ();
+
+        // Select view with progress bar
+        keys.Add ((Key)'&');
+
+        keys.Add (Application.ArrangeKey);
+
+        for (int i = 0; i < 8; i++)
+        {
+            keys.Add (Key.CursorUp);
+        }
+
+        for (int i = 0; i < 25; i++)
+        {
+            keys.Add (Key.CursorRight);
+        }
+
+        keys.Add (Application.ArrangeKey);
+
+        keys.Add (Key.S);
+
+        keys.Add (Application.ArrangeKey);
+
+        for (int i = 0; i < 10; i++)
+        {
+            keys.Add (Key.CursorUp);
+        }
+
+        for (int i = 0; i < 25; i++)
+        {
+            keys.Add (Key.CursorLeft);
+        }
+
+        keys.Add (Application.ArrangeKey);
+
+        // Select view with progress bar
+        keys.Add ((Key)'&');
+
+        keys.Add (Application.ArrangeKey);
+
+        keys.Add (Key.Tab);
+
+        for (int i = 0; i < 10; i++)
+        {
+            keys.Add (Key.CursorRight);
+            keys.Add (Key.CursorDown);
+        }
+
+        return keys;
+    }
 }

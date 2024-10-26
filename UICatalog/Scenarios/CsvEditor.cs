@@ -9,15 +9,15 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Csv Editor", "Open and edit simple CSV files using the TableView class.")]
-[Scenario.ScenarioCategory ("TableView")]
-[Scenario.ScenarioCategory ("TextView")]
-[Scenario.ScenarioCategory ("Controls")]
-[Scenario.ScenarioCategory ("Dialogs")]
-[Scenario.ScenarioCategory ("Text and Formatting")]
-[Scenario.ScenarioCategory ("Dialogs")]
-[Scenario.ScenarioCategory ("Arrangement")]
-[Scenario.ScenarioCategory ("Files and IO")]
+[ScenarioMetadata ("Csv Editor", "Open and edit simple CSV files using the TableView class.")]
+[ScenarioCategory ("TableView")]
+[ScenarioCategory ("TextView")]
+[ScenarioCategory ("Controls")]
+[ScenarioCategory ("Dialogs")]
+[ScenarioCategory ("Text and Formatting")]
+[ScenarioCategory ("Dialogs")]
+[ScenarioCategory ("Arrangement")]
+[ScenarioCategory ("Files and IO")]
 public class CsvEditor : Scenario
 {
     private string _currentFile;

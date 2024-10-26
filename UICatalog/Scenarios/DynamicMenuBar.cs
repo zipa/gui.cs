@@ -8,9 +8,9 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Dynamic MenuBar", "Demonstrates how to change a MenuBar dynamically.")]
-[Scenario.ScenarioCategory ("Arrangement")]
-[Scenario.ScenarioCategory ("Menus")]
+[ScenarioMetadata ("Dynamic MenuBar", "Demonstrates how to change a MenuBar dynamically.")]
+[ScenarioCategory ("Arrangement")]
+[ScenarioCategory ("Menus")]
 public class DynamicMenuBar : Scenario
 {
     public override void Main ()

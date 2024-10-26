@@ -4,8 +4,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("NumericUpDown", "Demonstrates the NumericUpDown View")]
-[Scenario.ScenarioCategory ("Controls")]
+[ScenarioMetadata ("NumericUpDown", "Demonstrates the NumericUpDown View")]
+[ScenarioCategory ("Controls")]
 public class NumericUpDownDemo : Scenario
 {
     public override void Main ()

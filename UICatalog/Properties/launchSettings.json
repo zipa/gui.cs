@@ -23,10 +23,6 @@
       "commandLineArgs": "dotnet UICatalog.dll --driver NetDriver",
       "distributionName": ""
     },
-    "Buttons": {
-      "commandName": "Project",
-      "commandLineArgs": "Buttons"
-    },
     "WizardAsView": {
       "commandName": "Project",
       "commandLineArgs": "WizardAsView"
@@ -37,11 +33,11 @@
     },
     "Charmap": {
       "commandName": "Project",
-      "commandLineArgs": "\"Character Map\""
+      "commandLineArgs": "\"Character Map\" -b"
     },
     "All Views Tester": {
       "commandName": "Project",
-      "commandLineArgs": "\"All Views Tester\""
+      "commandLineArgs": "\"All Views Tester\" -b"
     },
     "Windows & FrameViews": {
       "commandName": "Project",
@@ -73,6 +69,10 @@
     "Benchmark All": {
       "commandName": "Project",
       "commandLineArgs": "--benchmark"
+    },
+    "ContextMenus": {
+      "commandName": "Project",
+      "commandLineArgs": "ContextMenus -b"
     }
   }
 }

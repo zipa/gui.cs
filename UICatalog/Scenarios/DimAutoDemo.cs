@@ -4,8 +4,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("DimAuto", "Demonstrates Dim.Auto")]
-[Scenario.ScenarioCategory ("Layout")]
+[ScenarioMetadata ("DimAuto", "Demonstrates Dim.Auto")]
+[ScenarioCategory ("Layout")]
 public class DimAutoDemo : Scenario
 {
     public override void Main ()

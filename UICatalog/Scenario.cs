@@ -25,12 +25,12 @@ namespace UICatalog;
 ///             <item>
 ///                 <description>
 ///                     Annotate the <see cref="Scenario"/> derived class with a
-///                     <see cref="Scenario.ScenarioMetadata"/> attribute specifying the scenario's name and description.
+///                     <see cref="ScenarioMetadata"/> attribute specifying the scenario's name and description.
 ///                 </description>
 ///             </item>
 ///             <item>
 ///                 <description>
-///                     Add one or more <see cref="Scenario.ScenarioCategory"/> attributes to the class specifying
+///                     Add one or more <see cref="ScenarioCategory"/> attributes to the class specifying
 ///                     which categories the scenario belongs to. If you don't specify a category the scenario will show up
 ///                     in "_All".
 ///                 </description>
@@ -151,8 +151,9 @@ public class Scenario : IDisposable
     /// </summary>
     public virtual void Main () { }
 
-    private const uint ABORT_TIME = 1000;
-    private const uint MAX_ITERATIONS = 500;
+    private const uint MAX_NATURAL_ITERATIONS = 100; // not including needed for demo keys
+    private const uint ABORT_TIMEOUT_MS = 5000;
+    private const int DEMO_KEY_PACING_MS = 1; // Must be non-zero
 
     private readonly object _timeoutLock = new ();
     private object? _timeout;
@@ -180,13 +181,16 @@ public class Scenario : IDisposable
         return _benchmarkResults;
     }
 
+    private List<Key> _demoKeys;
+    private int _currentDemoKey = 0;
+
     private void OnApplicationOnInitializedChanged (object? s, EventArgs<bool> a)
     {
         if (a.CurrentValue)
         {
             lock (_timeoutLock!)
             {
-                _timeout = Application.AddTimeout (TimeSpan.FromMilliseconds (ABORT_TIME), ForceCloseCallback);
+                _timeout = Application.AddTimeout (TimeSpan.FromMilliseconds (ABORT_TIMEOUT_MS), ForceCloseCallback);
             }
 
             Application.Iteration += OnApplicationOnIteration;
@@ -202,6 +206,7 @@ public class Scenario : IDisposable
             };
             Application.NotifyNewRunState += OnApplicationNotifyNewRunState;
 
+
             _stopwatch = Stopwatch.StartNew ();
         }
         else
@@ -216,7 +221,7 @@ public class Scenario : IDisposable
     private void OnApplicationOnIteration (object? s, IterationEventArgs a)
     {
         BenchmarkResults.IterationCount++;
-        if (BenchmarkResults.IterationCount > MAX_ITERATIONS)
+        if (BenchmarkResults.IterationCount > MAX_NATURAL_ITERATIONS + (_demoKeys.Count* DEMO_KEY_PACING_MS))
         {
             Application.RequestStop ();
         }
@@ -237,6 +242,25 @@ public class Scenario : IDisposable
         }
 
         SubscribeAllSubviews (Application.Top!);
+
+        _currentDemoKey = 0;
+        _demoKeys = GetDemoKeyStrokes ();
+        _demoKeys.Add (Application.QuitKey);
+
+        Application.AddTimeout (
+                                new TimeSpan (0, 0, 0, 0, DEMO_KEY_PACING_MS),
+                                () =>
+                                {
+                                    if (_currentDemoKey >= _demoKeys.Count)
+                                    {
+                                        return false;
+                                    }
+
+                                    Application.RaiseKeyDownEvent (_demoKeys [_currentDemoKey++]);
+
+                                    return true;
+                                });
+
     }
 
     // If the scenario doesn't close within the abort time, this will force it to quit
@@ -250,7 +274,7 @@ public class Scenario : IDisposable
             }
         }
 
-        Debug.WriteLine ($@"  Failed to Quit with {Application.QuitKey} after {ABORT_TIME}ms and {BenchmarkResults.IterationCount} iterations. Force quit.");
+        Debug.WriteLine ($@"  Failed to Quit with {Application.QuitKey} after {ABORT_TIMEOUT_MS}ms and {BenchmarkResults.IterationCount} iterations. Force quit.");
 
         Application.RequestStop ();
 
@@ -298,7 +322,7 @@ public class Scenario : IDisposable
                                                    (current, attrs) => current
                                                                        .Union (
                                                                                attrs.Where (a => a is ScenarioCategory)
-                                                                                    .Select (a => ((Scenario.ScenarioCategory)a).Name))
+                                                                                    .Select (a => ((ScenarioCategory)a).Name))
                                                                        .ToList ());
 
         // Sort
@@ -308,75 +332,9 @@ public class Scenario : IDisposable
         categories.Insert (0, "All Scenarios");
 
         return categories;
+
     }
 
-    /// <summary>Defines the category names used to categorize a <see cref="Scenario"/></summary>
-    [AttributeUsage (AttributeTargets.Class, AllowMultiple = true)]
-    public class ScenarioCategory (string name) : System.Attribute
-    {
-        /// <summary>Static helper function to get the <see cref="Scenario"/> Categories given a Type</summary>
-        /// <param name="t"></param>
-        /// <returns>list of category names</returns>
-        public static List<string> GetCategories (Type t)
-        {
-            return GetCustomAttributes (t)
-                   .ToList ()
-                   .Where (a => a is Scenario.ScenarioCategory)
-                   .Select (a => ((Scenario.ScenarioCategory)a).Name)
-                   .ToList ();
-        }
+    public virtual List<Key> GetDemoKeyStrokes () => new List<Key> ();
 
-        /// <summary>Static helper function to get the <see cref="Scenario"/> Name given a Type</summary>
-        /// <param name="t"></param>
-        /// <returns>Name of the category</returns>
-        public static string GetName (Type t)
-        {
-            if (GetCustomAttributes (t).FirstOrDefault (a => a is Scenario.ScenarioMetadata) is Scenario.ScenarioMetadata { } metadata)
-            {
-                return metadata.Name;
-            }
-
-            return string.Empty;
-        }
-
-        /// <summary>Category Name</summary>
-        public string Name { get; set; } = name;
-    }
-
-    /// <summary>Defines the metadata (Name and Description) for a <see cref="Scenario"/></summary>
-    [AttributeUsage (AttributeTargets.Class)]
-    public class ScenarioMetadata (string name, string description) : System.Attribute
-    {
-        /// <summary><see cref="Scenario"/> Description</summary>
-        public string Description { get; set; } = description;
-
-        /// <summary>Static helper function to get the <see cref="Scenario"/> Description given a Type</summary>
-        /// <param name="t"></param>
-        /// <returns></returns>
-        public static string GetDescription (Type t)
-        {
-            if (GetCustomAttributes (t).FirstOrDefault (a => a is Scenario.ScenarioMetadata) is Scenario.ScenarioMetadata { } metadata)
-            {
-                return metadata.Description;
-            }
-
-            return string.Empty;
-        }
-
-        /// <summary>Static helper function to get the <see cref="Scenario"/> Name given a Type</summary>
-        /// <param name="t"></param>
-        /// <returns></returns>
-        public static string GetName (Type t)
-        {
-            if (GetCustomAttributes (t).FirstOrDefault (a => a is Scenario.ScenarioMetadata) is Scenario.ScenarioMetadata { } metadata)
-            {
-                return metadata.Name;
-            }
-
-            return string.Empty;
-        }
-
-        /// <summary><see cref="Scenario"/> Name</summary>
-        public string Name { get; set; } = name;
-    }
 }

@@ -6,8 +6,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("TextFormatter Demo", "Demos and tests the TextFormatter class.")]
-[Scenario.ScenarioCategory ("Text and Formatting")]
+[ScenarioMetadata ("TextFormatter Demo", "Demos and tests the TextFormatter class.")]
+[ScenarioCategory ("Text and Formatting")]
 public class TextFormatterDemo : Scenario
 {
     public override void Main ()

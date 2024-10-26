@@ -4,9 +4,9 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("ComboBoxIteration", "ComboBox iteration.")]
-[Scenario.ScenarioCategory ("Controls")]
-[Scenario.ScenarioCategory ("ComboBox")]
+[ScenarioMetadata ("ComboBoxIteration", "ComboBox iteration.")]
+[ScenarioCategory ("Controls")]
+[ScenarioCategory ("ComboBox")]
 public class ComboBoxIteration : Scenario
 {
     public override void Main ()

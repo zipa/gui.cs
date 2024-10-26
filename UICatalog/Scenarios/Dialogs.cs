@@ -5,8 +5,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Dialogs", "Demonstrates how to the Dialog class")]
-[Scenario.ScenarioCategory ("Dialogs")]
+[ScenarioMetadata ("Dialogs", "Demonstrates how to the Dialog class")]
+[ScenarioCategory ("Dialogs")]
 public class Dialogs : Scenario
 {
     private static readonly int CODE_POINT = '你'; // We know this is a wide char
@@ -352,5 +352,58 @@ public class Dialogs : Scenario
         }
 
         return dialog;
+    }
+
+    public override List<Key> GetDemoKeyStrokes ()
+    {
+        var keys = new List<Key> ();
+
+        keys.Add (Key.D6);
+        keys.Add (Key.D5);
+
+        keys.Add (Key.Tab);
+        keys.Add (Key.D2);
+        keys.Add (Key.D0);
+
+        keys.Add (Key.Enter);
+        for (int i = 0; i < 5; i++)
+        {
+            keys.Add (Key.A);
+        }
+        keys.Add (Key.Enter);
+
+        keys.Add (Key.S.WithAlt);
+        keys.Add (Key.Enter);
+        for (int i = 0; i < 5; i++)
+        {
+            keys.Add (Key.A);
+        }
+        keys.Add (Key.Enter);
+
+        keys.Add (Key.E.WithAlt);
+        keys.Add (Key.Enter);
+        for (int i = 0; i < 5; i++)
+        {
+            keys.Add (Key.A);
+        }
+        keys.Add (Key.Enter);
+
+        keys.Add (Key.C.WithAlt);
+        keys.Add (Key.Enter);
+        for (int i = 0; i < 5; i++)
+        {
+            keys.Add (Key.A);
+        }
+        keys.Add (Key.Enter);
+
+        keys.Add (Key.F.WithAlt);
+        keys.Add (Key.Enter);
+        for (int i = 0; i < 5; i++)
+        {
+            keys.Add (Key.A);
+        }
+        keys.Add (Key.Enter);
+
+        return keys;
     }
 }

@@ -8,8 +8,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Sliders", "Demonstrates the Slider view.")]
-[Scenario.ScenarioCategory ("Controls")]
+[ScenarioMetadata ("Sliders", "Demonstrates the Slider view.")]
+[ScenarioCategory ("Controls")]
 public class Sliders : Scenario
 {
     public void MakeSliders (View v, List<object> options)

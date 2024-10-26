@@ -5,10 +5,10 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("MultiColouredTable", "Demonstrates how to multi color cell contents.")]
-[Scenario.ScenarioCategory ("Controls")]
-[Scenario.ScenarioCategory ("Colors")]
-[Scenario.ScenarioCategory ("TableView")]
+[ScenarioMetadata ("MultiColouredTable", "Demonstrates how to multi color cell contents.")]
+[ScenarioCategory ("Controls")]
+[ScenarioCategory ("Colors")]
+[ScenarioCategory ("TableView")]
 public class MultiColouredTable : Scenario
 {
     private DataTable _table;

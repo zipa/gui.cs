@@ -7,8 +7,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("KeyBindings", "Illustrates the KeyBindings API.")]
-[Scenario.ScenarioCategory ("Mouse and Keyboard")]
+[ScenarioMetadata ("KeyBindings", "Illustrates the KeyBindings API.")]
+[ScenarioCategory ("Mouse and Keyboard")]
 public sealed class KeyBindings : Scenario
 {
     private readonly ObservableCollection<string> _focusedBindings = [];

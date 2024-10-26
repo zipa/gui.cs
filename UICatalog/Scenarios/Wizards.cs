@@ -4,10 +4,10 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Wizards", "Demonstrates the Wizard class")]
-[Scenario.ScenarioCategory ("Dialogs")]
-[Scenario.ScenarioCategory ("Wizards")]
-[Scenario.ScenarioCategory ("Runnable")]
+[ScenarioMetadata ("Wizards", "Demonstrates the Wizard class")]
+[ScenarioCategory ("Dialogs")]
+[ScenarioCategory ("Wizards")]
+[ScenarioCategory ("Runnable")]
 
 public class Wizards : Scenario
 {

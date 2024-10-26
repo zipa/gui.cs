@@ -4,9 +4,9 @@ using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("MenuBar", "Demonstrates the MenuBar using the demo menu.")]
-[Scenario.ScenarioCategory ("Controls")]
-[Scenario.ScenarioCategory ("Menus")]
+[ScenarioMetadata ("MenuBar", "Demonstrates the MenuBar using the demo menu.")]
+[ScenarioCategory ("Controls")]
+[ScenarioCategory ("Menus")]
 public class MenuBarScenario : Scenario
 {
     private Label _currentMenuBarItem;

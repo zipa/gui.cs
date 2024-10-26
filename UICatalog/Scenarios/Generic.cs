@@ -2,8 +2,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Generic", "Generic sample - A template for creating new Scenarios")]
-[Scenario.ScenarioCategory ("Controls")]
+[ScenarioMetadata ("Generic", "Generic sample - A template for creating new Scenarios")]
+[ScenarioCategory ("Controls")]
 public sealed class Generic : Scenario
 {
     public override void Main ()

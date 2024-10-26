@@ -3,10 +3,10 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Scrolling", "Demonstrates scrolling etc...")]
-[Scenario.ScenarioCategory ("Controls")]
-[Scenario.ScenarioCategory ("Scrolling")]
-[Scenario.ScenarioCategory ("Tests")]
+[ScenarioMetadata ("Scrolling", "Demonstrates scrolling etc...")]
+[ScenarioCategory ("Controls")]
+[ScenarioCategory ("Scrolling")]
+[ScenarioCategory ("Tests")]
 public class Scrolling : Scenario
 {
     private ViewDiagnosticFlags _diagnosticFlags;

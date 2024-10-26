@@ -3,8 +3,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Keys", "Shows keyboard input handling.")]
-[Scenario.ScenarioCategory ("Mouse and Keyboard")]
+[ScenarioMetadata ("Keys", "Shows keyboard input handling.")]
+[ScenarioCategory ("Mouse and Keyboard")]
 public class Keys : Scenario
 {
     public override void Main ()

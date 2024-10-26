@@ -5,8 +5,8 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("ProcessTable", "Demonstrates TableView with the currently running processes.")]
-[Scenario.ScenarioCategory ("TableView")]
+[ScenarioMetadata ("ProcessTable", "Demonstrates TableView with the currently running processes.")]
+[ScenarioCategory ("TableView")]
 public class ProcessTable : Scenario
 {
     private TableView tableView;

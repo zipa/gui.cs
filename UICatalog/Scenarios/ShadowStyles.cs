@@ -7,9 +7,9 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("ShadowStyles Demo", "Demonstrates ShadowStyles Effects.")]
-[Scenario.ScenarioCategory ("Layout")]
-[Scenario.ScenarioCategory ("Adornments")]
+[ScenarioMetadata ("ShadowStyles Demo", "Demonstrates ShadowStyles Effects.")]
+[ScenarioCategory ("Layout")]
+[ScenarioCategory ("Adornments")]
 public class ShadowStyles : Scenario
 {
     public override void Main ()

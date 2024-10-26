@@ -10,9 +10,9 @@ using Color = Terminal.Gui.Color;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Images", "Demonstration of how to render an image with/without true color support.")]
-[Scenario.ScenarioCategory ("Colors")]
-[Scenario.ScenarioCategory ("Drawing")]
+[ScenarioMetadata ("Images", "Demonstration of how to render an image with/without true color support.")]
+[ScenarioCategory ("Colors")]
+[ScenarioCategory ("Drawing")]
 public class Images : Scenario
 {
     public override void Main ()

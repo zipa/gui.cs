@@ -6,9 +6,9 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Localization", "Test for localization resources.")]
-[Scenario.ScenarioCategory ("Text and Formatting")]
-[Scenario.ScenarioCategory ("Tests")]
+[ScenarioMetadata ("Localization", "Test for localization resources.")]
+[ScenarioCategory ("Text and Formatting")]
+[ScenarioCategory ("Tests")]
 public class Localization : Scenario
 {
     private CheckBox _allowAnyCheckBox;

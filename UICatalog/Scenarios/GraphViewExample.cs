@@ -8,9 +8,9 @@ using Application = Terminal.Gui.Application;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Graph View", "Demos the GraphView control.")]
-[Scenario.ScenarioCategory ("Controls")]
-[Scenario.ScenarioCategory ("Drawing")]
+[ScenarioMetadata ("Graph View", "Demos the GraphView control.")]
+[ScenarioCategory ("Controls")]
+[ScenarioCategory ("Drawing")]
 public class GraphViewExample : Scenario
 {
     private readonly Thickness _thickness = new (1, 1, 1, 1);

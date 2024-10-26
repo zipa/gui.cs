@@ -5,10 +5,10 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Content Scrolling", "Demonstrates using View.Viewport and View.GetContentSize () to scroll content.")]
-[Scenario.ScenarioCategory ("Layout")]
-[Scenario.ScenarioCategory ("Drawing")]
-[Scenario.ScenarioCategory ("Scrolling")]
+[ScenarioMetadata ("Content Scrolling", "Demonstrates using View.Viewport and View.GetContentSize () to scroll content.")]
+[ScenarioCategory ("Layout")]
+[ScenarioCategory ("Drawing")]
+[ScenarioCategory ("Scrolling")]
 public class ContentScrolling : Scenario
 {
     private ViewDiagnosticFlags _diagnosticFlags;
@@ -424,5 +424,32 @@ public class ContentScrolling : Scenario
         Application.Run (app);
         app.Dispose ();
         Application.Shutdown ();
+    }
+
+    public override List<Key> GetDemoKeyStrokes ()
+    {
+        var keys = new List<Key> ();
+
+        for (int i = 0; i < 50; i++)
+        {
+            keys.Add (Key.CursorRight);
+        }
+
+        for (int i = 0; i < 25; i++)
+        {
+            keys.Add (Key.CursorLeft);
+        }
+
+        for (int i = 0; i < 50; i++)
+        {
+            keys.Add (Key.CursorDown);
+        }
+
+        for (int i = 0; i < 25; i++)
+        {
+            keys.Add (Key.CursorUp);
+        }
+
+        return keys;
     }
 }

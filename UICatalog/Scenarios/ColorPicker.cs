@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("Color Picker", "Color Picker.")]
-[Scenario.ScenarioCategory ("Colors")]
-[Scenario.ScenarioCategory ("Controls")]
+[ScenarioMetadata ("ColorPicker", "Color Picker.")]
+[ScenarioCategory ("Colors")]
+[ScenarioCategory ("Controls")]
 public class ColorPickers : Scenario
 {
     /// <summary>Background color Label.</summary>
@@ -269,5 +270,41 @@ public class ColorPickers : Scenario
                                         backgroundColorPicker16.SelectedColor
                                    )
         };
+    }
+
+    public override List<Key> GetDemoKeyStrokes ()
+    {
+        var keys = new List<Key> ();
+
+        keys.Add (Key.B.WithAlt);
+
+        for (int i = 0; i < 200; i++)
+        {
+            keys.Add (Key.CursorRight);
+        }
+
+        keys.Add (Key.Tab);
+        keys.Add (Key.Tab);
+
+        for (int i = 0; i < 200; i++)
+        {
+            keys.Add (Key.CursorLeft);
+        }
+
+        keys.Add (Key.Tab);
+        keys.Add (Key.Tab);
+
+        for (int i = 0; i < 200; i++)
+        {
+            keys.Add (Key.CursorLeft);
+        }
+
+        keys.Add (Key.N.WithAlt);
+        keys.Add (Key.R.WithAlt);
+        keys.Add (Key.H.WithAlt);
+        keys.Add (Key.S.WithAlt);
+        keys.Add (Key.D1.WithAlt);
+
+        return keys;
     }
 }

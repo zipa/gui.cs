@@ -4,12 +4,12 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[Scenario.ScenarioMetadata ("HexEditor", "A binary (hex) editor using the HexView control.")]
-[Scenario.ScenarioCategory ("Controls")]
-[Scenario.ScenarioCategory ("Dialogs")]
-[Scenario.ScenarioCategory ("Text and Formatting")]
-[Scenario.ScenarioCategory ("Navigation")]
-[Scenario.ScenarioCategory ("Files and IO")]
+[ScenarioMetadata ("HexEditor", "A binary (hex) editor using the HexView control.")]
+[ScenarioCategory ("Controls")]
+[ScenarioCategory ("Dialogs")]
+[ScenarioCategory ("Text and Formatting")]
+[ScenarioCategory ("Navigation")]
+[ScenarioCategory ("Files and IO")]
 public class HexEditor : Scenario
 {
     private string _fileName = "demo.bin";

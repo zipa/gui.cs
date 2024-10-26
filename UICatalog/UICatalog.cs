@@ -442,7 +442,7 @@ public class UICatalogApp
 
             if (maxScenarios == 0)
             {
-                break;
+               // break;
             }
         }
 
