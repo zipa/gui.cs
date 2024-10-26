@@ -41,68 +41,20 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     /// </summary>
     public DateTime StateChangedAt { get; private set; } = DateTime.Now;
 
-    protected readonly HashSet<char> _knownTerminators = new ();
-
-    public AnsiResponseParserBase ()
+    // These all are valid terminators on ansi responses,
+    // see CSI in https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h3-Functions-using-CSI-_-ordered-by-the-final-character_s
+    // No - N or O
+    protected readonly HashSet<char> _knownTerminators = new (new []
     {
-        // These all are valid terminators on ansi responses,
-        // see CSI in https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h3-Functions-using-CSI-_-ordered-by-the-final-character_s
-        _knownTerminators.Add ('@');
-        _knownTerminators.Add ('A');
-        _knownTerminators.Add ('B');
-        _knownTerminators.Add ('C');
-        _knownTerminators.Add ('D');
-        _knownTerminators.Add ('E');
-        _knownTerminators.Add ('F');
-        _knownTerminators.Add ('G');
-        _knownTerminators.Add ('G');
-        _knownTerminators.Add ('H');
-        _knownTerminators.Add ('I');
-        _knownTerminators.Add ('J');
-        _knownTerminators.Add ('K');
-        _knownTerminators.Add ('L');
-        _knownTerminators.Add ('M');
-
+        '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
         // No - N or O
-        _knownTerminators.Add ('P');
-        _knownTerminators.Add ('Q');
-        _knownTerminators.Add ('R');
-        _knownTerminators.Add ('S');
-        _knownTerminators.Add ('T');
-        _knownTerminators.Add ('W');
-        _knownTerminators.Add ('X');
-        _knownTerminators.Add ('Z');
+        'P', 'Q', 'R', 'S', 'T', 'W', 'X', 'Z',
+        '^', '`', '~',
+        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
+        'l', 'm', 'n',
+        'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
+    });
 
-        _knownTerminators.Add ('^');
-        _knownTerminators.Add ('`');
-        _knownTerminators.Add ('~');
-
-        _knownTerminators.Add ('a');
-        _knownTerminators.Add ('b');
-        _knownTerminators.Add ('c');
-        _knownTerminators.Add ('d');
-        _knownTerminators.Add ('e');
-        _knownTerminators.Add ('f');
-        _knownTerminators.Add ('g');
-        _knownTerminators.Add ('h');
-        _knownTerminators.Add ('i');
-
-        _knownTerminators.Add ('l');
-        _knownTerminators.Add ('m');
-        _knownTerminators.Add ('n');
-
-        _knownTerminators.Add ('p');
-        _knownTerminators.Add ('q');
-        _knownTerminators.Add ('r');
-        _knownTerminators.Add ('s');
-        _knownTerminators.Add ('t');
-        _knownTerminators.Add ('u');
-        _knownTerminators.Add ('v');
-        _knownTerminators.Add ('w');
-        _knownTerminators.Add ('x');
-        _knownTerminators.Add ('y');
-        _knownTerminators.Add ('z');
-    }
 
     protected void ResetState ()
     {
@@ -385,57 +337,4 @@ internal class AnsiResponseParser : AnsiResponseParserBase
     protected override IEnumerable<object> HeldToObjects () { return held.ToString ().Select (c => (object)c).ToArray (); }
 
     protected override void AddToHeld (object o) { held.Append ((char)o); }
-}
-
-
-/// <summary>
-///     Describes an ongoing ANSI request sent to the console.
-///     Use <see cref="ResponseReceived"/> to handle the response
-///     when console answers the request.
-/// </summary>
-public class AnsiEscapeSequenceRequest
-{
-    /// <summary>
-    ///     Request to send e.g. see
-    ///     <see>
-    ///         <cref>EscSeqUtils.CSI_SendDeviceAttributes.Request</cref>
-    ///     </see>
-    /// </summary>
-    public required string Request { get; init; }
-
-    /// <summary>
-    ///     Invoked when the console responds with an ANSI response code that matches the
-    ///     <see cref="Terminator"/>
-    /// </summary>
-    public Action<string> ResponseReceived;
-
-    /// <summary>
-    ///     <para>
-    ///         The terminator that uniquely identifies the type of response as responded
-    ///         by the console. e.g. for
-    ///         <see>
-    ///             <cref>EscSeqUtils.CSI_SendDeviceAttributes.Request</cref>
-    ///         </see>
-    ///         the terminator is
-    ///         <see>
-    ///             <cref>EscSeqUtils.CSI_SendDeviceAttributes.Terminator</cref>
-    ///         </see>
-    ///         .
-    ///     </para>
-    ///     <para>
-    ///         After sending a request, the first response with matching terminator will be matched
-    ///         to the oldest outstanding request.
-    ///     </para>
-    /// </summary>
-    public required string Terminator { get; init; }
-
-    /// <summary>
-    /// Sends the <see cref="Request"/> to the raw output stream of the current <see cref="ConsoleDriver"/>.
-    /// Only call this method from the main UI thread. You should use <see cref="AnsiRequestScheduler"/> if
-    /// sending many requests.
-    /// </summary>
-    public void Send ()
-    {
-        Application.Driver?.RawWrite (Request);
-    }
 }
