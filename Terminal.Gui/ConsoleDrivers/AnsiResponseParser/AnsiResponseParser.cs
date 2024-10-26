@@ -270,34 +270,6 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     }
 }
 
-internal interface IHeld
-{
-    void ClearHeld ();
-    string HeldToString ();
-    IEnumerable<object> HeldToObjects ();
-    void AddToHeld (object o);
-}
-
-internal class StringHeld : IHeld
-{
-    private readonly StringBuilder held = new ();
-
-    public void ClearHeld () => held.Clear ();
-    public string HeldToString () => held.ToString ();
-    public IEnumerable<object> HeldToObjects () => held.ToString ().Select (c => (object)c);
-    public void AddToHeld (object o) => held.Append ((char)o);
-}
-
-internal class GenericHeld<T> : IHeld
-{
-    private readonly List<Tuple<char, T>> held = new ();
-
-    public void ClearHeld () => held.Clear ();
-    public string HeldToString () => new (held.Select (h => h.Item1).ToArray ());
-    public IEnumerable<object> HeldToObjects () => held;
-    public void AddToHeld (object o) => held.Add ((Tuple<char, T>)o);
-}
-
 internal class AnsiResponseParser<T> : AnsiResponseParserBase
 {
     public AnsiResponseParser () : base (new GenericHeld<T> ()) { }
