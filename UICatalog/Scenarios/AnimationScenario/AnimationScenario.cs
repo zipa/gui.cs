@@ -46,64 +46,65 @@ public class AnimationScenario : Scenario
         };
         win.Add (lbl2);
 
-        DirectoryInfo dir;
-
-        string assemblyLocation = Assembly.GetExecutingAssembly ().Location;
-
-        if (!string.IsNullOrEmpty (assemblyLocation))
-        {
-            dir = new DirectoryInfo (Path.GetDirectoryName (assemblyLocation));
-        }
-        else
-        {
-            dir = new DirectoryInfo (AppContext.BaseDirectory);
-        }
-
-        var f = new FileInfo (
-                              Path.Combine (dir.FullName, "Scenarios\\AnimationScenario", "Spinning_globe_dark_small.gif")
-                             );
-
-        if (!f.Exists)
-        {
-            MessageBox.ErrorQuery ("Could not find gif", "Could not find " + f.FullName, "Ok");
-
-            return;
-        }
-
-        imageView.SetImage (Image.Load<Rgba32> (File.ReadAllBytes (f.FullName)));
-
-        win.Initialized += (sender, args) =>
-                           {
-                               Task.Run (
-                                         () =>
-                                         {
-                                             while (_appInitialized)
-                                             {
-                                                 // When updating from a Thread/Task always use Invoke
-                                                 Application.Invoke (
-                                                                     () =>
-                                                                     {
-                                                                         imageView.NextFrame ();
-                                                                         imageView.SetNeedsDisplay ();
-                                                                     }
-                                                                    );
-
-                                                 Task.Delay (100).Wait ();
-                                             }
-                                         }
-                                        );
-                           };
-
+        // Start the animation after the window is initialized
+        win.Initialized += OnWinOnInitialized;
 
         Application.Run (win);
         win.Dispose ();
         Application.Shutdown ();
         Debug.Assert (!_appInitialized);
 
+        Application.InitializedChanged -= OnAppInitializedChanged;
+
         return;
 
+        void OnWinOnInitialized (object sender, EventArgs args)
+        {
+            DirectoryInfo dir;
+
+            string assemblyLocation = Assembly.GetExecutingAssembly ().Location;
+
+            if (!string.IsNullOrEmpty (assemblyLocation))
+            {
+                dir = new DirectoryInfo (Path.GetDirectoryName (assemblyLocation));
+            }
+            else
+            {
+                dir = new DirectoryInfo (AppContext.BaseDirectory);
+            }
+
+            var f = new FileInfo (
+                                  Path.Combine (dir.FullName, "Scenarios\\AnimationScenario", "Spinning_globe_dark_small.gif")
+                                 );
+
+            if (!f.Exists)
+            {
+                Debug.WriteLine ($"Could not find {f.FullName}");
+                MessageBox.ErrorQuery ("Could not find gif", $"Could not find {f.FullName}", "Ok");
+
+                return;
+            }
+
+            imageView.SetImage (Image.Load<Rgba32> (File.ReadAllBytes (f.FullName)));
+
+            Task.Run (
+                      () =>
+                      {
+                          while (_appInitialized)
+                          {
+                              // When updating from a Thread/Task always use Invoke
+                              Application.Invoke (
+                                                  () =>
+                                                  {
+                                                      imageView.NextFrame ();
+                                                      imageView.SetNeedsDisplay ();
+                                                  });
+
+                              Task.Delay (100).Wait ();
+                          }
+                      });
+        }
         void OnAppInitializedChanged (object sender, EventArgs<bool> args) => _appInitialized = args.CurrentValue;
-        Application.InitializedChanged += OnAppInitializedChanged;
     }
 
     // This is a C# port of https://github.com/andraaspar/bitmap-to-braille by Andraaspar
@@ -185,6 +186,10 @@ public class AnimationScenario : Scenario
 
         protected override bool OnDrawingContent (Rectangle viewport)
         {
+            if (frameCount == 0)
+            {
+                return false;
+            }
             if (oldSize != Viewport)
             {
                 // Invalidate cached images now size has changed
