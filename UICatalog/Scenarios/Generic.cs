@@ -1,3 +1,4 @@
+#nullable enable
 using Terminal.Gui;
 
 namespace UICatalog.Scenarios;

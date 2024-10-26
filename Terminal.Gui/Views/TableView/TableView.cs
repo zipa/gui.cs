@@ -1,4 +1,5 @@
 using System.Data;
+using System.Globalization;
 
 namespace Terminal.Gui;
 
@@ -16,7 +17,7 @@ public delegate ColorScheme RowColorGetterDelegate (RowColorGetterArgs args);
 ///     View for tabular data based on a <see cref="ITableSource"/>.
 ///     <a href="../docs/tableview.md">See TableView Deep Dive for more information</a>.
 /// </summary>
-public class TableView : View
+public class TableView : View, IDesignable
 {
     /// <summary>
     ///     The default maximum cell width for <see cref="TableView.MaxCellWidth"/> and <see cref="ColumnStyle.MaxWidth"/>
@@ -2306,5 +2307,63 @@ public class TableView : View
 
         /// <summary>The horizontal position to begin rendering the column at</summary>
         public int X { get; set; }
+    }
+
+    bool IDesignable.EnableForDesign ()
+    {
+        var dt = BuildDemoDataTable (5, 5);
+        Table = new DataTableSource (dt);
+        return true;
+    }
+
+    /// <summary>
+    ///     Generates a new demo <see cref="DataTable"/> with the given number of <paramref name="cols"/> (min 5) and
+    ///     <paramref name="rows"/>
+    /// </summary>
+    /// <param name="cols"></param>
+    /// <param name="rows"></param>
+    /// <returns></returns>
+    public static DataTable BuildDemoDataTable (int cols, int rows)
+    {
+        var dt = new DataTable ();
+
+        var explicitCols = 6;
+        dt.Columns.Add (new DataColumn ("StrCol", typeof (string)));
+        dt.Columns.Add (new DataColumn ("DateCol", typeof (DateTime)));
+        dt.Columns.Add (new DataColumn ("IntCol", typeof (int)));
+        dt.Columns.Add (new DataColumn ("DoubleCol", typeof (double)));
+        dt.Columns.Add (new DataColumn ("NullsCol", typeof (string)));
+        dt.Columns.Add (new DataColumn ("Unicode", typeof (string)));
+
+        for (var i = 0; i < cols - explicitCols; i++)
+        {
+            dt.Columns.Add ("Column" + (i + explicitCols));
+        }
+
+        var r = new Random (100);
+
+        for (var i = 0; i < rows; i++)
+        {
+            List<object> row = new ()
+            {
+                $"Demo text in row {i}",
+                new DateTime (2000 + i, 12, 25),
+                r.Next (i),
+                r.NextDouble () * i - 0.5 /*add some negatives to demo styles*/,
+                DBNull.Value,
+                "Les Mise"
+                + char.ConvertFromUtf32 (int.Parse ("0301", NumberStyles.HexNumber))
+                + "rables"
+            };
+
+            for (var j = 0; j < cols - explicitCols; j++)
+            {
+                row.Add ("SomeValue" + r.Next (100));
+            }
+
+            dt.Rows.Add (row.ToArray ());
+        }
+
+        return dt;
     }
 }
