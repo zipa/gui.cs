@@ -135,13 +135,12 @@ internal class NetWinVTConsole
 
 internal class NetEvents : IDisposable
 {
-    private readonly ManualResetEventSlim _inputReady = new (false);
     private CancellationTokenSource _inputReadyCancellationTokenSource;
     private readonly ManualResetEventSlim _waitForStart = new (false);
 
     //CancellationTokenSource _waitForStartCancellationTokenSource;
     private readonly ManualResetEventSlim _winChange = new (false);
-    private readonly Queue<InputResult?> _inputQueue = new ();
+    private readonly BlockingCollection<InputResult?> _inputQueue = new (new ConcurrentQueue<InputResult?> ());
     private readonly ConsoleDriver _consoleDriver;
     private ConsoleKeyInfo [] _cki;
     private bool _isEscSeq;
@@ -173,31 +172,9 @@ internal class NetEvents : IDisposable
             _waitForStart.Set ();
             _winChange.Set ();
 
-            try
+            if (_inputQueue.TryTake (out var item,-1,_inputReadyCancellationTokenSource.Token))
             {
-                if (!_inputReadyCancellationTokenSource.Token.IsCancellationRequested)
-                {
-                    if (_inputQueue.Count == 0)
-                    {
-                        _inputReady.Wait (_inputReadyCancellationTokenSource.Token);
-                    }
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                return null;
-            }
-            finally
-            {
-                _inputReady.Reset ();
-            }
-
-#if PROCESS_REQUEST
-            _neededProcessRequest = false;
-#endif
-            if (_inputQueue.Count > 0)
-            {
-                return _inputQueue.Dequeue ();
+                return item;
             }
         }
 
@@ -220,7 +197,6 @@ internal class NetEvents : IDisposable
             foreach (var k in ShouldRelease ())
             {
                 ProcessMapConsoleKeyInfo (k);
-                _inputReady.Set ();
             }
 
             if (Console.KeyAvailable)
@@ -282,7 +258,6 @@ internal class NetEvents : IDisposable
                     }
                 }
             }
-            _inputReady.Set ();
         }
 
     }
@@ -345,7 +320,7 @@ internal class NetEvents : IDisposable
 
     void ProcessMapConsoleKeyInfo (ConsoleKeyInfo consoleKeyInfo)
     {
-        _inputQueue.Enqueue (
+        _inputQueue.Add (
                              new InputResult
                              {
                                  EventType = EventType.Key, ConsoleKeyInfo = EscSeqUtils.MapConsoleKeyInfo (consoleKeyInfo)
@@ -403,8 +378,6 @@ internal class NetEvents : IDisposable
             {
                 return;
             }
-
-            _inputReady.Set ();
         }
     }
 
@@ -424,7 +397,7 @@ internal class NetEvents : IDisposable
         int w = Math.Max (winWidth, 0);
         int h = Math.Max (winHeight, 0);
 
-        _inputQueue.Enqueue (
+        _inputQueue.Add (
                              new InputResult
                              {
                                  EventType = EventType.WindowSize, WindowSizeEvent = new WindowSizeEvent { Size = new (w, h) }
@@ -442,9 +415,6 @@ internal class NetEvents : IDisposable
         ConsoleModifiers mod = default;
 
         ProcessRequestResponse (ref newConsoleKeyInfo, ref key, obj.Select (v=>v.Item2).ToArray (),ref mod);
-
-        // Probably
-        _inputReady.Set ();
 
         // Handled
         return true;
@@ -647,7 +617,7 @@ internal class NetEvents : IDisposable
                     var eventType = EventType.WindowPosition;
                     var winPositionEv = new WindowPositionEvent { CursorPosition = point };
 
-                    _inputQueue.Enqueue (
+                    _inputQueue.Add (
                                          new InputResult { EventType = eventType, WindowPositionEvent = winPositionEv }
                                         );
                 }
@@ -682,8 +652,6 @@ internal class NetEvents : IDisposable
 
                 break;
         }
-
-        _inputReady.Set ();
     }
 
     private void EnqueueRequestResponseEvent (string c1Control, string code, string [] values, string terminating)
@@ -691,7 +659,7 @@ internal class NetEvents : IDisposable
         var eventType = EventType.RequestResponse;
         var requestRespEv = new RequestResponseEvent { ResultTuple = (c1Control, code, values, terminating) };
 
-        _inputQueue.Enqueue (
+        _inputQueue.Add (
                              new InputResult { EventType = eventType, RequestResponseEvent = requestRespEv }
                             );
     }
@@ -700,11 +668,9 @@ internal class NetEvents : IDisposable
     {
         var mouseEvent = new MouseEvent { Position = pos, ButtonState = buttonState };
 
-        _inputQueue.Enqueue (
+        _inputQueue.Add  (
                              new InputResult { EventType = EventType.Mouse, MouseEvent = mouseEvent }
                             );
-
-        _inputReady.Set ();
     }
 
     public enum EventType
@@ -817,7 +783,7 @@ internal class NetEvents : IDisposable
     {
         var inputResult = new InputResult { EventType = EventType.Key, ConsoleKeyInfo = cki };
 
-        _inputQueue.Enqueue (inputResult);
+        _inputQueue.Add (inputResult);
     }
 
     public void Dispose ()
