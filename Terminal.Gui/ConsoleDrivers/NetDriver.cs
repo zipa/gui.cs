@@ -2,6 +2,7 @@
 // NetDriver.cs: The System.Console-based .NET driver, works on Windows and Unix, but is not particularly efficient.
 //
 
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
@@ -1733,7 +1734,7 @@ internal class NetMainLoop : IMainLoopDriver
 
     private readonly ManualResetEventSlim _eventReady = new (false);
     private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
-    private readonly Queue<InputResult?> _resultQueue = new ();
+    private readonly ConcurrentQueue<InputResult> _resultQueue = new ();
     private readonly ManualResetEventSlim _waitForProbe = new (false);
     private readonly CancellationTokenSource _eventReadyTokenSource = new ();
     private MainLoop _mainLoop;
@@ -1799,9 +1800,9 @@ internal class NetMainLoop : IMainLoopDriver
 
     void IMainLoopDriver.Iteration ()
     {
-        while (_resultQueue.Count > 0)
-        {
-            ProcessInput?.Invoke (_resultQueue.Dequeue ().Value);
+        while (_resultQueue.TryDequeue (out InputResult v))
+        { 
+            ProcessInput?.Invoke (v);
         }
     }
 
@@ -1852,14 +1853,11 @@ internal class NetMainLoop : IMainLoopDriver
 
             _inputHandlerTokenSource.Token.ThrowIfCancellationRequested ();
 
-            if (_resultQueue.Count == 0)
-            {
-                _resultQueue.Enqueue (_netEvents.DequeueInput ());
-            }
+            var input = _netEvents.DequeueInput ();
 
-            while (_resultQueue.Count > 0 && _resultQueue.Peek () is null)
+            if (input.HasValue)
             {
-                _resultQueue.Dequeue ();
+                _resultQueue.Enqueue (input.Value);
             }
 
             if (_resultQueue.Count > 0)
