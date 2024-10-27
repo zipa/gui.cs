@@ -1732,11 +1732,11 @@ internal class NetMainLoop : IMainLoopDriver
     /// <summary>Invoked when a Key is pressed.</summary>
     internal Action<InputResult> ProcessInput;
 
-    private readonly ManualResetEventSlim _eventReady = new (false);
     private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
-    private readonly ConcurrentQueue<InputResult> _resultQueue = new ();
+    // Wrap ConcurrentQueue in a BlockingCollection to enable blocking with timeout
+    private readonly BlockingCollection<InputResult> _resultQueue = new (new ConcurrentQueue<InputResult> ());
+
     private readonly ManualResetEventSlim _waitForProbe = new (false);
-    private readonly CancellationTokenSource _eventReadyTokenSource = new ();
     private MainLoop _mainLoop;
 
     /// <summary>Initializes the class with the console driver.</summary>
@@ -1759,49 +1759,24 @@ internal class NetMainLoop : IMainLoopDriver
         Task.Run (NetInputHandler, _inputHandlerTokenSource.Token);
     }
 
-    void IMainLoopDriver.Wakeup () { _eventReady.Set (); }
+    void IMainLoopDriver.Wakeup () {  }
 
     bool IMainLoopDriver.EventsPending ()
     {
         _waitForProbe.Set ();
 
-        if (_mainLoop.CheckTimersAndIdleHandlers (out int waitTimeout))
+        if (_mainLoop.CheckTimersAndIdleHandlers (out _))
         {
             return true;
         }
 
-        try
-        {
-            if (!_eventReadyTokenSource.IsCancellationRequested)
-            {
-                // Note: ManualResetEventSlim.Wait will wait indefinitely if the timeout is -1. The timeout is -1 when there
-                // are no timers, but there IS an idle handler waiting.
-                _eventReady.Wait (waitTimeout, _eventReadyTokenSource.Token);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            return true;
-        }
-        finally
-        {
-            _eventReady.Reset ();
-        }
-
-        _eventReadyTokenSource.Token.ThrowIfCancellationRequested ();
-
-        if (!_eventReadyTokenSource.IsCancellationRequested)
-        {
-            return _resultQueue.Count > 0 || _mainLoop.CheckTimersAndIdleHandlers (out _);
-        }
-
-        return true;
+        return _resultQueue.Count > 0 || _mainLoop.CheckTimersAndIdleHandlers (out _);
     }
 
     void IMainLoopDriver.Iteration ()
     {
-        while (_resultQueue.TryDequeue (out InputResult v))
-        { 
+        while (_resultQueue.TryTake (out InputResult v))
+        {
             ProcessInput?.Invoke (v);
         }
     }
@@ -1810,12 +1785,7 @@ internal class NetMainLoop : IMainLoopDriver
     {
         _inputHandlerTokenSource?.Cancel ();
         _inputHandlerTokenSource?.Dispose ();
-        _eventReadyTokenSource?.Cancel ();
-        _eventReadyTokenSource?.Dispose ();
 
-        _eventReady?.Dispose ();
-
-        _resultQueue?.Clear ();
         _waitForProbe?.Dispose ();
         _netEvents?.Dispose ();
         _netEvents = null;
@@ -1857,12 +1827,7 @@ internal class NetMainLoop : IMainLoopDriver
 
             if (input.HasValue)
             {
-                _resultQueue.Enqueue (input.Value);
-            }
-
-            if (_resultQueue.Count > 0)
-            {
-                _eventReady.Set ();
+                _resultQueue.Add (input.Value);
             }
         }
     }
