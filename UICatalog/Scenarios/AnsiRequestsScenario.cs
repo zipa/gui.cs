@@ -22,6 +22,8 @@ public class AnsiRequestsScenario : Scenario
     private ScatterSeries _answeredSeries;
 
     private List<DateTime> sends = new  ();
+
+    private object lockAnswers = new object ();
     private Dictionary<DateTime,string> answers = new ();
     private Label _lblSummary;
 
@@ -42,9 +44,14 @@ public class AnsiRequestsScenario : Scenario
                                 TimeSpan.FromMilliseconds (1000),
                                 () =>
                                 {
-                                    UpdateGraph ();
+                                    lock (lockAnswers)
+                                    {
+                                        UpdateGraph ();
 
-                                    UpdateResponses ();
+                                        UpdateResponses ();
+                                    }
+
+
 
                                     return true;
                                 });
@@ -209,8 +216,9 @@ public class AnsiRequestsScenario : Scenario
 
     private void HandleResponse (string response)
     {
-        answers.Add (DateTime.Now,response);
+        lock (lockAnswers)
+        {
+            answers.Add (DateTime.Now,response);
+        }
     }
-
-
 }
