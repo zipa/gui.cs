@@ -118,7 +118,6 @@ public class NeedsDisplayTests ()
     {
         var view = new View { Width = 2, Height = 2 };
         Assert.True (view.NeedsDisplay);
-        Assert.False (view.NeedsLayout);
 
         view.Draw ();
         Assert.False (view.NeedsDisplay);

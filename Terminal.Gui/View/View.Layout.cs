@@ -165,8 +165,12 @@ public partial class View // Layout APIs
         {
             // Implicit layout is ok here because all Pos/Dim are Absolute values.
             Layout ();
-            // Ensure the next Application iteration tries to layout again
-            SetNeedsLayout ();
+
+            if (SuperView is { } || this is Adornment { Parent: null })
+            {
+                // Ensure the next Application iteration tries to layout again
+                SetNeedsLayout ();
+            }
         }
     }
 
@@ -550,7 +554,7 @@ public partial class View // Layout APIs
         Size contentSize = GetContentSize ();
 
         OnSubviewLayout (new (contentSize));
-        SubviewLayout?.Invoke(this, new (contentSize));
+        SubviewLayout?.Invoke (this, new (contentSize));
 
         // The Adornments already have their Frame's set by SetRelativeLayout so we call LayoutSubViews vs. Layout here.
         if (Margin is { Subviews.Count: > 0 })
@@ -619,7 +623,7 @@ public partial class View // Layout APIs
     /// <remarks>
     ///     Override to perform tasks when the layout is changing.
     /// </remarks>
-    protected virtual void OnSubviewLayout (LayoutEventArgs args) {  }
+    protected virtual void OnSubviewLayout (LayoutEventArgs args) { }
 
     /// <summary>Raised by <see cref="LayoutSubviews"/> before any subviews
     ///     have been laid out.</summary>
@@ -1036,7 +1040,7 @@ public partial class View // Layout APIs
         }
 
         ny = Math.Max (targetY, maxDimension);
-        
+
         if (viewToMove?.SuperView is null || viewToMove == Application.Top || viewToMove?.SuperView == Application.Top)
         {
             maxDimension = statusVisible ? Application.Screen.Height - 1 : Application.Screen.Height;

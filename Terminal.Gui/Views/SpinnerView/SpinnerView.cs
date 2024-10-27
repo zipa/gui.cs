@@ -171,8 +171,6 @@ public class SpinnerView : View, IDesignable
                         _currentIdx = Sequence.Length - 1;
                     }
                 }
-
-               // Text = "" + Sequence [_currentIdx]; //.EnumerateRunes;
             }
 
             _lastRender = DateTime.Now;
@@ -190,7 +188,7 @@ public class SpinnerView : View, IDesignable
     /// <inheritdoc />
     protected override bool OnDrawingText (Rectangle viewport)
     {
-        if (Sequence is { Length: > 0 } && _currentIdx < Sequence.Length - 1)
+        if (Sequence is { Length: > 0 } && _currentIdx < Sequence.Length)
         {
             Move (Viewport.X, Viewport.Y);
             View.Driver?.AddStr (Sequence [_currentIdx]);

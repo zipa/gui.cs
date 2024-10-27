@@ -143,7 +143,8 @@ public class RulerTests
                                                       _output
                                                      );
 
-        Application.Refresh (true);
+        f.SetNeedsDisplay();
+        Application.Refresh ();
         r.Length = len;
         r.Draw (new (1, 0), 1);
 
@@ -205,6 +206,7 @@ public class RulerTests
                                                      );
 
         // Postive offset
+        f.SetNeedsDisplay ();
         Application.Refresh (true);
         r.Draw (new (1, 1));
 
@@ -234,7 +236,8 @@ public class RulerTests
                                                      );
 
         // Negative offset
-        Application.Refresh (true);
+        f.SetNeedsDisplay ();
+        Application.Refresh ();
         r.Draw (new (1, -1));
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -263,7 +266,9 @@ public class RulerTests
                                                      );
 
         // Clip
-        Application.Refresh (true);
+        f.SetNeedsDisplay ();
+
+        Application.Refresh ();
         r.Draw (new (1, 10));
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -337,7 +342,7 @@ public class RulerTests
 └───┘",
                                                       _output
                                                      );
-
+        f.SetNeedsDisplay ();
         Application.Refresh (true);
         r.Length = len;
         r.Draw (new (0, 1), 1);
