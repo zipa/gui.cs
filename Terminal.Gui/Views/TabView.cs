@@ -297,16 +297,16 @@ public class TabView : View
     public int EnsureValidScrollOffsets (int value) { return Math.Max (Math.Min (value, Tabs.Count - 1), 0); }
 
     /// <inheritdoc />
-    protected override void OnHasFocusChanged (bool newHasFocus, View previousFocusedView, View focusedVew)
+    protected override void OnHasFocusChanged (bool newHasFocus, View previousFocusedView, View focusedView)
     {
-        if (SelectedTab is { } && !_contentView.CanFocus && focusedVew == this)
+        if (SelectedTab is { } && !_contentView.CanFocus && focusedView == this)
         {
             SelectedTab?.SetFocus ();
 
             return;
         }
 
-        base.OnHasFocusChanged (newHasFocus, previousFocusedView, focusedVew);
+        base.OnHasFocusChanged (newHasFocus, previousFocusedView, focusedView);
     }
 
     /// <inheritdoc/>
