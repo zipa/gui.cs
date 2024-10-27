@@ -970,6 +970,18 @@ public static class EscSeqUtils
 
                 break;
             case uint n when n > 0 && n <= KeyEsc:
+                if (n == KeyEsc)
+                {
+                    key= ConsoleKey.Escape;
+
+                    newConsoleKeyInfo = new ConsoleKeyInfo (
+                                                            consoleKeyInfo.KeyChar,
+                                                            key,
+                                                            (consoleKeyInfo.Modifiers & ConsoleModifiers.Shift) != 0,
+                                                            (consoleKeyInfo.Modifiers & ConsoleModifiers.Alt) != 0,
+                                                            (consoleKeyInfo.Modifiers & ConsoleModifiers.Control) != 0);
+                }
+                else
                 if (consoleKeyInfo.Key == 0 && consoleKeyInfo.KeyChar == '\r')
                 {
                     key = ConsoleKey.Enter;
