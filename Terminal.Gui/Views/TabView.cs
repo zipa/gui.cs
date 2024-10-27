@@ -117,6 +117,7 @@ public class TabView : View
             {
                 if (_selectedTab.View is { })
                 {
+                    _selectedTab.View.CanFocusChanged -= ContentViewCanFocus;
                     // remove old content
                     _contentView.Remove (_selectedTab.View);
                 }
@@ -129,12 +130,13 @@ public class TabView : View
                 // add new content
                 if (_selectedTab.View is { })
                 {
+                    _selectedTab.View.CanFocusChanged += ContentViewCanFocus;
                     _contentView.Add (_selectedTab.View);
                     // _contentView.Id = $"_contentView for {_selectedTab.DisplayText}";
                 }
             }
 
-            _contentView.CanFocus = _contentView.Subviews.Count (v => v.CanFocus) > 0;
+            ContentViewCanFocus (null, null);
 
             EnsureSelectedTabIsVisible ();
 
@@ -149,6 +151,11 @@ public class TabView : View
             }
             SetNeedsLayout ();
         }
+    }
+
+    private void ContentViewCanFocus (object sender, EventArgs eventArgs)
+    {
+        _contentView.CanFocus = _contentView.Subviews.Count (v => v.CanFocus) > 0;
     }
 
     private TabStyle _style = new ();
@@ -288,6 +295,19 @@ public class TabView : View
     /// <remarks>Changes will not be immediately visible in the display until you call <see cref="View.SetNeedsDisplay()"/>.</remarks>
     /// <returns>The valid <see cref="TabScrollOffset"/> for the given value.</returns>
     public int EnsureValidScrollOffsets (int value) { return Math.Max (Math.Min (value, Tabs.Count - 1), 0); }
+
+    /// <inheritdoc />
+    protected override void OnHasFocusChanged (bool newHasFocus, View previousFocusedView, View focusedVew)
+    {
+        if (SelectedTab is { } && !_contentView.CanFocus && focusedVew == this)
+        {
+            SelectedTab?.SetFocus ();
+
+            return;
+        }
+
+        base.OnHasFocusChanged (newHasFocus, previousFocusedView, focusedVew);
+    }
 
     /// <inheritdoc/>
     protected override bool OnDrawingContent (Rectangle viewport)
@@ -652,10 +672,16 @@ public class TabView : View
         {
             _host._tabLocations = _host.CalculateViewport (Viewport).ToArray ();
 
-            RenderTabLine ();
 
-            RenderUnderline ();
             Driver?.SetAttribute (HasFocus ? GetFocusColor () : GetNormalColor ());
+
+            return true;
+        }
+
+        /// <inheritdoc />
+        protected override bool OnDrawingSubviews (Rectangle viewport)
+        {
+            RenderTabLine ();
 
             return true;
         }
@@ -1190,10 +1216,10 @@ public class TabView : View
                 }
 
                 tab.LineCanvas.Merge (lc);
-                tab.DrawAdornments ();
-            }
+                tab.RenderLineCanvas ();
 
-            return;
+                RenderUnderline ();
+            }
         }
 
         private int GetUnderlineYPosition ()

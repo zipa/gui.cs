@@ -103,7 +103,7 @@ public class TabViewTests (ITestOutputHelper output)
         Application.Shutdown ();
     }
 
-    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
+    [Fact]
     [AutoInitShutdown]
     public void MouseClick_ChangesTab ()
     {
@@ -188,7 +188,7 @@ public class TabViewTests (ITestOutputHelper output)
         top.Dispose ();
     }
 
-    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
+    [Fact]
     [AutoInitShutdown]
     public void MouseClick_Right_Left_Arrows_ChangesTab ()
     {
@@ -274,7 +274,7 @@ public class TabViewTests (ITestOutputHelper output)
         top.Dispose ();
     }
 
-    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
+    [Fact]
     [AutoInitShutdown]
     public void MouseClick_Right_Left_Arrows_ChangesTab_With_Border ()
     {
@@ -369,7 +369,7 @@ public class TabViewTests (ITestOutputHelper output)
         top.Dispose ();
     }
 
-    [Fact (Skip="#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
+    [Fact]
     [AutoInitShutdown]
     public void ProcessKey_Down_Up_Right_Left_Home_End_PageDown_PageUp ()
     {
@@ -429,7 +429,7 @@ public class TabViewTests (ITestOutputHelper output)
         Assert.Equal (tab2, tv.SelectedTab);
         Assert.Equal (btn, top.MostFocused);
 
-        // Add a focusable subview to Selected Tab
+        // Add a focusable subview to Selected Tab View which is a Label with CanFocus as false
         var btnSubView = new View ()
         {
             Id = "btnSubView",
@@ -438,8 +438,16 @@ public class TabViewTests (ITestOutputHelper output)
         };
         tv.SelectedTab.View.Add (btnSubView);
 
+        Assert.False (tv.SelectedTab.View.CanFocus);
+
         // Press cursor up. Should focus the subview in the selected tab.
         Application.RaiseKeyDownEvent (Key.CursorUp);
+        Assert.Equal (tab2, tv.SelectedTab);
+        Assert.NotEqual (btnSubView, top.MostFocused);
+        Assert.Equal (tab2, top.MostFocused);
+
+        tv.SelectedTab.View.CanFocus = true;
+        Application.RaiseKeyDownEvent (Key.CursorDown);
         Assert.Equal (tab2, tv.SelectedTab);
         Assert.Equal (btnSubView, top.MostFocused);
 
@@ -451,24 +459,18 @@ public class TabViewTests (ITestOutputHelper output)
         Application.RaiseKeyDownEvent (Key.CursorDown);
         Assert.Equal (btn, top.MostFocused);
 
-        // Press the cursor down key again will focus next view in the toplevel, whic is the TabView
+        // Press the cursor down key again will focus next view in the toplevel, which is the TabView
         Application.RaiseKeyDownEvent (Key.CursorDown);
         Assert.Equal (tab2, tv.SelectedTab);
         Assert.Equal (tv, top.Focused);
-        Assert.Equal (tab1, tv.MostFocused);
+        // Due to the RestoreFocus method prioritize the _previouslyFocused, so btnSubView will be focused again
+        Assert.Equal (btnSubView, tv.MostFocused);
 
-        // Press the cursor down key to focus the selected tab view hosting again
-        Application.RaiseKeyDownEvent (Key.CursorDown);
-        Assert.Equal (tab2, tv.SelectedTab);
-        Assert.Equal (btnSubView, top.MostFocused);
-
-        // Press the cursor up key to focus the selected tab
+        // Press the cursor up key to focus the selected tab which it's the only way to do that
         Application.RaiseKeyDownEvent (Key.CursorUp);
-        Application.Refresh ();
-
-        // Is the selected tab focused
         Assert.Equal (tab2, tv.SelectedTab);
         Assert.Equal (tv, top.Focused);
+        Assert.Equal (tab2, top.Focused.MostFocused);
         Assert.Equal (tv.MostFocused, top.Focused.MostFocused);
 
         // Press the cursor left key to select the previous tab
@@ -479,6 +481,7 @@ public class TabViewTests (ITestOutputHelper output)
         Assert.Equal (tab1, tv.SelectedTab);
         Assert.Equal (tv, top.Focused);
         Assert.Equal (tv.MostFocused, top.Focused.MostFocused);
+        Assert.Equal (tab1, top.Focused.MostFocused);
 
         // Press the end key to select the last tab
         Application.RaiseKeyDownEvent (Key.End);
@@ -595,7 +598,7 @@ public class TabViewTests (ITestOutputHelper output)
         Application.Shutdown ();
     }
 
-    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
+    [Fact]
     [SetupFakeDriver]
     public void ShowTopLine_False_TabsOnBottom_False_TestTabView_Width3 ()
     {
@@ -643,7 +646,7 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
     }
 
-    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
+    [Fact]
     [SetupFakeDriver]
     public void ShowTopLine_False_TabsOnBottom_False_TestThinTabView_WithLongNames ()
     {
@@ -735,7 +738,7 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
     }
 
-    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
+    [Fact]
     [SetupFakeDriver]
     public void ShowTopLine_False_TabsOnBottom_True_TestTabView_Width3 ()
     {
@@ -783,7 +786,7 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
     }
 
-    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
+    [Fact]
     [SetupFakeDriver]
     public void ShowTopLine_False_TabsOnBottom_True_TestThinTabView_WithLongNames ()
     {
@@ -875,7 +878,7 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
     }
 
-    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
+    [Fact]
     [SetupFakeDriver]
     public void ShowTopLine_True_TabsOnBottom_False_TestTabView_Width3 ()
     {
@@ -919,7 +922,7 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
     }
 
-    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
+    [Fact]
     [SetupFakeDriver]
     public void ShowTopLine_True_TabsOnBottom_False_TestThinTabView_WithLongNames ()
     {
@@ -1009,7 +1012,7 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
     }
 
-    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
+    [Fact]
     [SetupFakeDriver]
     public void ShowTopLine_True_TabsOnBottom_False_With_Unicode ()
     {
@@ -1050,7 +1053,7 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
     }
 
-    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
+    [Fact]
     [SetupFakeDriver]
     public void ShowTopLine_True_TabsOnBottom_True_TestTabView_Width3 ()
     {
@@ -1098,7 +1101,7 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
     }
 
-    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
+    [Fact]
     [SetupFakeDriver]
     public void ShowTopLine_True_TabsOnBottom_True_TestThinTabView_WithLongNames ()
     {
@@ -1174,7 +1177,7 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
     }
 
-    [Fact (Skip = "#3789 Broke. The right way to fix is to refactor TabView to separate Layout and Draw")]
+    [Fact]
     [SetupFakeDriver]
     public void ShowTopLine_True_TabsOnBottom_True_With_Unicode ()
     {
