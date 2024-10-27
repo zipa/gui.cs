@@ -1239,7 +1239,6 @@ public class TabView : View
 
             View selected = null;
             int topLine = _host.Style.ShowTopLine ? 1 : 0;
-            int width = Viewport.Width;
 
             foreach (TabToRender toRender in tabLocations)
             {
