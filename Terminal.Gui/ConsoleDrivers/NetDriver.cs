@@ -160,8 +160,7 @@ internal class NetEvents : IDisposable
 
         Task.Run (CheckWindowSizeChange, _inputReadyCancellationTokenSource.Token);
 
-        Parser.ExpectResponseT ("m",ProcessRequestResponse,true);
-        Parser.ExpectResponseT ("M", ProcessRequestResponse, true);
+        Parser.UnexpectedResponseHandler = ProcessRequestResponse;
     }
 
 
@@ -204,7 +203,7 @@ internal class NetEvents : IDisposable
         return null;
     }
 
-    private static ConsoleKeyInfo ReadConsoleKeyInfo (CancellationToken cancellationToken, bool intercept = true)
+    private ConsoleKeyInfo ReadConsoleKeyInfo (CancellationToken cancellationToken, bool intercept = true)
     {
         // if there is a key available, return it without waiting
         //  (or dispatching work to the thread queue)
@@ -217,6 +216,12 @@ internal class NetEvents : IDisposable
         {
             Task.Delay (100, cancellationToken).Wait (cancellationToken);
 
+            foreach (var k in ShouldRelease ())
+            {
+                ProcessMapConsoleKeyInfo (k);
+                _inputReady.Set ();
+            }
+
             if (Console.KeyAvailable)
             {
                 return Console.ReadKey (intercept);
@@ -226,6 +231,17 @@ internal class NetEvents : IDisposable
         cancellationToken.ThrowIfCancellationRequested ();
 
         return default (ConsoleKeyInfo);
+    }
+
+    public IEnumerable<ConsoleKeyInfo> ShouldRelease ()
+    {
+        if (Parser.State == AnsiResponseParserState.ExpectingBracket &&
+            DateTime.Now - Parser.StateChangedAt > _consoleDriver.EscTimeout)
+        {
+            return Parser.Release ().Select (o => o.Item2);
+        }
+
+        return [];
     }
 
     private void ProcessInputQueue ()
@@ -417,7 +433,7 @@ internal class NetEvents : IDisposable
         return true;
     }
 
-    private void ProcessRequestResponse (IEnumerable<Tuple<char, ConsoleKeyInfo>> obj)
+    private bool ProcessRequestResponse (IEnumerable<Tuple<char, ConsoleKeyInfo>> obj)
     {
         // Added for signature compatibility with existing method, not sure what they are even for.
         ConsoleKeyInfo newConsoleKeyInfo = default;
@@ -425,6 +441,12 @@ internal class NetEvents : IDisposable
         ConsoleModifiers mod = default;
 
         ProcessRequestResponse (ref newConsoleKeyInfo, ref key, obj.Select (v=>v.Item2).ToArray (),ref mod);
+
+        // Probably
+        _inputReady.Set ();
+
+        // Handled
+        return true;
     }
 
     // Process a CSI sequence received by the driver (key pressed, mouse event, or request/response event)
