@@ -1011,7 +1011,7 @@ public class UICatalogApp
             const string RULER = "View Diagnostics: _Ruler";
             const string THICKNESS = "View Diagnostics: _Thickness";
             const string HOVER = "View Diagnostics: _Hover";
-            const string DRAW = "View Diagnostics: _Draw";
+            const string DRAWINDICATOR = "View Diagnostics: _DrawIndicator";
             var index = 0;
 
             List<MenuItem> menuItems = new ();
@@ -1030,7 +1030,7 @@ public class UICatalogApp
                     item.Checked = !_diagnosticFlags.HasFlag (ViewDiagnosticFlags.Thickness)
                                    && !_diagnosticFlags.HasFlag (ViewDiagnosticFlags.Ruler)
                                    && !_diagnosticFlags.HasFlag (ViewDiagnosticFlags.Hover)
-                                   && !_diagnosticFlags.HasFlag (ViewDiagnosticFlags.Draw);
+                                   && !_diagnosticFlags.HasFlag (ViewDiagnosticFlags.DrawIndicator);
                 }
                 else
                 {
@@ -1043,12 +1043,12 @@ public class UICatalogApp
 
                                    if (item.Title == t && item.Checked == false)
                                    {
-                                       _diagnosticFlags &= ~(ViewDiagnosticFlags.Thickness | ViewDiagnosticFlags.Ruler | ViewDiagnosticFlags.Hover | ViewDiagnosticFlags.Draw);
+                                       _diagnosticFlags &= ~(ViewDiagnosticFlags.Thickness | ViewDiagnosticFlags.Ruler | ViewDiagnosticFlags.Hover | ViewDiagnosticFlags.DrawIndicator);
                                        item.Checked = true;
                                    }
                                    else if (item.Title == t && item.Checked == true)
                                    {
-                                       _diagnosticFlags |= ViewDiagnosticFlags.Thickness | ViewDiagnosticFlags.Ruler | ViewDiagnosticFlags.Hover | ViewDiagnosticFlags.Draw;
+                                       _diagnosticFlags |= ViewDiagnosticFlags.Thickness | ViewDiagnosticFlags.Ruler | ViewDiagnosticFlags.Hover | ViewDiagnosticFlags.DrawIndicator;
                                        item.Checked = false;
                                    }
                                    else
@@ -1072,7 +1072,7 @@ public class UICatalogApp
                                            menuItem.Checked = !_diagnosticFlags.HasFlag (ViewDiagnosticFlags.Ruler)
                                                               && !_diagnosticFlags.HasFlag (ViewDiagnosticFlags.Thickness)
                                                               && !_diagnosticFlags.HasFlag (ViewDiagnosticFlags.Hover)
-                                                              && !_diagnosticFlags.HasFlag (ViewDiagnosticFlags.Draw);
+                                                              && !_diagnosticFlags.HasFlag (ViewDiagnosticFlags.DrawIndicator);
                                        }
                                        else if (menuItem.Title != t)
                                        {
@@ -1095,7 +1095,7 @@ public class UICatalogApp
                     "Ruler" => RULER,
                     "Thickness" => THICKNESS,
                     "Hover" => HOVER,
-                    "Draw" => DRAW,
+                    "DrawIndicator" => DRAWINDICATOR,
                     _ => ""
                 };
             }
@@ -1107,7 +1107,7 @@ public class UICatalogApp
                     RULER => ViewDiagnosticFlags.Ruler,
                     THICKNESS => ViewDiagnosticFlags.Thickness,
                     HOVER => ViewDiagnosticFlags.Hover,
-                    DRAW => ViewDiagnosticFlags.Draw,
+                    DRAWINDICATOR => ViewDiagnosticFlags.DrawIndicator,
                     _ => null!
                 };
             }
@@ -1149,14 +1149,14 @@ public class UICatalogApp
                         }
 
                         break;
-                    case ViewDiagnosticFlags.Draw:
+                    case ViewDiagnosticFlags.DrawIndicator:
                         if (add)
                         {
-                            _diagnosticFlags |= ViewDiagnosticFlags.Draw;
+                            _diagnosticFlags |= ViewDiagnosticFlags.DrawIndicator;
                         }
                         else
                         {
-                            _diagnosticFlags &= ~ViewDiagnosticFlags.Draw;
+                            _diagnosticFlags &= ~ViewDiagnosticFlags.DrawIndicator;
                         }
 
                         break;

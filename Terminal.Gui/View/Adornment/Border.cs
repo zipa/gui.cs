@@ -105,7 +105,7 @@ public class Border : Adornment
             LayoutStarted += OnLayoutStarted;
     }
 #endif
-        if (View.Diagnostics.HasFlag (ViewDiagnosticFlags.Draw))
+        if (View.Diagnostics.HasFlag (ViewDiagnosticFlags.DrawIndicator))
         {
             _drawIndicator = new SpinnerView ()
             {
