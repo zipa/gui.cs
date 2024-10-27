@@ -866,7 +866,7 @@ public class Slider<T> : View, IOrientation
         // Left Spacing
         if (_config._showEndSpacing && _config._startSpacing > 0)
         {
-            Driver?.SetAttribute (
+            SetAttribute (
                                   isSet && _config._type == SliderType.LeftRange
                                       ? Style.RangeChar.Attribute ?? normalAttr
                                       : Style.SpaceChar.Attribute ?? normalAttr
@@ -889,7 +889,7 @@ public class Slider<T> : View, IOrientation
         }
         else
         {
-            Driver?.SetAttribute (Style.EmptyChar.Attribute ?? normalAttr);
+            SetAttribute (Style.EmptyChar.Attribute ?? normalAttr);
 
             for (var i = 0; i < _config._startSpacing; i++)
             {
@@ -942,7 +942,7 @@ public class Slider<T> : View, IOrientation
                 }
 
                 // Draw Option
-                Driver?.SetAttribute (
+                SetAttribute (
                                       isSet && _setOptions.Contains (i) ? Style.SetChar.Attribute ?? setAttr :
                                       drawRange ? Style.RangeChar.Attribute ?? setAttr : Style.OptionChar.Attribute ?? normalAttr
                                      );
@@ -980,7 +980,7 @@ public class Slider<T> : View, IOrientation
                 if (_config._showEndSpacing || i < _options.Count - 1)
                 {
                     // Skip if is the Last Spacing.
-                    Driver?.SetAttribute (
+                    SetAttribute (
                                           drawRange && isSet
                                               ? Style.RangeChar.Attribute ?? setAttr
                                               : Style.SpaceChar.Attribute ?? normalAttr
@@ -1008,7 +1008,7 @@ public class Slider<T> : View, IOrientation
         // Right Spacing
         if (_config._showEndSpacing)
         {
-            Driver?.SetAttribute (
+            SetAttribute (
                                   isSet && _config._type == SliderType.RightRange
                                       ? Style.RangeChar.Attribute ?? normalAttr
                                       : Style.SpaceChar.Attribute ?? normalAttr
@@ -1031,7 +1031,7 @@ public class Slider<T> : View, IOrientation
         }
         else
         {
-            Driver?.SetAttribute (Style.EmptyChar.Attribute ?? normalAttr);
+            SetAttribute (Style.EmptyChar.Attribute ?? normalAttr);
 
             for (var i = 0; i < remaining; i++)
             {
@@ -1223,7 +1223,7 @@ public class Slider<T> : View, IOrientation
             }
 
             // Legend
-            Driver?.SetAttribute (isOptionSet ? setAttr : normalAttr);
+            SetAttribute (isOptionSet ? setAttr : normalAttr);
 
             foreach (Rune c in text.EnumerateRunes ())
             {
@@ -1249,7 +1249,7 @@ public class Slider<T> : View, IOrientation
             }
 
             // Option Right Spacing of Option
-            Driver?.SetAttribute (spaceAttr);
+            SetAttribute (spaceAttr);
 
             if (isTextVertical)
             {

@@ -772,7 +772,7 @@ public class ListView : View, IDesignable
     protected override bool OnDrawingContent (Rectangle viewport)
     {
         Attribute current = ColorScheme?.Focus ?? Attribute.Default;
-        Driver?.SetAttribute (current);
+        SetAttribute (current);
         Move (0, 0);
         Rectangle f = Viewport;
         int item = Viewport.Y;
@@ -789,7 +789,7 @@ public class ListView : View, IDesignable
 
             if (newcolor != current)
             {
-                Driver?.SetAttribute (newcolor);
+                SetAttribute (newcolor);
                 current = newcolor;
             }
 
@@ -810,7 +810,7 @@ public class ListView : View, IDesignable
                 if (rowEventArgs.RowAttribute is { } && current != rowEventArgs.RowAttribute)
                 {
                     current = (Attribute)rowEventArgs.RowAttribute;
-                    Driver?.SetAttribute (current);
+                    SetAttribute (current);
                 }
 
                 if (_allowsMarking)

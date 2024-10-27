@@ -63,7 +63,7 @@ internal class ShadowView : View
             case ShadowStyle.Transparent:
                 //Attribute prevAttr = Driver.GetAttribute ();
                 //var attr = new Attribute (prevAttr.Foreground, prevAttr.Background);
-                //Driver.SetAttribute (attr);
+                //SetAttribute (attr);
 
                 if (Orientation == Orientation.Vertical)
                 {
@@ -74,7 +74,7 @@ internal class ShadowView : View
                     DrawHorizontalShadowTransparent (viewport);
                 }
 
-                //Driver.SetAttribute (prevAttr);
+                //SetAttribute (prevAttr);
 
                 break;
         }

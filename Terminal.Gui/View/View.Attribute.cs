@@ -1,7 +1,14 @@
-﻿namespace Terminal.Gui;
+﻿using System;
+
+namespace Terminal.Gui;
 
 public partial class View
 {
+    // TODO: Rename "Color"->"Attribute" given we'll soon have non-color information in Attributes?
+    // TODO: See https://github.com/gui-cs/Terminal.Gui/issues/457
+
+    #region ColorScheme
+    
     private ColorScheme _colorScheme;
 
     /// <summary>The color scheme for this view, if it is not defined, it returns the <see cref="SuperView"/>'s color scheme.</summary>
@@ -117,4 +124,24 @@ public partial class View
 
         return attr;
     }
+
+    #endregion ColorScheme
+
+    #region Attribute
+
+    /// <summary>Selects the specified attribute as the attribute to use for future calls to AddRune and AddString.</summary>
+    /// <remarks></remarks>
+    /// <param name="attribute">THe Attribute to set.</param>
+    public Attribute SetAttribute (Attribute attribute)
+    {
+        return Driver?.SetAttribute (attribute) ?? Attribute.Default;
+    }
+
+    /// <summary>Gets the current <see cref="Attribute"/>.</summary>
+    /// <returns>The current attribute.</returns>
+    public Attribute GetAttribute ()
+    {
+        return Driver?.GetAttribute () ?? Attribute.Default;
+    }
+    #endregion Attribute
 }

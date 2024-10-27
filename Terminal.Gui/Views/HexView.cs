@@ -428,9 +428,9 @@ public class HexView : View, IDesignable
             return true;
         }
 
-        Attribute currentAttribute;
+        Attribute currentAttribute = Attribute.Default;
         Attribute current = GetFocusColor ();
-        Driver?.SetAttribute (current);
+        SetAttribute (current);
         Move (0, 0);
 
         int nBlocks = BytesPerLine / NUM_BYTES_PER_HEX_COLUMN;
@@ -452,7 +452,7 @@ public class HexView : View, IDesignable
 
             Move (0, line);
             currentAttribute = new Attribute (GetNormalColor ().Foreground.GetHighlightColor (), GetNormalColor ().Background);
-            Driver?.SetAttribute (currentAttribute);
+            SetAttribute (currentAttribute);
             var address = $"{_displayStart + line * nBlocks * NUM_BYTES_PER_HEX_COLUMN:x8}";
             Driver?.AddStr ($"{address.Substring (8 - AddressWidth)}");
 
@@ -555,7 +555,7 @@ public class HexView : View, IDesignable
             if (currentAttribute != attribute)
             {
                 currentAttribute = attribute;
-                Driver?.SetAttribute (attribute);
+                SetAttribute (attribute);
             }
         }
     }

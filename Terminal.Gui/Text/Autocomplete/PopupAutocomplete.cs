@@ -395,11 +395,11 @@ public abstract partial class PopupAutocomplete : AutocompleteBase
         {
             if (i == SelectedIdx - ScrollOffset)
             {
-                Application.Driver?.SetAttribute (ColorScheme.Focus);
+                _popup.SetAttribute (ColorScheme.Focus);
             }
             else
             {
-                Application.Driver?.SetAttribute (ColorScheme.Normal);
+                _popup.SetAttribute (ColorScheme.Normal);
             }
 
             _popup.Move (0, i);

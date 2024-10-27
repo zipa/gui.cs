@@ -166,7 +166,7 @@ public partial class View // Drawing APIs
     {
         if (ColorScheme is { })
         {
-            Driver?.SetAttribute (GetNormalColor ());
+            SetAttribute (GetNormalColor ());
         }
     }
 
@@ -241,9 +241,9 @@ public partial class View // Drawing APIs
             toClear = Rectangle.Intersect (toClear, visibleContent);
         }
 
-        Attribute prev = Driver.SetAttribute (GetNormalColor ());
+        Attribute prev = SetAttribute (GetNormalColor ());
         Driver.FillRect (toClear);
-        Driver.SetAttribute (prev);
+        SetAttribute (prev);
 
         Driver.Clip = prevClip;
         SetNeedsDisplay ();
@@ -467,7 +467,7 @@ public partial class View // Drawing APIs
                 // Get the entire map
                 if (p.Value is { })
                 {
-                    Driver.SetAttribute (p.Value.Value.Attribute ?? ColorScheme!.Normal);
+                    SetAttribute (p.Value.Value.Attribute ?? ColorScheme!.Normal);
                     Driver.Move (p.Key.X, p.Key.Y);
 
                     // TODO: #2616 - Support combining sequences that don't normalize
@@ -492,7 +492,7 @@ public partial class View // Drawing APIs
                 // Get the entire map
                 if (p.Value is { })
                 {
-                    Driver.SetAttribute (p.Value.Value.Attribute ?? ColorScheme!.Normal);
+                    SetAttribute (p.Value.Value.Attribute ?? ColorScheme!.Normal);
                     Driver.Move (p.Key.X, p.Key.Y);
 
                     // TODO: #2616 - Support combining sequences that don't normalize

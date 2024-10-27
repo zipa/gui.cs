@@ -463,7 +463,7 @@ public class ScrollBarView : View
             return false;
         }
 
-        Driver.SetAttribute (Host.HasFocus ? ColorScheme.Focus : GetNormalColor ());
+        SetAttribute (Host.HasFocus ? ColorScheme.Focus : GetNormalColor ());
 
         if (_vertical)
         {
@@ -765,7 +765,7 @@ public class ScrollBarView : View
 
     private void ContentBottomRightCorner_DrawContent (object sender, DrawEventArgs e)
     {
-        Driver.SetAttribute (Host.HasFocus ? ColorScheme.Focus : GetNormalColor ());
+        SetAttribute (Host.HasFocus ? ColorScheme.Focus : GetNormalColor ());
 
         // I'm forced to do this here because the Clear method is
         // changing the color attribute and is different of this one

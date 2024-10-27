@@ -160,7 +160,7 @@ public class LegendAnnotation : View, IAnnotation
         {
             if (entry.Item1.Color.HasValue)
             {
-                Application.Driver?.SetAttribute (entry.Item1.Color.Value);
+                SetAttribute (entry.Item1.Color.Value);
             }
             else
             {
@@ -217,7 +217,7 @@ public class PathAnnotation : IAnnotation
     /// <param name="graph"></param>
     public void Render (GraphView graph)
     {
-        View.Driver.SetAttribute (LineColor ?? graph.ColorScheme.Normal);
+        graph.SetAttribute (LineColor ?? graph.ColorScheme.Normal);
 
         foreach (LineF line in PointsToLines ())
         {

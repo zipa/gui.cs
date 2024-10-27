@@ -549,7 +549,7 @@ public abstract class ConsoleDriver
     /// <summary>Selects the specified attribute as the attribute to use for future calls to AddRune and AddString.</summary>
     /// <remarks>Implementations should call <c>base.SetAttribute(c)</c>.</remarks>
     /// <param name="c">C.</param>
-    public Attribute SetAttribute (Attribute c)
+    internal Attribute SetAttribute (Attribute c)
     {
         Attribute prevAttribute = CurrentAttribute;
         CurrentAttribute = c;
@@ -559,7 +559,7 @@ public abstract class ConsoleDriver
 
     /// <summary>Gets the current <see cref="Attribute"/>.</summary>
     /// <returns>The current attribute.</returns>
-    public Attribute GetAttribute () { return CurrentAttribute; }
+    internal Attribute GetAttribute () { return CurrentAttribute; }
 
     // TODO: This is only overridden by CursesDriver. Once CursesDriver supports 24-bit color, this virtual method can be
     // removed (and Attribute can lose the platformColor property).

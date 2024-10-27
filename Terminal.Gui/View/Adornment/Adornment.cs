@@ -170,7 +170,7 @@ public class Adornment : View, IDesignable
         }
 
         Attribute normalAttr = GetNormalColor ();
-        Driver?.SetAttribute (normalAttr);
+        SetAttribute (normalAttr);
 
         // This just draws/clears the thickness, not the insides.
         Thickness.Draw (ViewportToScreen (viewport), Diagnostics, ToString ());

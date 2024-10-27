@@ -141,7 +141,7 @@ public class ProgressBar : View, IDesignable
     ///<inheritdoc/>
     protected override bool OnDrawingContent (Rectangle viewport)
     {
-        Driver?.SetAttribute (GetHotNormalColor ());
+        SetAttribute (GetHotNormalColor ());
 
         Move (0, 0);
 

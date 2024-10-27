@@ -316,7 +316,7 @@ public class Snake : Scenario
 
         protected override bool OnDrawingContent (Rectangle viewport)
         {
-            Driver?.SetAttribute (white);
+            SetAttribute (white);
             ClearViewport ();
 
             var canvas = new LineCanvas ();
@@ -349,9 +349,9 @@ public class Snake : Scenario
                 AddRune (p.Key.X, p.Key.Y, p.Value);
             }
 
-            Driver?.SetAttribute (red);
+            SetAttribute (red);
             AddRune (State.Apple.X, State.Apple.Y, _appleRune);
-            Driver?.SetAttribute (white);
+            SetAttribute (white);
 
             return true;
         }

@@ -655,7 +655,7 @@ public class TabView : View
             RenderTabLine ();
 
             RenderUnderline ();
-            Driver?.SetAttribute (HasFocus ? GetFocusColor () : GetNormalColor ());
+            SetAttribute (HasFocus ? GetFocusColor () : GetNormalColor ());
 
             return true;
         }
@@ -1308,7 +1308,7 @@ public class TabView : View
                 tab.DrawAdornments ();
 
 
-                Driver?.SetAttribute (GetNormalColor ());
+                SetAttribute (GetNormalColor ());
             }
         }
 

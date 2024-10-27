@@ -362,7 +362,7 @@ public class RadioGroup : View, IDesignable, IOrientation
     /// <inheritdoc/>
     protected override bool OnDrawingContent (Rectangle viewport)
     {
-        Driver?.SetAttribute (GetNormalColor ());
+        SetAttribute (GetNormalColor ());
 
         for (var i = 0; i < _radioLabels.Count; i++)
         {
@@ -379,7 +379,7 @@ public class RadioGroup : View, IDesignable, IOrientation
             }
 
             string rl = _radioLabels [i];
-            Driver?.SetAttribute (GetNormalColor ());
+            SetAttribute (GetNormalColor ());
             Driver?.AddStr ($"{(i == _selected ? Glyphs.Selected : Glyphs.UnSelected)} ");
             TextFormatter.FindHotKey (rl, HotKeySpecifier, out int hotPos, out Key hotKey);
 
@@ -393,7 +393,7 @@ public class RadioGroup : View, IDesignable, IOrientation
 
                     if (j == hotPos && i == Cursor)
                     {
-                        Application.Driver?.SetAttribute (
+                        SetAttribute (
                                                           HasFocus
                                                               ? ColorScheme!.HotFocus
                                                               : GetHotNormalColor ()
@@ -401,11 +401,11 @@ public class RadioGroup : View, IDesignable, IOrientation
                     }
                     else if (j == hotPos && i != Cursor)
                     {
-                        Application.Driver?.SetAttribute (GetHotNormalColor ());
+                        SetAttribute (GetHotNormalColor ());
                     }
                     else if (HasFocus && i == Cursor)
                     {
-                        Application.Driver?.SetAttribute (GetFocusColor ());
+                        SetAttribute (GetFocusColor ());
                     }
 
                     if (rune == HotKeySpecifier && j + 1 < rlRunes.Length)
@@ -415,7 +415,7 @@ public class RadioGroup : View, IDesignable, IOrientation
 
                         if (i == Cursor)
                         {
-                            Application.Driver?.SetAttribute (
+                            SetAttribute (
                                                               HasFocus
                                                                   ? ColorScheme!.HotFocus
                                                                   : GetHotNormalColor ()
@@ -423,12 +423,12 @@ public class RadioGroup : View, IDesignable, IOrientation
                         }
                         else if (i != Cursor)
                         {
-                            Application.Driver?.SetAttribute (GetHotNormalColor ());
+                            SetAttribute (GetHotNormalColor ());
                         }
                     }
 
                     Application.Driver?.AddRune (rune);
-                    Driver?.SetAttribute (GetNormalColor ());
+                    SetAttribute (GetNormalColor ());
                 }
             }
             else

@@ -106,12 +106,12 @@ public class AppendAutocomplete : AutocompleteBase
         }
 
         // draw it like it's selected, even though it's not
-        Application.Driver?.SetAttribute (
-                                         new Attribute (
-                                                        ColorScheme.Normal.Foreground,
-                                                        textField.ColorScheme.Focus.Background
-                                                       )
-                                        );
+        textField.SetAttribute (
+                               new Attribute (
+                                              ColorScheme.Normal.Foreground,
+                                              textField.ColorScheme.Focus.Background
+                                             )
+                              );
         textField.Move (textField.Text.Length, 0);
 
         Suggestion suggestion = Suggestions.ElementAt (SelectedIdx);

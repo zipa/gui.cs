@@ -57,7 +57,7 @@ public class LineView : View
     protected override bool OnDrawingContent (Rectangle viewport)
     {
         Move (0, 0);
-        Driver?.SetAttribute (GetNormalColor ());
+        SetAttribute (GetNormalColor ());
 
         int hLineWidth = Math.Max (1, Glyphs.HLine.GetColumns ());
 

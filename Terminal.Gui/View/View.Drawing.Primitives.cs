@@ -65,19 +65,19 @@ public partial class View
     public void DrawHotString (string text, Attribute hotColor, Attribute normalColor)
     {
         Rune hotkeySpec = HotKeySpecifier == (Rune)0xffff ? (Rune)'_' : HotKeySpecifier;
-        Application.Driver?.SetAttribute (normalColor);
+        SetAttribute (normalColor);
 
         foreach (Rune rune in text.EnumerateRunes ())
         {
             if (rune == new Rune (hotkeySpec.Value))
             {
-                Application.Driver?.SetAttribute (hotColor);
+                SetAttribute (hotColor);
 
                 continue;
             }
 
             Application.Driver?.AddRune (rune);
-            Application.Driver?.SetAttribute (normalColor);
+            SetAttribute (normalColor);
         }
     }
 
@@ -123,9 +123,9 @@ public partial class View
 
         Driver.Clip = Rectangle.Intersect (prevClip, ViewportToScreen (Viewport with { Location = new (0, 0) }));
 
-        Attribute prev = Driver.SetAttribute (new (color ?? GetNormalColor ().Background));
+        Attribute prev = SetAttribute (new (color ?? GetNormalColor ().Background));
         Driver.FillRect (toClear);
-        Driver.SetAttribute (prev);
+        SetAttribute (prev);
 
         Driver.Clip = prevClip;
     }

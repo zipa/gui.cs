@@ -3962,7 +3962,7 @@ public class TextView : View
     /// <summary>
     ///     Sets the <see cref="View.Driver"/> to an appropriate color for rendering the given <paramref name="idxCol"/>
     ///     of the current <paramref name="line"/>. Override to provide custom coloring by calling
-    ///     <see cref="ConsoleDriver?.SetAttribute(Attribute)"/> Defaults to <see cref="ColorScheme.Normal"/>.
+    ///     <see cref="SetAttribute(Attribute)"/> Defaults to <see cref="ColorScheme.Normal"/>.
     /// </summary>
     /// <param name="line">The line.</param>
     /// <param name="idxCol">The col index.</param>
@@ -3976,18 +3976,18 @@ public class TextView : View
         if (line [idxCol].Attribute is { })
         {
             Attribute? attribute = line [idxCol].Attribute;
-            Driver?.SetAttribute ((Attribute)attribute!);
+            SetAttribute ((Attribute)attribute!);
         }
         else
         {
-            Driver?.SetAttribute (GetNormalColor ());
+            SetAttribute (GetNormalColor ());
         }
     }
 
     /// <summary>
     ///     Sets the <see cref="View.Driver"/> to an appropriate color for rendering the given <paramref name="idxCol"/>
     ///     of the current <paramref name="line"/>. Override to provide custom coloring by calling
-    ///     <see cref="ConsoleDriver?.SetAttribute(Attribute)"/> Defaults to <see cref="ColorScheme.Focus"/>.
+    ///     <see cref="SetAttribute(Attribute)"/> Defaults to <see cref="ColorScheme.Focus"/>.
     /// </summary>
     /// <param name="line">The line.</param>
     /// <param name="idxCol">The col index.</param>
@@ -4011,13 +4011,13 @@ public class TextView : View
             attribute = new (cellAttribute.Value.Foreground, ColorScheme!.Focus.Background);
         }
 
-        Driver?.SetAttribute (attribute);
+        SetAttribute (attribute);
     }
 
     /// <summary>
     ///     Sets the <see cref="View.Driver"/> to an appropriate color for rendering the given <paramref name="idxCol"/>
     ///     of the current <paramref name="line"/>. Override to provide custom coloring by calling
-    ///     <see cref="ConsoleDriver?.SetAttribute(Attribute)"/> Defaults to <see cref="ColorScheme.Focus"/>.
+    ///     <see cref="SetAttribute(Attribute)"/> Defaults to <see cref="ColorScheme.Focus"/>.
     /// </summary>
     /// <param name="line">The line.</param>
     /// <param name="idxCol">The col index.</param>
@@ -4033,13 +4033,13 @@ public class TextView : View
         {
             Attribute? attribute = line [idxCol].Attribute;
 
-            Driver?.SetAttribute (
+            SetAttribute (
                                  new (attribute!.Value.Background, attribute.Value.Foreground)
                                 );
         }
         else
         {
-            Driver?.SetAttribute (
+            SetAttribute (
                                  new (
                                       ColorScheme!.Focus.Background,
                                       ColorScheme!.Focus.Foreground
@@ -4051,7 +4051,7 @@ public class TextView : View
     /// <summary>
     ///     Sets the <see cref="View.Driver"/> to an appropriate color for rendering the given <paramref name="idxCol"/>
     ///     of the current <paramref name="line"/>. Override to provide custom coloring by calling
-    ///     <see cref="ConsoleDriver?.SetAttribute(Attribute)"/> Defaults to <see cref="ColorScheme.HotFocus"/>.
+    ///     <see cref="SetAttribute(Attribute)"/> Defaults to <see cref="ColorScheme.HotFocus"/>.
     /// </summary>
     /// <param name="line">The line.</param>
     /// <param name="idxCol">The col index.</param>
@@ -4078,7 +4078,7 @@ public class TextView : View
     ///     Sets the driver to the default color for the control where no text is being rendered. Defaults to
     ///     <see cref="ColorScheme.Normal"/>.
     /// </summary>
-    protected virtual void SetNormalColor () { Driver?.SetAttribute (GetNormalColor ()); }
+    protected virtual void SetNormalColor () { SetAttribute (GetNormalColor ()); }
 
     private void Adjust ()
     {
@@ -6361,11 +6361,11 @@ public class TextView : View
         DoNeededAction ();
     }
 
-    private static void SetValidUsedColor (Attribute? attribute)
+    private void SetValidUsedColor (Attribute? attribute)
     {
         // BUGBUG: (v2 truecolor) This code depends on 8-bit color names; disabling for now
         //if ((colorScheme!.HotNormal.Foreground & colorScheme.Focus.Background) == colorScheme.Focus.Foreground) {
-        Driver?.SetAttribute (new (attribute!.Value.Background, attribute!.Value.Foreground));
+        SetAttribute (new (attribute!.Value.Background, attribute!.Value.Foreground));
     }
 
     /// <summary>Restore from original model.</summary>

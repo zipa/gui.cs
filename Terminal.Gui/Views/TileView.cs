@@ -1,4 +1,5 @@
-﻿namespace Terminal.Gui;
+﻿#nullable enable
+namespace Terminal.Gui;
 
 /// <summary>
 ///     A <see cref="View"/> consisting of a moveable bar that divides the display area into resizeable
@@ -7,10 +8,10 @@
 public class TileView : View
 {
     private Orientation _orientation = Orientation.Vertical;
-    private List<Pos> _splitterDistances;
-    private List<TileViewLineView> _splitterLines;
-    private List<Tile> _tiles;
-    private TileView _parentTileView;
+    private List<Pos>? _splitterDistances;
+    private List<TileViewLineView>? _splitterLines;
+    private List<Tile>? _tiles;
+    private TileView? _parentTileView;
 
     /// <summary>Creates a new instance of the <see cref="TileView"/> class with 2 tiles (i.e. left and right).</summary>
     public TileView () : this (2) { }
@@ -63,10 +64,10 @@ public class TileView : View
     }
 
     /// <summary>The splitter locations. Note that there will be N-1 splitters where N is the number of <see cref="Tiles"/>.</summary>
-    public IReadOnlyCollection<Pos> SplitterDistances => _splitterDistances.AsReadOnly ();
+    public IReadOnlyCollection<Pos> SplitterDistances => _splitterDistances!.AsReadOnly ();
 
     /// <summary>The sub sections hosted by the view</summary>
-    public IReadOnlyCollection<Tile> Tiles => _tiles.AsReadOnly ();
+    public IReadOnlyCollection<Tile> Tiles => _tiles!.AsReadOnly ();
 
     // TODO: Update to use Key instead of KeyCode
     /// <summary>
@@ -82,7 +83,7 @@ public class TileView : View
     /// </summary>
     /// <remarks>Use <see cref="IsRootTileView"/> to determine if the returned value is the root.</remarks>
     /// <returns></returns>
-    public TileView GetParentTileView () { return _parentTileView; }
+    public TileView? GetParentTileView () { return _parentTileView; }
 
     /// <summary>
     ///     Returns the index of the first <see cref="Tile"/> in <see cref="Tiles"/> which contains
@@ -90,9 +91,9 @@ public class TileView : View
     /// </summary>
     public int IndexOf (View toFind, bool recursive = false)
     {
-        for (var i = 0; i < _tiles.Count; i++)
+        for (var i = 0; i < _tiles!.Count; i++)
         {
-            View v = _tiles [i].ContentView;
+            View v = _tiles [i].ContentView!;
 
             if (v == toFind)
             {
@@ -121,14 +122,14 @@ public class TileView : View
     ///     line
     /// </summary>
     /// <param name="idx"></param>
-    public Tile InsertTile (int idx)
+    public Tile? InsertTile (int idx)
     {
         Tile [] oldTiles = Tiles.ToArray ();
         RebuildForTileCount (oldTiles.Length + 1);
 
-        Tile toReturn = null;
+        Tile? toReturn = null;
 
-        for (var i = 0; i < _tiles.Count; i++)
+        for (var i = 0; i < _tiles?.Count; i++)
         {
             if (i != idx)
             {
@@ -136,12 +137,12 @@ public class TileView : View
 
                 // remove the new empty View
                 Remove (_tiles [i].ContentView);
-                _tiles [i].ContentView.Dispose ();
+                _tiles [i].ContentView?.Dispose ();
                 _tiles [i].ContentView = null;
 
                 // restore old Tile and View
                 _tiles [i] = oldTile;
-                _tiles [i].ContentView.TabStop = TabStop;
+                _tiles [i].ContentView!.TabStop = TabStop;
                 Add (_tiles [i].ContentView);
             }
             else
@@ -182,7 +183,10 @@ public class TileView : View
     /// <inheritdoc/>
     protected override void OnDrawComplete ()
     {
-        Driver?.SetAttribute (ColorScheme.Normal);
+        if (ColorScheme is { })
+        {
+            SetAttribute (ColorScheme.Normal);
+        }
 
         var lc = new LineCanvas ();
 
@@ -213,7 +217,7 @@ public class TileView : View
 
             foreach (TileViewLineView line in allLines)
             {
-                bool isRoot = _splitterLines.Contains (line);
+                bool isRoot = _splitterLines!.Contains (line);
 
                 Rectangle screen = line.ViewportToScreen (Rectangle.Empty);
                 Point origin = ScreenToFrame (screen.Location);
@@ -237,7 +241,10 @@ public class TileView : View
             }
         }
 
-        Driver?.SetAttribute (ColorScheme.Normal);
+        if (ColorScheme is { })
+        {
+            SetAttribute (ColorScheme.Normal);
+        }
 
         foreach (KeyValuePair<Point, Rune> p in lc.GetMap (Viewport))
         {
@@ -284,7 +291,7 @@ public class TileView : View
 
         if (key.KeyCode == ToggleResizable)
         {
-            foreach (TileViewLineView l in _splitterLines)
+            foreach (TileViewLineView l in _splitterLines!)
             {
                 bool iniBefore = l.IsInitialized;
                 l.IsInitialized = false;
@@ -328,7 +335,7 @@ public class TileView : View
 
         foreach (Tile tile in _tiles)
         {
-            tile.ContentView.Dispose ();
+            tile.ContentView?.Dispose ();
             tile.ContentView = null;
         }
 
@@ -353,7 +360,7 @@ public class TileView : View
 
             var tile = new Tile ();
             _tiles.Add (tile);
-            tile.ContentView.Id = $"Tile.ContentView {i}";
+            tile.ContentView!.Id = $"Tile.ContentView {i}";
             Add (tile.ContentView);
 
             // BUGBUG: This should not be needed:
@@ -369,7 +376,7 @@ public class TileView : View
     /// </summary>
     /// <param name="idx"></param>
     /// <returns></returns>
-    public Tile RemoveTile (int idx)
+    public Tile? RemoveTile (int idx)
     {
         Tile [] oldTiles = Tiles.ToArray ();
 
@@ -382,14 +389,14 @@ public class TileView : View
 
         RebuildForTileCount (oldTiles.Length - 1);
 
-        for (var i = 0; i < _tiles.Count; i++)
+        for (var i = 0; i < _tiles?.Count; i++)
         {
             int oldIdx = i >= idx ? i + 1 : i;
             Tile oldTile = oldTiles [oldIdx];
 
             // remove the new empty View
             Remove (_tiles [i].ContentView);
-            _tiles [i].ContentView.Dispose ();
+            _tiles [i].ContentView?.Dispose ();
             _tiles [i].ContentView = null;
 
             // restore old Tile and View
@@ -427,7 +434,11 @@ public class TileView : View
             return false;
         }
 
-        _splitterDistances [idx] = value;
+        if (_splitterDistances is { })
+        {
+            _splitterDistances [idx] = value;
+        }
+
         OnSplitterMoved (idx);
         SetNeedsDisplay ();
         SetNeedsLayout ();
@@ -436,7 +447,7 @@ public class TileView : View
     }
 
     /// <summary>Invoked when any of the <see cref="SplitterDistances"/> is changed.</summary>
-    public event SplitterEventHandler SplitterMoved;
+    public event SplitterEventHandler? SplitterMoved;
 
     /// <summary>
     ///     Converts of <see cref="Tiles"/> element <paramref name="idx"/> from a regular <see cref="View"/> to a new
@@ -458,10 +469,10 @@ public class TileView : View
     {
         // when splitting a view into 2 sub views we will need to migrate
         // the title too
-        Tile tile = _tiles [idx];
+        Tile tile = _tiles! [idx];
 
         string title = tile.Title;
-        View toMove = tile.ContentView;
+        View? toMove = tile.ContentView;
 
         if (toMove is TileView existing)
         {
@@ -476,7 +487,7 @@ public class TileView : View
         };
 
         // Take everything out of the View we are moving
-        View [] childViews = toMove.Subviews.ToArray ();
+        View [] childViews = toMove!.Subviews.ToArray ();
         toMove.RemoveAll ();
 
         // Remove the view itself and replace it with the new TileView
@@ -488,16 +499,16 @@ public class TileView : View
 
         tile.ContentView = newContainer;
 
-        View newTileView1 = newContainer._tiles [0].ContentView;
+        View newTileView1 = newContainer!._tiles? [0].ContentView!;
 
         // Add the original content into the first view of the new container
         foreach (View childView in childViews)
         {
-            newTileView1.Add (childView);
+            newTileView1!.Add (childView);
         }
 
         // Move the title across too
-        newContainer._tiles [0].Title = title;
+        newContainer._tiles! [0].Title = title;
         tile.Title = string.Empty;
 
         result = newContainer;
@@ -511,14 +522,14 @@ public class TileView : View
         foreach (Tile tile in Tiles)
         {
             Remove (tile.ContentView);
-            tile.ContentView.Dispose ();
+            tile.ContentView?.Dispose ();
         }
 
         base.Dispose (disposing);
     }
 
     /// <summary>Raises the <see cref="SplitterMoved"/> event</summary>
-    protected virtual void OnSplitterMoved (int idx) { SplitterMoved?.Invoke (this, new (this, idx, _splitterDistances [idx])); }
+    protected virtual void OnSplitterMoved (int idx) { SplitterMoved?.Invoke (this, new (this, idx, _splitterDistances! [idx])); }
 
     private List<TileViewLineView> GetAllLineViewsRecursively (View v)
     {
@@ -545,14 +556,14 @@ public class TileView : View
         return lines;
     }
 
-    private List<TileTitleToRender> GetAllTitlesToRenderRecursively (TileView v, int depth = 0)
+    private List<TileTitleToRender> GetAllTitlesToRenderRecursively (TileView? v, int depth = 0)
     {
         List<TileTitleToRender> titles = new ();
 
-        foreach (Tile sub in v.Tiles)
+        foreach (Tile sub in v!.Tiles)
         {
             // Don't render titles for invisible stuff!
-            if (!sub.ContentView.Visible)
+            if (!sub.ContentView!.Visible)
             {
                 continue;
             }
@@ -588,20 +599,20 @@ public class TileView : View
         return root;
     }
 
-    private Dim GetTileWidthOrHeight (int i, int space, Tile [] visibleTiles, TileViewLineView [] visibleSplitterLines)
+    private Dim GetTileWidthOrHeight (int i, int space, Tile? [] visibleTiles, TileViewLineView? [] visibleSplitterLines)
     {
         // last tile
         if (i + 1 >= visibleTiles.Length)
         {
-            return Dim.Fill (HasBorder () ? 1 : 0);
+            return Dim.Fill (HasBorder () ? 1 : 0)!;
         }
 
-        TileViewLineView nextSplitter = visibleSplitterLines [i];
-        Pos nextSplitterPos = Orientation == Orientation.Vertical ? nextSplitter.X : nextSplitter.Y;
+        TileViewLineView? nextSplitter = visibleSplitterLines [i];
+        Pos? nextSplitterPos = Orientation == Orientation.Vertical ? nextSplitter!.X : nextSplitter!.Y;
         int nextSplitterDistance = nextSplitterPos.GetAnchor (space);
 
-        TileViewLineView lastSplitter = i >= 1 ? visibleSplitterLines [i - 1] : null;
-        Pos lastSplitterPos = Orientation == Orientation.Vertical ? lastSplitter?.X : lastSplitter?.Y;
+        TileViewLineView? lastSplitter = i >= 1 ? visibleSplitterLines [i - 1] : null;
+        Pos? lastSplitterPos = Orientation == Orientation.Vertical ? lastSplitter?.X : lastSplitter?.Y;
         int lastSplitterDistance = lastSplitterPos?.GetAnchor (space) ?? 0;
 
         int distance = nextSplitterDistance - lastSplitterDistance;
@@ -618,19 +629,19 @@ public class TileView : View
 
     private void HideSplittersBasedOnTileVisibility ()
     {
-        if (_splitterLines.Count == 0)
+        if (_splitterLines is { Count: 0 })
         {
             return;
         }
 
-        foreach (TileViewLineView line in _splitterLines)
+        foreach (TileViewLineView line in _splitterLines!)
         {
             line.Visible = true;
         }
 
-        for (var i = 0; i < _tiles.Count; i++)
+        for (var i = 0; i < _tiles!.Count; i++)
         {
-            if (!_tiles [i].ContentView.Visible)
+            if (!_tiles [i].ContentView!.Visible)
             {
                 // when a tile is not visible, prefer hiding
                 // the splitter on it's left
@@ -654,7 +665,7 @@ public class TileView : View
     private bool IsValidNewSplitterPos (int idx, Pos value, int fullSpace)
     {
         int newSize = value.GetAnchor (fullSpace);
-        bool isGettingBigger = newSize > _splitterDistances [idx].GetAnchor (fullSpace);
+        bool isGettingBigger = newSize > _splitterDistances! [idx].GetAnchor (fullSpace);
         int lastSplitterOrBorder = HasBorder () ? 1 : 0;
         int nextSplitterOrBorder = HasBorder () ? fullSpace - 1 : fullSpace;
 
@@ -713,7 +724,7 @@ public class TileView : View
             }
 
             // don't grow if it would take us below min size of right panel
-            if (spaceForNext < _tiles [idx + 1].MinSize)
+            if (spaceForNext < _tiles! [idx + 1].MinSize)
             {
                 return false;
             }
@@ -729,7 +740,7 @@ public class TileView : View
             }
 
             // don't shrink if it would take us below min size of left panel
-            if (spaceForLast < _tiles [idx].MinSize)
+            if (spaceForLast < _tiles! [idx].MinSize)
             {
                 return false;
             }
@@ -763,7 +774,7 @@ public class TileView : View
             return;
         }
 
-        for (var i = 0; i < _splitterLines.Count; i++)
+        for (var i = 0; i < _splitterLines!.Count; i++)
         {
             TileViewLineView line = _splitterLines [i];
 
@@ -780,19 +791,19 @@ public class TileView : View
 
             if (_orientation == Orientation.Vertical)
             {
-                line.X = _splitterDistances [i];
+                line.X = _splitterDistances! [i];
                 line.Y = 0;
             }
             else
             {
-                line.Y = _splitterDistances [i];
+                line.Y = _splitterDistances! [i];
                 line.X = 0;
             }
         }
 
         HideSplittersBasedOnTileVisibility ();
 
-        Tile [] visibleTiles = _tiles.Where (t => t.ContentView.Visible).ToArray ();
+        Tile [] visibleTiles = _tiles!.Where (t => t.ContentView!.Visible).ToArray ();
         TileViewLineView [] visibleSplitterLines = _splitterLines.Where (l => l.Visible).ToArray ();
 
         for (var i = 0; i < visibleTiles.Length; i++)
@@ -801,14 +812,14 @@ public class TileView : View
 
             if (Orientation == Orientation.Vertical)
             {
-                tile.ContentView.X = i == 0 ? viewport.X : Pos.Right (visibleSplitterLines [i - 1]);
+                tile.ContentView!.X = i == 0 ? viewport.X : Pos.Right (visibleSplitterLines [i - 1]);
                 tile.ContentView.Y = viewport.Y;
                 tile.ContentView.Height = viewport.Height;
                 tile.ContentView.Width = GetTileWidthOrHeight (i, Viewport.Width, visibleTiles, visibleSplitterLines);
             }
             else
             {
-                tile.ContentView.X = viewport.X;
+                tile.ContentView!.X = viewport.X;
                 tile.ContentView.Y = i == 0 ? viewport.Y : Pos.Bottom (visibleSplitterLines [i - 1]);
                 tile.ContentView.Width = viewport.Width;
                 tile.ContentView.Height = GetTileWidthOrHeight (i, Viewport.Height, visibleTiles, visibleSplitterLines);
@@ -821,7 +832,7 @@ public class TileView : View
 
     private class TileTitleToRender
     {
-        public TileTitleToRender (TileView parent, Tile tile, int depth)
+        public TileTitleToRender (TileView? parent, Tile tile, int depth)
         {
             Parent = parent;
             Tile = tile;
@@ -829,8 +840,8 @@ public class TileView : View
         }
 
         public int Depth { get; }
-        public TileView Parent { get; }
-        public Tile Tile { get; }
+        public TileView? Parent { get; }
+        public Tile? Tile { get; }
 
         /// <summary>
         ///     Translates the <see cref="Tile"/> title location from its local coordinate space
@@ -838,22 +849,22 @@ public class TileView : View
         /// </summary>
         public Point GetLocalCoordinateForTitle (TileView intoCoordinateSpace)
         {
-            Rectangle screen = Tile.ContentView.ViewportToScreen (Rectangle.Empty);
+            Rectangle screen = Tile!.ContentView!.ViewportToScreen (Rectangle.Empty);
 
             return intoCoordinateSpace.ScreenToFrame (new (screen.X, screen.Y - 1));
         }
 
         internal string GetTrimmedTitle ()
         {
-            Dim spaceDim = Tile.ContentView.Width;
+            Dim? spaceDim = Tile?.ContentView?.Width;
 
-            int spaceAbs = spaceDim.GetAnchor (Parent.Viewport.Width);
+            int spaceAbs = spaceDim!.GetAnchor (Parent!.Viewport.Width);
 
-            var title = $" {Tile.Title} ";
+            var title = $" {Tile!.Title} ";
 
             if (title.Length > spaceAbs)
             {
-                return title.Substring (0, spaceAbs);
+                return title!.Substring (0, spaceAbs);
             }
 
             return title;
@@ -864,7 +875,7 @@ public class TileView : View
     {
         public Point? moveRuneRenderLocation;
 
-        private Pos dragOrignalPos;
+        private Pos? dragOrignalPos;
         private Point? dragPosition;
 
         public TileViewLineView (TileView parent, int idx)
@@ -874,13 +885,13 @@ public class TileView : View
 
             Parent = parent;
             Idx = idx;
-            AddCommand (Command.Right, () => { return MoveSplitter (1, 0); });
+            AddCommand (Command.Right, () => MoveSplitter (1, 0));
 
-            AddCommand (Command.Left, () => { return MoveSplitter (-1, 0); });
+            AddCommand (Command.Left, () => MoveSplitter (-1, 0));
 
-            AddCommand (Command.Up, () => { return MoveSplitter (0, -1); });
+            AddCommand (Command.Up, () => MoveSplitter (0, -1));
 
-            AddCommand (Command.Down, () => { return MoveSplitter (0, 1); });
+            AddCommand (Command.Down, () => MoveSplitter (0, 1));
 
             KeyBindings.Add (Key.CursorRight, Command.Right);
             KeyBindings.Add (Key.CursorLeft, Command.Left);
@@ -960,7 +971,7 @@ public class TileView : View
 
                 //Driver.UncookMouse ();
                 FinalisePosition (
-                                  dragOrignalPos,
+                                  dragOrignalPos!,
                                   Orientation == Orientation.Horizontal ? Y : X
                                  );
                 dragPosition = null;
@@ -1087,4 +1098,4 @@ public class TileView : View
 }
 
 /// <summary>Represents a method that will handle splitter events.</summary>
-public delegate void SplitterEventHandler (object sender, SplitterEventArgs e);
+public delegate void SplitterEventHandler (object? sender, SplitterEventArgs e);
