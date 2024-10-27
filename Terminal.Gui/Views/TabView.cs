@@ -1236,16 +1236,6 @@ public class TabView : View
         private void RenderTabLine ()
         {
             TabToRender [] tabLocations = _host._tabLocations;
-            int y;
-
-            if (_host.Style.TabsOnBottom)
-            {
-                y = 1;
-            }
-            else
-            {
-                y = _host.Style.ShowTopLine ? 1 : 0;
-            }
 
             View selected = null;
             int topLine = _host.Style.ShowTopLine ? 1 : 0;
