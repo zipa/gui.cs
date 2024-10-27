@@ -178,7 +178,7 @@ public class ScrollBarViewTests
 
         Application.Begin (top);
         ((FakeDriver)Application.Driver!).SetBufferSize (width, height);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         var expected = @"
 ┌─┐
@@ -231,7 +231,7 @@ public class ScrollBarViewTests
     {
         _scrollBar = new ScrollBarView (_hostView, true);
         Application.Begin (_hostView.SuperView as Toplevel);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         AddHandlers ();
 
@@ -252,7 +252,7 @@ public class ScrollBarViewTests
     {
         _scrollBar = new ScrollBarView (_hostView, true);
         Application.Begin (_hostView.SuperView as Toplevel);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         AddHandlers ();
 
@@ -288,7 +288,7 @@ public class ScrollBarViewTests
     {
         _scrollBar = new ScrollBarView (_hostView, true);
         Application.Begin (_hostView.SuperView as Toplevel);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         AddHandlers ();
 
@@ -312,7 +312,7 @@ public class ScrollBarViewTests
 
         var sbv = new ScrollBarView (label, true, false) { Size = 100 };
         Application.Begin (top);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         Assert.True (sbv.Visible);
 
@@ -430,7 +430,7 @@ This is a test
 
                                                                                       Assert.Equal (newScrollBarView.Position, listView.LeftItem);
                                                                                       listView.SetNeedsDisplay ();
-                                                                                      Application.Refresh ();
+                                                                                      Application.LayoutAndDrawToplevels ();
 
                                                                                   };
 
@@ -511,7 +511,7 @@ This is a test
 
                                                                                             Assert.Equal (newScrollBarView.Position, listView.TopItem);
                                                                                             listView.SetNeedsDisplay ();
-                                                                                            Application.Refresh ();
+                                                                                            Application.LayoutAndDrawToplevels ();
 
                                                                                         };
 
@@ -562,7 +562,7 @@ This is a test
         var sbv = new ScrollBarView (label, true) { Size = 100 };
         sbv.OtherScrollBarView.Size = 100;
         Application.Begin (top);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         Assert.Equal (100, sbv.Size);
         Assert.Equal (100, sbv.OtherScrollBarView.Size);
@@ -646,7 +646,7 @@ This is a tes▼
 
         var sbv = new ScrollBarView (label, true, false) { Size = 100 };
         Application.Begin (top);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         Assert.Equal (100, sbv.Size);
         Assert.Null (sbv.OtherScrollBarView);
@@ -691,7 +691,7 @@ This is a test
     {
         _scrollBar = new ScrollBarView (_hostView, true);
         Application.Begin (_hostView.SuperView as Toplevel);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         AddHandlers ();
 
@@ -1168,7 +1168,7 @@ This is a test
 
         var sbv = new ScrollBarView (label, true, false) { Size = 5 };
         Application.Begin (top);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         Assert.Equal (5, sbv.Size);
         Assert.Null (sbv.OtherScrollBarView);
@@ -1196,7 +1196,7 @@ This is a test             ",
         Assert.Equal (5, sbv.Size);
         Assert.False (sbv.ShowScrollIndicator);
         Assert.True (sbv.Visible);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         Assert.False (sbv.Visible);
 
         TestHelpers.AssertDriverContentsWithFrameAre (

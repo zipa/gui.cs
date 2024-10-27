@@ -456,7 +456,7 @@ public partial class ToplevelTests (ITestOutputHelper output)
                                                                        ScreenPosition = new (2, 2), Flags = MouseFlags.Button1Pressed
                                                                                                       | MouseFlags.ReportMousePosition
                                                                    });
-                                         Application.Refresh ();
+                                         Application.LayoutAndDrawToplevels ();
 
                                          Assert.Equal (Application.Top.Border, Application.MouseGrabView);
                                          Assert.Equal (new (1, 2, 10, 3), Application.Top.Frame);
@@ -478,7 +478,7 @@ public partial class ToplevelTests (ITestOutputHelper output)
                                                                    {
                                                                        ScreenPosition = new (2, 1), Flags = MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition
                                                                    });
-                                         Application.Refresh ();
+                                         Application.LayoutAndDrawToplevels ();
 
                                          Assert.Equal (Application.Top!.Border, Application.MouseGrabView);
                                          Assert.Equal (new (1, 1, 10, 3), Application.Top.Frame);
@@ -497,7 +497,7 @@ public partial class ToplevelTests (ITestOutputHelper output)
 
                                          // Ungrab the mouse
                                          Application.RaiseMouseEvent (new () { ScreenPosition = new (2, 1), Flags = MouseFlags.Button1Released });
-                                         Application.Refresh ();
+                                         Application.LayoutAndDrawToplevels ();
 
                                          Assert.Null (Application.MouseGrabView);
                                      }
@@ -752,7 +752,7 @@ public partial class ToplevelTests (ITestOutputHelper output)
         top.SetNeedsLayout ();
         top.LayoutSubviews ();
         Assert.Equal (new (6, 6, 191, 91), win.Frame);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         Application.RaiseMouseEvent (
                                   new ()
@@ -763,7 +763,7 @@ public partial class ToplevelTests (ITestOutputHelper output)
         top.SetNeedsLayout ();
         top.LayoutSubviews ();
         Assert.Equal (new (2, 2, 195, 95), win.Frame);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         Application.RaiseMouseEvent (new () { ScreenPosition = new (5, 5), Flags = MouseFlags.Button1Released });
 
@@ -784,7 +784,7 @@ public partial class ToplevelTests (ITestOutputHelper output)
         RunState rsTop = Application.Begin (top);
         ((FakeDriver)Application.Driver!).SetBufferSize (40, 10);
         RunState rsWindow = Application.Begin (window);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         Assert.Equal (new (0, 0, 40, 10), top.Frame);
         Assert.Equal (new (0, 0, 20, 3), window.Frame);
 
@@ -800,7 +800,7 @@ public partial class ToplevelTests (ITestOutputHelper output)
                                       ScreenPosition = new (-11, -4), Flags = MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition
                                   });
 
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         Assert.Equal (new (0, 0, 40, 10), top.Frame);
         Assert.Equal (new (-11, -4, 20, 3), window.Frame);
 
@@ -813,7 +813,7 @@ public partial class ToplevelTests (ITestOutputHelper output)
                                       ScreenPosition = new (-1, -1), Flags = MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition
                                   });
 
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         Assert.Equal (new (0, 0, 20, 3), top.Frame);
         Assert.Equal (new (-1, -1, 20, 3), window.Frame);
 
@@ -826,7 +826,7 @@ public partial class ToplevelTests (ITestOutputHelper output)
                                       ScreenPosition = new (-1, -1), Flags = MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition
                                   });
 
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         Assert.Equal (new (0, 0, 19, 2), top.Frame);
         Assert.Equal (new (-1, -1, 20, 3), window.Frame);
 
@@ -836,7 +836,7 @@ public partial class ToplevelTests (ITestOutputHelper output)
                                       ScreenPosition = new (18, 1), Flags = MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition
                                   });
 
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         Assert.Equal (new (0, 0, 19, 2), top.Frame);
         Assert.Equal (new (18, 1, 20, 3), window.Frame);
 
@@ -847,7 +847,7 @@ public partial class ToplevelTests (ITestOutputHelper output)
                                       ScreenPosition = new (19, 2), Flags = MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition
                                   });
 
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         Assert.Equal (new (0, 0, 19, 2), top.Frame);
         Assert.Equal (new (19, 2, 20, 3), window.Frame);
         //TestHelpers.AssertDriverContentsWithFrameAre (@"", output);
@@ -986,7 +986,7 @@ public partial class ToplevelTests (ITestOutputHelper output)
 
         Application.RaiseMouseEvent (new () { ScreenPosition = new (5, 2), Flags = MouseFlags.Button1Clicked });
 
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @$"

@@ -100,7 +100,7 @@ public class MenuBarTests (ITestOutputHelper output)
                                          new () { Position = new (0, 0), Flags = MouseFlags.Button1Pressed, View = menu }
                                         )
                     );
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @$"
@@ -880,7 +880,7 @@ public class MenuBarTests (ITestOutputHelper output)
         Toplevel top = new ();
         Application.Begin (top);
         menu.OpenMenu ();
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         var expected = @"
 ──────┐
@@ -895,7 +895,7 @@ public class MenuBarTests (ITestOutputHelper output)
         menu.CloseAllMenus ();
         menu.Frame = new (-1, -2, menu.Frame.Width, menu.Frame.Height);
         menu.OpenMenu ();
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         expected = @"
  One  │
@@ -910,7 +910,7 @@ public class MenuBarTests (ITestOutputHelper output)
         menu.Frame = new (0, 0, menu.Frame.Width, menu.Frame.Height);
         ((FakeDriver)Application.Driver!).SetBufferSize (7, 5);
         menu.OpenMenu ();
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         expected = @"
 ┌──────
@@ -926,7 +926,7 @@ public class MenuBarTests (ITestOutputHelper output)
         menu.Frame = new (0, 0, menu.Frame.Width, menu.Frame.Height);
         ((FakeDriver)Application.Driver!).SetBufferSize (7, 3);
         menu.OpenMenu ();
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         expected = @"
 ┌──────
@@ -960,7 +960,7 @@ public class MenuBarTests (ITestOutputHelper output)
         Toplevel top = new ();
         Application.Begin (top);
         menu.OpenMenu ();
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         var expected = @"
 ne
@@ -972,7 +972,7 @@ wo
         menu.CloseAllMenus ();
         menu.Frame = new (-2, -2, menu.Frame.Width, menu.Frame.Height);
         menu.OpenMenu ();
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         expected = @"
 wo
@@ -984,7 +984,7 @@ wo
         menu.Frame = new (0, 0, menu.Frame.Width, menu.Frame.Height);
         ((FakeDriver)Application.Driver!).SetBufferSize (3, 2);
         menu.OpenMenu ();
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         expected = @"
  On
@@ -997,7 +997,7 @@ wo
         menu.Frame = new (0, 0, menu.Frame.Width, menu.Frame.Height);
         ((FakeDriver)Application.Driver!).SetBufferSize (3, 1);
         menu.OpenMenu ();
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         expected = @"
  On
@@ -1024,7 +1024,7 @@ wo
         Toplevel top = new ();
         Application.Begin (top);
         menu.OpenMenu ();
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         var expected = @"
 ┌──────┐
@@ -1056,7 +1056,7 @@ wo
         Toplevel top = new ();
         Application.Begin (top);
         menu.OpenMenu ();
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         var expected = @"
  One
@@ -1479,7 +1479,7 @@ wo
         Application.Begin (top);
 
         menu.OpenMenu ();
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -1527,7 +1527,7 @@ wo
         Application.Begin (top);
 
         menu.OpenMenu ();
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -1660,7 +1660,7 @@ wo
                                                      );
 
         Assert.True (menu.NewKeyDownEvent (Key.CursorRight));
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -1771,7 +1771,7 @@ wo
                                                                                   );
 
                                      Assert.True (menu.NewKeyDownEvent (Key.CursorRight));
-                                     Application.Refresh ();
+                                     Application.LayoutAndDrawToplevels ();
 
                                      TestHelpers.AssertDriverContentsWithFrameAre (
                                                                                    @"
@@ -1942,7 +1942,7 @@ wo
         Application.Iteration += (s, a) =>
                                  {
                                      Toplevel top = Application.Top;
-                                     Application.Refresh();
+                                     Application.LayoutAndDrawToplevels();
 
                                      TestHelpers.AssertDriverContentsWithFrameAre (
                                                                                    @"
@@ -1974,7 +1974,7 @@ wo
                                                                                   );
 
                                      Assert.True (top.Subviews [0].NewKeyDownEvent (Key.CursorRight));
-                                     Application.Refresh ();
+                                     Application.LayoutAndDrawToplevels ();
 
                                      TestHelpers.AssertDriverContentsWithFrameAre (
                                                                                    @"

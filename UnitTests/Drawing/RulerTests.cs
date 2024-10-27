@@ -68,7 +68,7 @@ public class RulerTests
 
         // Postive offset
         top.SetNeedsDisplay ();
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         r.Draw (new (1, 1));
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -83,7 +83,7 @@ public class RulerTests
 
         // Negative offset
         top.SetNeedsDisplay ();
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         r.Draw (new (-1, 1));
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -98,7 +98,7 @@ public class RulerTests
 
         // Clip
         top.SetNeedsDisplay ();
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         r.Draw (new (10, 1));
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -144,7 +144,7 @@ public class RulerTests
                                                      );
 
         f.SetNeedsDisplay();
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         r.Length = len;
         r.Draw (new (1, 0), 1);
 
@@ -207,7 +207,7 @@ public class RulerTests
 
         // Postive offset
         f.SetNeedsDisplay ();
-        Application.Refresh (true);
+        Application.LayoutAndDrawToplevels (true);
         r.Draw (new (1, 1));
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -237,7 +237,7 @@ public class RulerTests
 
         // Negative offset
         f.SetNeedsDisplay ();
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         r.Draw (new (1, -1));
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -268,7 +268,7 @@ public class RulerTests
         // Clip
         f.SetNeedsDisplay ();
 
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         r.Draw (new (1, 10));
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -343,7 +343,7 @@ public class RulerTests
                                                       _output
                                                      );
         f.SetNeedsDisplay ();
-        Application.Refresh (true);
+        Application.LayoutAndDrawToplevels (true);
         r.Length = len;
         r.Draw (new (0, 1), 1);
 

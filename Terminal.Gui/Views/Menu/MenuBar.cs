@@ -1117,7 +1117,7 @@ public class MenuBar : View, IDesignable
 
         Application.UngrabMouse ();
         CloseAllMenus ();
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         _openedByAltKey = true;
 
         return Run (item.Action);

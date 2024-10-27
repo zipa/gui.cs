@@ -145,21 +145,21 @@ public class TabViewTests (ITestOutputHelper output)
         {
             args = new () { ScreenPosition = new (i, 1), Flags = MouseFlags.ReportMousePosition };
             Application.RaiseMouseEvent (args);
-            Application.Refresh ();
+            Application.LayoutAndDrawToplevels ();
             Assert.Null (clicked);
             Assert.Equal (tab1, tv.SelectedTab);
         }
 
         args = new () { ScreenPosition = new (3, 1), Flags = MouseFlags.Button1Clicked };
         Application.RaiseMouseEvent (args);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         Assert.Equal (tab1, clicked);
         Assert.Equal (tab1, tv.SelectedTab);
 
         // Click to tab2
         args = new () { ScreenPosition = new (6, 1), Flags = MouseFlags.Button1Clicked };
         Application.RaiseMouseEvent (args);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         Assert.Equal (tab2, clicked);
         Assert.Equal (tab2, tv.SelectedTab);
 
@@ -172,7 +172,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         args = new () { ScreenPosition = new (3, 1), Flags = MouseFlags.Button1Clicked };
         Application.RaiseMouseEvent (args);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         // Tab 1 was clicked but event handler blocked navigation
         Assert.Equal (tab1, clicked);
@@ -180,7 +180,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         args = new () { ScreenPosition = new (12, 1), Flags = MouseFlags.Button1Clicked };
         Application.RaiseMouseEvent (args);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         // Clicking beyond last tab should raise event with null Tab
         Assert.Null (clicked);
@@ -235,7 +235,7 @@ public class TabViewTests (ITestOutputHelper output)
         // Click the right arrow
         var args = new MouseEventArgs { ScreenPosition = new (6, 2), Flags = MouseFlags.Button1Clicked };
         Application.RaiseMouseEvent (args);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         Assert.Null (clicked);
         Assert.Equal (tab1, oldChanged);
         Assert.Equal (tab2, newChanged);
@@ -255,7 +255,7 @@ public class TabViewTests (ITestOutputHelper output)
         // Click the left arrow
         args = new () { ScreenPosition = new (0, 2), Flags = MouseFlags.Button1Clicked };
         Application.RaiseMouseEvent (args);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         Assert.Null (clicked);
         Assert.Equal (tab2, oldChanged);
         Assert.Equal (tab1, newChanged);
@@ -326,7 +326,7 @@ public class TabViewTests (ITestOutputHelper output)
         // Click the right arrow
         var args = new MouseEventArgs { ScreenPosition = new (7, 3), Flags = MouseFlags.Button1Clicked };
         Application.RaiseMouseEvent (args);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         Assert.Null (clicked);
         Assert.Equal (tab1, oldChanged);
         Assert.Equal (tab2, newChanged);
@@ -348,7 +348,7 @@ public class TabViewTests (ITestOutputHelper output)
         // Click the left arrow
         args = new () { ScreenPosition = new (1, 3), Flags = MouseFlags.Button1Clicked };
         Application.RaiseMouseEvent (args);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         Assert.Null (clicked);
         Assert.Equal (tab2, oldChanged);
         Assert.Equal (tab1, newChanged);
@@ -399,7 +399,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         // Press the cursor up key to focus the selected tab
         Application.RaiseKeyDownEvent (Key.CursorUp);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         // Is the selected tab focused
         Assert.Equal (tab1, tv.SelectedTab);
@@ -417,7 +417,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         // Press the cursor right key to select the next tab
         Application.RaiseKeyDownEvent (Key.CursorRight);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         Assert.Equal (tab1, oldChanged);
         Assert.Equal (tab2, newChanged);
         Assert.Equal (tab2, tv.SelectedTab);
@@ -475,7 +475,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         // Press the cursor left key to select the previous tab
         Application.RaiseKeyDownEvent (Key.CursorLeft);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         Assert.Equal (tab2, oldChanged);
         Assert.Equal (tab1, newChanged);
         Assert.Equal (tab1, tv.SelectedTab);
@@ -485,7 +485,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         // Press the end key to select the last tab
         Application.RaiseKeyDownEvent (Key.End);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         Assert.Equal (tab1, oldChanged);
         Assert.Equal (tab2, newChanged);
         Assert.Equal (tab2, tv.SelectedTab);
@@ -494,7 +494,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         // Press the home key to select the first tab
         Application.RaiseKeyDownEvent (Key.Home);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         Assert.Equal (tab2, oldChanged);
         Assert.Equal (tab1, newChanged);
         Assert.Equal (tab1, tv.SelectedTab);
@@ -503,7 +503,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         // Press the page down key to select the next set of tabs
         Application.RaiseKeyDownEvent (Key.PageDown);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         Assert.Equal (tab1, oldChanged);
         Assert.Equal (tab2, newChanged);
         Assert.Equal (tab2, tv.SelectedTab);
@@ -512,7 +512,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         // Press the page up key to select the previous set of tabs
         Application.RaiseKeyDownEvent (Key.PageUp);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         Assert.Equal (tab2, oldChanged);
         Assert.Equal (tab1, newChanged);
         Assert.Equal (tab1, tv.SelectedTab);

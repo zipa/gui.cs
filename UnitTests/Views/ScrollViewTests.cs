@@ -195,7 +195,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         var top = new Toplevel ();
         top.Add (topLabel, sv, bottomLabel);
         Application.Begin (top);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -250,7 +250,7 @@ public class ScrollViewTests (ITestOutputHelper output)
 
         sv.Add (new Window { X = 3, Y = 3, Width = 20, Height = 20 });
 
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -297,7 +297,7 @@ public class ScrollViewTests (ITestOutputHelper output)
                                               );
 
         sv.ContentOffset = new (20, 20);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -461,7 +461,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         var top = new Toplevel ();
         top.Add (sv);
         Application.Begin (top);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         Assert.Equal (new (-25, -25), sv.ContentOffset);
         Assert.Equal (new (50, 50), sv.GetContentSize ());
@@ -497,7 +497,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         var top = new Toplevel ();
         top.Add (sv);
         Application.Begin (top);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         Assert.Equal (50, sv.GetContentSize ().Width);
         Assert.Equal (50, sv.GetContentSize ().Height);
@@ -567,7 +567,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         var top = new Toplevel ();
         top.Add (win);
         Application.Begin (top);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         var expected = @"
  ┌──────────────────┐
@@ -898,7 +898,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         var top = new Toplevel ();
         top.Add (sv);
         Application.Begin (top);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -917,7 +917,7 @@ public class ScrollViewTests (ITestOutputHelper output)
 
         sv.ContentOffset = new (5, 5);
         sv.LayoutSubviews ();
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -1085,7 +1085,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         var top = new Toplevel ();
         top.Add (sv);
         Application.Begin (top);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         Assert.Equal (4, sv.Subviews.Count);
         Assert.Equal (2, sv.Subviews [0].Subviews.Count);

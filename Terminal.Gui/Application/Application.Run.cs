@@ -207,7 +207,7 @@ public static partial class Application // Run (Begin, Run, End, Stop)
         NotifyNewRunState?.Invoke (toplevel, new (rs));
 
         // Force an Idle event so that an Iteration (and Refresh) happen.
-        Application.Invoke(() => {});
+        Application.Invoke (() => { });
 
         return rs;
     }
@@ -496,33 +496,29 @@ public static partial class Application // Run (Begin, Run, End, Stop)
     public static void Wakeup () { MainLoop?.Wakeup (); }
 
     /// <summary>
-    /// Refreshes layout and the display. Only Views that need to be laid out (see <see cref="View.NeedsLayout"/>) will be laid out.
+    /// Causes any Toplevels that need layout to be laid out. Then draws any Toplevels that need dispplay. Only Views that need to be laid out (see <see cref="View.NeedsLayout"/>) will be laid out.
     /// Only Views that need to be drawn (see <see cref="View.NeedsDisplay"/>) will be drawn.
     /// </summary>
-    /// <param name="forceRedraw">If <see langword="true"/> the entire View hierarchy will be redrawn. The default is <see langword="false"/> and should only be overriden for testing.</param>
-    public static void Refresh (bool forceRedraw = false, object context = null)
+    /// <param name="forceDraw">If <see langword="true"/> the entire View hierarchy will be redrawn. The default is <see langword="false"/> and should only be overriden for testing.</param>
+    public static void LayoutAndDrawToplevels (bool forceDraw = false)
     {
-        //WindowsConsole.InputRecord rec = new WindowsConsole.InputRecord();
-        //if (context is WindowsConsole.InputRecord record)
-        //{
-        //    rec = record;
-        //    if (record is { EventType: WindowsConsole.EventType.Focus })
-        //    {
-        //        return;
-        //    }
-
-        //    if (record is { EventType: WindowsConsole.EventType.Key })
-        //    {
-        //        var key = (WindowsConsole.KeyEventRecord)record.KeyEvent;
-        //        if (key is { dwControlKeyState: WindowsConsole.ControlKeyState.LeftAltPressed })
-        //        {
-        //            return;
-        //        }
-        //    }
-
-        //}
-
         bool neededLayout = false;
+        neededLayout = LayoutToplevels ();
+
+        if (forceDraw)
+        {
+            Driver?.ClearContents ();
+        }
+
+        DrawToplevels (neededLayout || forceDraw);
+
+        Driver?.Refresh ();
+    }
+
+    private static bool LayoutToplevels ()
+    {
+        bool neededLayout = false;
+
         foreach (Toplevel tl in TopLevels.Reverse ())
         {
             if (tl.NeedsLayout)
@@ -532,47 +528,22 @@ public static partial class Application // Run (Begin, Run, End, Stop)
             }
         }
 
-        if (forceRedraw)
-        {
-           Driver?.ClearContents ();
-        }
+        return neededLayout;
+    }
 
+    private static void DrawToplevels (bool forceDraw)
+    {
         foreach (Toplevel tl in TopLevels.Reverse ())
         {
-            if (neededLayout)
+            if (forceDraw)
             {
                 tl.SetNeedsDisplay ();
             }
 
             tl.Draw ();
         }
-
-        // Stack<Toplevel> redrawStack = new (TopLevels);
-
-        //// Debug.WriteLine ($"{DateTime.Now}.{DateTime.Now.Millisecond} - Refresh {rec} = {redrawStack.Count}");
-        // while (redrawStack.Count > 0)
-        // {
-        //     Toplevel? tlToDraw = redrawStack.Pop ();
-
-        //     if (forceRedraw)
-        //     {
-        //         tlToDraw.SetNeedsDisplay ();
-        //     }
-
-        //     if (View.CanBeVisible (tlToDraw))
-        //     {
-        //         bool needs =  tlToDraw.NeedsDisplay || tlToDraw.SubViewNeedsDisplay;
-        //         tlToDraw.Draw ();
-
-        //         if (needs && redrawStack.TryPeek (out var nexToplevel))
-        //         {
-        //             nexToplevel.SetNeedsDisplay ();
-        //         }
-        //     }
-        // }
-
-        Driver?.Refresh ();
     }
+
 
     /// <summary>This event is raised on each iteration of the main loop.</summary>
     /// <remarks>See also <see cref="Timeout"/></remarks>
@@ -633,9 +604,7 @@ public static partial class Application // Run (Begin, Run, End, Stop)
                 state.Toplevel.OnReady ();
             }
 
-            object ctx = state.Context;
             MainLoop.RunIteration ();
-            state.Context = ctx;
 
             Iteration?.Invoke (null, new ());
         }
@@ -647,7 +616,7 @@ public static partial class Application // Run (Begin, Run, End, Stop)
             return firstIteration;
         }
 
-        Refresh (context: state.Context);
+        LayoutAndDrawToplevels ();
 
         if (PositionCursor ())
         {
@@ -747,6 +716,6 @@ public static partial class Application // Run (Begin, Run, End, Stop)
         runState.Toplevel = null;
         runState.Dispose ();
 
-        Refresh (context: "End");
+        LayoutAndDrawToplevels ();
     }
 }

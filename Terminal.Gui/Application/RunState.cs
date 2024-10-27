@@ -10,8 +10,6 @@ public class RunState : IDisposable
     /// <summary>The <see cref="Toplevel"/> belonging to this <see cref="RunState"/>.</summary>
     public Toplevel Toplevel { get; internal set; }
 
-    public object Context { get; internal set; }
-
     /// <summary>Releases all resource used by the <see cref="RunState"/> object.</summary>
     /// <remarks>Call <see cref="Dispose()"/> when you are finished using the <see cref="RunState"/>.</remarks>
     /// <remarks>

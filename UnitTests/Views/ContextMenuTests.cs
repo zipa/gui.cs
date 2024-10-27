@@ -138,7 +138,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         var top = new Toplevel { X = 2, Y = 2, Width = 15, Height = 4 };
         top.Add (new TextField { X = Pos.Center (), Width = 10, Text = "Test" });
         RunState rs = Application.Begin (top);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         Assert.Equal (new Rectangle (2, 2, 15, 4), top.Frame);
         Assert.Equal (top, Application.Top);
@@ -209,7 +209,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         var testWindow = new Window { X = 2, Y = 2, Width = 15, Height = 4 };
         testWindow.Add (new TextField { X = Pos.Center (), Width = 10, Text = "Test" });
         RunState rsDialog = Application.Begin (testWindow);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         Assert.Equal (new Rectangle (2, 2, 15, 4), testWindow.Frame);
 
@@ -275,7 +275,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         var dialog = new Window { X = 2, Y = 2, Width = 15, Height = 4 };
         dialog.Add (new TextField { X = Pos.Center (), Width = 10, Text = "Test" });
         RunState rs = Application.Begin (dialog);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         Assert.Equal (new Rectangle (2, 2, 15, 4), dialog.Frame);
         Assert.Equal (dialog, Application.Top);
@@ -336,7 +336,7 @@ public class ContextMenuTests (ITestOutputHelper output)
 
         cm.Show (menuItems);
         Assert.Equal (new Point (-1, -2), cm.Position);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         var expected = @"
 ┌──────┐
@@ -351,7 +351,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         cm.ForceMinimumPosToZero = false;
         cm.Show (menuItems);
         Assert.Equal (new Point (-1, -2), cm.Position);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         expected = @"
  One  │
@@ -443,7 +443,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         Toplevel top = new ();
         Application.Begin (top);
         cm.Show (menuItems);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         var expected = @"
           ┌──────┐
@@ -463,7 +463,7 @@ public class ContextMenuTests (ITestOutputHelper output)
                                     );
 
         cm.Show (menuItems);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         expected = @"
           ┌─────────┐
@@ -801,7 +801,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         Toplevel top = new ();
         Application.Begin (top);
         cm.Show (menuItems);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         var expected = @"
           ┌──────┐
@@ -815,7 +815,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         cm.Position = new Point (5, 10);
 
         cm.Show (menuItems);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         expected = @"
      ┌──────┐
@@ -936,7 +936,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         Application.Begin (top);
         cm.Show (menuItems);
         Assert.Equal (Point.Empty, cm.Position);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         var expected = @"
 ┌──────┐
@@ -974,7 +974,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         Application.Begin (top);
         cm.Show (menuItems);
         Assert.Equal (Point.Empty, cm.Position);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         var expected = @"
 ┌────
@@ -1085,7 +1085,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         Application.Begin (top);
         cm.Show (menuItems);
         Assert.Equal (new Point (80, 25), cm.Position);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         var expected = @"
                                                                         ┌──────┐
@@ -1170,7 +1170,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         Application.Begin (top);
         cm.Show (menuItems);
         Assert.True (ContextMenu.IsShow);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         var expected = @"
           ┌──────┐
@@ -1184,7 +1184,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         cm.Hide ();
         Assert.False (ContextMenu.IsShow);
 
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         expected = "";
 
@@ -1224,7 +1224,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         RunState rs = Application.Begin (top);
         cm.Show (menuItems);
         Assert.Equal (new Rectangle (5, 11, 10, 5), Application.Top!.Subviews [0].Frame);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -1317,7 +1317,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         cm.Show (menuItems);
 
         Assert.Equal (new Rectangle (5, 11, 10, 5), Application.Top.Subviews [0].Frame);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"

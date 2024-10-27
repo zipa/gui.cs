@@ -590,7 +590,7 @@ public class DrawTests (ITestOutputHelper _output)
                                                      );
 
         content.X = -1;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       """
@@ -605,12 +605,12 @@ public class DrawTests (ITestOutputHelper _output)
                                                      );
 
         content.X = -2;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         TestHelpers.AssertDriverContentsWithFrameAre (@"", _output);
 
         content.X = 0;
         content.Y = -1;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       """
@@ -625,7 +625,7 @@ public class DrawTests (ITestOutputHelper _output)
                                                      );
 
         content.Y = -6;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       """
@@ -640,7 +640,7 @@ public class DrawTests (ITestOutputHelper _output)
                                                      );
 
         content.Y = -19;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       """
@@ -651,12 +651,12 @@ public class DrawTests (ITestOutputHelper _output)
                                                      );
 
         content.Y = -20;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         TestHelpers.AssertDriverContentsWithFrameAre ("", _output);
 
         content.X = -2;
         content.Y = 0;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         TestHelpers.AssertDriverContentsWithFrameAre ("", _output);
         top.Dispose ();
     }
@@ -696,7 +696,7 @@ public class DrawTests (ITestOutputHelper _output)
         top.SubviewsLaidOut += Top_LayoutComplete;
         Application.Begin (top);
 
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       """
                                                       
@@ -707,7 +707,7 @@ public class DrawTests (ITestOutputHelper _output)
                                                      );
 
         content.X = -1;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       """
@@ -719,7 +719,7 @@ public class DrawTests (ITestOutputHelper _output)
                                                      );
 
         content.Y = -1;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       """
@@ -730,12 +730,12 @@ public class DrawTests (ITestOutputHelper _output)
                                                      );
 
         content.Y = -2;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         TestHelpers.AssertDriverContentsWithFrameAre ("", _output);
 
         content.X = -20;
         content.Y = 0;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         TestHelpers.AssertDriverContentsWithFrameAre ("", _output);
         top.Dispose ();
 
@@ -783,7 +783,7 @@ public class DrawTests (ITestOutputHelper _output)
         top.Add (container);
         Application.Begin (top);
 
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       """
                                                       
@@ -797,7 +797,7 @@ public class DrawTests (ITestOutputHelper _output)
                                                      );
 
         content.X = -1;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       """
@@ -812,12 +812,12 @@ public class DrawTests (ITestOutputHelper _output)
                                                      );
 
         content.X = -2;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         TestHelpers.AssertDriverContentsWithFrameAre (@"", _output);
 
         content.X = 0;
         content.Y = -1;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       """
@@ -832,7 +832,7 @@ public class DrawTests (ITestOutputHelper _output)
                                                      );
 
         content.Y = -6;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       """
@@ -847,7 +847,7 @@ public class DrawTests (ITestOutputHelper _output)
                                                      );
 
         content.Y = -19;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       """
@@ -858,12 +858,12 @@ public class DrawTests (ITestOutputHelper _output)
                                                      );
 
         content.Y = -20;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         TestHelpers.AssertDriverContentsWithFrameAre ("", _output);
 
         content.X = -2;
         content.Y = 0;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         TestHelpers.AssertDriverContentsWithFrameAre ("", _output);
         top.Dispose ();
     }

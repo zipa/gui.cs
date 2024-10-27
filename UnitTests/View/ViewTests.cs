@@ -212,7 +212,7 @@ cccccccccccccccccccc",
             Assert.True (v.HasFocus);
             v.SetFocus ();
             Assert.True (v.HasFocus);
-            Application.Refresh ();
+            Application.LayoutAndDrawToplevels ();
 
             TestHelpers.AssertDriverAttributesAre (
                                                    @"

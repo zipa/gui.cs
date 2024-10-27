@@ -933,7 +933,7 @@ public class DialogTests
 
                           dlg.Loaded += (s, a) =>
                                         {
-                                            Refresh ();
+                                            LayoutAndDrawToplevels ();
 
                                             var expected = @$"
 ┌──────────────────┐
@@ -1038,7 +1038,7 @@ public class DialogTests
                          }
                          else if (iterations == 1)
                          {
-                             Refresh ();
+                             LayoutAndDrawToplevels ();
 
                              // BUGBUG: This seems wrong; is it a bug in Dim.Percent(85)?? No
                              _ = TestHelpers.AssertDriverContentsWithFrameAre (expected, _output);
@@ -1110,7 +1110,7 @@ public class DialogTests
                              case 0:
                                  Top.SetNeedsLayout();
                                  Top.SetNeedsDisplay();
-                                 Refresh ();
+                                 LayoutAndDrawToplevels ();
 
                                  break;
 
@@ -1119,7 +1119,7 @@ public class DialogTests
 
                                  break;
                              case 2:
-                                 Refresh ();
+                                 LayoutAndDrawToplevels ();
 
                                  expected = @$"
   ┌───────────────────────┐
@@ -1136,7 +1136,7 @@ public class DialogTests
 
                                  break;
                              case 3:
-                                 Refresh ();
+                                 LayoutAndDrawToplevels ();
 
                                  TestHelpers.AssertDriverContentsWithFrameAre (
                                                                                @$"
@@ -1155,7 +1155,7 @@ public class DialogTests
 
                                  break;
                              case 4:
-                                 Refresh ();
+                                 LayoutAndDrawToplevels ();
 
                                  TestHelpers.AssertDriverContentsWithFrameAre (expected, _output);
 

@@ -100,7 +100,7 @@ public class Images : Scenario
                                    }
 
                                    imageView.SetImage (img);
-                                   Application.Refresh ();
+                                   Application.LayoutAndDrawToplevels ();
                                };
 
         Application.Run (win);

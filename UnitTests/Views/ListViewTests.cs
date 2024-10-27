@@ -56,7 +56,7 @@ public class ListViewTests (ITestOutputHelper output)
         top.Add (win);
         Application.Begin (top);
         ((FakeDriver)Application.Driver!).SetBufferSize (12, 12);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         Assert.Equal (-1, lv.SelectedItem);
 
@@ -305,7 +305,7 @@ public class ListViewTests (ITestOutputHelper output)
         var top = new Toplevel ();
         top.Add (lv);
         Application.Begin (top);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -319,7 +319,7 @@ Item 4",
 
         // EnsureSelectedItemVisible is auto enabled on the OnSelectedChanged
         lv.SelectedItem = 6;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -343,7 +343,7 @@ Item 6",
         var top = new Toplevel ();
         top.Add (lv);
         Application.Begin (top);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         Assert.Equal ("Second ", GetContents (0));
         Assert.Equal (new (' ', 7), GetContents (1));
@@ -725,7 +725,7 @@ Item 6",
         var top = new Toplevel ();
         top.Add (lv);
         Application.Begin (top);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         Assert.Equal (new (1), lv.Border.Thickness);
         Assert.Equal (-1, lv.SelectedItem);
@@ -799,7 +799,7 @@ Item 6",
         var top = new Toplevel ();
         top.Add (lv);
         Application.Begin (top);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -812,7 +812,7 @@ Item 6",
 
         lv.LeftItem = 1;
         lv.TopItem = 1;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"

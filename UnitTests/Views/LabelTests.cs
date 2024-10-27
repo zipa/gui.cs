@@ -111,7 +111,7 @@ public class LabelTests (ITestOutputHelper output)
 
         label.Text = "Say Hello 你 changed";
 
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         expected = @"
 ┌────────────────────────────┐
@@ -151,7 +151,7 @@ public class LabelTests (ITestOutputHelper output)
 
         label.Text = "Say Hello 你 changed";
 
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         expected = @"
 ┌────────────────────────────┐
@@ -244,7 +244,7 @@ This TextFormatter (tf2) is rewritten.                                 ",
         var top = new Toplevel ();
         top.Add (label);
         Application.Begin (top);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         Assert.Equal (new (0, 0, 16, 1), label.Frame);
 
@@ -265,7 +265,7 @@ Demo Simple Rune
         var top = new Toplevel ();
         top.Add (label);
         Application.Begin (top);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         Assert.NotNull (label.Width);
         Assert.NotNull (label.Height);
 
@@ -301,7 +301,7 @@ e
         var top = new Toplevel ();
         top.Add (label);
         Application.Begin (top);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         var expected = @"
 デ
@@ -472,7 +472,7 @@ e
         var top = new Toplevel ();
         top.Add (label);
         Application.Begin (top);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         Assert.Equal (new (0, 0, 6, 3), label.Frame);
         Assert.Equal (new (0, 0, 4, 1), label.Viewport);
@@ -496,7 +496,7 @@ e
         var top = new Toplevel ();
         top.Add (label);
         Application.Begin (top);
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
         Assert.Equal (new (0, 0, 6, 2), label.Frame);
         Assert.Equal (new (0, 0, 4, 1), label.Viewport);
         Application.Begin (top);
@@ -1224,7 +1224,7 @@ e
         Assert.Equal (10, text.Length);
 
         //label.Width = Dim.Fill () - text.Length;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         Assert.Equal (new (0, 0, 5, 1), label.Frame);
         Assert.Equal (new (5, 1), label.TextFormatter.ConstrainToSize);
@@ -1283,7 +1283,7 @@ e
         Assert.Equal (10, text.Length);
 
         //label.Width = Dim.Fill () - text.Length;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
 
         Assert.Equal (new (0, 0, 5, 1), label.Frame);
         Assert.Equal (new (5, 1), label.TextFormatter.ConstrainToSize);
