@@ -105,6 +105,16 @@ public class Border : Adornment
             LayoutStarted += OnLayoutStarted;
     }
 #endif
+        if (View.Diagnostics.HasFlag (ViewDiagnosticFlags.Draw))
+        {
+            _drawIndicator = new SpinnerView ()
+            {
+                X = 1,
+                Style = new SpinnerStyle.Dots2 (),
+                SpinDelay = 0,
+            };
+            Add (_drawIndicator);
+        }
     }
 
 #if SUBVIEW_BASED_BORDER
@@ -566,8 +576,6 @@ public class Border : Adornment
                         break;
                 }
 
-                //Application.Refresh ();
-
                 return true;
             }
         }
@@ -906,6 +914,20 @@ public class Border : Adornment
             }
         }
 
+        return true;
+    }
+
+    private SpinnerView? _drawIndicator = null;
+    /// <inheritdoc />
+    protected override bool OnRenderingLineCanvas ()
+    {
+        if (_drawIndicator is { })
+        {
+            _drawIndicator.AdvanceAnimation (false);
+            _drawIndicator.DrawText();
+        }
+
+        RenderLineCanvas ();
         return true;
     }
 
@@ -1250,8 +1272,6 @@ public class Border : Adornment
                             }
                         }
 
-                        Application.Refresh ();
-
                         return true;
                     });
 
@@ -1273,8 +1293,6 @@ public class Border : Adornment
                         {
                             Parent!.Height = Parent.Height! + 1;
                         }
-
-                        Application.Refresh ();
 
                         return true;
                     });
@@ -1301,8 +1319,6 @@ public class Border : Adornment
                             }
                         }
 
-                        Application.Refresh ();
-
                         return true;
                     });
 
@@ -1324,8 +1340,6 @@ public class Border : Adornment
                         {
                             Parent!.Width = Parent.Width! + 1;
                         }
-
-                        Application.Refresh ();
 
                         return true;
                     });

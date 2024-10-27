@@ -2193,15 +2193,18 @@ internal class WindowsMainLoop : IMainLoopDriver
                 // Note: ManualResetEventSlim.Wait will wait indefinitely if the timeout is -1. The timeout is -1 when there
                 // are no timers, but there IS an idle handler waiting.
                 _eventReady.Wait (waitTimeout, _eventReadyTokenSource.Token);
+                //
             }
+            _eventReady.Reset ();
         }
         catch (OperationCanceledException)
         {
+            _eventReady.Reset ();
             return true;
         }
         finally
         {
-            _eventReady.Reset ();
+            //_eventReady.Reset ();
         }
 
         if (!_eventReadyTokenSource.IsCancellationRequested)
@@ -2299,10 +2302,18 @@ internal class WindowsMainLoop : IMainLoopDriver
 
             if (_resultQueue?.Count == 0)
             {
-                _resultQueue.Enqueue (_winConsole.ReadConsoleInput ());
+                var input = _winConsole.ReadConsoleInput ();
+
+                //if (input [0].EventType != WindowsConsole.EventType.Focus)
+                {
+                    _resultQueue.Enqueue (input);
+                }
             }
 
-            _eventReady.Set ();
+            if (_resultQueue?.Count > 0)
+            {
+                _eventReady.Set ();
+            }
         }
     }
 

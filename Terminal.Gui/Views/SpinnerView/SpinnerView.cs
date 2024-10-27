@@ -4,6 +4,8 @@
 // <https://spectreconsole.net/best-practices>.
 //------------------------------------------------------------------------------
 
+using System.Diagnostics;
+
 namespace Terminal.Gui;
 
 /// <summary>A <see cref="View"/> which displays (by default) a spinning line character.</summary>
@@ -113,11 +115,11 @@ public class SpinnerView : View, IDesignable
     ///     ignored based on <see cref="SpinDelay"/>.
     /// </summary>
     /// <remarks>Ensure this method is called on the main UI thread e.g. via <see cref="Application.Invoke"/></remarks>
-    public void AdvanceAnimation ()
+    public void AdvanceAnimation (bool setNeedsDisplay = true)
     {
         if (DateTime.Now - _lastRender > TimeSpan.FromMilliseconds (SpinDelay))
         {
-            if (Sequence is { } && Sequence.Length > 1)
+            if (Sequence is { Length: > 1 })
             {
                 var d = 1;
 
@@ -170,13 +172,30 @@ public class SpinnerView : View, IDesignable
                     }
                 }
 
-                Text = "" + Sequence [_currentIdx]; //.EnumerateRunes;
+               // Text = "" + Sequence [_currentIdx]; //.EnumerateRunes;
             }
 
             _lastRender = DateTime.Now;
         }
 
-        SetNeedsDisplay ();
+        if (setNeedsDisplay)
+        {
+            SetNeedsDisplay ();
+        }
+    }
+
+    /// <inheritdoc />
+    protected override bool OnClearingViewport (Rectangle viewport) { return true; }
+
+    /// <inheritdoc />
+    protected override bool OnDrawingText (Rectangle viewport)
+    {
+        if (Sequence is { Length: > 0 } && _currentIdx < Sequence.Length - 1)
+        {
+            Move (Viewport.X, Viewport.Y);
+            View.Driver?.AddStr (Sequence [_currentIdx]);
+        }
+        return true;
     }
 
     /// <inheritdoc/>
@@ -198,7 +217,7 @@ public class SpinnerView : View, IDesignable
                                            TimeSpan.FromMilliseconds (SpinDelay),
                                            () =>
                                            {
-                                               Application.Invoke (AdvanceAnimation);
+                                               Application.Invoke (() => AdvanceAnimation());
 
                                                return true;
                                            }

@@ -1,6 +1,7 @@
 #nullable enable
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Terminal.Gui;
 
@@ -204,6 +205,9 @@ public static partial class Application // Run (Begin, Run, End, Stop)
         }
 
         NotifyNewRunState?.Invoke (toplevel, new (rs));
+
+        // Force an Idle event so that an Iteration (and Refresh) happen.
+        Application.Invoke(() => {});
 
         return rs;
     }
@@ -496,44 +500,76 @@ public static partial class Application // Run (Begin, Run, End, Stop)
     /// Only Views that need to be drawn (see <see cref="View.NeedsDisplay"/>) will be drawn.
     /// </summary>
     /// <param name="forceRedraw">If <see langword="true"/> the entire View hierarchy will be redrawn. The default is <see langword="false"/> and should only be overriden for testing.</param>
-    public static void Refresh (bool forceRedraw = false)
+    public static void Refresh (bool forceRedraw = false, object context = null)
     {
-        bool clear = false;
+        //WindowsConsole.InputRecord rec = new WindowsConsole.InputRecord();
+        //if (context is WindowsConsole.InputRecord record)
+        //{
+        //    rec = record;
+        //    if (record is { EventType: WindowsConsole.EventType.Focus })
+        //    {
+        //        return;
+        //    }
+
+        //    if (record is { EventType: WindowsConsole.EventType.Key })
+        //    {
+        //        var key = (WindowsConsole.KeyEventRecord)record.KeyEvent;
+        //        if (key is { dwControlKeyState: WindowsConsole.ControlKeyState.LeftAltPressed })
+        //        {
+        //            return;
+        //        }
+        //    }
+
+        //}
+
+        bool neededLayout = false;
         foreach (Toplevel tl in TopLevels.Reverse ())
         {
             if (tl.NeedsLayout)
             {
-                clear = true;
+                neededLayout = true;
                 tl.Layout (Screen.Size);
             }
         }
 
-        if (clear || forceRedraw)
+        if (forceRedraw)
         {
-            //Driver?.ClearContents ();
+           Driver?.ClearContents ();
         }
 
-        Stack<Toplevel> redrawStack = new (TopLevels);
-
-        while  (redrawStack.Count > 0)
+        foreach (Toplevel tl in TopLevels.Reverse ())
         {
-            Toplevel? tlToDraw = redrawStack.Pop ();
-
-            if (clear || forceRedraw)
+            if (neededLayout)
             {
-                tlToDraw.SetNeedsDisplay ();
+                tl.SetNeedsDisplay ();
             }
 
-            if (!(!View.CanBeVisible (tlToDraw) || tlToDraw is { NeedsDisplay: false, SubViewNeedsDisplay: false }))
-            {
-                tlToDraw.Draw ();
-
-                if (redrawStack.TryPeek (out var nexToplevel))
-                {
-                    nexToplevel.SetNeedsDisplay();
-                }
-            }
+            tl.Draw ();
         }
+
+        // Stack<Toplevel> redrawStack = new (TopLevels);
+
+        //// Debug.WriteLine ($"{DateTime.Now}.{DateTime.Now.Millisecond} - Refresh {rec} = {redrawStack.Count}");
+        // while (redrawStack.Count > 0)
+        // {
+        //     Toplevel? tlToDraw = redrawStack.Pop ();
+
+        //     if (forceRedraw)
+        //     {
+        //         tlToDraw.SetNeedsDisplay ();
+        //     }
+
+        //     if (View.CanBeVisible (tlToDraw))
+        //     {
+        //         bool needs =  tlToDraw.NeedsDisplay || tlToDraw.SubViewNeedsDisplay;
+        //         tlToDraw.Draw ();
+
+        //         if (needs && redrawStack.TryPeek (out var nexToplevel))
+        //         {
+        //             nexToplevel.SetNeedsDisplay ();
+        //         }
+        //     }
+        // }
 
         Driver?.Refresh ();
     }
@@ -588,6 +624,7 @@ public static partial class Application // Run (Begin, Run, End, Stop)
     /// <returns><see langword="false"/> if at least one iteration happened.</returns>
     public static bool RunIteration (ref RunState state, bool firstIteration = false)
     {
+        // If the driver has events pending do an iteration of the driver MainLoop
         if (MainLoop!.Running && MainLoop.EventsPending ())
         {
             // Notify Toplevel it's ready
@@ -596,7 +633,10 @@ public static partial class Application // Run (Begin, Run, End, Stop)
                 state.Toplevel.OnReady ();
             }
 
+            object ctx = state.Context;
             MainLoop.RunIteration ();
+            state.Context = ctx;
+
             Iteration?.Invoke (null, new ());
         }
 
@@ -607,7 +647,7 @@ public static partial class Application // Run (Begin, Run, End, Stop)
             return firstIteration;
         }
 
-        Refresh ();
+        Refresh (context: state.Context);
 
         if (PositionCursor ())
         {
@@ -707,6 +747,6 @@ public static partial class Application // Run (Begin, Run, End, Stop)
         runState.Toplevel = null;
         runState.Dispose ();
 
-        Refresh ();
+        Refresh (context: "End");
     }
 }

@@ -165,6 +165,8 @@ public partial class View // Layout APIs
         {
             // Implicit layout is ok here because all Pos/Dim are Absolute values.
             Layout ();
+            // Ensure the next Application iteration tries to layout again
+            SetNeedsLayout ();
         }
     }
 

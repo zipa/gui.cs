@@ -1,6 +1,7 @@
 ﻿#nullable enable
 using System.ComponentModel;
 using System.Diagnostics;
+using Microsoft.CodeAnalysis.Operations;
 
 namespace Terminal.Gui;
 
@@ -37,6 +38,7 @@ public partial class View // Drawing APIs
         DoClearViewport (Viewport);
         DoDrawText (Viewport);
         DoDrawContent (Viewport);
+
         DoDrawSubviews (Viewport);
 
         // Restore the clip before rendering the line canvas and adornment subviews
@@ -100,6 +102,12 @@ public partial class View // Drawing APIs
 
         // TODO: add event.
 
+        // Subviews of Adornments count as subviews
+        if (!NeedsDisplay && !SubViewNeedsDisplay)
+        {
+            return;
+        }
+
         DrawAdornments ();
     }
 
@@ -139,6 +147,11 @@ public partial class View // Drawing APIs
         SettingAttribute?.Invoke (this, args);
 
         if (args.Cancel)
+        {
+            return;
+        }
+
+        if (!NeedsDisplay && !SubViewNeedsDisplay)
         {
             return;
         }
@@ -187,6 +200,11 @@ public partial class View // Drawing APIs
         ClearingViewport?.Invoke (this, dev);
 
         if (dev.Cancel)
+        {
+            return;
+        }
+
+        if (!NeedsDisplay)
         {
             return;
         }
@@ -270,6 +288,11 @@ public partial class View // Drawing APIs
             return;
         }
 
+        if (!NeedsDisplay)
+        {
+            return;
+        }
+
         DrawText ();
     }
 
@@ -315,7 +338,7 @@ public partial class View // Drawing APIs
     #endregion DrawText
 
     #region DrawContent
-    
+
     private void DoDrawContent (Rectangle viewport)
     {
         Debug.Assert (viewport == Viewport);
@@ -373,6 +396,11 @@ public partial class View // Drawing APIs
             return;
         }
 
+        if (!SubViewNeedsDisplay)
+        {
+            return;
+        }
+
         DrawSubviews ();
     }
 
@@ -402,12 +430,23 @@ public partial class View // Drawing APIs
             return;
         }
 
-        IEnumerable<View> subviewsNeedingDraw = _subviews.Where (view => view.Visible && (view.NeedsDisplay || view.SubViewNeedsDisplay));
+        IEnumerable<View> subviewsNeedingDraw = _subviews.Where (view => (view.Visible && (view.NeedsDisplay || view.SubViewNeedsDisplay))
+                                                                      );//|| view.Arrangement.HasFlag (ViewArrangement.Overlapped));
 
         foreach (View view in subviewsNeedingDraw)
         {
+            if (view.Arrangement.HasFlag (ViewArrangement.Overlapped))
+            {
+                //view.SetNeedsDisplay ();
+            }
             view.Draw ();
         }
+
+        //var overlapped = subviewsNeedingDraw;
+        //foreach (View view in overlapped)
+        //{
+        //    view.Draw ();
+        //}
     }
 
     #endregion DrawSubviews

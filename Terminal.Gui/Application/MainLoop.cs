@@ -247,6 +247,7 @@ internal class MainLoop : IDisposable
         while (Running)
         {
             EventsPending ();
+            object ctx = null;
             RunIteration ();
         }
 
