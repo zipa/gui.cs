@@ -1,9 +1,10 @@
-﻿namespace Terminal.Gui;
+﻿#nullable enable
+namespace Terminal.Gui;
 
 /// <summary>A single tab in a <see cref="TabView"/>.</summary>
 public class Tab : View
 {
-    private string _displayText;
+    private string? _displayText;
 
     /// <summary>Creates a new unnamed tab with no controls inside.</summary>
     public Tab ()
@@ -27,5 +28,5 @@ public class Tab : View
 
     /// <summary>The control to display when the tab is selected.</summary>
     /// <value></value>
-    public View View { get; set; }
+    public View? View { get; set; }
 }

@@ -1134,7 +1134,7 @@ public class ScrollViewTests (ITestOutputHelper output)
             CanFocus = true;
         }
 
-        protected override void OnHasFocusChanged (bool newHasFocus, [CanBeNull] View previousFocusedView, [CanBeNull] View focusedVew)
+        protected override void OnHasFocusChanged (bool newHasFocus, [CanBeNull] View previousFocusedView, [CanBeNull] View focusedView)
         {
             if (newHasFocus)
             {
