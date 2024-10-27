@@ -693,7 +693,7 @@ internal class CharMap : View, IDesignable
         int cursorCol = Cursor.X + Viewport.X - RowLabelWidth - 1;
         int cursorRow = Cursor.Y + Viewport.Y - 1;
 
-        Driver.SetAttribute (GetHotNormalColor ());
+        SetAttribute (GetHotNormalColor ());
         Move (0, 0);
         Driver.AddStr (new (' ', RowLabelWidth + 1));
 
@@ -707,11 +707,11 @@ internal class CharMap : View, IDesignable
             if (x > RowLabelWidth - 2)
             {
                 Move (x, 0);
-                Driver.SetAttribute (GetHotNormalColor ());
+                SetAttribute (GetHotNormalColor ());
                 Driver.AddStr (" ");
-                Driver.SetAttribute (HasFocus && cursorCol + firstColumnX == x ? ColorScheme.HotFocus : GetHotNormalColor ());
+                SetAttribute (HasFocus && cursorCol + firstColumnX == x ? ColorScheme.HotFocus : GetHotNormalColor ());
                 Driver.AddStr ($"{hexDigit:x}");
-                Driver.SetAttribute (GetHotNormalColor ());
+                SetAttribute (GetHotNormalColor ());
                 Driver.AddStr (" ");
             }
         }
@@ -731,7 +731,7 @@ internal class CharMap : View, IDesignable
             }
 
             Move (firstColumnX + COLUMN_WIDTH, y);
-            Driver.SetAttribute (GetNormalColor ());
+            SetAttribute (GetNormalColor ());
 
             for (var col = 0; col < 16; col++)
             {
@@ -747,7 +747,7 @@ internal class CharMap : View, IDesignable
                 // If we're at the cursor position, and we don't have focus, invert the colors.
                 if (row == cursorRow && x == cursorCol && !HasFocus)
                 {
-                    Driver.SetAttribute (GetFocusColor ());
+                    SetAttribute (GetFocusColor ());
                 }
 
                 int scalar = val + col;
@@ -798,21 +798,21 @@ internal class CharMap : View, IDesignable
                 else
                 {
                     // Draw the width of the rune
-                    Driver.SetAttribute (ColorScheme.HotNormal);
+                    SetAttribute (ColorScheme.HotNormal);
                     Driver.AddStr ($"{width}");
                 }
 
                 // If we're at the cursor position, and we don't have focus, revert the colors to normal
                 if (row == cursorRow && x == cursorCol && !HasFocus)
                 {
-                    Driver.SetAttribute (GetNormalColor ());
+                    SetAttribute (GetNormalColor ());
                 }
             }
 
             // Draw row label (U+XXXX_)
             Move (0, y);
 
-            Driver.SetAttribute (HasFocus && y + Viewport.Y - 1 == cursorRow ? ColorScheme.HotFocus : ColorScheme.HotNormal);
+            SetAttribute (HasFocus && y + Viewport.Y - 1 == cursorRow ? ColorScheme.HotFocus : ColorScheme.HotNormal);
 
             if (!ShowGlyphWidths || (y + Viewport.Y) % _rowHeight > 0)
             {

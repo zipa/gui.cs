@@ -921,7 +921,7 @@ public class TableView : View, IDesignable
         // What columns to render at what X offset in viewport
         ColumnToRender [] columnsToRender = CalculateViewport (Viewport).ToArray ();
 
-        Driver?.SetAttribute (GetNormalColor ());
+        SetAttribute (GetNormalColor ());
 
         //invalidate current row (prevents scrolling around leaving old characters in the frame
         Driver?.AddStr (new string (' ', Viewport.Width));
@@ -1281,19 +1281,19 @@ public class TableView : View, IDesignable
             if (render.Length > 0)
             {
                 // invert the color of the current cell for the first character
-                Driver.SetAttribute (new Attribute (cellColor.Background, cellColor.Foreground));
+                SetAttribute (new Attribute (cellColor.Background, cellColor.Foreground));
                 Driver.AddRune ((Rune)render [0]);
 
                 if (render.Length > 1)
                 {
-                    Driver.SetAttribute (cellColor);
+                    SetAttribute (cellColor);
                     Driver.AddStr (render.Substring (1));
                 }
             }
         }
         else
         {
-            Driver.SetAttribute (cellColor);
+            SetAttribute (cellColor);
             Driver.AddStr (render);
         }
     }
@@ -1321,7 +1321,7 @@ public class TableView : View, IDesignable
     /// <returns></returns>
     internal int GetHeaderHeightIfAny () { return ShouldRenderHeaders () ? GetHeaderHeight () : 0; }
 
-    private void AddRuneAt (ConsoleDriver? d, int col, int row, Rune ch)
+    private void AddRuneAt (ConsoleDriver d, int col, int row, Rune ch)
     {
         Move (col, row);
         d?.AddRune (ch);
@@ -1511,7 +1511,7 @@ public class TableView : View, IDesignable
             return;
         }
         Move (0, row);
-        Driver.SetAttribute (GetNormalColor ());
+        SetAttribute (GetNormalColor ());
         Driver.AddStr (new string (' ', width));
     }
 
@@ -1904,7 +1904,10 @@ public class TableView : View, IDesignable
             color = Enabled ? rowScheme?.Normal : rowScheme?.Disabled;
         }
 
-        Driver?.SetAttribute (color.Value);
+        if (color is { })
+        {
+            SetAttribute (color.Value);
+        }
         Driver?.AddStr (new string (' ', Viewport.Width));
 
         // Render cells for each visible header for the current row
@@ -1989,18 +1992,24 @@ public class TableView : View, IDesignable
                     color = Enabled ? rowScheme.Normal : rowScheme.Disabled;
                 }
 
-                Driver?.SetAttribute (color.Value);
+                SetAttribute (color.Value);
             }
 
             // If not in full row select mode always, reset color scheme to normal and render the vertical line (or space) at the end of the cell
             if (!FullRowSelect)
             {
-                Driver?.SetAttribute (Enabled ? rowScheme.Normal : rowScheme.Disabled);
+                if (rowScheme is { })
+                {
+                    SetAttribute (Enabled ? rowScheme.Normal : rowScheme.Disabled);
+                }
             }
 
             if (style.AlwaysUseNormalColorForVerticalCellLines && style.ShowVerticalCellLines)
             {
-                Driver?.SetAttribute (rowScheme.Normal);
+                if (rowScheme is { })
+                {
+                    SetAttribute (rowScheme.Normal);
+                }
             }
 
             RenderSeparator (current.X - 1, row, false);
@@ -2013,7 +2022,10 @@ public class TableView : View, IDesignable
 
         if (style.ShowVerticalCellLines)
         {
-            Driver?.SetAttribute (rowScheme.Normal);
+            if (rowScheme is { })
+            {
+                SetAttribute (rowScheme.Normal);
+            }
 
             //render start and end of line
             AddRune (0, row, Glyphs.VLine);

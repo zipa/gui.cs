@@ -938,7 +938,7 @@ public class TextField : View
         var selColor = new Attribute (GetFocusColor ().Background, GetFocusColor ().Foreground);
         SetSelectedStartSelectedLength ();
 
-        Driver?.SetAttribute (GetNormalColor ());
+        SetAttribute (GetNormalColor ());
         Move (0, 0);
 
         int p = ScrollOffset;
@@ -954,11 +954,11 @@ public class TextField : View
 
             if (idx == _cursorPosition && HasFocus && !Used && SelectedLength == 0 && !ReadOnly)
             {
-                Driver?.SetAttribute (selColor);
+                SetAttribute (selColor);
             }
             else if (ReadOnly)
             {
-                Driver?.SetAttribute (
+                SetAttribute (
                                       idx >= _start && SelectedLength > 0 && idx < _start + SelectedLength
                                           ? selColor
                                           : roc
@@ -966,15 +966,15 @@ public class TextField : View
             }
             else if (!HasFocus && Enabled)
             {
-                Driver?.SetAttribute (GetFocusColor ());
+                SetAttribute (GetFocusColor ());
             }
             else if (!Enabled)
             {
-                Driver?.SetAttribute (roc);
+                SetAttribute (roc);
             }
             else
             {
-                Driver?.SetAttribute (
+                SetAttribute (
                                       idx >= _start && SelectedLength > 0 && idx < _start + SelectedLength
                                           ? selColor
                                           : ColorScheme.Focus
@@ -997,7 +997,7 @@ public class TextField : View
             }
         }
 
-        Driver?.SetAttribute (GetFocusColor ());
+        SetAttribute (GetFocusColor ());
 
         for (int i = col; i < width; i++)
         {
@@ -1769,7 +1769,7 @@ public class TextField : View
         }
 
         var color = new Attribute (CaptionColor, GetNormalColor ().Background);
-        Driver.SetAttribute (color);
+        SetAttribute (color);
 
         Move (0, 0);
         string render = Caption;

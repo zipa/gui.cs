@@ -178,7 +178,7 @@ internal class GradientsView : View
 
         int width = text.Length;
         int x = xOffset + (GRADIENT_WIDTH - width) / 2; // Center the text within the gradient area width
-        Driver.SetAttribute (GetNormalColor ());
+        SetAttribute (GetNormalColor ());
         Move (x, yOffset + 1);
         Driver.AddStr (text);
     }
@@ -260,5 +260,5 @@ internal class GradientsView : View
         }
     }
 
-    private static void SetColor (Color color) { Application.Driver?.SetAttribute (new (color, color)); }
+    private void SetColor (Color color) { SetAttribute (new (color, color)); }
 }

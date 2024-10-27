@@ -47,8 +47,12 @@ public partial class View // SuperView/SubView hierarchy management (SuperView, 
     /// </remarks>
     /// <param name="view">The view to add.</param>
     /// <returns>The view that was added.</returns>
-    public virtual View Add (View view)
+    public virtual View? Add (View? view)
     {
+        if (view is null)
+        {
+            return null;
+        }
         if (_subviews is null)
         {
             _subviews = [];
@@ -148,8 +152,13 @@ public partial class View // SuperView/SubView hierarchy management (SuperView, 
     /// <returns>
     ///     The removed View. <see langword="null"/> if the View could not be removed.
     /// </returns>
-    public virtual View? Remove (View view)
+    public virtual View? Remove (View? view)
     {
+        if (view is null)
+        {
+            return null;
+        }
+
         if (_subviews is null)
         {
             return view;

@@ -411,7 +411,7 @@ internal sealed class Menu : View
 
         Rectangle savedClip = Driver.Clip;
         Driver.Clip = new (0, 0, Driver.Cols, Driver.Rows);
-        Driver.SetAttribute (GetNormalColor ());
+        SetAttribute (GetNormalColor ());
 
         for (int i = Viewport.Y; i < _barItems!.Children.Length; i++)
         {
@@ -427,7 +427,7 @@ internal sealed class Menu : View
 
             MenuItem? item = _barItems.Children [i];
 
-            Driver.SetAttribute (
+            SetAttribute (
                                  // ReSharper disable once ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract
                                  item is null ? GetNormalColor () :
                                  i == _currentChild ? GetFocusColor () : GetNormalColor ()
@@ -444,7 +444,7 @@ internal sealed class Menu : View
                 Move (0, i);
             }
 
-            Driver.SetAttribute (DetermineColorSchemeFor (item, i));
+            SetAttribute (DetermineColorSchemeFor (item, i));
 
             for (int p = Viewport.X; p < Frame.Width - 2; p++)
             {

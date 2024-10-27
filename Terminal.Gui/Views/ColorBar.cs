@@ -89,7 +89,7 @@ internal abstract class ColorBar : View, IColorBar
         if (!string.IsNullOrWhiteSpace (Text))
         {
             Move (0, 0);
-            Driver?.SetAttribute (HasFocus ? GetFocusColor () : GetNormalColor ());
+            SetAttribute (HasFocus ? GetFocusColor () : GetNormalColor ());
             Driver?.AddStr (Text);
 
             // TODO: is there a better method than this? this is what it is in TableView
@@ -198,7 +198,7 @@ internal abstract class ColorBar : View, IColorBar
             if (isSelectedCell)
             {
                 // Draw the triangle at the closest position
-                Application.Driver?.SetAttribute (new (triangleColor, color));
+                SetAttribute (new (triangleColor, color));
                 AddRune (x + xOffset, yOffset, new ('▲'));
 
                 // Record for tests
@@ -206,7 +206,7 @@ internal abstract class ColorBar : View, IColorBar
             }
             else
             {
-                Application.Driver?.SetAttribute (new (color, color));
+                SetAttribute (new (color, color));
                 AddRune (x + xOffset, yOffset, new ('█'));
             }
         }

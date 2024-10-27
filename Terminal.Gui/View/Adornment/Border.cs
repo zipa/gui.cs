@@ -705,11 +705,11 @@ public class Border : Adornment
 
             if (ColorScheme is { })
             {
-                Driver?.SetAttribute (GetNormalColor ());
+                SetAttribute (GetNormalColor ());
             }
             else
             {
-                Driver?.SetAttribute (Parent!.GetNormalColor ());
+                SetAttribute (Parent!.GetNormalColor ());
             }
 
             if (drawTop)
@@ -852,7 +852,7 @@ public class Border : Adornment
                             );
             }
 
-            Driver?.SetAttribute (prevAttr);
+            SetAttribute (prevAttr);
 
             // TODO: This should be moved to LineCanvas as a new BorderStyle.Ruler
             if (Diagnostics.HasFlag (ViewDiagnosticFlags.Ruler))

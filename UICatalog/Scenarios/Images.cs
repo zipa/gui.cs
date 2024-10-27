@@ -142,7 +142,7 @@ public class Images : Scenario
                                                                            )
                                                      );
 
-                    Driver.SetAttribute (attr);
+                    SetAttribute (attr);
                     AddRune (x, y, (Rune)' ');
                 }
             }

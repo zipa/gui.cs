@@ -1010,23 +1010,23 @@ public class GraphViewExample : Scenario
 
                 if (height >= 85)
                 {
-                    driver.SetAttribute (_red);
+                    graph.SetAttribute (_red);
                 }
                 else if (height >= 66)
                 {
-                    driver.SetAttribute (_brightred);
+                    graph.SetAttribute (_brightred);
                 }
                 else if (height >= 45)
                 {
-                    driver.SetAttribute (_brightyellow);
+                    graph.SetAttribute (_brightyellow);
                 }
                 else if (height >= 25)
                 {
-                    driver.SetAttribute (_brightgreen);
+                    graph.SetAttribute (_brightgreen);
                 }
                 else
                 {
-                    driver.SetAttribute (_green);
+                    graph.SetAttribute (_green);
                 }
 
                 graph.AddRune (x, y, beingDrawn.Fill.Rune);

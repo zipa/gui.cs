@@ -302,7 +302,10 @@ public class ComboBox : View, IDesignable
             return true;
         }
 
-        Driver?.SetAttribute (ColorScheme.Focus);
+        if (ColorScheme != null)
+        {
+            SetAttribute (ColorScheme.Focus);
+        }
         Move (Viewport.Right - 1, 0);
         Driver?.AddRune (Glyphs.DownArrow);
 
@@ -889,7 +892,7 @@ public class ComboBox : View, IDesignable
         protected override bool OnDrawingContent (Rectangle viewport)
         {
             Attribute current = ColorScheme?.Focus ?? Attribute.Default;
-            Driver?.SetAttribute (current);
+            SetAttribute (current);
             Move (0, 0);
             Rectangle f = Frame;
             int item = TopItem;
@@ -919,7 +922,7 @@ public class ComboBox : View, IDesignable
 
                 if (newcolor != current)
                 {
-                    Driver?.SetAttribute (newcolor);
+                    SetAttribute (newcolor);
                     current = newcolor;
                 }
 
@@ -940,7 +943,7 @@ public class ComboBox : View, IDesignable
                     if (rowEventArgs.RowAttribute is { } && current != rowEventArgs.RowAttribute)
                     {
                         current = (Attribute)rowEventArgs.RowAttribute;
-                        Driver?.SetAttribute (current);
+                        SetAttribute (current);
                     }
 
                     if (AllowsMarking)

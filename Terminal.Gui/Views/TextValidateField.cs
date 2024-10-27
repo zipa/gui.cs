@@ -571,7 +571,7 @@ namespace Terminal.Gui
             Move (0, 0);
 
             // Left Margin
-            Driver?.SetAttribute (textColor);
+            SetAttribute (textColor);
 
             for (var i = 0; i < margin_left; i++)
             {
@@ -579,7 +579,7 @@ namespace Terminal.Gui
             }
 
             // Content
-            Driver?.SetAttribute (textColor);
+            SetAttribute (textColor);
 
             // Content
             for (var i = 0; i < _provider.DisplayText.Length; i++)
@@ -588,7 +588,7 @@ namespace Terminal.Gui
             }
 
             // Right Margin
-            Driver?.SetAttribute (textColor);
+            SetAttribute (textColor);
 
             for (var i = 0; i < margin_right; i++)
             {

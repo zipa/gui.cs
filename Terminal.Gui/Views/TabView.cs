@@ -673,7 +673,7 @@ public class TabView : View
             _host._tabLocations = _host.CalculateViewport (Viewport).ToArray ();
 
 
-            Driver?.SetAttribute (HasFocus ? GetFocusColor () : GetNormalColor ());
+            SetAttribute (HasFocus ? GetFocusColor () : GetNormalColor ());
 
             return true;
         }
@@ -1334,7 +1334,7 @@ public class TabView : View
                 tab.DrawAdornments ();
 
 
-                Driver?.SetAttribute (GetNormalColor ());
+                SetAttribute (GetNormalColor ());
             }
         }
 

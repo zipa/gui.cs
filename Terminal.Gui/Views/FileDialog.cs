@@ -384,7 +384,7 @@ public class FileDialog : Dialog
 
             Move (0, Viewport.Height / 2);
 
-            Driver.SetAttribute (new Attribute (Color.Red, ColorScheme.Normal.Background));
+            SetAttribute (new Attribute (Color.Red, ColorScheme.Normal.Background));
             Driver.AddStr (new string (' ', feedbackPadLeft));
             Driver.AddStr (_feedback);
             Driver.AddStr (new string (' ', feedbackPadRight));

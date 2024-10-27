@@ -276,7 +276,7 @@ public class DrawingArea : View
             {
                 if (c.Value is { })
                 {
-                    Driver?.SetAttribute (c.Value.Value.Attribute ?? ColorScheme.Normal);
+                    SetAttribute (c.Value.Value.Attribute ?? ColorScheme.Normal);
 
                     // TODO: #2616 - Support combining sequences that don't normalize
                     AddRune (c.Key.X, c.Key.Y, c.Value.Value.Rune);
@@ -383,7 +383,7 @@ public class AttributeView : View
         bool isTransparentFg = fg == GetNormalColor ().Background;
         bool isTransparentBg = bg == GetNormalColor ().Background;
 
-        Driver?.SetAttribute (new (fg, isTransparentFg ? Color.Gray : fg));
+        SetAttribute (new (fg, isTransparentFg ? Color.Gray : fg));
 
         // Square of foreground color
         foreach ((int, int) point in ForegroundPoints)
@@ -405,7 +405,7 @@ public class AttributeView : View
             AddRune (point.Item1, point.Item2, rune);
         }
 
-        Driver?.SetAttribute (new (bg, isTransparentBg ? Color.Gray : bg));
+        SetAttribute (new (bg, isTransparentBg ? Color.Gray : bg));
 
         // Square of background color
         foreach ((int, int) point in BackgroundPoints)
