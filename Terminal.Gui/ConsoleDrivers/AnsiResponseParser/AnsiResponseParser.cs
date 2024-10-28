@@ -5,7 +5,9 @@ namespace Terminal.Gui;
 
 internal abstract class AnsiResponseParserBase : IAnsiResponseParser
 {
-    object lockExpectedResponses = new object();
+    protected object lockExpectedResponses = new object();
+
+    protected object lockState = new object ();
     /// <summary>
     /// Responses we are expecting to come in.
     /// </summary>
@@ -80,6 +82,19 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     /// </param>
     /// <param name="inputLength">The total number of elements in your collection</param>
     protected void ProcessInputBase (
+        Func<int, char> getCharAtIndex,
+        Func<int, object> getObjectAtIndex,
+        Action<object> appendOutput,
+        int inputLength
+    )
+    {
+        lock (lockState)
+        {
+            ProcessInputBaseImpl (getCharAtIndex, getObjectAtIndex, appendOutput, inputLength);
+        }
+    }
+
+    private void ProcessInputBaseImpl (
         Func<int, char> getCharAtIndex,
         Func<int, object> getObjectAtIndex,
         Action<object> appendOutput,
@@ -334,12 +349,17 @@ internal class AnsiResponseParser<T> : AnsiResponseParserBase
 
     public IEnumerable<Tuple<char, T>> Release ()
     {
-        foreach (Tuple<char, T> h in HeldToEnumerable())
+        // Lock in case Release is called from different Thread from parse
+        lock (lockState)
         {
-            yield return h;
+            foreach (Tuple<char, T> h in HeldToEnumerable())
+            {
+                yield return h;
+            }
+
+            ResetState ();
         }
 
-        ResetState ();
     }
 
     private IEnumerable<Tuple<char, T>> HeldToEnumerable ()
@@ -356,13 +376,16 @@ internal class AnsiResponseParser<T> : AnsiResponseParserBase
     /// <param name="persistent"></param>
     public void ExpectResponseT (string terminator, Action<IEnumerable<Tuple<char,T>>> response, bool persistent)
     {
-        if (persistent)
+        lock (lockExpectedResponses)
         {
-            persistentExpectations.Add (new (terminator, (h) => response.Invoke (HeldToEnumerable ())));
-        }
-        else
-        {
-            expectedResponses.Add (new (terminator, (h) => response.Invoke (HeldToEnumerable ())));
+            if (persistent)
+            {
+                persistentExpectations.Add (new (terminator, (h) => response.Invoke (HeldToEnumerable ())));
+            }
+            else
+            {
+                expectedResponses.Add (new (terminator, (h) => response.Invoke (HeldToEnumerable ())));
+            }
         }
     }
 
@@ -405,10 +428,13 @@ internal class AnsiResponseParser : AnsiResponseParserBase
 
     public string Release ()
     {
-        var output = heldContent.HeldToString ();
-        ResetState ();
+        lock (lockState)
+        {
+            var output = heldContent.HeldToString ();
+            ResetState ();
 
-        return output;
+            return output;
+        }
     }
 
     /// <inheritdoc />
