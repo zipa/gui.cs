@@ -136,17 +136,12 @@ internal class NetWinVTConsole
 internal class NetEvents : IDisposable
 {
     private readonly CancellationTokenSource _netEventsDisposed = new CancellationTokenSource ();
-    private readonly ManualResetEventSlim _waitForStart = new (false);
 
     //CancellationTokenSource _waitForStartCancellationTokenSource;
     private readonly ManualResetEventSlim _winChange = new (false);
     private readonly BlockingCollection<InputResult?> _inputQueue = new (new ConcurrentQueue<InputResult?> ());
     private readonly ConsoleDriver _consoleDriver;
-    private ConsoleKeyInfo [] _cki;
-    private bool _isEscSeq;
-#if PROCESS_REQUEST
-    bool _neededProcessRequest;
-#endif
+
     public EscSeqRequests EscSeqRequests { get; } = new ();
 
     public AnsiResponseParser<ConsoleKeyInfo> Parser { get; private set; } = new ();
@@ -182,7 +177,6 @@ internal class NetEvents : IDisposable
     {
         while (!_netEventsDisposed.Token.IsCancellationRequested)
         {
-            _waitForStart.Set ();
             _winChange.Set ();
 
             if (_inputQueue.TryTake (out var item,-1,_netEventsDisposed.Token))
@@ -238,17 +232,6 @@ internal class NetEvents : IDisposable
     {
         while (!_netEventsDisposed.IsCancellationRequested)
         {
-            try
-            {
-                _waitForStart.Wait (_netEventsDisposed.Token);
-            }
-            catch (OperationCanceledException)
-            {
-                return;
-            }
-
-            _waitForStart.Reset ();
-
             if (_inputQueue.Count == 0)
             {
                 while (!_netEventsDisposed.IsCancellationRequested)
@@ -266,62 +249,6 @@ internal class NetEvents : IDisposable
             }
         }
     }
-    private void ProcessInputAfterParsing(ConsoleKeyInfo consoleKeyInfo,
-                                            ref ConsoleKey key,
-                                            ref ConsoleModifiers mod,
-                                            ref ConsoleKeyInfo newConsoleKeyInfo)
-    {
-
-        if ((consoleKeyInfo.KeyChar == (char)KeyCode.Esc && !_isEscSeq)
-            || (consoleKeyInfo.KeyChar != (char)KeyCode.Esc && _isEscSeq))
-        {
-            if (_cki is null && consoleKeyInfo.KeyChar != (char)KeyCode.Esc && _isEscSeq)
-            {
-                _cki = EscSeqUtils.ResizeArray (
-                                                new ConsoleKeyInfo (
-                                                                    (char)KeyCode.Esc,
-                                                                    0,
-                                                                    false,
-                                                                    false,
-                                                                    false
-                                                                   ),
-                                                _cki
-                                               );
-            }
-
-            _isEscSeq = true;
-            newConsoleKeyInfo = consoleKeyInfo;
-            _cki = EscSeqUtils.ResizeArray (consoleKeyInfo, _cki);
-
-            if (Console.KeyAvailable)
-            {
-                return;
-            }
-
-            ProcessRequestResponse (ref newConsoleKeyInfo, ref key, _cki, ref mod);
-            _cki = null;
-            _isEscSeq = false;
-            return;
-        }
-
-        if (consoleKeyInfo.KeyChar == (char)KeyCode.Esc && _isEscSeq && _cki is { })
-        {
-            ProcessRequestResponse (ref newConsoleKeyInfo, ref key, _cki, ref mod);
-            _cki = null;
-
-            if (Console.KeyAvailable)
-            {
-                _cki = EscSeqUtils.ResizeArray (consoleKeyInfo, _cki);
-            }
-            else
-            {
-                ProcessMapConsoleKeyInfo (consoleKeyInfo);
-            }
-            return;
-        }
-
-        ProcessMapConsoleKeyInfo (consoleKeyInfo);
-    }
 
     void ProcessMapConsoleKeyInfo (ConsoleKeyInfo consoleKeyInfo)
     {
@@ -331,7 +258,6 @@ internal class NetEvents : IDisposable
                                  EventType = EventType.Key, ConsoleKeyInfo = EscSeqUtils.MapConsoleKeyInfo (consoleKeyInfo)
                              }
                             );
-        _isEscSeq = false;
     }
 
     private void CheckWindowSizeChange ()
