@@ -38,7 +38,7 @@ public class Localization : Scenario
 
         CurrentCulture = culture;
         Thread.CurrentThread.CurrentUICulture = culture;
-        Application.Refresh ();
+        Application.LayoutAndDrawToplevels ();
     }
 
     public override void Main ()

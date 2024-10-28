@@ -71,7 +71,7 @@ public class ProgressBar : View, IDesignable
         {
             _fraction = Math.Min (value, 1);
             _isActivity = false;
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -109,7 +109,7 @@ public class ProgressBar : View, IDesignable
 
                     break;
             }
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -139,9 +139,9 @@ public class ProgressBar : View, IDesignable
     }
 
     ///<inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
-        Driver.SetAttribute (GetHotNormalColor ());
+        SetAttribute (GetHotNormalColor ());
 
         Move (0, 0);
 
@@ -151,11 +151,11 @@ public class ProgressBar : View, IDesignable
             {
                 if (Array.IndexOf (_activityPos, i) != -1)
                 {
-                    Driver.AddRune (SegmentCharacter);
+                    Driver?.AddRune (SegmentCharacter);
                 }
                 else
                 {
-                    Driver.AddRune ((Rune)' ');
+                    Driver?.AddRune ((Rune)' ');
                 }
             }
         }
@@ -166,12 +166,12 @@ public class ProgressBar : View, IDesignable
 
             for (i = 0; (i < mid) & (i < Viewport.Width); i++)
             {
-                Driver.AddRune (SegmentCharacter);
+                Driver?.AddRune (SegmentCharacter);
             }
 
             for (; i < Viewport.Width; i++)
             {
-                Driver.AddRune ((Rune)' ');
+                Driver?.AddRune ((Rune)' ');
             }
         }
 
@@ -185,13 +185,15 @@ public class ProgressBar : View, IDesignable
                 attr = new Attribute (ColorScheme.HotNormal.Background, ColorScheme.HotNormal.Foreground);
             }
 
-            tf?.Draw (
+            tf.Draw (
                       ViewportToScreen (Viewport),
                       attr,
                       ColorScheme.Normal,
                       SuperView?.ViewportToScreen (SuperView.Viewport) ?? default (Rectangle)
                      );
         }
+
+        return true;
     }
 
     /// <summary>Notifies the <see cref="ProgressBar"/> that some progress has taken place.</summary>
@@ -250,7 +252,7 @@ public class ProgressBar : View, IDesignable
             }
         }
 
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     private void PopulateActivityPos ()

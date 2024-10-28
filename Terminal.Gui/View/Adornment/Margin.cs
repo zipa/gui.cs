@@ -19,9 +19,9 @@ public class Margin : Adornment
         /* Do nothing; View.CreateAdornment requires a constructor that takes a parent */
 
         // BUGBUG: We should not set HighlightStyle.Pressed here, but wherever it is actually needed
-       // HighlightStyle |= HighlightStyle.Pressed;
+        // HighlightStyle |= HighlightStyle.Pressed;
         Highlight += Margin_Highlight;
-        LayoutStarted += Margin_LayoutStarted;
+        SubviewLayout += Margin_LayoutStarted;
 
         // Margin should not be focusable
         CanFocus = false;
@@ -43,27 +43,6 @@ public class Margin : Adornment
         }
 
         ShadowStyle = base.ShadowStyle;
-
-        Add (
-             _rightShadow = new ()
-             {
-                 X = Pos.AnchorEnd (1),
-                 Y = 0,
-                 Width = 1,
-                 Height = Dim.Fill (),
-                 ShadowStyle = ShadowStyle,
-                 Orientation = Orientation.Vertical
-             },
-             _bottomShadow = new ()
-             {
-                 X = 0,
-                 Y = Pos.AnchorEnd (1),
-                 Width = Dim.Fill (),
-                 Height = 1,
-                 ShadowStyle = ShadowStyle,
-                 Orientation = Orientation.Horizontal
-             }
-            );
     }
 
     /// <summary>
@@ -84,54 +63,41 @@ public class Margin : Adornment
         set
         {
             base.ColorScheme = value;
-            Parent?.SetNeedsDisplay ();
+            Parent?.SetNeedsDraw ();
         }
     }
 
-    /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    /// <inheritdoc />
+    protected override bool OnClearingViewport (Rectangle viewport)
     {
-        if (!NeedsDisplay)
+        if (Thickness == Thickness.Empty)
         {
-            return;
+            return true;
         }
 
         Rectangle screen = ViewportToScreen (viewport);
-        Attribute normalAttr = GetNormalColor ();
-
-        Driver?.SetAttribute (normalAttr);
 
         if (ShadowStyle != ShadowStyle.None)
         {
+            // Don't clear where the shadow goes
             screen = Rectangle.Inflate (screen, -1, -1);
         }
 
         // This just draws/clears the thickness, not the insides.
-        Thickness.Draw (screen, ToString ());
+        Thickness.Draw (screen, Diagnostics, ToString ());
 
-        if (Subviews.Count > 0)
-        {
-            // Draw subviews
-            // TODO: Implement OnDrawSubviews (cancelable);
-            if (Subviews is { } && SubViewNeedsDisplay)
-            {
-                IEnumerable<View> subviewsNeedingDraw = Subviews.Where (
-                                                                        view => view.Visible
-                                                                                && (view.NeedsDisplay || view.SubViewNeedsDisplay || view.LayoutNeeded)
-                                                                       );
-
-                foreach (View view in subviewsNeedingDraw)
-                {
-                    if (view.LayoutNeeded)
-                    {
-                        view.LayoutSubviews ();
-                    }
-
-                    view.Draw ();
-                }
-            }
-        }
+        return true;
     }
+
+    ///// <inheritdoc />
+    ////protected override bool OnDrawSubviews (Rectangle viewport) { return true; }
+
+    //protected override bool OnDrawComplete (Rectangle viewport)
+    //{
+    //    DoDrawSubviews (viewport);
+
+    //    return true;
+    //}
 
     /// <summary>
     ///     Sets whether the Margin includes a shadow effect. The shadow is drawn on the right and bottom sides of the
@@ -139,9 +105,18 @@ public class Margin : Adornment
     /// </summary>
     public ShadowStyle SetShadow (ShadowStyle style)
     {
-        if (ShadowStyle == style)
+        if (_rightShadow is { })
         {
-            // return style;
+            Remove (_rightShadow);
+            _rightShadow.Dispose ();
+            _rightShadow = null;
+        }
+
+        if (_bottomShadow is { })
+        {
+            Remove (_bottomShadow);
+            _bottomShadow.Dispose ();
+            _bottomShadow = null;
         }
 
         if (ShadowStyle != ShadowStyle.None)
@@ -156,14 +131,28 @@ public class Margin : Adornment
             Thickness = new (Thickness.Left, Thickness.Top, Thickness.Right + 1, Thickness.Bottom + 1);
         }
 
-        if (_rightShadow is { })
+        if (style != ShadowStyle.None)
         {
-            _rightShadow.ShadowStyle = style;
-        }
+            _rightShadow = new ()
+            {
+                X = Pos.AnchorEnd (1),
+                Y = 0,
+                Width = 1,
+                Height = Dim.Fill (),
+                ShadowStyle = style,
+                Orientation = Orientation.Vertical
+            };
 
-        if (_bottomShadow is { })
-        {
-            _bottomShadow.ShadowStyle = style;
+            _bottomShadow = new ()
+            {
+                X = 0,
+                Y = Pos.AnchorEnd (1),
+                Width = Dim.Fill (),
+                Height = 1,
+                ShadowStyle = style,
+                Orientation = Orientation.Horizontal
+            };
+            Add (_rightShadow, _bottomShadow);
         }
 
         return style;
@@ -173,7 +162,11 @@ public class Margin : Adornment
     public override ShadowStyle ShadowStyle
     {
         get => base.ShadowStyle;
-        set => base.ShadowStyle = SetShadow (value);
+        set
+        {
+            base.ShadowStyle = SetShadow (value);
+
+        }
     }
 
     private const int PRESS_MOVE_HORIZONTAL = 1;
@@ -181,47 +174,49 @@ public class Margin : Adornment
 
     private void Margin_Highlight (object? sender, CancelEventArgs<HighlightStyle> e)
     {
-        if (ShadowStyle != ShadowStyle.None)
+        if (Thickness == Thickness.Empty || ShadowStyle == ShadowStyle.None)
         {
-            if (_pressed && e.NewValue == HighlightStyle.None)
+            return;
+        }
+
+        if (_pressed && e.NewValue == HighlightStyle.None)
+        {
+            // If the view is pressed and the highlight is being removed, move the shadow back.
+            // Note, for visual effects reasons, we only move horizontally.
+            // TODO: Add a setting or flag that lets the view move vertically as well.
+            Thickness = new (Thickness.Left - PRESS_MOVE_HORIZONTAL, Thickness.Top - PRESS_MOVE_VERTICAL, Thickness.Right + PRESS_MOVE_HORIZONTAL, Thickness.Bottom + PRESS_MOVE_VERTICAL);
+
+            if (_rightShadow is { })
             {
-                // If the view is pressed and the highlight is being removed, move the shadow back.
-                // Note, for visual effects reasons, we only move horizontally.
-                // TODO: Add a setting or flag that lets the view move vertically as well.
-                Thickness = new (Thickness.Left - PRESS_MOVE_HORIZONTAL, Thickness.Top - PRESS_MOVE_VERTICAL, Thickness.Right + PRESS_MOVE_HORIZONTAL, Thickness.Bottom + PRESS_MOVE_VERTICAL);
-
-                if (_rightShadow is { })
-                {
-                    _rightShadow.Visible = true;
-                }
-
-                if (_bottomShadow is { })
-                {
-                    _bottomShadow.Visible = true;
-                }
-
-                _pressed = false;
-
-                return;
+                _rightShadow.Visible = true;
             }
 
-            if (!_pressed && e.NewValue.HasFlag (HighlightStyle.Pressed))
+            if (_bottomShadow is { })
             {
-                // If the view is not pressed and we want highlight move the shadow
-                // Note, for visual effects reasons, we only move horizontally.
-                // TODO: Add a setting or flag that lets the view move vertically as well.
-                Thickness = new (Thickness.Left + PRESS_MOVE_HORIZONTAL, Thickness.Top+ PRESS_MOVE_VERTICAL, Thickness.Right - PRESS_MOVE_HORIZONTAL, Thickness.Bottom - PRESS_MOVE_VERTICAL);
-                _pressed = true;
+                _bottomShadow.Visible = true;
+            }
 
-                if (_rightShadow is { })
-                {
-                    _rightShadow.Visible = false;
-                }
+            _pressed = false;
 
-                if (_bottomShadow is { })
-                {
-                    _bottomShadow.Visible = false;
-                }
+            return;
+        }
+
+        if (!_pressed && e.NewValue.HasFlag (HighlightStyle.Pressed))
+        {
+            // If the view is not pressed and we want highlight move the shadow
+            // Note, for visual effects reasons, we only move horizontally.
+            // TODO: Add a setting or flag that lets the view move vertically as well.
+            Thickness = new (Thickness.Left + PRESS_MOVE_HORIZONTAL, Thickness.Top + PRESS_MOVE_VERTICAL, Thickness.Right - PRESS_MOVE_HORIZONTAL, Thickness.Bottom - PRESS_MOVE_VERTICAL);
+            _pressed = true;
+
+            if (_rightShadow is { })
+            {
+                _rightShadow.Visible = false;
+            }
+
+            if (_bottomShadow is { })
+            {
+                _bottomShadow.Visible = false;
             }
         }
     }

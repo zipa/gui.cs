@@ -36,10 +36,16 @@ internal class ShadowView : View
         return base.GetNormalColor ();
     }
 
-    /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    /// <inheritdoc />
+    protected override bool OnClearingViewport (Rectangle viewport)
     {
-        //base.OnDrawContent (viewport);
+        // Prevent clearing (so we can have transparency)
+        return true;
+    }
+
+    /// <inheritdoc/>
+    protected override bool OnDrawingContent (Rectangle viewport)
+    {
         switch (ShadowStyle)
         {
             case ShadowStyle.Opaque:
@@ -57,7 +63,7 @@ internal class ShadowView : View
             case ShadowStyle.Transparent:
                 //Attribute prevAttr = Driver.GetAttribute ();
                 //var attr = new Attribute (prevAttr.Foreground, prevAttr.Background);
-                //Driver.SetAttribute (attr);
+                //SetAttribute (attr);
 
                 if (Orientation == Orientation.Vertical)
                 {
@@ -68,10 +74,12 @@ internal class ShadowView : View
                     DrawHorizontalShadowTransparent (viewport);
                 }
 
-                //Driver.SetAttribute (prevAttr);
+                //SetAttribute (prevAttr);
 
                 break;
         }
+
+        return true;
     }
 
     /// <summary>
@@ -111,9 +119,9 @@ internal class ShadowView : View
         // Fill the rest of the rectangle - note we skip the last since vertical will draw it
         for (int i = Math.Max(0, screen.X + 1); i < screen.X + screen.Width - 1; i++)
         {
-            Driver.Move (i, screen.Y);
+            Driver?.Move (i, screen.Y);
 
-            if (i < Driver.Contents!.GetLength (1) && screen.Y < Driver.Contents.GetLength (0))
+            if (i < Driver?.Contents!.GetLength (1) && screen.Y < Driver?.Contents?.GetLength (0))
             {
                 Driver.AddRune (Driver.Contents [screen.Y, i].Rune);
             }
@@ -139,9 +147,9 @@ internal class ShadowView : View
         // Fill the rest of the rectangle
         for (int i = Math.Max (0, screen.Y); i < screen.Y + viewport.Height; i++)
         {
-            Driver.Move (screen.X, i);
+            Driver?.Move (screen.X, i);
 
-            if (Driver.Contents is { } && screen.X < Driver.Contents.GetLength (1) && i < Driver.Contents.GetLength (0))
+            if (Driver?.Contents is { } && screen.X < Driver.Contents.GetLength (1) && i < Driver.Contents.GetLength (0))
             {
                 Driver.AddRune (Driver.Contents [i, screen.X].Rune);
             }

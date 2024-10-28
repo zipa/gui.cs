@@ -67,7 +67,8 @@ public class RulerTests
                                                      );
 
         // Postive offset
-        Application.Refresh ();
+        top.SetNeedsDraw ();
+        Application.LayoutAndDrawToplevels ();
         r.Draw (new (1, 1));
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -81,7 +82,8 @@ public class RulerTests
                                                      );
 
         // Negative offset
-        Application.Refresh ();
+        top.SetNeedsDraw ();
+        Application.LayoutAndDrawToplevels ();
         r.Draw (new (-1, 1));
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -95,7 +97,8 @@ public class RulerTests
                                                      );
 
         // Clip
-        Application.Refresh ();
+        top.SetNeedsDraw ();
+        Application.LayoutAndDrawToplevels ();
         r.Draw (new (10, 1));
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -140,7 +143,8 @@ public class RulerTests
                                                       _output
                                                      );
 
-        Application.Refresh ();
+        f.SetNeedsDraw();
+        Application.LayoutAndDrawToplevels ();
         r.Length = len;
         r.Draw (new (1, 0), 1);
 
@@ -202,7 +206,8 @@ public class RulerTests
                                                      );
 
         // Postive offset
-        Application.Refresh ();
+        f.SetNeedsDraw ();
+        Application.LayoutAndDrawToplevels (true);
         r.Draw (new (1, 1));
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -231,7 +236,8 @@ public class RulerTests
                                                      );
 
         // Negative offset
-        Application.Refresh ();
+        f.SetNeedsDraw ();
+        Application.LayoutAndDrawToplevels ();
         r.Draw (new (1, -1));
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -260,7 +266,9 @@ public class RulerTests
                                                      );
 
         // Clip
-        Application.Refresh ();
+        f.SetNeedsDraw ();
+
+        Application.LayoutAndDrawToplevels ();
         r.Draw (new (1, 10));
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -334,8 +342,8 @@ public class RulerTests
 └───┘",
                                                       _output
                                                      );
-
-        Application.Refresh ();
+        f.SetNeedsDraw ();
+        Application.LayoutAndDrawToplevels (true);
         r.Length = len;
         r.Draw (new (0, 1), 1);
 

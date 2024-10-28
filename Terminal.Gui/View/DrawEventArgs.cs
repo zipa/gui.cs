@@ -1,7 +1,9 @@
-﻿namespace Terminal.Gui;
+﻿using System.ComponentModel;
+
+namespace Terminal.Gui;
 
 /// <summary>Event args for draw events</summary>
-public class DrawEventArgs : EventArgs
+public class DrawEventArgs : CancelEventArgs
 {
     /// <summary>Creates a new instance of the <see cref="DrawEventArgs"/> class.</summary>
     /// <param name="newViewport">

@@ -4,14 +4,16 @@
 // <https://spectreconsole.net/best-practices>.
 //------------------------------------------------------------------------------
 
+using System.Diagnostics;
+
 namespace Terminal.Gui;
 
 /// <summary>A <see cref="View"/> which displays (by default) a spinning line character.</summary>
 /// <remarks>
-///     By default animation only occurs when you call <see cref="SpinnerView.AdvanceAnimation()"/>. Use
-///     <see cref="AutoSpin"/> to make the automate calls to <see cref="SpinnerView.AdvanceAnimation()"/>.
+///     By default animation only occurs when you call <see cref="SpinnerView.AdvanceAnimation(bool)"/>. Use
+///     <see cref="AutoSpin"/> to make the automate calls to <see cref="SpinnerView.AdvanceAnimation(bool)"/>.
 /// </remarks>
-public class SpinnerView : View
+public class SpinnerView : View, IDesignable
 {
     private const int DEFAULT_DELAY = 130;
     private static readonly SpinnerStyle DEFAULT_STYLE = new SpinnerStyle.Line ();
@@ -113,11 +115,11 @@ public class SpinnerView : View
     ///     ignored based on <see cref="SpinDelay"/>.
     /// </summary>
     /// <remarks>Ensure this method is called on the main UI thread e.g. via <see cref="Application.Invoke"/></remarks>
-    public void AdvanceAnimation ()
+    public void AdvanceAnimation (bool setNeedsDraw = true)
     {
         if (DateTime.Now - _lastRender > TimeSpan.FromMilliseconds (SpinDelay))
         {
-            if (Sequence is { } && Sequence.Length > 1)
+            if (Sequence is { Length: > 1 })
             {
                 var d = 1;
 
@@ -169,14 +171,29 @@ public class SpinnerView : View
                         _currentIdx = Sequence.Length - 1;
                     }
                 }
-
-                Text = "" + Sequence [_currentIdx]; //.EnumerateRunes;
             }
 
             _lastRender = DateTime.Now;
         }
 
-        SetNeedsDisplay ();
+        if (setNeedsDraw)
+        {
+            SetNeedsDraw ();
+        }
+    }
+
+    /// <inheritdoc />
+    protected override bool OnClearingViewport (Rectangle viewport) { return true; }
+
+    /// <inheritdoc />
+    protected override bool OnDrawingText (Rectangle viewport)
+    {
+        if (Sequence is { Length: > 0 } && _currentIdx < Sequence.Length)
+        {
+            Move (Viewport.X, Viewport.Y);
+            View.Driver?.AddStr (Sequence [_currentIdx]);
+        }
+        return true;
     }
 
     /// <inheritdoc/>
@@ -198,7 +215,7 @@ public class SpinnerView : View
                                            TimeSpan.FromMilliseconds (SpinDelay),
                                            () =>
                                            {
-                                               Application.Invoke (AdvanceAnimation);
+                                               Application.Invoke (() => AdvanceAnimation());
 
                                                return true;
                                            }
@@ -288,5 +305,13 @@ public class SpinnerView : View
             _bounce = style.SpinBounce;
             Width = GetSpinnerWidth ();
         }
+    }
+
+    bool IDesignable.EnableForDesign ()
+    {
+        Style = new SpinnerStyle.Points ();
+        SpinReverse = true;
+        AutoSpin = true;
+        return true;
     }
 }

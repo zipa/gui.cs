@@ -9,6 +9,8 @@ public class MarginTests (ITestOutputHelper output)
     public void Margin_Uses_SuperView_ColorScheme ()
     {
         ((FakeDriver)Application.Driver!).SetBufferSize (5, 5);
+        View.Diagnostics = ViewDiagnosticFlags.Thickness;
+
         var view = new View { Height = 3, Width = 3 };
         view.Margin.Thickness = new (1);
 
@@ -27,7 +29,7 @@ public class MarginTests (ITestOutputHelper output)
 
         superView.BeginInit ();
         superView.EndInit ();
-        View.Diagnostics = ViewDiagnosticFlags.Padding;
+        view.SetNeedsDraw();
         view.Draw ();
         View.Diagnostics = ViewDiagnosticFlags.Off;
 
@@ -38,6 +40,6 @@ M M
 MMM",
                                              output
                                             );
-        TestHelpers.AssertDriverAttributesAre ("0", null, superView.GetNormalColor ());
+        TestHelpers.AssertDriverAttributesAre ("0", output, null, superView.GetNormalColor ());
     }
 }

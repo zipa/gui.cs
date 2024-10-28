@@ -1392,7 +1392,7 @@ public class LineCanvasTests (ITestOutputHelper _output)
     // TODO: Remove this and make all LineCanvas tests independent of View
     /// <summary>
     ///     Creates a new <see cref="View"/> into which a <see cref="LineCanvas"/> is rendered at
-    ///     <see cref="View.DrawContentComplete"/> time.
+    ///     <see cref="View.DrawComplete"/> time.
     /// </summary>
     /// <param name="canvas">The <see cref="LineCanvas"/> you can draw into.</param>
     /// <param name="offsetX">How far to offset drawing in X</param>
@@ -1404,7 +1404,7 @@ public class LineCanvasTests (ITestOutputHelper _output)
 
         LineCanvas canvasCopy = canvas = new ();
 
-        v.DrawContentComplete += (s, e) =>
+        v.DrawComplete += (s, e) =>
                                  {
                                      v.FillRect (v.Viewport);
 

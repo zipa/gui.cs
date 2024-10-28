@@ -81,7 +81,7 @@ public class CharacterMap : Scenario
 
         _categoryList = new () { X = Pos.Right (_charMap), Y = Pos.Bottom (jumpLabel), Height = Dim.Fill () };
         _categoryList.FullRowSelect = true;
-
+        _categoryList.MultiSelect = false;
         //jumpList.Style.ShowHeaders = false;
         //jumpList.Style.ShowHorizontalHeaderOverline = false;
         //jumpList.Style.ShowHorizontalHeaderUnderline = false;
@@ -306,9 +306,33 @@ public class CharacterMap : Scenario
         return item;
     }
 
+    public override List<Key> GetDemoKeyStrokes ()
+    {
+        var keys = new List<Key> ();
+
+        for (int i = 0; i < 200; i++)
+        {
+            keys.Add (Key.CursorDown);
+        }
+
+        // Category table
+        keys.Add (Key.Tab.WithShift);
+
+        // Block elements
+        keys.Add (Key.B);
+        keys.Add (Key.L);
+
+        keys.Add (Key.Tab);
+
+        for (int i = 0; i < 200; i++)
+        {
+            keys.Add (Key.CursorLeft);
+        }
+        return keys;
+    }
 }
 
-internal class CharMap : View
+internal class CharMap : View, IDesignable
 {
     private const int COLUMN_WIDTH = 3;
 
@@ -622,7 +646,7 @@ internal class CharMap : View
                 }
             }
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
             SelectedCodePointChanged?.Invoke (this, new (SelectedCodePoint, null));
         }
     }
@@ -633,7 +657,7 @@ internal class CharMap : View
         set
         {
             _rowHeight = value ? 2 : 1;
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -649,7 +673,7 @@ internal class CharMap : View
             _start = value;
             SelectedCodePoint = value;
             Viewport = Viewport with { Y = SelectedCodePoint / 16 * _rowHeight };
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -657,19 +681,19 @@ internal class CharMap : View
     private static int RowWidth => RowLabelWidth + COLUMN_WIDTH * 16;
     public event EventHandler<ListViewItemEventArgs> Hover;
 
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
         if (viewport.Height == 0 || viewport.Width == 0)
         {
-            return;
+            return true;
         }
 
-        Clear ();
+        ClearViewport ();
 
         int cursorCol = Cursor.X + Viewport.X - RowLabelWidth - 1;
         int cursorRow = Cursor.Y + Viewport.Y - 1;
 
-        Driver.SetAttribute (GetHotNormalColor ());
+        SetAttribute (GetHotNormalColor ());
         Move (0, 0);
         Driver.AddStr (new (' ', RowLabelWidth + 1));
 
@@ -683,11 +707,11 @@ internal class CharMap : View
             if (x > RowLabelWidth - 2)
             {
                 Move (x, 0);
-                Driver.SetAttribute (GetHotNormalColor ());
+                SetAttribute (GetHotNormalColor ());
                 Driver.AddStr (" ");
-                Driver.SetAttribute (HasFocus && cursorCol + firstColumnX == x ? ColorScheme.HotFocus : GetHotNormalColor ());
+                SetAttribute (HasFocus && cursorCol + firstColumnX == x ? ColorScheme.HotFocus : GetHotNormalColor ());
                 Driver.AddStr ($"{hexDigit:x}");
-                Driver.SetAttribute (GetHotNormalColor ());
+                SetAttribute (GetHotNormalColor ());
                 Driver.AddStr (" ");
             }
         }
@@ -707,7 +731,7 @@ internal class CharMap : View
             }
 
             Move (firstColumnX + COLUMN_WIDTH, y);
-            Driver.SetAttribute (GetNormalColor ());
+            SetAttribute (GetNormalColor ());
 
             for (var col = 0; col < 16; col++)
             {
@@ -723,7 +747,7 @@ internal class CharMap : View
                 // If we're at the cursor position, and we don't have focus, invert the colors.
                 if (row == cursorRow && x == cursorCol && !HasFocus)
                 {
-                    Driver.SetAttribute (GetFocusColor ());
+                    SetAttribute (GetFocusColor ());
                 }
 
                 int scalar = val + col;
@@ -774,21 +798,21 @@ internal class CharMap : View
                 else
                 {
                     // Draw the width of the rune
-                    Driver.SetAttribute (ColorScheme.HotNormal);
+                    SetAttribute (ColorScheme.HotNormal);
                     Driver.AddStr ($"{width}");
                 }
 
                 // If we're at the cursor position, and we don't have focus, revert the colors to normal
                 if (row == cursorRow && x == cursorCol && !HasFocus)
                 {
-                    Driver.SetAttribute (GetNormalColor ());
+                    SetAttribute (GetNormalColor ());
                 }
             }
 
             // Draw row label (U+XXXX_)
             Move (0, y);
 
-            Driver.SetAttribute (HasFocus && y + Viewport.Y - 1 == cursorRow ? ColorScheme.HotFocus : ColorScheme.HotNormal);
+            SetAttribute (HasFocus && y + Viewport.Y - 1 == cursorRow ? ColorScheme.HotFocus : ColorScheme.HotNormal);
 
             if (!ShowGlyphWidths || (y + Viewport.Y) % _rowHeight > 0)
             {
@@ -799,6 +823,8 @@ internal class CharMap : View
                 Driver.AddStr (new (' ', RowLabelWidth));
             }
         }
+
+        return true;
     }
 
     public override Point? PositionCursor ()

@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+using System;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -15,11 +17,11 @@ namespace UICatalog.Scenarios;
 [ScenarioCategory ("Drawing")]
 public class AnimationScenario : Scenario
 {
-    private bool _isDisposed;
+    private ImageView? _imageView;
 
     public override void Main ()
     {
-        Application.Init();
+        Application.Init ();
 
         var win = new Window
         {
@@ -30,19 +32,31 @@ public class AnimationScenario : Scenario
             Height = Dim.Fill (),
         };
 
-        var imageView = new ImageView { Width = Dim.Fill (), Height = Dim.Fill () - 2 };
+        _imageView = new ImageView { Width = Dim.Fill (), Height = Dim.Fill () - 2 };
 
-        win.Add (imageView);
+        win.Add (_imageView);
 
         var lbl = new Label { Y = Pos.AnchorEnd (), Text = "Image by Wikiscient" };
         win.Add (lbl);
 
         var lbl2 = new Label
         {
-           X = Pos.AnchorEnd(), Y = Pos.AnchorEnd (), Text = "https://commons.wikimedia.org/wiki/File:Spinning_globe.gif"
+            X = Pos.AnchorEnd (), Y = Pos.AnchorEnd (), Text = "https://commons.wikimedia.org/wiki/File:Spinning_globe.gif"
         };
         win.Add (lbl2);
 
+        // Start the animation after the window is initialized
+        win.Initialized += OnWinOnInitialized;
+
+        Application.Run (win);
+        win.Dispose ();
+        Application.Shutdown ();
+        Debug.Assert (!Application.Initialized);
+    }
+
+
+    private void OnWinOnInitialized (object? sender, EventArgs args)
+    {
         DirectoryInfo dir;
 
         string assemblyLocation = Assembly.GetExecutingAssembly ().Location;
@@ -57,46 +71,35 @@ public class AnimationScenario : Scenario
         }
 
         var f = new FileInfo (
-                              Path.Combine (dir.FullName, "Scenarios", "Spinning_globe_dark_small.gif")
+                              Path.Combine (dir.FullName, "Scenarios/AnimationScenario", "Spinning_globe_dark_small.gif")
                              );
 
         if (!f.Exists)
         {
-            MessageBox.ErrorQuery ("Could not find gif", "Could not find " + f.FullName, "Ok");
+            Debug.WriteLine ($"Could not find {f.FullName}");
+            MessageBox.ErrorQuery ("Could not find gif", $"Could not find\n{f.FullName}", "Ok");
 
             return;
         }
 
-        imageView.SetImage (Image.Load<Rgba32> (File.ReadAllBytes (f.FullName)));
+        _imageView!.SetImage (Image.Load<Rgba32> (File.ReadAllBytes (f.FullName)));
 
         Task.Run (
                   () =>
                   {
-                      while (!_isDisposed)
+                      while (Application.Initialized)
                       {
                           // When updating from a Thread/Task always use Invoke
                           Application.Invoke (
                                               () =>
                                               {
-                                                  imageView.NextFrame ();
-                                                  imageView.SetNeedsDisplay ();
-                                              }
-                                             );
+                                                  _imageView.NextFrame ();
+                                                  _imageView.SetNeedsDraw ();
+                                              });
 
                           Task.Delay (100).Wait ();
                       }
-                  }
-                 );
-
-        Application.Run (win);
-        win.Dispose ();
-        Application.Shutdown ();
-    }
-
-    protected override void Dispose (bool disposing)
-    {
-        _isDisposed = true;
-        base.Dispose (disposing);
+                  });
     }
 
     // This is a C# port of https://github.com/andraaspar/bitmap-to-braille by Andraaspar
@@ -176,10 +179,12 @@ public class AnimationScenario : Scenario
         private Rectangle oldSize = Rectangle.Empty;
         public void NextFrame () { currentFrame = (currentFrame + 1) % frameCount; }
 
-        public override void OnDrawContent (Rectangle viewport)
+        protected override bool OnDrawingContent (Rectangle viewport)
         {
-            base.OnDrawContent (viewport);
-
+            if (frameCount == 0)
+            {
+                return false;
+            }
             if (oldSize != Viewport)
             {
                 // Invalidate cached images now size has changed
@@ -223,6 +228,8 @@ public class AnimationScenario : Scenario
                     AddRune (x, y, (Rune)line [x]);
                 }
             }
+
+            return true;
         }
 
         internal void SetImage (Image<Rgba32> image)
@@ -240,7 +247,7 @@ public class AnimationScenario : Scenario
 
             fullResImages [frameCount - 1] = image;
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
 
         private string GetBraille (Image<Rgba32> img)

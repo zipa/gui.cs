@@ -1229,6 +1229,7 @@ oot two
 0000000000
 0000000000
 ",
+                                               _output,
                                                Application.Driver,
                                                tv.ColorScheme.Normal,
                                                pink
@@ -1242,7 +1243,7 @@ oot two
 
         // redraw now that the custom color
         // delegate is registered
-        tv.SetNeedsDisplay ();
+        tv.SetNeedsDraw ();
         tv.Draw ();
 
         // Same text
@@ -1265,6 +1266,7 @@ oot two
 0000000000
 001111
 ",
+                                               _output,
                                                Application.Driver,
                                                tv.ColorScheme.Normal,
                                                pink

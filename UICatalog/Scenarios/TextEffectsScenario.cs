@@ -74,7 +74,7 @@ public class TextEffectsScenario : Scenario
                             {
                                 LoopingGradient = e.NewValue == CheckState.Checked;
                                 SetupGradientLineCanvas (w, w.Frame.Size);
-                                _tabView.SetNeedsDisplay ();
+                                _tabView.SetNeedsDraw ();
                             };
 
         gradientsView.Add (cbLooping);
@@ -132,10 +132,8 @@ internal class GradientsView : View
     private const int LABEL_HEIGHT = 1;
     private const int GRADIENT_WITH_LABEL_HEIGHT = GRADIENT_HEIGHT + LABEL_HEIGHT + 1; // +1 for spacing
 
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
-        base.OnDrawContent (viewport);
-
         DrawTopLineGradient (viewport);
 
         var x = 2;
@@ -160,6 +158,8 @@ internal class GradientsView : View
             DrawLabeledGradientArea (label, direction, x, y);
             x += GRADIENT_WIDTH + 2; // Move right for next gradient, +2 for spacing
         }
+
+        return true;
     }
 
     private void DrawLabeledGradientArea (string label, GradientDirection direction, int xOffset, int yOffset)
@@ -178,7 +178,7 @@ internal class GradientsView : View
 
         int width = text.Length;
         int x = xOffset + (GRADIENT_WIDTH - width) / 2; // Center the text within the gradient area width
-        Driver.SetAttribute (GetNormalColor ());
+        SetAttribute (GetNormalColor ());
         Move (x, yOffset + 1);
         Driver.AddStr (text);
     }
@@ -260,5 +260,5 @@ internal class GradientsView : View
         }
     }
 
-    private static void SetColor (Color color) { Application.Driver?.SetAttribute (new (color, color)); }
+    private void SetColor (Color color) { SetAttribute (new (color, color)); }
 }

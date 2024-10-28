@@ -189,7 +189,7 @@ public class FileDialog : Dialog
                                                   bool newState = !tile.ContentView.Visible;
                                                   tile.ContentView.Visible = newState;
                                                   _btnToggleSplitterCollapse.Text = GetToggleSplitterText (newState);
-                                                  LayoutSubviews ();
+                                                  SetNeedsLayout();
                                               };
 
         _tbFind = new TextField
@@ -368,10 +368,8 @@ public class FileDialog : Dialog
     }
 
     /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
-        base.OnDrawContent (viewport);
-
         if (!string.IsNullOrWhiteSpace (_feedback))
         {
             int feedbackWidth = _feedback.EnumerateRunes ().Sum (c => c.GetColumns ());
@@ -386,11 +384,13 @@ public class FileDialog : Dialog
 
             Move (0, Viewport.Height / 2);
 
-            Driver.SetAttribute (new Attribute (Color.Red, ColorScheme.Normal.Background));
+            SetAttribute (new Attribute (Color.Red, ColorScheme.Normal.Background));
             Driver.AddStr (new string (' ', feedbackPadLeft));
             Driver.AddStr (_feedback);
             Driver.AddStr (new string (' ', feedbackPadRight));
         }
+
+        return true;
     }
 
     /// <inheritdoc/>
@@ -461,7 +461,7 @@ public class FileDialog : Dialog
             AllowedTypeMenuClicked (0);
 
             // TODO: Using v1's menu bar here is a hack. Need to upgrade this.
-            _allowedTypeMenuBar.DrawContentComplete += (s, e) =>
+            _allowedTypeMenuBar.DrawingContent += (s, e) =>
                                                        {
                                                            _allowedTypeMenuBar.Move (e.NewViewport.Width - 1, 0);
                                                            Driver.AddRune (Glyphs.DownArrow);
@@ -493,7 +493,9 @@ public class FileDialog : Dialog
             _btnOk.X = Pos.Right (_btnCancel) + 1;
             MoveSubviewTowardsStart (_btnCancel);
         }
-        LayoutSubviews ();
+
+        SetNeedsDisplay();
+        SetNeedsLayout();
     }
 
     /// <inheritdoc/>

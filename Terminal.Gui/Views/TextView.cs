@@ -1901,7 +1901,7 @@ public class TextView : View
 
         Added += TextView_Added!;
 
-        LayoutComplete += TextView_LayoutComplete;
+        SubviewsLaidOut += TextView_LayoutComplete;
 
         // Things this view knows how to do
 
@@ -2457,7 +2457,7 @@ public class TextView : View
                 AllowsTab = false;
             }
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -2489,7 +2489,7 @@ public class TextView : View
                 _tabWidth = 0;
             }
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -2522,7 +2522,7 @@ public class TextView : View
 
             CurrentRow = value.Y < 0 ? 0 :
                          value.Y > _model.Count - 1 ? Math.Max (_model.Count - 1, 0) : value.Y;
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
             Adjust ();
         }
     }
@@ -2605,12 +2605,12 @@ public class TextView : View
                     _model.LoadString (Text);
                 }
 
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
             }
             else if (_multiline && _savedHeight is { })
             {
                 Height = _savedHeight;
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
             }
 
             KeyBindings.Remove (Key.Enter);
@@ -2629,7 +2629,7 @@ public class TextView : View
             {
                 _isReadOnly = value;
 
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
                 WrapTextModel ();
                 Adjust ();
             }
@@ -2683,7 +2683,7 @@ public class TextView : View
             _selectionStartColumn = value < 0 ? 0 :
                                     value > line.Count ? line.Count : value;
             IsSelecting = true;
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
             Adjust ();
         }
     }
@@ -2697,7 +2697,7 @@ public class TextView : View
             _selectionStartRow = value < 0 ? 0 :
                                  value > _model.Count - 1 ? Math.Max (_model.Count - 1, 0) : value;
             IsSelecting = true;
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
             Adjust ();
         }
     }
@@ -2715,7 +2715,7 @@ public class TextView : View
                 AllowsTab = true;
             }
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -2747,7 +2747,7 @@ public class TextView : View
             }
 
             OnTextChanged ();
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             _historyText.Clear (_model.GetAllLines ());
         }
@@ -2795,7 +2795,7 @@ public class TextView : View
                 _model = _wrapManager.Model;
             }
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -2809,7 +2809,7 @@ public class TextView : View
         SetWrapModel ();
         bool res = _model.CloseFile ();
         ResetPosition ();
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
         UpdateWrapModel ();
 
         return res;
@@ -2978,7 +2978,7 @@ public class TextView : View
         _selectionStartRow = 0;
         MoveBottomEndExtend ();
         DeleteCharLeft ();
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     /// <summary>Deletes all the selected or a single character at left from the position of the cursor.</summary>
@@ -3196,7 +3196,7 @@ public class TextView : View
 
             InsertText (key);
 
-            if (NeedsDisplay)
+            if (NeedsDraw)
             {
                 Adjust ();
             }
@@ -3225,7 +3225,7 @@ public class TextView : View
         finally
         {
             UpdateWrapModel ();
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
             Adjust ();
         }
 
@@ -3243,7 +3243,7 @@ public class TextView : View
         _model.LoadStream (stream);
         _historyText.Clear (_model.GetAllLines ());
         ResetPosition ();
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
         UpdateWrapModel ();
     }
 
@@ -3255,7 +3255,7 @@ public class TextView : View
         _model.LoadCells (cells, ColorScheme?.Focus);
         _historyText.Clear (_model.GetAllLines ());
         ResetPosition ();
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
         UpdateWrapModel ();
         InheritsPreviousAttribute = true;
     }
@@ -3269,7 +3269,7 @@ public class TextView : View
         _model.LoadListCells (cellsList, ColorScheme?.Focus);
         _historyText.Clear (_model.GetAllLines ());
         ResetPosition ();
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
         UpdateWrapModel ();
     }
 
@@ -3325,7 +3325,7 @@ public class TextView : View
             }
             else
             {
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
             }
 
             _lastWasKill = false;
@@ -3534,7 +3534,7 @@ public class TextView : View
         _leftColumn = 0;
         TrackColumn ();
         PositionCursor ();
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     /// <summary>
@@ -3550,7 +3550,7 @@ public class TextView : View
     }
 
     /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent (Rectangle viewport)
     {
         _isDrawing = true;
 
@@ -3645,6 +3645,8 @@ public class TextView : View
         //PositionCursor ();
 
         _isDrawing = false;
+
+        return true;
     }
 
     /// <inheritdoc/>
@@ -3756,7 +3758,7 @@ public class TextView : View
                               HistoryText.LineStatus.Replaced
                              );
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
             OnContentsChanged ();
         }
         else
@@ -3778,7 +3780,7 @@ public class TextView : View
                                          );
             }
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
 
         UpdateWrapModel ();
@@ -3801,8 +3803,8 @@ public class TextView : View
             // BUGBUG: customized rect aren't supported now because the Redraw isn't using the Intersect method.
             //var minRow = Math.Min (Math.Max (Math.Min (selectionStartRow, currentRow) - topRow, 0), Viewport.Height);
             //var maxRow = Math.Min (Math.Max (Math.Max (selectionStartRow, currentRow) - topRow, 0), Viewport.Height);
-            //SetNeedsDisplay (new (0, minRow, Viewport.Width, maxRow));
-            SetNeedsDisplay ();
+            //SetNeedsDraw (new (0, minRow, Viewport.Width, maxRow));
+            SetNeedsDraw ();
         }
 
         List<Cell> line = _model.GetLine (CurrentRow);
@@ -3917,7 +3919,7 @@ public class TextView : View
             _leftColumn = Math.Max (!_wordWrap && idx > maxlength - 1 ? maxlength - 1 : idx, 0);
         }
 
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     /// <summary>Select all text.</summary>
@@ -3933,7 +3935,7 @@ public class TextView : View
         _selectionStartRow = 0;
         CurrentColumn = _model.GetLine (_model.Count - 1).Count;
         CurrentRow = _model.Count - 1;
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     ///// <summary>Raised when the <see cref="Text"/> property of the <see cref="TextView"/> changes.</summary>
@@ -3960,7 +3962,7 @@ public class TextView : View
     /// <summary>
     ///     Sets the <see cref="View.Driver"/> to an appropriate color for rendering the given <paramref name="idxCol"/>
     ///     of the current <paramref name="line"/>. Override to provide custom coloring by calling
-    ///     <see cref="ConsoleDriver.SetAttribute(Attribute)"/> Defaults to <see cref="ColorScheme.Normal"/>.
+    ///     <see cref="View.SetAttribute"/> Defaults to <see cref="ColorScheme.Normal"/>.
     /// </summary>
     /// <param name="line">The line.</param>
     /// <param name="idxCol">The col index.</param>
@@ -3974,18 +3976,18 @@ public class TextView : View
         if (line [idxCol].Attribute is { })
         {
             Attribute? attribute = line [idxCol].Attribute;
-            Driver.SetAttribute ((Attribute)attribute!);
+            SetAttribute ((Attribute)attribute!);
         }
         else
         {
-            Driver.SetAttribute (GetNormalColor ());
+            SetAttribute (GetNormalColor ());
         }
     }
 
     /// <summary>
     ///     Sets the <see cref="View.Driver"/> to an appropriate color for rendering the given <paramref name="idxCol"/>
     ///     of the current <paramref name="line"/>. Override to provide custom coloring by calling
-    ///     <see cref="ConsoleDriver.SetAttribute(Attribute)"/> Defaults to <see cref="ColorScheme.Focus"/>.
+    ///     <see cref="View.SetAttribute(Attribute)"/> Defaults to <see cref="ColorScheme.Focus"/>.
     /// </summary>
     /// <param name="line">The line.</param>
     /// <param name="idxCol">The col index.</param>
@@ -4009,13 +4011,13 @@ public class TextView : View
             attribute = new (cellAttribute.Value.Foreground, ColorScheme!.Focus.Background);
         }
 
-        Driver.SetAttribute (attribute);
+        SetAttribute (attribute);
     }
 
     /// <summary>
     ///     Sets the <see cref="View.Driver"/> to an appropriate color for rendering the given <paramref name="idxCol"/>
     ///     of the current <paramref name="line"/>. Override to provide custom coloring by calling
-    ///     <see cref="ConsoleDriver.SetAttribute(Attribute)"/> Defaults to <see cref="ColorScheme.Focus"/>.
+    ///     <see cref="View.SetAttribute(Attribute)"/> Defaults to <see cref="ColorScheme.Focus"/>.
     /// </summary>
     /// <param name="line">The line.</param>
     /// <param name="idxCol">The col index.</param>
@@ -4031,13 +4033,13 @@ public class TextView : View
         {
             Attribute? attribute = line [idxCol].Attribute;
 
-            Driver.SetAttribute (
+            SetAttribute (
                                  new (attribute!.Value.Background, attribute.Value.Foreground)
                                 );
         }
         else
         {
-            Driver.SetAttribute (
+            SetAttribute (
                                  new (
                                       ColorScheme!.Focus.Background,
                                       ColorScheme!.Focus.Foreground
@@ -4049,7 +4051,7 @@ public class TextView : View
     /// <summary>
     ///     Sets the <see cref="View.Driver"/> to an appropriate color for rendering the given <paramref name="idxCol"/>
     ///     of the current <paramref name="line"/>. Override to provide custom coloring by calling
-    ///     <see cref="ConsoleDriver.SetAttribute(Attribute)"/> Defaults to <see cref="ColorScheme.HotFocus"/>.
+    ///     <see cref="View.SetAttribute(Attribute)"/> Defaults to <see cref="ColorScheme.HotFocus"/>.
     /// </summary>
     /// <param name="line">The line.</param>
     /// <param name="idxCol">The col index.</param>
@@ -4076,13 +4078,13 @@ public class TextView : View
     ///     Sets the driver to the default color for the control where no text is being rendered. Defaults to
     ///     <see cref="ColorScheme.Normal"/>.
     /// </summary>
-    protected virtual void SetNormalColor () { Driver.SetAttribute (GetNormalColor ()); }
+    protected virtual void SetNormalColor () { SetAttribute (GetNormalColor ()); }
 
     private void Adjust ()
     {
         (int width, int height) offB = OffSetBackground ();
         List<Cell> line = GetCurrentLine ();
-        bool need = NeedsDisplay || _wrapNeeded || !Used;
+        bool need = NeedsDraw || _wrapNeeded || !Used;
         (int size, int length) tSize = TextModel.DisplaySize (line, -1, -1, false, TabWidth);
         (int size, int length) dSize = TextModel.DisplaySize (line, _leftColumn, CurrentColumn, true, TabWidth);
 
@@ -4136,7 +4138,7 @@ public class TextView : View
                 _wrapNeeded = false;
             }
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
         else
         {
@@ -4266,14 +4268,14 @@ public class TextView : View
 
             if (_wordWrap)
             {
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
             }
             else
             {
                 //QUESTION: Is the below comment still relevant?
                 // BUGBUG: customized rect aren't supported now because the Redraw isn't using the Intersect method.
-                //SetNeedsDisplay (new (0, startRow - topRow, Viewport.Width, startRow - topRow + 1));
-                SetNeedsDisplay ();
+                //SetNeedsDraw (new (0, startRow - topRow, Viewport.Width, startRow - topRow + 1));
+                SetNeedsDraw ();
             }
 
             _historyText.Add (
@@ -4315,7 +4317,7 @@ public class TextView : View
 
         UpdateWrapModel ();
 
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     private void ClearSelectedRegion ()
@@ -4363,13 +4365,13 @@ public class TextView : View
             if (CurrentColumn < _leftColumn)
             {
                 _leftColumn--;
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
             }
             else
             {
                 // BUGBUG: customized rect aren't supported now because the Redraw isn't using the Intersect method.
-                //SetNeedsDisplay (new (0, currentRow - topRow, 1, Viewport.Width));
-                SetNeedsDisplay ();
+                //SetNeedsDraw (new (0, currentRow - topRow, 1, Viewport.Width));
+                SetNeedsDraw ();
             }
         }
         else
@@ -4413,7 +4415,7 @@ public class TextView : View
                              );
 
             CurrentColumn = prevCount;
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
 
         UpdateWrapModel ();
@@ -4460,7 +4462,7 @@ public class TextView : View
                 _wrapNeeded = true;
             }
 
-            DoSetNeedsDisplay (new (0, CurrentRow - _topRow, Viewport.Width, CurrentRow - _topRow + 1));
+            DoSetNeedsDraw (new (0, CurrentRow - _topRow, Viewport.Width, CurrentRow - _topRow + 1));
         }
         else
         {
@@ -4479,7 +4481,7 @@ public class TextView : View
                 _wrapNeeded = true;
             }
 
-            DoSetNeedsDisplay (
+            DoSetNeedsDraw (
                                new (
                                     CurrentColumn - _leftColumn,
                                     CurrentRow - _topRow,
@@ -4496,7 +4498,7 @@ public class TextView : View
 
     private void DoNeededAction ()
     {
-        if (NeedsDisplay)
+        if (NeedsDraw)
         {
             Adjust ();
         }
@@ -4506,17 +4508,17 @@ public class TextView : View
         }
     }
 
-    private void DoSetNeedsDisplay (Rectangle rect)
+    private void DoSetNeedsDraw (Rectangle rect)
     {
         if (_wrapNeeded)
         {
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
         else
         {
             // BUGBUG: customized rect aren't supported now because the Redraw isn't using the Intersect method.
-            //SetNeedsDisplay (rect);
-            SetNeedsDisplay ();
+            //SetNeedsDraw (rect);
+            SetNeedsDraw ();
         }
     }
 
@@ -4789,8 +4791,8 @@ public class TextView : View
         if (!_wrapNeeded)
         {
             // BUGBUG: customized rect aren't supported now because the Redraw isn't using the Intersect method.
-            //SetNeedsDisplay (new (0, prow, Math.Max (Viewport.Width, 0), Math.Max (prow + 1, 0)));
-            SetNeedsDisplay ();
+            //SetNeedsDraw (new (0, prow, Math.Max (Viewport.Width, 0), Math.Max (prow + 1, 0)));
+            SetNeedsDraw ();
         }
     }
 
@@ -4844,13 +4846,13 @@ public class TextView : View
 
             if (_wordWrap)
             {
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
             }
             else
             {
                 // BUGBUG: customized rect aren't supported now because the Redraw isn't using the Intersect method.
-                //SetNeedsDisplay (new (0, currentRow - topRow, Viewport.Width, Math.Max (currentRow - topRow + 1, 0)));
-                SetNeedsDisplay ();
+                //SetNeedsDraw (new (0, currentRow - topRow, Viewport.Width, Math.Max (currentRow - topRow + 1, 0)));
+                SetNeedsDraw ();
             }
 
             UpdateWrapModel ();
@@ -4948,7 +4950,7 @@ public class TextView : View
                 if (CurrentColumn >= _leftColumn + Viewport.Width)
                 {
                     _leftColumn++;
-                    SetNeedsDisplay ();
+                    SetNeedsDraw ();
                 }
             }
             else
@@ -5063,7 +5065,7 @@ public class TextView : View
 
         UpdateWrapModel ();
 
-        DoSetNeedsDisplay (new (0, CurrentRow - _topRow, Viewport.Width, Viewport.Height));
+        DoSetNeedsDraw (new (0, CurrentRow - _topRow, Viewport.Width, Viewport.Height));
 
         _lastWasKill = setLastWasKill;
         DoNeededAction ();
@@ -5170,7 +5172,7 @@ public class TextView : View
 
         UpdateWrapModel ();
 
-        DoSetNeedsDisplay (new (0, CurrentRow - _topRow, Viewport.Width, Viewport.Height));
+        DoSetNeedsDraw (new (0, CurrentRow - _topRow, Viewport.Width, Viewport.Height));
 
         _lastWasKill = setLastWasKill;
         DoNeededAction ();
@@ -5240,7 +5242,7 @@ public class TextView : View
 
         UpdateWrapModel ();
 
-        DoSetNeedsDisplay (new (0, CurrentRow - _topRow, Viewport.Width, Viewport.Height));
+        DoSetNeedsDraw (new (0, CurrentRow - _topRow, Viewport.Width, Viewport.Height));
         DoNeededAction ();
     }
 
@@ -5299,7 +5301,7 @@ public class TextView : View
 
         UpdateWrapModel ();
 
-        DoSetNeedsDisplay (new (0, CurrentRow - _topRow, Viewport.Width, Viewport.Height));
+        DoSetNeedsDraw (new (0, CurrentRow - _topRow, Viewport.Width, Viewport.Height));
         DoNeededAction ();
     }
 
@@ -5352,7 +5354,7 @@ public class TextView : View
             if (CurrentRow >= _topRow + Viewport.Height)
             {
                 _topRow++;
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
             }
 
             TrackColumn ();
@@ -5395,7 +5397,7 @@ public class TextView : View
                 if (CurrentRow < _topRow)
                 {
                     _topRow--;
-                    SetNeedsDisplay ();
+                    SetNeedsDraw ();
                 }
 
                 List<Cell> currentLine = GetCurrentLine ();
@@ -5433,7 +5435,7 @@ public class TextView : View
                 _topRow = CurrentRow >= _model.Count
                               ? CurrentRow - nPageDnShift
                               : _topRow + nPageDnShift;
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
             }
 
             TrackColumn ();
@@ -5459,7 +5461,7 @@ public class TextView : View
             if (CurrentRow < _topRow)
             {
                 _topRow = _topRow - nPageUpShift < 0 ? 0 : _topRow - nPageUpShift;
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
             }
 
             TrackColumn ();
@@ -5487,7 +5489,7 @@ public class TextView : View
                 if (CurrentRow >= _topRow + Viewport.Height)
                 {
                     _topRow++;
-                    SetNeedsDisplay ();
+                    SetNeedsDraw ();
                 }
                 else
                 {
@@ -5510,7 +5512,7 @@ public class TextView : View
     {
         if (_leftColumn > 0)
         {
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
 
         CurrentColumn = 0;
@@ -5552,7 +5554,7 @@ public class TextView : View
             if (CurrentRow < _topRow)
             {
                 _topRow--;
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
             }
 
             TrackColumn ();
@@ -5684,7 +5686,7 @@ public class TextView : View
                                  );
             }
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             UpdateWrapModel ();
         }
@@ -6184,12 +6186,12 @@ public class TextView : View
 
         CurrentRow++;
 
-        var fullNeedsDisplay = false;
+        var fullNeedsDraw = false;
 
         if (CurrentRow >= _topRow + Viewport.Height)
         {
             _topRow++;
-            fullNeedsDisplay = true;
+            fullNeedsDraw = true;
         }
 
         CurrentColumn = 0;
@@ -6202,19 +6204,19 @@ public class TextView : View
 
         if (!_wordWrap && CurrentColumn < _leftColumn)
         {
-            fullNeedsDisplay = true;
+            fullNeedsDraw = true;
             _leftColumn = 0;
         }
 
-        if (fullNeedsDisplay)
+        if (fullNeedsDraw)
         {
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
         else
         {
             // BUGBUG: customized rect aren't supported now because the Redraw isn't using the Intersect method.
-            //SetNeedsDisplay (new (0, currentRow - topRow, 2, Viewport.Height));
-            SetNeedsDisplay ();
+            //SetNeedsDraw (new (0, currentRow - topRow, 2, Viewport.Height));
+            SetNeedsDraw ();
         }
 
         UpdateWrapModel ();
@@ -6337,7 +6339,7 @@ public class TextView : View
             else
             {
                 UpdateWrapModel ();
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
                 Adjust ();
             }
 
@@ -6355,15 +6357,15 @@ public class TextView : View
     private void SetOverwrite (bool overwrite)
     {
         Used = overwrite;
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
         DoNeededAction ();
     }
 
-    private static void SetValidUsedColor (Attribute? attribute)
+    private void SetValidUsedColor (Attribute? attribute)
     {
         // BUGBUG: (v2 truecolor) This code depends on 8-bit color names; disabling for now
         //if ((colorScheme!.HotNormal.Foreground & colorScheme.Focus.Background) == colorScheme.Focus.Foreground) {
-        Driver.SetAttribute (new (attribute!.Value.Background, attribute!.Value.Foreground));
+        SetAttribute (new (attribute!.Value.Background, attribute!.Value.Foreground));
     }
 
     /// <summary>Restore from original model.</summary>
@@ -6527,7 +6529,7 @@ public class TextView : View
             _selectionStartColumn = nStartCol;
             _wrapNeeded = true;
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
 
         if (_currentCaller is { })
@@ -6558,7 +6560,7 @@ public class TextView : View
             CurrentColumn = nCol;
             _selectionStartRow = nStartRow;
             _selectionStartColumn = nStartCol;
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 }
