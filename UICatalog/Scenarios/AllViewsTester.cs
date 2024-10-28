@@ -254,6 +254,7 @@ public class AllViewsTester : Scenario
 
         // Instantiate view
         var view = (View)Activator.CreateInstance (type)!;
+        _eventLog!.ViewToLog = _curView;
 
         if (view is IDesignable designable)
         {
@@ -281,7 +282,6 @@ public class AllViewsTester : Scenario
         view.Id = "_curView";
         _curView = view;
 
-        _eventLog!.ViewToLog = _curView;
         _hostPane!.Add (_curView);
         _layoutEditor!.ViewToEdit = _curView;
         _curView.SetNeedsLayout ();
