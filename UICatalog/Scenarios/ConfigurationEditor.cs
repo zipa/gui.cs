@@ -94,7 +94,7 @@ public class ConfigurationEditor : Scenario
                                          foreach (Tile t in _tileView.Tiles)
                                          {
                                              t.ContentView.ColorScheme = EditorColorScheme;
-                                             t.ContentView.SetNeedsDisplay ();
+                                             t.ContentView.SetNeedsDraw ();
                                          }
 
                                          ;

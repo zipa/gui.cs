@@ -297,7 +297,7 @@ public class GraphView : View, IDesignable
         Series.Clear ();
         Annotations.Clear ();
         GraphColor = null;
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     /// <summary>Returns the section of the graph that is represented by the given screen position.</summary>
@@ -338,7 +338,7 @@ public class GraphView : View, IDesignable
                             ScrollOffset.Y + offsetY
                            );
 
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     /// <summary>

@@ -908,7 +908,7 @@ public class UICatalogApp
 
             ((CheckBox)ShForce16Colors!.CommandView!).CheckedState = Application.Force16Colors ? CheckState.Checked : CheckState.UnChecked;
 
-            Application.Top!.SetNeedsDisplay ();
+            Application.Top!.SetNeedsDraw ();
         }
 
         public MenuItem []? CreateThemeMenuItems ()

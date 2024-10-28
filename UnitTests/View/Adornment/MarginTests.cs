@@ -29,7 +29,7 @@ public class MarginTests (ITestOutputHelper output)
 
         superView.BeginInit ();
         superView.EndInit ();
-        view.SetNeedsDisplay();
+        view.SetNeedsDraw();
         view.Draw ();
         View.Diagnostics = ViewDiagnosticFlags.Off;
 

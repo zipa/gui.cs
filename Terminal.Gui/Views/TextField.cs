@@ -562,7 +562,7 @@ public class TextField : View
             }
 
             Adjust ();
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -585,7 +585,7 @@ public class TextField : View
         _selectedText = null;
         _start = 0;
         SelectedLength = 0;
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     /// <summary>Allows clearing the <see cref="HistoryText.HistoryTextItemEventArgs"/> items updating the original text.</summary>
@@ -627,7 +627,7 @@ public class TextField : View
         _selectedStart = 0;
         MoveEndExtend ();
         DeleteCharLeft (false);
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     /// <summary>Deletes the character to the left.</summary>
@@ -909,7 +909,7 @@ public class TextField : View
             ShowContextMenu ();
         }
 
-        //SetNeedsDisplay ();
+        //SetNeedsDraw ();
 
         return true;
 
@@ -1095,7 +1095,7 @@ public class TextField : View
 
         _cursorPosition = Math.Min (selStart + cbTxt.GetRuneCount (), _text.Count);
         ClearAllSelection ();
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
         Adjust ();
     }
 
@@ -1144,7 +1144,7 @@ public class TextField : View
 
         _selectedStart = 0;
         MoveEndExtend ();
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     ///// <summary>
@@ -1193,7 +1193,7 @@ public class TextField : View
         //SetContentSize(new (TextModel.DisplaySize (_text).size, 1));
 
         int offB = OffSetBackground ();
-        bool need = NeedsDisplay || !Used;
+        bool need = NeedsDraw || !Used;
 
         if (_cursorPosition < ScrollOffset)
         {
@@ -1218,7 +1218,7 @@ public class TextField : View
 
         if (need)
         {
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
         else
         {
@@ -1713,7 +1713,7 @@ public class TextField : View
                 _selectedText = null;
             }
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
         else if (SelectedLength > 0 || _selectedText is { })
         {
@@ -1793,7 +1793,7 @@ public class TextField : View
     private void SetOverwrite (bool overwrite)
     {
         Used = overwrite;
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     private void SetSelectedStartSelectedLength ()

@@ -136,7 +136,7 @@ public class Shortcut : View, IOrientation, IDesignable
     }
 
     // Helper to set Width consistently
-    public Dim GetWidthDimAuto ()
+    internal Dim GetWidthDimAuto ()
     {
         return Dim.Auto (
                          DimAutoStyle.Content,
@@ -647,7 +647,7 @@ public class Shortcut : View, IOrientation, IDesignable
             CommandView.SetNeedsLayout ();
             HelpView.SetNeedsLayout ();
             KeyView.SetNeedsLayout ();
-            SetSubViewNeedsDisplay ();
+            SetSubViewNeedsDraw ();
         }
     }
 

@@ -361,7 +361,7 @@ public class Shortcuts : Scenario
 
                 Application.Wakeup ();
 
-                pb.SetNeedsDisplay ();
+                pb.SetNeedsDraw ();
             }
         };
         timer.Start ();

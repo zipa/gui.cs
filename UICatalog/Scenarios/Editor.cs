@@ -281,7 +281,7 @@ public class Editor : Scenario
                                               _scrollBar.Position = _textView.TopRow;
                                           }
 
-                                          _textView.SetNeedsDisplay ();
+                                          _textView.SetNeedsDraw ();
                                       };
 
         _scrollBar.OtherScrollBarView.ChangedPosition += (s, e) =>
@@ -293,7 +293,7 @@ public class Editor : Scenario
                                                                  _scrollBar.OtherScrollBarView.Position = _textView.LeftColumn;
                                                              }
 
-                                                             _textView.SetNeedsDisplay ();
+                                                             _textView.SetNeedsDraw ();
                                                          };
 
         _textView.DrawingContent += (s, e) =>

@@ -101,7 +101,7 @@ public class SingleBackgroundWorker : Scenario
                                  if (_worker == null)
                                  {
                                      _log.Add ($"Worker is not running at {DateTime.Now}!");
-                                     _listLog.SetNeedsDisplay ();
+                                     _listLog.SetNeedsDraw ();
 
                                      return;
                                  }
@@ -109,13 +109,13 @@ public class SingleBackgroundWorker : Scenario
                                  _log.Add (
                                            $"Worker {_startStaging}.{_startStaging:fff} is canceling at {DateTime.Now}!"
                                           );
-                                 _listLog.SetNeedsDisplay ();
+                                 _listLog.SetNeedsDraw ();
                                  _worker.CancelAsync ();
                              };
 
             _startStaging = DateTime.Now;
             _log.Add ($"Worker is started at {_startStaging}.{_startStaging:fff}");
-            _listLog.SetNeedsDisplay ();
+            _listLog.SetNeedsDraw ();
 
             var md = new Dialog
             {
@@ -159,7 +159,7 @@ public class SingleBackgroundWorker : Scenario
                                                   _log.Add (
                                                             $"Exception occurred {e.Error.Message} on Worker {_startStaging}.{_startStaging:fff} at {DateTime.Now}"
                                                            );
-                                                  _listLog.SetNeedsDisplay ();
+                                                  _listLog.SetNeedsDraw ();
                                               }
                                               else if (e.Cancelled)
                                               {
@@ -167,7 +167,7 @@ public class SingleBackgroundWorker : Scenario
                                                   _log.Add (
                                                             $"Worker {_startStaging}.{_startStaging:fff} was canceled at {DateTime.Now}!"
                                                            );
-                                                  _listLog.SetNeedsDisplay ();
+                                                  _listLog.SetNeedsDraw ();
                                               }
                                               else
                                               {
@@ -175,7 +175,7 @@ public class SingleBackgroundWorker : Scenario
                                                   _log.Add (
                                                             $"Worker {_startStaging}.{_startStaging:fff} was completed at {DateTime.Now}."
                                                            );
-                                                  _listLog.SetNeedsDisplay ();
+                                                  _listLog.SetNeedsDraw ();
                                                   Application.LayoutAndDrawToplevels ();
 
                                                   var builderUI =

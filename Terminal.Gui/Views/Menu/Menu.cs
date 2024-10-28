@@ -290,7 +290,7 @@ internal sealed class Menu : View
 
                 if (!disabled && (_host.UseSubMenusSingleFrame || !CheckSubMenu ()))
                 {
-                    SetNeedsDisplay ();
+                    SetNeedsDraw ();
                     SetParentSetNeedsDisplay ();
 
                     return true;
@@ -709,7 +709,7 @@ internal sealed class Menu : View
         }
         while (_barItems?.Children? [_currentChild] is null || disabled);
 
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
         SetParentSetNeedsDisplay ();
 
         if (!_host.UseSubMenusSingleFrame)
@@ -790,7 +790,7 @@ internal sealed class Menu : View
         }
         while (_barItems.Children [_currentChild] is null || disabled);
 
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
         SetParentSetNeedsDisplay ();
 
         if (!_host.UseSubMenusSingleFrame)
@@ -807,12 +807,12 @@ internal sealed class Menu : View
         {
             foreach (Menu menu in _host._openSubMenu)
             {
-                menu.SetNeedsDisplay ();
+                menu.SetNeedsDraw ();
             }
         }
 
-        _host._openMenu?.SetNeedsDisplay ();
-        _host.SetNeedsDisplay ();
+        _host._openMenu?.SetNeedsDraw ();
+        _host.SetNeedsDraw ();
     }
 
     protected override bool OnMouseEvent (MouseEventArgs me)
@@ -895,7 +895,7 @@ internal sealed class Menu : View
 
             if (_host.UseSubMenusSingleFrame || !CheckSubMenu ())
             {
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
                 SetParentSetNeedsDisplay ();
 
                 return me.Handled = true;
@@ -942,7 +942,7 @@ internal sealed class Menu : View
         }
         else
         {
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
             SetParentSetNeedsDisplay ();
         }
 

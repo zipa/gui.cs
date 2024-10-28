@@ -84,7 +84,7 @@ public class ListViewWithSelection : Scenario
                 scrollBar.Position = _listView.TopItem;
             }
 
-            _listView.SetNeedsDisplay ();
+            _listView.SetNeedsDraw ();
         };
 
         scrollBar.OtherScrollBarView.ChangedPosition += (s, e) =>
@@ -96,7 +96,7 @@ public class ListViewWithSelection : Scenario
                 scrollBar.OtherScrollBarView.Position = _listView.LeftItem;
             }
 
-            _listView.SetNeedsDisplay ();
+            _listView.SetNeedsDraw ();
         };
 
         _listView.DrawingContent += (s, e) =>
@@ -166,20 +166,20 @@ public class ListViewWithSelection : Scenario
             _listView.Source = new ScenarioListDataSource (_scenarios);
         }
 
-        _appWindow.SetNeedsDisplay ();
+        _appWindow.SetNeedsDraw ();
     }
 
     private void AllowMarkingCB_Toggle (object sender, [NotNull] CancelEventArgs<CheckState> stateEventArgs)
     {
         _listView.AllowsMarking = stateEventArgs.NewValue == CheckState.Checked;
         _allowMultipleCB.Visible = _listView.AllowsMarking;
-        _appWindow.SetNeedsDisplay ();
+        _appWindow.SetNeedsDraw ();
     }
 
     private void AllowMultipleCB_Toggle (object sender, [NotNull] CancelEventArgs<CheckState> stateEventArgs)
     {
         _listView.AllowsMultipleSelection = stateEventArgs.NewValue == CheckState.Checked;
-        _appWindow.SetNeedsDisplay ();
+        _appWindow.SetNeedsDraw ();
     }
 
     private void ListView_RowRender (object sender, ListViewRowEventArgs obj)

@@ -259,7 +259,7 @@ At 0,0
         view.Frame = new (3, 3, 10, 1);
         Assert.Equal (new (3, 3, 10, 1), view.Frame);
         Assert.Equal (new (0, 0, 10, 1), view.Viewport);
-        Assert.Equal (new (0, 0, 10, 1), view._needsDisplayRect);
+        Assert.Equal (new (0, 0, 10, 1), view._needsDrawRect);
         //Application.Refresh();
         top.Draw ();
 
@@ -310,7 +310,7 @@ At 0,0
         view.Height = 1;
         Assert.Equal (new (3, 3, 10, 1), view.Frame);
         Assert.Equal (new (0, 0, 10, 1), view.Viewport);
-        Assert.Equal (new (0, 0, 10, 1), view._needsDisplayRect);
+        Assert.Equal (new (0, 0, 10, 1), view._needsDrawRect);
         top.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -356,7 +356,7 @@ At 0,0
         view.Frame = new (1, 1, 10, 1);
         Assert.Equal (new (1, 1, 10, 1), view.Frame);
         Assert.Equal (new (0, 0, 10, 1), view.Viewport);
-        Assert.Equal (new (0, 0, 10, 1), view._needsDisplayRect);
+        Assert.Equal (new (0, 0, 10, 1), view._needsDrawRect);
         top.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -404,7 +404,7 @@ At 0,0
         view.Height = 1;
         Assert.Equal (new (1, 1, 10, 1), view.Frame);
         Assert.Equal (new (0, 0, 10, 1), view.Viewport);
-        Assert.Equal (new (0, 0, 10, 1), view._needsDisplayRect);
+        Assert.Equal (new (0, 0, 10, 1), view._needsDrawRect);
         top.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -491,13 +491,13 @@ At 0,0
 
         RunState runState = Application.Begin (top);
 
-        top.SubviewsLaidOut += (s, e) => { Assert.Equal (new (0, 0, 80, 25), top._needsDisplayRect); };
+        top.SubviewsLaidOut += (s, e) => { Assert.Equal (new (0, 0, 80, 25), top._needsDrawRect); };
 
-        frame.SubviewsLaidOut += (s, e) => { Assert.Equal (new (0, 0, 40, 8), frame._needsDisplayRect); };
+        frame.SubviewsLaidOut += (s, e) => { Assert.Equal (new (0, 0, 40, 8), frame._needsDrawRect); };
 
-        label.SubviewsLaidOut += (s, e) => { Assert.Equal (new (0, 0, 38, 1), label._needsDisplayRect); };
+        label.SubviewsLaidOut += (s, e) => { Assert.Equal (new (0, 0, 38, 1), label._needsDrawRect); };
 
-        view.SubviewsLaidOut += (s, e) => { Assert.Equal (new (0, 0, 13, 1), view._needsDisplayRect); };
+        view.SubviewsLaidOut += (s, e) => { Assert.Equal (new (0, 0, 13, 1), view._needsDrawRect); };
 
         Assert.Equal (new (0, 0, 80, 25), top.Frame);
         Assert.Equal (new (20, 8, 40, 8), frame.Frame);
@@ -571,7 +571,7 @@ At 0,0
 
         view.Frame = new (3, 3, 10, 1);
         Assert.Equal (new (0, 0, 10, 1), view.Viewport);
-        Assert.Equal (new (0, 0, 10, 1), view._needsDisplayRect);
+        Assert.Equal (new (0, 0, 10, 1), view._needsDrawRect);
         view.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -620,7 +620,7 @@ At 0,0
         view.Height = 1;
         Assert.Equal (new (3, 3, 10, 1), view.Frame);
         Assert.Equal (new (0, 0, 10, 1), view.Viewport);
-        Assert.Equal (new (0, 0, 10, 1), view._needsDisplayRect);
+        Assert.Equal (new (0, 0, 10, 1), view._needsDrawRect);
         view.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -666,7 +666,7 @@ At 0,0
         view.Frame = new (1, 1, 10, 1);
         Assert.Equal (new (1, 1, 10, 1), view.Frame);
         Assert.Equal (new (0, 0, 10, 1), view.Viewport);
-        Assert.Equal (new (0, 0, 10, 1), view._needsDisplayRect);
+        Assert.Equal (new (0, 0, 10, 1), view._needsDrawRect);
         view.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -715,7 +715,7 @@ At 0,0
         view.Height = 1;
         Assert.Equal (new (1, 1, 10, 1), view.Frame);
         Assert.Equal (new (0, 0, 10, 1), view.Viewport);
-        Assert.Equal (new (0, 0, 10, 1), view._needsDisplayRect);
+        Assert.Equal (new (0, 0, 10, 1), view._needsDrawRect);
         view.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -1130,7 +1130,7 @@ At 0,0
                 }
             }
 
-            ClearNeedsDisplay ();
+            ClearNeedsDraw ();
 
             return true;
         }

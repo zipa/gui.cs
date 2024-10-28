@@ -137,7 +137,7 @@ public class Bar : View, IOrientation, IDesignable
         set
         {
             _alignmentModes = value;
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
             SetNeedsLayout ();
         }
     }
@@ -165,7 +165,7 @@ public class Bar : View, IOrientation, IDesignable
             }
         }
 
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
         SetNeedsLayout ();
     }
 
@@ -189,7 +189,7 @@ public class Bar : View, IOrientation, IDesignable
         if (toRemove is { })
         {
             Remove (toRemove);
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
             SetNeedsLayout ();
         }
 

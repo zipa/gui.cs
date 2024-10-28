@@ -494,7 +494,7 @@ public class FileDialog : Dialog
             MoveSubviewTowardsStart (_btnCancel);
         }
 
-        SetNeedsDisplay();
+        SetNeedsDraw();
         SetNeedsLayout();
     }
 
@@ -636,7 +636,7 @@ public class FileDialog : Dialog
         if (!IsCompatibleWithOpenMode (f.FullName, out string reason))
         {
             _feedback = reason;
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             return;
         }
@@ -663,7 +663,7 @@ public class FileDialog : Dialog
             if (reason is { })
             {
                 _feedback = reason;
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
             }
 
             return;
@@ -1117,7 +1117,7 @@ public class FileDialog : Dialog
             _tableView.RowOffset = 0;
             _tableView.SelectedRow = 0;
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
             UpdateNavigationVisibility ();
         }
         finally
@@ -1402,7 +1402,7 @@ public class FileDialog : Dialog
         if (reason is { })
         {
             _feedback = reason;
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
 
         return false;
@@ -1590,7 +1590,7 @@ public class FileDialog : Dialog
                                     Parent.WriteStateToTableView ();
 
                                     Parent._spinnerView.Visible = true;
-                                    Parent._spinnerView.SetNeedsDisplay ();
+                                    Parent._spinnerView.SetNeedsDraw ();
                                 }
                                );
         }

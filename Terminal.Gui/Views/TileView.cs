@@ -57,7 +57,7 @@ public class TileView : View
 
             _orientation = value;
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
             SetNeedsLayout ();
 
         }
@@ -151,7 +151,7 @@ public class TileView : View
             }
         }
 
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
         SetNeedsLayout ();
 
         return toReturn;
@@ -440,7 +440,7 @@ public class TileView : View
         }
 
         OnSplitterMoved (idx);
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
         SetNeedsLayout ();
 
         return true;
@@ -826,7 +826,7 @@ public class TileView : View
             }
 
             //  BUGBUG: This should not be needed. If any of the pos/dim setters above actually changed values, NeedsDisplay should have already been set. 
-            tile.ContentView.SetNeedsDisplay ();
+            tile.ContentView.SetNeedsDraw ();
         }
     }
 
@@ -1041,7 +1041,7 @@ public class TileView : View
         /// <param name="newValue"></param>
         private bool FinalisePosition (Pos oldValue, Pos newValue)
         {
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             SetNeedsLayout ();
 

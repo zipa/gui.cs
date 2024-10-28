@@ -152,7 +152,7 @@ public class Images : Scenario
         internal void SetImage (Image<Rgba32> image)
         {
             _fullResImage = image;
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 }

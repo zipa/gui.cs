@@ -66,7 +66,7 @@ public class Adornment : View, IDesignable
             {
                 Parent?.SetAdornmentFrames ();
                 SetNeedsLayout ();
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
 
                 OnThicknessChanged ();
             }

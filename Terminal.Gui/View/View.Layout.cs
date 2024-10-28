@@ -35,7 +35,7 @@ public partial class View // Layout APIs
     ///         Setting Frame will set <see cref="X"/>, <see cref="Y"/>, <see cref="Width"/>, and <see cref="Height"/> to absoulte values.
     ///     </para>
     ///     <para>
-    ///         Changing this property will result in <see cref="NeedsLayout"/> and <see cref="NeedsDisplay"/> to be set, resulting in the
+    ///         Changing this property will result in <see cref="NeedsLayout"/> and <see cref="NeedsDraw"/> to be set, resulting in the
     ///         view being laid out and redrawn as appropriate in the next iteration of the <see cref="MainLoop"/>.
     ///     </para>
     /// </remarks>
@@ -90,7 +90,7 @@ public partial class View // Layout APIs
 
         SetAdornmentFrames ();
 
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
         SetNeedsLayout ();
 
         // BUGBUG: When SetFrame is called from Frame_set, this event gets raised BEFORE OnResizeNeeded. Is that OK?
@@ -192,7 +192,7 @@ public partial class View // Layout APIs
     ///         laid out (e.g. <see cref="Layout(System.Drawing.Size)"/> has been called).
     ///     </para>
     ///     <para>
-    ///         Changing this property will result in <see cref="NeedsLayout"/> and <see cref="NeedsDisplay"/> to be set, resulting in the
+    ///         Changing this property will result in <see cref="NeedsLayout"/> and <see cref="NeedsDraw"/> to be set, resulting in the
     ///         view being laid out and redrawn as appropriate in the next iteration of the <see cref="MainLoop"/>.
     ///     </para>
     ///     <para>
@@ -235,7 +235,7 @@ public partial class View // Layout APIs
     ///         laid out (e.g. <see cref="Layout(System.Drawing.Size)"/> has been called).
     ///     </para>
     ///     <para>
-    ///         Changing this property will result in <see cref="NeedsLayout"/> and <see cref="NeedsDisplay"/> to be set, resulting in the
+    ///         Changing this property will result in <see cref="NeedsLayout"/> and <see cref="NeedsDraw"/> to be set, resulting in the
     ///         view being laid out and redrawn as appropriate in the next iteration of the <see cref="MainLoop"/>.
     ///     </para>
     ///     <para>
@@ -276,7 +276,7 @@ public partial class View // Layout APIs
     ///         laid out (e.g. <see cref="Layout(System.Drawing.Size)"/> has been called).
     ///     </para>
     ///     <para>
-    ///         Changing this property will result in <see cref="NeedsLayout"/> and <see cref="NeedsDisplay"/> to be set, resulting in the
+    ///         Changing this property will result in <see cref="NeedsLayout"/> and <see cref="NeedsDraw"/> to be set, resulting in the
     ///         view being laid out and redrawn as appropriate in the next iteration of the <see cref="MainLoop"/>.
     ///     </para>
     ///     <para>
@@ -322,7 +322,7 @@ public partial class View // Layout APIs
     ///         laid out (e.g. <see cref="Layout(System.Drawing.Size)"/> has been called).
     ///     </para>
     ///     <para>
-    ///         Changing this property will result in <see cref="NeedsLayout"/> and <see cref="NeedsDisplay"/> to be set, resulting in the
+    ///         Changing this property will result in <see cref="NeedsLayout"/> and <see cref="NeedsDraw"/> to be set, resulting in the
     ///         view being laid out and redrawn as appropriate in the next iteration of the <see cref="MainLoop"/>.
     ///     </para>
     ///     <para>
@@ -512,7 +512,7 @@ public partial class View // Layout APIs
                 SetTitleTextFormatterSize ();
             }
 
-            SuperView?.SetNeedsDisplay ();
+            SuperView?.SetNeedsDraw ();
         }
 
         if (TextFormatter.ConstrainToWidth is null)

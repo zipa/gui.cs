@@ -63,7 +63,7 @@ public class Margin : Adornment
         set
         {
             base.ColorScheme = value;
-            Parent?.SetNeedsDisplay ();
+            Parent?.SetNeedsDraw ();
         }
     }
 

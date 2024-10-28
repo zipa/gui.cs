@@ -247,7 +247,7 @@ public class ListView : View, IDesignable
         set
         {
             _allowsMarking = value;
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -274,7 +274,7 @@ public class ListView : View, IDesignable
                 }
             }
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -302,7 +302,7 @@ public class ListView : View, IDesignable
             }
 
             Viewport = Viewport with { X = value };
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -361,7 +361,7 @@ public class ListView : View, IDesignable
             KeystrokeNavigator.Collection = _source?.ToList ();
             _selected = -1;
             _lastSelectedItem = -1;
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -375,7 +375,7 @@ public class ListView : View, IDesignable
             SelectedItem = Source.Count - 1;
         }
 
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
 
         OnCollectionChanged (e);
     }
@@ -482,7 +482,7 @@ public class ListView : View, IDesignable
         if (UnmarkAllButSelected ())
         {
             Source.SetMark (SelectedItem, !Source.IsMarked (SelectedItem));
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             return Source.IsMarked (SelectedItem);
         }
@@ -558,7 +558,7 @@ public class ListView : View, IDesignable
         }
 
         OnSelectedChanged ();
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
 
         if (me.Flags == MouseFlags.Button1DoubleClicked)
         {
@@ -585,7 +585,7 @@ public class ListView : View, IDesignable
             // This can occur if the backing data source changes.
             _selected = _source.Count - 1;
             OnSelectedChanged ();
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
         else if (_selected + 1 < _source.Count)
         {
@@ -602,17 +602,17 @@ public class ListView : View, IDesignable
             }
 
             OnSelectedChanged ();
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
         else if (_selected == 0)
         {
             OnSelectedChanged ();
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
         else if (_selected >= Viewport.Y + Viewport.Height)
         {
             Viewport = Viewport with { Y = _source.Count - Viewport.Height };
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
 
         return true;
@@ -637,7 +637,7 @@ public class ListView : View, IDesignable
             }
 
             OnSelectedChanged ();
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
 
         return true;
@@ -652,7 +652,7 @@ public class ListView : View, IDesignable
             _selected = 0;
             Viewport = Viewport with { Y = _selected };
             OnSelectedChanged ();
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
 
         return true;
@@ -691,7 +691,7 @@ public class ListView : View, IDesignable
             }
 
             OnSelectedChanged ();
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
 
         return true;
@@ -713,7 +713,7 @@ public class ListView : View, IDesignable
             _selected = n;
             Viewport = Viewport with { Y = _selected };
             OnSelectedChanged ();
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
 
         return true;
@@ -736,7 +736,7 @@ public class ListView : View, IDesignable
             // This can occur if the backing data source changes.
             _selected = _source.Count - 1;
             OnSelectedChanged ();
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
         else if (_selected > 0)
         {
@@ -757,12 +757,12 @@ public class ListView : View, IDesignable
             }
 
             OnSelectedChanged ();
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
         else if (_selected < Viewport.Y)
         {
             Viewport = Viewport with { Y = _selected };
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
 
         return true;
@@ -886,7 +886,7 @@ public class ListView : View, IDesignable
             {
                 SelectedItem = (int)newItem;
                 EnsureSelectedItemVisible ();
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
 
                 return true;
             }

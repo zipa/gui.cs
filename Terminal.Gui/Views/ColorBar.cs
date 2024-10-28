@@ -78,7 +78,7 @@ internal abstract class ColorBar : View, IColorBar
     void IColorBar.SetValueWithoutRaisingEvent (int v)
     {
         _value = v;
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     /// <inheritdoc/>
@@ -215,7 +215,7 @@ internal abstract class ColorBar : View, IColorBar
     private void OnValueChanged ()
     {
         ValueChanged?.Invoke (this, new (in _value));
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     private bool? SetMax ()

@@ -594,7 +594,7 @@ public partial class View // Focus and cross-view navigation management (TabStop
         // Focus work is done. Notify.
         RaiseFocusChanged (HasFocus, currentFocusedView, this);
 
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
 
         // Post-conditions - prove correctness
         if (HasFocus == previousValue)
@@ -847,7 +847,7 @@ public partial class View // Focus and cross-view navigation management (TabStop
             throw new InvalidOperationException ("SetHasFocusFalse and the HasFocus value did not change.");
         }
 
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     private void RaiseFocusChanged (bool newHasFocus, View? previousFocusedView, View? focusedView)

@@ -61,7 +61,7 @@ internal class DrawLineTool : ITool
                 _currentLine.Length = length;
                 _currentLine.Orientation = orientation;
                 area.CurrentLayer.ClearCache ();
-                area.SetNeedsDisplay ();
+                area.SetNeedsDraw ();
             }
         }
         else
@@ -93,7 +93,7 @@ internal class DrawLineTool : ITool
 
                 _currentLine = null;
                 area.ClearUndo ();
-                area.SetNeedsDisplay ();
+                area.SetNeedsDraw ();
             }
         }
 
@@ -302,7 +302,7 @@ public class DrawingArea : View
             if (pop != null)
             {
                 _undoHistory.Push (pop);
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
 
                 return true;
             }
@@ -314,7 +314,7 @@ public class DrawingArea : View
             {
                 StraightLine pop = _undoHistory.Pop ();
                 CurrentLayer.AddLine (pop);
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
 
                 return true;
             }
@@ -458,7 +458,7 @@ public class AttributeView : View
         if (LineDrawing.PromptForColor ("Background", Value.Background, out Color newColor))
         {
             Value = new (Value.Foreground, newColor);
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -467,7 +467,7 @@ public class AttributeView : View
         if (LineDrawing.PromptForColor ("Foreground", Value.Foreground, out Color newColor))
         {
             Value = new (newColor, Value.Background);
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 }

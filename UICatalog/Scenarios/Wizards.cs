@@ -322,7 +322,7 @@ public class Wizards : Scenario
                                                                                 scrollBar.Position = someText.TopRow;
                                                                             }
 
-                                                                            someText.SetNeedsDisplay ();
+                                                                            someText.SetNeedsDraw ();
                                                                         };
 
                                            someText.DrawingContent += (s, e) =>

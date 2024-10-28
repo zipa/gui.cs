@@ -73,7 +73,7 @@ public class ComboBox : View, IDesignable
                      }
 
                      SetNeedsLayout ();
-                     SetNeedsDisplay ();
+                     SetNeedsDraw ();
                      ShowHideList (Text);
                  };
 
@@ -118,7 +118,7 @@ public class ComboBox : View, IDesignable
         {
             _listview.ColorScheme = value;
             base.ColorScheme = value;
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -198,7 +198,7 @@ public class ComboBox : View, IDesignable
             if (SuperView is { } && SuperView.Subviews.Contains (this))
             {
                 Text = string.Empty;
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
             }
         }
     }
@@ -512,9 +512,9 @@ public class ComboBox : View, IDesignable
         _listview.TabStop = TabBehavior.NoStop;
         SuperView?.MoveSubviewToStart (this);
 
-        // BUGBUG: SetNeedsDisplay takes Viewport relative coordinates, not Screen
+        // BUGBUG: SetNeedsDraw takes Viewport relative coordinates, not Screen
         Rectangle rect = _listview.ViewportToScreen (_listview.IsInitialized ? _listview.Viewport : Rectangle.Empty);
-        SuperView?.SetNeedsDisplay (rect);
+        SuperView?.SetNeedsDraw (rect);
         OnCollapsed ();
     }
 
@@ -878,7 +878,7 @@ public class ComboBox : View, IDesignable
                 if (isMousePositionValid)
                 {
                     _highlighted = Math.Min (TopItem + me.Position.Y, Source.Count);
-                    SetNeedsDisplay ();
+                    SetNeedsDraw ();
                 }
 
                 _isFocusing = false;

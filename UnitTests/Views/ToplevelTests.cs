@@ -699,7 +699,7 @@ public partial class ToplevelTests (ITestOutputHelper output)
 
         void ViewLayoutStarted (object sender, LayoutEventArgs e)
         {
-            Assert.Equal (new (0, 0, 20, 10), view._needsDisplayRect);
+            Assert.Equal (new (0, 0, 20, 10), view._needsDrawRect);
             view.SubviewLayout -= ViewLayoutStarted;
         }
 
@@ -711,12 +711,12 @@ public partial class ToplevelTests (ITestOutputHelper output)
 
         view.Frame = new (1, 3, 10, 5);
         Assert.Equal (new (1, 3, 10, 5), view.Frame);
-        Assert.Equal (new (0, 0, 10, 5), view._needsDisplayRect);
+        Assert.Equal (new (0, 0, 10, 5), view._needsDrawRect);
 
         view.Frame = new (1, 3, 10, 5);
         top.Layout ();
         Assert.Equal (new (1, 3, 10, 5), view.Frame);
-        Assert.Equal (new (0, 0, 10, 5), view._needsDisplayRect);
+        Assert.Equal (new (0, 0, 10, 5), view._needsDrawRect);
         top.Dispose ();
     }
 
@@ -968,7 +968,7 @@ public partial class ToplevelTests (ITestOutputHelper output)
                                {
                                    Assert.Equal (new (1, 3, 18, 16), viewAddedToTop.Frame);
 
-                                   viewAddedToTop.SetNeedsDisplay ();
+                                   viewAddedToTop.SetNeedsDraw ();
                                    viewAddedToTop.Draw ();
                                    top.Move (2, 15);
                                    View.Driver.AddStr ("One");

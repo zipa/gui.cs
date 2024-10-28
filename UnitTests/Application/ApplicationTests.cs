@@ -831,7 +831,7 @@ public class ApplicationTests
     }
 
     // TODO: All Toplevel layout tests should be moved to ToplevelTests.cs
-    [Fact (Skip = "#2491 - Changing focus should cause NeedsDisplay = true, so bogus test?")]
+    [Fact (Skip = "#2491 - Changing focus should cause NeedsDraw = true, so bogus test?")]
     public void Run_Toplevel_With_Modal_View_Does_Not_Refresh_If_Not_Dirty ()
     {
         Init ();
@@ -857,11 +857,11 @@ public class ApplicationTests
                                      else if (iteration < 3)
                                      {
                                          Application.RaiseMouseEvent (new () { Flags = MouseFlags.ReportMousePosition });
-                                         Assert.False (top.NeedsDisplay);
-                                         Assert.False (top.SubViewNeedsDisplay);
+                                         Assert.False (top.NeedsDraw);
+                                         Assert.False (top.SubViewNeedsDraw);
                                          Assert.False (top.NeedsLayout);
-                                         Assert.False (d.NeedsDisplay);
-                                         Assert.False (d.SubViewNeedsDisplay);
+                                         Assert.False (d.NeedsDraw);
+                                         Assert.False (d.SubViewNeedsDraw);
                                          Assert.False (d.NeedsLayout);
                                      }
                                      else

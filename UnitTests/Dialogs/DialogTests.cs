@@ -1109,7 +1109,7 @@ public class DialogTests
                          {
                              case 0:
                                  Top.SetNeedsLayout();
-                                 Top.SetNeedsDisplay();
+                                 Top.SetNeedsDraw();
                                  LayoutAndDrawToplevels ();
 
                                  break;
@@ -1448,7 +1448,7 @@ public class DialogTests
 
         RunState runState = Begin (dlg);
 
-        dlg.SetNeedsDisplay();
+        dlg.SetNeedsDraw();
         dlg.SetNeedsLayout ();
         dlg.Layout ();
         dlg.Draw ();

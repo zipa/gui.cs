@@ -24,7 +24,7 @@ public class AutocompleteTests (ITestOutputHelper output)
         for (var i = 0; i < 7; i++)
         {
             Assert.True (tv.NewKeyDownEvent (Key.CursorRight));
-            top.SetNeedsDisplay();
+            top.SetNeedsDraw();
             Application.RunIteration (ref rs);
 
             if (i < 4 || i > 5)
@@ -52,7 +52,7 @@ This a long line and against TextView.
                                        new() { Position = new (6, 0), Flags = MouseFlags.Button1Pressed }
                                       )
                     );
-        top.SetNeedsDisplay ();
+        top.SetNeedsDraw ();
         Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -64,7 +64,7 @@ This a long line and against TextView.
                                                      );
 
         Assert.True (tv.NewKeyDownEvent (Key.G));
-        top.SetNeedsDisplay ();
+        top.SetNeedsDraw ();
         Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -75,7 +75,7 @@ This ag long line and against TextView.
                                                      );
 
         Assert.True (tv.NewKeyDownEvent (Key.CursorLeft));
-        top.SetNeedsDisplay ();
+        top.SetNeedsDraw ();
         Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -86,7 +86,7 @@ This ag long line and against TextView.
                                                      );
 
         Assert.True (tv.NewKeyDownEvent (Key.CursorLeft));
-        top.SetNeedsDisplay ();
+        top.SetNeedsDraw ();
         Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -97,7 +97,7 @@ This ag long line and against TextView.
                                                      );
 
         Assert.True (tv.NewKeyDownEvent (Key.CursorLeft));
-        top.SetNeedsDisplay ();
+        top.SetNeedsDraw ();
         Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -109,7 +109,7 @@ This ag long line and against TextView.",
         for (var i = 0; i < 3; i++)
         {
             Assert.True (tv.NewKeyDownEvent (Key.CursorRight));
-            top.SetNeedsDisplay ();
+            top.SetNeedsDraw ();
             Application.RunIteration (ref rs);
 
             TestHelpers.AssertDriverContentsWithFrameAre (
@@ -121,7 +121,7 @@ This ag long line and against TextView.
         }
 
         Assert.True (tv.NewKeyDownEvent (Key.Backspace));
-        top.SetNeedsDisplay ();
+        top.SetNeedsDraw ();
         Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -133,7 +133,7 @@ This a long line and against TextView.
                                                      );
 
         Assert.True (tv.NewKeyDownEvent (Key.N));
-        top.SetNeedsDisplay ();
+        top.SetNeedsDraw ();
         Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -144,7 +144,7 @@ This an long line and against TextView.
                                                      );
 
         Assert.True (tv.NewKeyDownEvent (Key.CursorRight));
-        top.SetNeedsDisplay ();
+        top.SetNeedsDraw ();
         Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (

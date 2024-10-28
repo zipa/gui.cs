@@ -176,7 +176,7 @@ public class VkeyPacketSimulator : Scenario
                                  _outputStarted = true;
                                  tvOutput.ReadOnly = false;
                                  tvOutput.SetFocus ();
-                                 tvOutput.SetNeedsDisplay ();
+                                 tvOutput.SetNeedsDraw ();
 
                                  Task.Run (
                                            () =>

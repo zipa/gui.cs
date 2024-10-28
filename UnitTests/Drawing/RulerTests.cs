@@ -67,7 +67,7 @@ public class RulerTests
                                                      );
 
         // Postive offset
-        top.SetNeedsDisplay ();
+        top.SetNeedsDraw ();
         Application.LayoutAndDrawToplevels ();
         r.Draw (new (1, 1));
 
@@ -82,7 +82,7 @@ public class RulerTests
                                                      );
 
         // Negative offset
-        top.SetNeedsDisplay ();
+        top.SetNeedsDraw ();
         Application.LayoutAndDrawToplevels ();
         r.Draw (new (-1, 1));
 
@@ -97,7 +97,7 @@ public class RulerTests
                                                      );
 
         // Clip
-        top.SetNeedsDisplay ();
+        top.SetNeedsDraw ();
         Application.LayoutAndDrawToplevels ();
         r.Draw (new (10, 1));
 
@@ -143,7 +143,7 @@ public class RulerTests
                                                       _output
                                                      );
 
-        f.SetNeedsDisplay();
+        f.SetNeedsDraw();
         Application.LayoutAndDrawToplevels ();
         r.Length = len;
         r.Draw (new (1, 0), 1);
@@ -206,7 +206,7 @@ public class RulerTests
                                                      );
 
         // Postive offset
-        f.SetNeedsDisplay ();
+        f.SetNeedsDraw ();
         Application.LayoutAndDrawToplevels (true);
         r.Draw (new (1, 1));
 
@@ -236,7 +236,7 @@ public class RulerTests
                                                      );
 
         // Negative offset
-        f.SetNeedsDisplay ();
+        f.SetNeedsDraw ();
         Application.LayoutAndDrawToplevels ();
         r.Draw (new (1, -1));
 
@@ -266,7 +266,7 @@ public class RulerTests
                                                      );
 
         // Clip
-        f.SetNeedsDisplay ();
+        f.SetNeedsDraw ();
 
         Application.LayoutAndDrawToplevels ();
         r.Draw (new (1, 10));
@@ -342,7 +342,7 @@ public class RulerTests
 └───┘",
                                                       _output
                                                      );
-        f.SetNeedsDisplay ();
+        f.SetNeedsDraw ();
         Application.LayoutAndDrawToplevels (true);
         r.Length = len;
         r.Draw (new (0, 1), 1);

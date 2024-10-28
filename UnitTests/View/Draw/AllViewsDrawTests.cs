@@ -40,7 +40,7 @@ public class AllViewsDrawTests (ITestOutputHelper _output) : TestsAllViews
         Assert.Equal (1, layoutStartedCount);
         Assert.Equal (1, layoutCompleteCount);
 
-        view.SetNeedsDisplay ();
+        view.SetNeedsDraw ();
         view.Draw ();
 
         Assert.Equal (1, drawCompleteCount);

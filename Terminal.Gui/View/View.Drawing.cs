@@ -12,8 +12,8 @@ public partial class View // Drawing APIs
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///         The view will only be drawn if it is visible, and has any of <see cref="NeedsDisplay"/>,
-    ///         <see cref="SubViewNeedsDisplay"/>,
+    ///         The view will only be drawn if it is visible, and has any of <see cref="NeedsDraw"/>,
+    ///         <see cref="SubViewNeedsDraw"/>,
     ///         or <see cref="NeedsLayout"/> set.
     ///     </para>
     ///     <para>
@@ -22,7 +22,7 @@ public partial class View // Drawing APIs
     /// </remarks>
     public void Draw ()
     {
-        if (!CanBeVisible (this) || (!NeedsDisplay && !SubViewNeedsDisplay))
+        if (!CanBeVisible (this) || (!NeedsDraw && !SubViewNeedsDraw))
         {
             return;
         }
@@ -50,7 +50,7 @@ public partial class View // Drawing APIs
 
         DoRenderLineCanvas ();
         DoDrawAdornmentSubViews ();
-        ClearNeedsDisplay ();
+        ClearNeedsDraw ();
 
         // We're done
         DoDrawComplete ();
@@ -66,7 +66,7 @@ public partial class View // Drawing APIs
         {
             foreach (View subview in Margin.Subviews)
             {
-                subview.SetNeedsDisplay ();
+                subview.SetNeedsDraw ();
             }
 
             Margin?.DoDrawSubviews (Margin.Viewport);
@@ -76,7 +76,7 @@ public partial class View // Drawing APIs
         {
             foreach (View subview in Border.Subviews)
             {
-                subview.SetNeedsDisplay ();
+                subview.SetNeedsDraw ();
             }
 
             Border?.DoDrawSubviews (Border.Viewport);
@@ -86,7 +86,7 @@ public partial class View // Drawing APIs
         {
             foreach (View subview in Padding.Subviews)
             {
-                subview.SetNeedsDisplay ();
+                subview.SetNeedsDraw ();
             }
 
             Padding?.DoDrawSubviews (Padding.Viewport);
@@ -103,7 +103,7 @@ public partial class View // Drawing APIs
         // TODO: add event.
 
         // Subviews of Adornments count as subviews
-        if (!NeedsDisplay && !SubViewNeedsDisplay)
+        if (!NeedsDraw && !SubViewNeedsDraw)
         {
             return;
         }
@@ -151,7 +151,7 @@ public partial class View // Drawing APIs
             return;
         }
 
-        if (!NeedsDisplay && !SubViewNeedsDisplay)
+        if (!NeedsDraw && !SubViewNeedsDraw)
         {
             return;
         }
@@ -204,7 +204,7 @@ public partial class View // Drawing APIs
             return;
         }
 
-        if (!NeedsDisplay)
+        if (!NeedsDraw)
         {
             return;
         }
@@ -264,7 +264,7 @@ public partial class View // Drawing APIs
         SetAttribute (prev);
 
         Driver.Clip = prevClip;
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     #endregion ClearViewport
@@ -288,7 +288,7 @@ public partial class View // Drawing APIs
             return;
         }
 
-        if (!NeedsDisplay)
+        if (!NeedsDraw)
         {
             return;
         }
@@ -332,7 +332,7 @@ public partial class View // Drawing APIs
                             );
 
         // We assume that the text has been drawn over the entire area; ensure that the subviews are redrawn.
-        SetSubViewNeedsDisplay ();
+        SetSubViewNeedsDraw ();
     }
 
     #endregion DrawText
@@ -396,7 +396,7 @@ public partial class View // Drawing APIs
             return;
         }
 
-        if (!SubViewNeedsDisplay)
+        if (!SubViewNeedsDraw)
         {
             return;
         }
@@ -425,19 +425,19 @@ public partial class View // Drawing APIs
     /// </summary>
     public void DrawSubviews ()
     {
-        if (_subviews is null || !SubViewNeedsDisplay)
+        if (_subviews is null || !SubViewNeedsDraw)
         {
             return;
         }
 
-        IEnumerable<View> subviewsNeedingDraw = _subviews.Where (view => (view.Visible && (view.NeedsDisplay || view.SubViewNeedsDisplay))
+        IEnumerable<View> subviewsNeedingDraw = _subviews.Where (view => (view.Visible && (view.NeedsDraw || view.SubViewNeedsDraw))
                                                                       );//|| view.Arrangement.HasFlag (ViewArrangement.Overlapped));
 
         foreach (View view in subviewsNeedingDraw)
         {
             if (view.Arrangement.HasFlag (ViewArrangement.Overlapped))
             {
-                //view.SetNeedsDisplay ();
+                //view.SetNeedsDraw ();
             }
             view.Draw ();
         }
@@ -567,14 +567,14 @@ public partial class View // Drawing APIs
 
     #endregion DrawComplete
 
-    #region NeedsDisplay
+    #region NeedsDraw
 
-    // TODO: Make _needsDisplayRect nullable instead of relying on Empty
+    // TODO: Make _needsDrawRect nullable instead of relying on Empty
     // TODO: If null, it means ?
     // TODO: If Empty, it means no need to redraw
     // TODO: If not Empty, it means the region that needs to be redrawn
     // The viewport-relative region that needs to be redrawn. Marked internal for unit tests.
-    internal Rectangle _needsDisplayRect = Rectangle.Empty;
+    internal Rectangle _needsDrawRect = Rectangle.Empty;
 
     /// <summary>Gets or sets whether the view needs to be redrawn.</summary>
     /// <remarks>
@@ -586,42 +586,42 @@ public partial class View // Drawing APIs
     ///         Setting has no effect on <see cref="NeedsLayout"/>.
     ///     </para>
     /// </remarks>
-    public bool NeedsDisplay
+    public bool NeedsDraw
     {
-        // TODO: Figure out if we can decouple NeedsDisplay from NeedsLayout. This is a temporary fix.
-        get => _needsDisplayRect != Rectangle.Empty || NeedsLayout;
+        // TODO: Figure out if we can decouple NeedsDraw from NeedsLayout. This is a temporary fix.
+        get => _needsDrawRect != Rectangle.Empty || NeedsLayout;
         set
         {
             if (value)
             {
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
             }
             else
             {
-                ClearNeedsDisplay ();
+                ClearNeedsDraw ();
             }
         }
     }
 
     /// <summary>Gets whether any Subviews need to be redrawn.</summary>
-    public bool SubViewNeedsDisplay { get; private set; }
+    public bool SubViewNeedsDraw { get; private set; }
 
     /// <summary>Sets that the <see cref="Viewport"/> of this View needs to be redrawn.</summary>
     /// <remarks>
     ///     If the view has not been initialized (<see cref="IsInitialized"/> is <see langword="false"/>), this method
     ///     does nothing.
     /// </remarks>
-    public void SetNeedsDisplay ()
+    public void SetNeedsDraw ()
     {
         Rectangle viewport = Viewport;
 
-        if (_needsDisplayRect != Rectangle.Empty && viewport.IsEmpty)
+        if (_needsDrawRect != Rectangle.Empty && viewport.IsEmpty)
         {
             // This handles the case where the view has not been initialized yet
             return;
         }
 
-        SetNeedsDisplay (viewport);
+        SetNeedsDraw (viewport);
     }
 
     /// <summary>Expands the area of this view needing to be redrawn to include <paramref name="viewPortRelativeRegion"/>.</summary>
@@ -635,11 +635,11 @@ public partial class View // Drawing APIs
     ///     </para>
     /// </remarks>
     /// <param name="viewPortRelativeRegion">The <see cref="Viewport"/>relative region that needs to be redrawn.</param>
-    public void SetNeedsDisplay (Rectangle viewPortRelativeRegion)
+    public void SetNeedsDraw (Rectangle viewPortRelativeRegion)
     {
-        if (_needsDisplayRect.IsEmpty)
+        if (_needsDrawRect.IsEmpty)
         {
-            _needsDisplayRect = viewPortRelativeRegion;
+            _needsDrawRect = viewPortRelativeRegion;
         }
         else
         {
@@ -647,18 +647,18 @@ public partial class View // Drawing APIs
             int y = Math.Min (Viewport.Y, viewPortRelativeRegion.Y);
             int w = Math.Max (Viewport.Width, viewPortRelativeRegion.Width);
             int h = Math.Max (Viewport.Height, viewPortRelativeRegion.Height);
-            _needsDisplayRect = new (x, y, w, h);
+            _needsDrawRect = new (x, y, w, h);
         }
 
-        Margin?.SetNeedsDisplay ();
-        Border?.SetNeedsDisplay ();
-        Padding?.SetNeedsDisplay ();
+        Margin?.SetNeedsDraw ();
+        Border?.SetNeedsDraw ();
+        Padding?.SetNeedsDraw ();
 
-        SuperView?.SetSubViewNeedsDisplay ();
+        SuperView?.SetSubViewNeedsDraw ();
 
         if (this is Adornment adornment)
         {
-            adornment.Parent?.SetSubViewNeedsDisplay ();
+            adornment.Parent?.SetSubViewNeedsDraw ();
         }
 
         foreach (View subview in Subviews)
@@ -668,42 +668,42 @@ public partial class View // Drawing APIs
                 Rectangle subviewRegion = Rectangle.Intersect (subview.Frame, viewPortRelativeRegion);
                 subviewRegion.X -= subview.Frame.X;
                 subviewRegion.Y -= subview.Frame.Y;
-                subview.SetNeedsDisplay (subviewRegion);
+                subview.SetNeedsDraw (subviewRegion);
             }
         }
     }
 
-    /// <summary>Sets <see cref="SubViewNeedsDisplay"/> to <see langword="true"/> for this View and all Superviews.</summary>
-    public void SetSubViewNeedsDisplay ()
+    /// <summary>Sets <see cref="SubViewNeedsDraw"/> to <see langword="true"/> for this View and all Superviews.</summary>
+    public void SetSubViewNeedsDraw ()
     {
-        SubViewNeedsDisplay = true;
+        SubViewNeedsDraw = true;
 
         if (this is Adornment adornment)
         {
-            adornment.Parent?.SetSubViewNeedsDisplay ();
+            adornment.Parent?.SetSubViewNeedsDraw ();
         }
 
-        if (SuperView is { SubViewNeedsDisplay: false })
+        if (SuperView is { SubViewNeedsDraw: false })
         {
-            SuperView.SetSubViewNeedsDisplay ();
+            SuperView.SetSubViewNeedsDraw ();
         }
     }
 
-    /// <summary>Clears <see cref="NeedsDisplay"/> and <see cref="SubViewNeedsDisplay"/>.</summary>
-    protected void ClearNeedsDisplay ()
+    /// <summary>Clears <see cref="NeedsDraw"/> and <see cref="SubViewNeedsDraw"/>.</summary>
+    protected void ClearNeedsDraw ()
     {
-        _needsDisplayRect = Rectangle.Empty;
-        SubViewNeedsDisplay = false;
+        _needsDrawRect = Rectangle.Empty;
+        SubViewNeedsDraw = false;
 
-        Margin?.ClearNeedsDisplay ();
-        Border?.ClearNeedsDisplay ();
-        Padding?.ClearNeedsDisplay ();
+        Margin?.ClearNeedsDraw ();
+        Border?.ClearNeedsDraw ();
+        Padding?.ClearNeedsDraw ();
 
         foreach (View subview in Subviews)
         {
-            subview.ClearNeedsDisplay ();
+            subview.ClearNeedsDraw ();
         }
     }
 
-    #endregion NeedsDisplay
+    #endregion NeedsDraw
 }

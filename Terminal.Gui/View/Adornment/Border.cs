@@ -152,7 +152,7 @@ public class Border : Adornment
         set
         {
             base.ColorScheme = value;
-            Parent?.SetNeedsDisplay ();
+            Parent?.SetNeedsDraw ();
         }
     }
 
@@ -223,7 +223,7 @@ public class Border : Adornment
 
             _settings = value;
 
-            Parent?.SetNeedsDisplay ();
+            Parent?.SetNeedsDraw ();
         }
     }
 
@@ -264,7 +264,7 @@ public class Border : Adornment
             ColorScheme = cs;
         }
 
-        Parent?.SetNeedsDisplay ();
+        Parent?.SetNeedsDraw ();
         e.Cancel = true;
     }
 
@@ -447,11 +447,11 @@ public class Border : Adornment
                 if (Parent!.SuperView is null)
                 {
                     // Redraw the entire app window.
-                    Application.Top!.SetNeedsDisplay ();
+                    Application.Top!.SetNeedsDraw ();
                 }
                 else
                 {
-                    Parent.SuperView.SetNeedsDisplay ();
+                    Parent.SuperView.SetNeedsDraw ();
                 }
 
                 _dragPosition = mouseEvent.Position;

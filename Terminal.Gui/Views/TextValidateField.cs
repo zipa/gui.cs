@@ -526,7 +526,7 @@ namespace Terminal.Gui
 
                 _provider.Text = value;
 
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
             }
         }
 
@@ -544,7 +544,7 @@ namespace Terminal.Gui
 
                 _cursorPosition = c;
                 SetFocus ();
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
 
                 return true;
             }
@@ -657,7 +657,7 @@ namespace Terminal.Gui
 
             _cursorPosition = _provider.CursorLeft (_cursorPosition);
             _provider.Delete (_cursorPosition);
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             return true;
         }
@@ -673,7 +673,7 @@ namespace Terminal.Gui
 
             int current = _cursorPosition;
             _cursorPosition = _provider.CursorLeft (_cursorPosition);
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             return current != _cursorPosition;
         }
@@ -689,7 +689,7 @@ namespace Terminal.Gui
 
             int current = _cursorPosition;
             _cursorPosition = _provider.CursorRight (_cursorPosition);
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             return current != _cursorPosition;
         }
@@ -704,7 +704,7 @@ namespace Terminal.Gui
             }
 
             _provider.Delete (_cursorPosition);
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             return true;
         }
@@ -714,7 +714,7 @@ namespace Terminal.Gui
         private bool EndKeyHandler ()
         {
             _cursorPosition = _provider.CursorEnd ();
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             return true;
         }
@@ -745,7 +745,7 @@ namespace Terminal.Gui
         private bool HomeKeyHandler ()
         {
             _cursorPosition = _provider.CursorStart ();
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             return true;
         }

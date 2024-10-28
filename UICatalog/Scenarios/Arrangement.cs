@@ -99,7 +99,7 @@ public class Arrangement : Scenario
 
                              Application.Wakeup ();
 
-                             progressBar.SetNeedsDisplay ();
+                             progressBar.SetNeedsDraw ();
                          };
         timer.Start ();
 

@@ -102,7 +102,7 @@ public class DrawTests (ITestOutputHelper _output)
                                                       _output);
 
         // Now try to clear beyond Viewport (invalid; clipping should prevent)
-        superView.SetNeedsDisplay ();
+        superView.SetNeedsDraw ();
         superView.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -122,7 +122,7 @@ public class DrawTests (ITestOutputHelper _output)
                                                       _output);
 
         // Now try to clear beyond Viewport (valid)
-        superView.SetNeedsDisplay ();
+        superView.SetNeedsDraw ();
         superView.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -142,7 +142,7 @@ public class DrawTests (ITestOutputHelper _output)
                                                       _output);
 
         // Now clear too much size
-        superView.SetNeedsDisplay ();
+        superView.SetNeedsDraw ();
         superView.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -404,13 +404,13 @@ public class DrawTests (ITestOutputHelper _output)
     {
         var view = new View { Width = 2, Height = 2, BorderStyle = LineStyle.Single };
         Assert.True (view.NeedsLayout);
-        Assert.True (view.NeedsDisplay);
+        Assert.True (view.NeedsDraw);
         view.Layout ();
 
         Assert.Equal (new (0, 0, 2, 2), view.Frame);
         Assert.Equal (Rectangle.Empty, view.Viewport);
 
-        Assert.True (view.NeedsDisplay);
+        Assert.True (view.NeedsDraw);
         view.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (

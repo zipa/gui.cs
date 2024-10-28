@@ -44,7 +44,7 @@ public class ScrollBarViewTests
         Assert.Equal (1, _scrollBar.OtherScrollBarView.Viewport.Height);
 
         _hostView.Lines = 10;
-        _hostView.SetNeedsDisplay ();
+        _hostView.SetNeedsDraw ();
         _hostView.Draw ();
         Assert.False (_scrollBar.ShowScrollIndicator);
         Assert.False (_scrollBar.Visible);
@@ -68,7 +68,7 @@ public class ScrollBarViewTests
         Assert.Equal (1, _scrollBar.OtherScrollBarView.Viewport.Height);
 
         _hostView.Cols = 60;
-        _hostView.SetNeedsDisplay ();
+        _hostView.SetNeedsDraw ();
         _hostView.Draw ();
         Assert.False (_scrollBar.ShowScrollIndicator);
         Assert.False (_scrollBar.Visible);
@@ -92,7 +92,7 @@ public class ScrollBarViewTests
         Assert.Equal (1, _scrollBar.OtherScrollBarView.Viewport.Height);
 
         _hostView.Lines = 40;
-        _hostView.SetNeedsDisplay ();
+        _hostView.SetNeedsDraw ();
         _hostView.Draw ();
         Assert.True (_scrollBar.ShowScrollIndicator);
         Assert.True (_scrollBar.Visible);
@@ -116,7 +116,7 @@ public class ScrollBarViewTests
         Assert.Equal (1, _scrollBar.OtherScrollBarView.Viewport.Height);
 
         _hostView.Cols = 120;
-        _hostView.SetNeedsDisplay ();
+        _hostView.SetNeedsDraw ();
         _hostView.Draw ();
         Assert.True (_scrollBar.ShowScrollIndicator);
         Assert.True (_scrollBar.Visible);
@@ -429,7 +429,7 @@ This is a test
                                                                                       }
 
                                                                                       Assert.Equal (newScrollBarView.Position, listView.LeftItem);
-                                                                                      listView.SetNeedsDisplay ();
+                                                                                      listView.SetNeedsDraw ();
                                                                                       Application.LayoutAndDrawToplevels ();
 
                                                                                   };
@@ -510,7 +510,7 @@ This is a test
                                                                                             }
 
                                                                                             Assert.Equal (newScrollBarView.Position, listView.TopItem);
-                                                                                            listView.SetNeedsDisplay ();
+                                                                                            listView.SetNeedsDraw ();
                                                                                             Application.LayoutAndDrawToplevels ();
 
                                                                                         };
@@ -696,12 +696,12 @@ This is a test
         AddHandlers ();
 
         _hostView.Top = 3;
-        _hostView.SetNeedsDisplay ();
+        _hostView.SetNeedsDraw ();
         _hostView.Draw ();
         Assert.Equal (_scrollBar.Position, _hostView.Top);
 
         _hostView.Left = 6;
-        _hostView.SetNeedsDisplay ();
+        _hostView.SetNeedsDraw ();
         _hostView.Draw ();
         Assert.Equal (_scrollBar.OtherScrollBarView.Position, _hostView.Left);
         _hostView.SuperView.Dispose ();
@@ -813,7 +813,7 @@ This is a test
                                              scrollBar.Position = textView.TopRow;
                                          }
 
-                                         textView.SetNeedsDisplay ();
+                                         textView.SetNeedsDraw ();
                                      };
 
         scrollBar.OtherScrollBarView.ChangedPosition += (s, e) =>
@@ -825,7 +825,7 @@ This is a test
                                                                 scrollBar.OtherScrollBarView.Position = textView.LeftColumn;
                                                             }
 
-                                                            textView.SetNeedsDisplay ();
+                                                            textView.SetNeedsDraw ();
                                                         };
 
         textView.SubviewsLaidOut += (s, e) =>
@@ -1308,7 +1308,7 @@ This is a test             ",
             _scrollBar.Position = _hostView.Top;
         }
 
-        _hostView.SetNeedsDisplay ();
+        _hostView.SetNeedsDraw ();
     }
 
     private void _scrollBar_OtherScrollBarView_ChangedPosition (object sender, EventArgs e)
@@ -1320,7 +1320,7 @@ This is a test             ",
             _scrollBar.OtherScrollBarView.Position = _hostView.Left;
         }
 
-        _hostView.SetNeedsDisplay ();
+        _hostView.SetNeedsDraw ();
     }
 
     private void AddHandlers ()

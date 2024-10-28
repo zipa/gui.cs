@@ -279,7 +279,7 @@ Y
         Assert.Equal (new (0, 0, 12, 1), view.Frame);
 
         top.ClearViewport ();
-        view.SetNeedsDisplay ();
+        view.SetNeedsDraw ();
         view.Draw ();
         expected = @" HelloWorlds";
         TestHelpers.AssertDriverContentsWithFrameAre (expected, output);
@@ -715,8 +715,8 @@ w ";
         lbl.Layout ();
 
         Assert.Equal (new (0, 0, 2, 1), lbl.Frame);
-        Assert.Equal (new (0, 0, 2, 1), lbl._needsDisplayRect);
-        Assert.Equal (new (0, 0, 80, 25), lbl.SuperView._needsDisplayRect);
+        Assert.Equal (new (0, 0, 2, 1), lbl._needsDrawRect);
+        Assert.Equal (new (0, 0, 80, 25), lbl.SuperView._needsDrawRect);
         Assert.True (lbl.SuperView.NeedsLayout);
         Application.RunIteration (ref rs);
 

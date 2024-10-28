@@ -1170,7 +1170,7 @@ public class TableEditor : Scenario
                                              scrollBar.Position = _tableView.RowOffset;
                                          }
 
-                                         _tableView.SetNeedsDisplay ();
+                                         _tableView.SetNeedsDraw ();
                                      };
         /*
         scrollBar.OtherScrollBarView.ChangedPosition += (s,e) => {
@@ -1178,7 +1178,7 @@ public class TableEditor : Scenario
             if (tableView.LeftItem != scrollBar.OtherScrollBarView.Position) {
                 scrollBar.OtherScrollBarView.Position = tableView.LeftItem;
             }
-            tableView.SetNeedsDisplay ();
+            tableView.SetNeedsDraw ();
         };*/
 
         _tableView.DrawingContent += (s, e) =>
@@ -1350,7 +1350,7 @@ public class TableEditor : Scenario
             _tableView.Style.RowColorGetter = null;
         }
 
-        _tableView.SetNeedsDisplay ();
+        _tableView.SetNeedsDraw ();
     }
 
     private void ToggleAlwaysShowHeaders ()
@@ -1468,7 +1468,7 @@ public class TableEditor : Scenario
         //toggle menu item
         _miCursor.Checked = !_miCursor.Checked;
         _tableView.Style.InvertSelectedCellFirstCharacter = (bool)_miCursor.Checked;
-        _tableView.SetNeedsDisplay ();
+        _tableView.SetNeedsDraw ();
     }
 
     private void ToggleNoCellLines ()

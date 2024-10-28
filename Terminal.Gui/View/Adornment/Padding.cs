@@ -35,7 +35,7 @@ public class Padding : Adornment
         set
         {
             base.ColorScheme = value;
-            Parent?.SetNeedsDisplay ();
+            Parent?.SetNeedsDraw ();
         }
     }
 
@@ -62,7 +62,7 @@ public class Padding : Adornment
             if (Parent.CanFocus && !Parent.HasFocus)
             {
                 Parent.SetFocus ();
-                Parent.SetNeedsDisplay ();
+                Parent.SetNeedsDraw ();
                 return mouseEvent.Handled = true;
             }
         }

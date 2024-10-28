@@ -566,7 +566,7 @@ public class MenuBarTests (ITestOutputHelper output)
         void ChangeMenuTitle (string title)
         {
             menu.Menus [0].Title = title;
-            menu.SetNeedsDisplay ();
+            menu.SetNeedsDraw ();
         }
 
         RunState rsDialog = Application.Begin (dialog);
@@ -775,7 +775,7 @@ public class MenuBarTests (ITestOutputHelper output)
         void ChangeMenuTitle (string title)
         {
             menu.Menus [0].Title = title;
-            menu.SetNeedsDisplay ();
+            menu.SetNeedsDraw ();
         }
 
         RunState rs = Application.Begin (dialog);

@@ -69,9 +69,9 @@ namespace Terminal.Gui;
 ///     </para>
 ///     <para>
 ///         To flag a region of the View's <see cref="Viewport"/> to be redrawn call
-///         <see cref="SetNeedsDisplay(Rectangle)"/>
+///         <see cref="SetNeedsDraw(System.Drawing.Rectangle)"/>
 ///         .
-///         To flag the entire view for redraw call <see cref="SetNeedsDisplay()"/>.
+///         To flag the entire view for redraw call <see cref="SetNeedsDraw()"/>.
 ///     </para>
 ///     <para>
 ///         The <see cref="SetNeedsLayout"/> method is called when the size or layout of a view has changed. The <see cref="MainLoop"/> will
@@ -286,7 +286,7 @@ public partial class View : Responder, ISupportInitializeNotification
             }
 
             OnEnabledChanged ();
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             if (Border is { })
             {
@@ -363,8 +363,8 @@ public partial class View : Responder, ISupportInitializeNotification
 
             SetNeedsLayout ();
             SuperView?.SetNeedsLayout();
-            SetNeedsDisplay ();
-            SuperView?.SetNeedsDisplay();
+            SetNeedsDraw ();
+            SuperView?.SetNeedsDraw();
         }
     }
 
@@ -470,7 +470,7 @@ public partial class View : Responder, ISupportInitializeNotification
 
                 SetTitleTextFormatterSize ();
                 SetHotKeyFromTitle ();
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
 #if DEBUG
                 if (string.IsNullOrEmpty (Id))
                 {

@@ -222,7 +222,7 @@ public class Slider<T> : View, IOrientation
 
             // Todo: Custom logic to preserve options.
             _setOptions.Clear ();
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -353,7 +353,7 @@ public class Slider<T> : View, IOrientation
     public virtual void OnOptionsChanged ()
     {
         OptionsChanged?.Invoke (this, new (GetSetOptionDictionary ()));
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     /// <summary>Event raised When the option is hovered with the keys or the mouse.</summary>
@@ -1311,7 +1311,7 @@ public class Slider<T> : View, IOrientation
                 Application.GrabMouse (this);
             }
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             return true;
         }
@@ -1345,7 +1345,7 @@ public class Slider<T> : View, IOrientation
                 }
             }
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             return true;
         }
@@ -1379,7 +1379,7 @@ public class Slider<T> : View, IOrientation
                 }
             }
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             mouseEvent.Handled = true;
 

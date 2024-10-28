@@ -329,7 +329,7 @@ public class DynamicStatusBar : Scenario
                                           DataContext.Items [i - 1] =
                                               new DynamicStatusItemList (statusItem.Title, statusItem);
                                           _lstItems.SelectedItem = i - 1;
-                                          _statusBar.SetNeedsDisplay ();
+                                          _statusBar.SetNeedsDraw ();
                                       }
                                   }
                               };
@@ -352,7 +352,7 @@ public class DynamicStatusBar : Scenario
                                             DataContext.Items [i + 1] =
                                                 new DynamicStatusItemList (statusItem.Title, statusItem);
                                             _lstItems.SelectedItem = i + 1;
-                                            _statusBar.SetNeedsDisplay ();
+                                            _statusBar.SetNeedsDraw ();
                                         }
                                     }
                                 };
@@ -435,7 +435,7 @@ public class DynamicStatusBar : Scenario
                                               _lstItems.SelectedItem = _lstItems.Source.Count - 1;
                                           }
 
-                                          _lstItems.SetNeedsDisplay ();
+                                          _lstItems.SetNeedsDraw ();
                                           SetFrameDetails ();
                                       }
                                   };

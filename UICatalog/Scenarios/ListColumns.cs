@@ -305,13 +305,13 @@ public class ListColumns : Scenario
     private void SetListMaxWidth ()
     {
         RunListWidthDialog ("MaxCellWidth", (s, v) => s.MaxCellWidth = v, s => s.MaxCellWidth);
-        _listColView.SetNeedsDisplay ();
+        _listColView.SetNeedsDraw ();
     }
 
     private void SetListMinWidth ()
     {
         RunListWidthDialog ("MinCellWidth", (s, v) => s.MinCellWidth = v, s => s.MinCellWidth);
-        _listColView.SetNeedsDisplay ();
+        _listColView.SetNeedsDraw ();
     }
 
     private void SetTable (IList list)
@@ -337,7 +337,7 @@ public class ListColumns : Scenario
                                              scrollBar.Position = _listColView.RowOffset;
                                          }
 
-                                         _listColView.SetNeedsDisplay ();
+                                         _listColView.SetNeedsDraw ();
                                      };
         /*
         scrollBar.OtherScrollBarView.ChangedPosition += (s,e) => {
@@ -345,7 +345,7 @@ public class ListColumns : Scenario
             if (listColView.ColumnOffset != scrollBar.OtherScrollBarView.Position) {
                 scrollBar.OtherScrollBarView.Position = listColView.ColumnOffset;
             }
-            listColView.SetNeedsDisplay ();
+            listColView.SetNeedsDraw ();
         };
         */
 
@@ -389,7 +389,7 @@ public class ListColumns : Scenario
             _listColView.Style.RowColorGetter = null;
         }
 
-        _listColView.SetNeedsDisplay ();
+        _listColView.SetNeedsDraw ();
     }
 
     private void ToggleAlwaysUseNormalColorForVerticalCellLines ()
@@ -430,7 +430,7 @@ public class ListColumns : Scenario
         //toggle menu item
         _miCursor.Checked = !_miCursor.Checked;
         _listColView.Style.InvertSelectedCellFirstCharacter = (bool)_miCursor.Checked;
-        _listColView.SetNeedsDisplay ();
+        _listColView.SetNeedsDraw ();
     }
 
     private void ToggleScrollParallel ()
@@ -440,7 +440,7 @@ public class ListColumns : Scenario
         if ((ListTableSource)_listColView.Table != null)
         {
             ((ListTableSource)_listColView.Table).Style.ScrollParallel = (bool)_miScrollParallel.Checked;
-            _listColView.SetNeedsDisplay ();
+            _listColView.SetNeedsDraw ();
         }
     }
 
@@ -468,7 +468,7 @@ public class ListColumns : Scenario
             ((ListTableSource)_listColView.Table).Style.Orientation = (bool)_miOrientVertical.Checked
                                                                           ? Orientation.Vertical
                                                                           : Orientation.Horizontal;
-            _listColView.SetNeedsDisplay ();
+            _listColView.SetNeedsDraw ();
         }
     }
 }

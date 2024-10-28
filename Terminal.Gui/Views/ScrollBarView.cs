@@ -115,7 +115,7 @@ public class ScrollBarView : View
             if (_autoHideScrollBars != value)
             {
                 _autoHideScrollBars = value;
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
             }
         }
     }
@@ -903,7 +903,7 @@ public class ScrollBarView : View
         if (newPosition < 0)
         {
             _position = 0;
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             return;
         }
@@ -928,7 +928,7 @@ public class ScrollBarView : View
         }
 
         OnChangedPosition ();
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     // BUGBUG: v2 - rationalize this with View.SetMinWidthHeight

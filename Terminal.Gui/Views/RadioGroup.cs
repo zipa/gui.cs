@@ -354,7 +354,7 @@ public class RadioGroup : View, IDesignable, IOrientation
         OnSelectedItemChanged (value, SelectedItem);
         SelectedItemChanged?.Invoke (this, new (SelectedItem, savedSelected));
 
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
 
         return true;
     }
@@ -523,7 +523,7 @@ public class RadioGroup : View, IDesignable, IOrientation
         if (Cursor + 1 < _radioLabels.Count)
         {
             Cursor++;
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             return true;
         }
@@ -551,7 +551,7 @@ public class RadioGroup : View, IDesignable, IOrientation
         if (Cursor > 0)
         {
             Cursor--;
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             return true;
         }

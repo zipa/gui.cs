@@ -495,9 +495,10 @@ public static partial class Application // Run (Begin, Run, End, Stop)
     /// <summary>Wakes up the running application that might be waiting on input.</summary>
     public static void Wakeup () { MainLoop?.Wakeup (); }
 
+    // TODO: Rename this to LayoutAndDrawRunnables in https://github.com/gui-cs/Terminal.Gui/issues/2491
     /// <summary>
     /// Causes any Toplevels that need layout to be laid out. Then draws any Toplevels that need dispplay. Only Views that need to be laid out (see <see cref="View.NeedsLayout"/>) will be laid out.
-    /// Only Views that need to be drawn (see <see cref="View.NeedsDisplay"/>) will be drawn.
+    /// Only Views that need to be drawn (see <see cref="View.NeedsDraw"/>) will be drawn.
     /// </summary>
     /// <param name="forceDraw">If <see langword="true"/> the entire View hierarchy will be redrawn. The default is <see langword="false"/> and should only be overriden for testing.</param>
     public static void LayoutAndDrawToplevels (bool forceDraw = false)
@@ -515,6 +516,8 @@ public static partial class Application // Run (Begin, Run, End, Stop)
         Driver?.Refresh ();
     }
 
+    // TODO: Rename this to LayoutRunnables in https://github.com/gui-cs/Terminal.Gui/issues/2491
+
     private static bool LayoutToplevels ()
     {
         bool neededLayout = false;
@@ -531,13 +534,14 @@ public static partial class Application // Run (Begin, Run, End, Stop)
         return neededLayout;
     }
 
+    // TODO: Rename this to DrawRunnables in https://github.com/gui-cs/Terminal.Gui/issues/2491
     private static void DrawToplevels (bool forceDraw)
     {
         foreach (Toplevel tl in TopLevels.Reverse ())
         {
             if (forceDraw)
             {
-                tl.SetNeedsDisplay ();
+                tl.SetNeedsDraw ();
             }
 
             tl.Draw ();
@@ -698,7 +702,7 @@ public static partial class Application // Run (Begin, Run, End, Stop)
         if (TopLevels.Count > 0)
         {
             Top = TopLevels.Peek ();
-            Top.SetNeedsDisplay ();
+            Top.SetNeedsDraw ();
         }
 
         if (runState.Toplevel is { HasFocus: true })

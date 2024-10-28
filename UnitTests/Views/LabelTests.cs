@@ -211,13 +211,13 @@ This TextFormatter (tf2) with fill will be cleared on rewritten.       ",
                                                       output
                                                      );
 
-        Assert.False (label.NeedsDisplay);
+        Assert.False (label.NeedsDraw);
         Assert.False (label.NeedsLayout);
-        Assert.False (label.SubViewNeedsDisplay);
+        Assert.False (label.SubViewNeedsDraw);
         label.Text = "This label is rewritten.";
-        Assert.True (label.NeedsDisplay);
+        Assert.True (label.NeedsDraw);
         Assert.True (label.NeedsLayout);
-        //Assert.False (label.SubViewNeedsDisplay);
+        //Assert.False (label.SubViewNeedsDraw);
         label.Draw ();
 
         tf1.Text = "This TextFormatter (tf1) is rewritten.";

@@ -74,7 +74,7 @@ public class TextEffectsScenario : Scenario
                             {
                                 LoopingGradient = e.NewValue == CheckState.Checked;
                                 SetupGradientLineCanvas (w, w.Frame.Size);
-                                _tabView.SetNeedsDisplay ();
+                                _tabView.SetNeedsDraw ();
                             };
 
         gradientsView.Add (cbLooping);

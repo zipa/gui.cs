@@ -34,7 +34,7 @@ public partial class View
                     Border.ColorScheme = _colorScheme;
                 }
 
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
             }
         }
     }

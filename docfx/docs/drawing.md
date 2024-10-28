@@ -25,7 +25,7 @@ Line drawing is accomplished using the @Terminal.Gui.LineCanvas API:
 a) Add the lines via @Terminal.Gui.LineCanvas.Add.
 b) Either render the line canvas via @Terminal.Gui.LineCanvas.GetMap() or let the @Terminal.Gui.View do so automatically (which enables automatic line joining across Views).
 
-The @Terminal.Gui.Application MainLoop will iterate over all Views in an application looking for views have their @Terminal.Gui.View.NeedsDisplay property set. The @Terminal.Gui.View.Draw method will be called which, in turn.
+The @Terminal.Gui.Application MainLoop will iterate over all Views in an application looking for views have their @Terminal.Gui.View.NeedsDraw property set. The @Terminal.Gui.View.Draw method will be called which, in turn.
 
 1) Draws the Adornments (e.g. @Terminal.Gui.View.Border).
 2) Sets the Normal color scheme.
@@ -39,7 +39,7 @@ Each of these steps can be overridden by developers using the standard [Terminal
 
 ### Declaring that drawing is needed
 
-If a View need to redraw because something changed within it's Content Area it can call @Terminal.Gui.View.SetNeedsDisplay. If a View needs to be redrawn because something has changed the size of the Viewport, it can call @Terminal.Gui.View.SetNeedsLayout.
+If a View need to redraw because something changed within it's Content Area it can call @Terminal.Gui.View.SetNeedsDraw. If a View needs to be redrawn because something has changed the size of the Viewport, it can call @Terminal.Gui.View.SetNeedsLayout.
 
 ## Coordinate System for Drawing
 

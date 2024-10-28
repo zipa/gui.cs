@@ -10,8 +10,8 @@ namespace Terminal.Gui;
 
 /// <summary>A <see cref="View"/> which displays (by default) a spinning line character.</summary>
 /// <remarks>
-///     By default animation only occurs when you call <see cref="SpinnerView.AdvanceAnimation()"/>. Use
-///     <see cref="AutoSpin"/> to make the automate calls to <see cref="SpinnerView.AdvanceAnimation()"/>.
+///     By default animation only occurs when you call <see cref="SpinnerView.AdvanceAnimation(bool)"/>. Use
+///     <see cref="AutoSpin"/> to make the automate calls to <see cref="SpinnerView.AdvanceAnimation(bool)"/>.
 /// </remarks>
 public class SpinnerView : View, IDesignable
 {
@@ -115,7 +115,7 @@ public class SpinnerView : View, IDesignable
     ///     ignored based on <see cref="SpinDelay"/>.
     /// </summary>
     /// <remarks>Ensure this method is called on the main UI thread e.g. via <see cref="Application.Invoke"/></remarks>
-    public void AdvanceAnimation (bool setNeedsDisplay = true)
+    public void AdvanceAnimation (bool setNeedsDraw = true)
     {
         if (DateTime.Now - _lastRender > TimeSpan.FromMilliseconds (SpinDelay))
         {
@@ -176,9 +176,9 @@ public class SpinnerView : View, IDesignable
             _lastRender = DateTime.Now;
         }
 
-        if (setNeedsDisplay)
+        if (setNeedsDraw)
         {
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 

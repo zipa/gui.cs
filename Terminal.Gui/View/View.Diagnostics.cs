@@ -25,7 +25,7 @@ public enum ViewDiagnosticFlags : uint
     Hover = 0b_0000_00100,
 
     /// <summary>
-    ///     When enabled a draw indicator will be shown; the indicator will change each time the View's Draw method is called with NeedsDisplay set to true.
+    ///     When enabled a draw indicator will be shown; the indicator will change each time the View's Draw method is called with NeedsDraw set to true.
     /// </summary>
     DrawIndicator = 0b_0000_01000,
 }

@@ -199,7 +199,7 @@ public class HexView : View, IDesignable
             }
 
             SetNeedsLayout ();
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -271,7 +271,7 @@ public class HexView : View, IDesignable
             }
 
             _addressWidth = value;
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
             SetNeedsLayout ();
         }
     }
@@ -293,7 +293,7 @@ public class HexView : View, IDesignable
             _displayStart = value;
         }
 
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     /// <summary>
@@ -319,7 +319,7 @@ public class HexView : View, IDesignable
         }
 
         _edits = new ();
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     /// <summary>
@@ -415,7 +415,7 @@ public class HexView : View, IDesignable
             }
         }
 
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
 
         return true;
     }
@@ -581,7 +581,7 @@ public class HexView : View, IDesignable
     /// </summary>
     protected void RaisePositionChanged ()
     {
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
 
         HexViewEventArgs args = new (Address, Position, BytesPerLine);
         OnPositionChanged (args);
@@ -786,7 +786,7 @@ public class HexView : View, IDesignable
         if (Address >= DisplayStart + BytesPerLine * Viewport.Height)
         {
             SetDisplayStart (DisplayStart + bytes);
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
         else
         {
@@ -804,7 +804,7 @@ public class HexView : View, IDesignable
         if (Address >= DisplayStart + BytesPerLine * Viewport.Height)
         {
             SetDisplayStart (Address);
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
         else
         {
@@ -818,7 +818,7 @@ public class HexView : View, IDesignable
     {
         // This lets address go past the end of the stream one, enabling adding to the stream.
         Address = Math.Min (Address / BytesPerLine * BytesPerLine + BytesPerLine - 1, GetEditedSize ());
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
 
         return true;
     }
@@ -826,7 +826,7 @@ public class HexView : View, IDesignable
     private bool MoveHome ()
     {
         DisplayStart = 0;
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
 
         return true;
     }
@@ -855,7 +855,7 @@ public class HexView : View, IDesignable
         if (Address - 1 < DisplayStart)
         {
             SetDisplayStart (_displayStart - BytesPerLine);
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
         else
         {
@@ -892,7 +892,7 @@ public class HexView : View, IDesignable
         if (Address >= DisplayStart + BytesPerLine * Viewport.Height)
         {
             SetDisplayStart (DisplayStart + BytesPerLine);
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
         else
         {
@@ -917,7 +917,7 @@ public class HexView : View, IDesignable
     private bool MoveLeftStart ()
     {
         Address = Address / BytesPerLine * BytesPerLine;
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
 
         return true;
     }
@@ -934,7 +934,7 @@ public class HexView : View, IDesignable
         if (Address < DisplayStart)
         {
             SetDisplayStart (DisplayStart - bytes);
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
         else
         {
@@ -954,7 +954,7 @@ public class HexView : View, IDesignable
         var delta = (int)(pos - DisplayStart);
         int line = delta / BytesPerLine;
 
-        SetNeedsDisplay (new (0, line, Viewport.Width, 1));
+        SetNeedsDraw (new (0, line, Viewport.Width, 1));
     }
 
     /// <inheritdoc />

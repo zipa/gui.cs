@@ -94,7 +94,7 @@ public class AnimationScenario : Scenario
                                               () =>
                                               {
                                                   _imageView.NextFrame ();
-                                                  _imageView.SetNeedsDisplay ();
+                                                  _imageView.SetNeedsDraw ();
                                               });
 
                           Task.Delay (100).Wait ();
@@ -247,7 +247,7 @@ public class AnimationScenario : Scenario
 
             fullResImages [frameCount - 1] = image;
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
 
         private string GetBraille (Image<Rgba32> img)

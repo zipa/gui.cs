@@ -321,7 +321,7 @@ public class TableView : View, IDesignable
         set
         {
             columnOffset = TableIsNullOrInvisible () ? 0 : Math.Max (0, Math.Min (Table.Columns - 1, value));
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -583,7 +583,7 @@ public class TableView : View, IDesignable
     ///     not been set.
     /// </summary>
     /// <remarks>
-    ///     Changes will not be immediately visible in the display until you call <see cref="View.SetNeedsDisplay()"/>
+    ///     Changes will not be immediately visible in the display until you call <see cref="View.SetNeedsDraw"/>
     /// </remarks>
     public void EnsureSelectedCellIsVisible ()
     {
@@ -644,7 +644,7 @@ public class TableView : View, IDesignable
     ///     (by adjusting them to the nearest existing cell).  Has no effect if <see cref="Table"/> has not been set.
     /// </summary>
     /// <remarks>
-    ///     Changes will not be immediately visible in the display until you call <see cref="View.SetNeedsDisplay()"/>
+    ///     Changes will not be immediately visible in the display until you call <see cref="View.SetNeedsDraw"/>
     /// </remarks>
     public void EnsureValidScrollOffsets ()
     {
@@ -663,7 +663,7 @@ public class TableView : View, IDesignable
     ///     <see cref="Table"/> has not been set.
     /// </summary>
     /// <remarks>
-    ///     Changes will not be immediately visible in the display until you call <see cref="View.SetNeedsDisplay()"/>
+    ///     Changes will not be immediately visible in the display until you call <see cref="View.SetNeedsDraw"/>
     /// </remarks>
     public void EnsureValidSelection ()
     {
@@ -830,28 +830,28 @@ public class TableView : View, IDesignable
             case MouseFlags.WheeledDown:
                 RowOffset++;
                 EnsureValidScrollOffsets ();
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
 
                 return true;
 
             case MouseFlags.WheeledUp:
                 RowOffset--;
                 EnsureValidScrollOffsets ();
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
 
                 return true;
 
             case MouseFlags.WheeledRight:
                 ColumnOffset++;
                 EnsureValidScrollOffsets ();
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
 
                 return true;
 
             case MouseFlags.WheeledLeft:
                 ColumnOffset--;
                 EnsureValidScrollOffsets ();
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
 
                 return true;
         }
@@ -867,7 +867,7 @@ public class TableView : View, IDesignable
             {
                 ColumnOffset--;
                 EnsureValidScrollOffsets ();
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
             }
 
             if (scrollRightPoint != null
@@ -876,7 +876,7 @@ public class TableView : View, IDesignable
             {
                 ColumnOffset++;
                 EnsureValidScrollOffsets ();
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
             }
 
             Point? hit = ScreenToCell (boundsX, boundsY);
@@ -1227,12 +1227,12 @@ public class TableView : View, IDesignable
     ///     Updates the view to reflect changes to <see cref="Table"/> and to (<see cref="ColumnOffset"/> /
     ///     <see cref="RowOffset"/>) etc
     /// </summary>
-    /// <remarks>This always calls <see cref="View.SetNeedsDisplay()"/></remarks>
+    /// <remarks>This always calls <see cref="View.SetNeedsDraw"/></remarks>
     public void Update ()
     {
         if (!IsInitialized || TableIsNullOrInvisible ())
         {
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             return;
         }
@@ -1242,7 +1242,7 @@ public class TableView : View, IDesignable
 
         EnsureSelectedCellIsVisible ();
 
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     /// <summary>Invokes the <see cref="CellActivated"/> event</summary>
@@ -1585,7 +1585,7 @@ public class TableView : View, IDesignable
             SelectedRow = match;
             EnsureValidSelection ();
             EnsureSelectedCellIsVisible ();
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             return true;
         }

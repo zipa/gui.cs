@@ -89,7 +89,7 @@ public partial class View // SuperView/SubView hierarchy management (SuperView, 
             view.EndInit ();
         }
 
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
         SetNeedsLayout ();
 
         return view;
@@ -186,13 +186,13 @@ public partial class View // SuperView/SubView hierarchy management (SuperView, 
         view._superView = null;
 
         SetNeedsLayout ();
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
 
         foreach (View v in _subviews)
         {
             if (v.Frame.IntersectsWith (touched))
             {
-                view.SetNeedsDisplay ();
+                view.SetNeedsDraw ();
             }
         }
 
@@ -346,8 +346,8 @@ public partial class View // SuperView/SubView hierarchy management (SuperView, 
         }
 
         // BUGBUG: this is odd. Why is this needed?
-        SetNeedsDisplay ();
-        subview.SetNeedsDisplay ();
+        SetNeedsDraw ();
+        subview.SetNeedsDraw ();
     }
 
     #endregion SubViewOrdering

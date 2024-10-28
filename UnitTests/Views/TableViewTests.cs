@@ -105,7 +105,7 @@ public class TableViewTests (ITestOutputHelper output)
             style.ColorGetter = e => { return scheme; };
         }
 
-        tv.SetNeedsDisplay ();
+        tv.SetNeedsDraw ();
         tv.Draw ();
 
         expected =
@@ -462,7 +462,7 @@ public class TableViewTests (ITestOutputHelper output)
         style.MaxWidth = 10;
 
         tableView.LayoutSubviews ();
-        tableView.SetNeedsDisplay ();
+        tableView.SetNeedsDraw ();
         tableView.Draw ();
 
         expected =
@@ -483,7 +483,7 @@ public class TableViewTests (ITestOutputHelper output)
         style.RepresentationGetter = s => { return s.ToString ().Length < 15 ? s.ToString () : s.ToString ().Substring (0, 13) + "..."; };
 
         tableView.LayoutSubviews ();
-        tableView.SetNeedsDisplay ();
+        tableView.SetNeedsDraw ();
         tableView.Draw ();
 
         expected =
@@ -511,7 +511,7 @@ public class TableViewTests (ITestOutputHelper output)
         style.MinAcceptableWidth = 5;
 
         tableView.LayoutSubviews ();
-        tableView.SetNeedsDisplay ();
+        tableView.SetNeedsDraw ();
         tableView.Draw ();
 
         expected =
@@ -585,7 +585,7 @@ public class TableViewTests (ITestOutputHelper output)
         tableView.MinCellWidth = 10;
 
         tableView.LayoutSubviews ();
-        tableView.SetNeedsDisplay ();
+        tableView.SetNeedsDraw ();
         tableView.Draw ();
 
         expected =
@@ -1107,7 +1107,7 @@ public class TableViewTests (ITestOutputHelper output)
         // the value 2)
         dt.Rows [0] [1] = 5;
 
-        tv.SetNeedsDisplay ();
+        tv.SetNeedsDraw ();
         tv.Draw ();
 
         expected = @"
@@ -1202,7 +1202,7 @@ public class TableViewTests (ITestOutputHelper output)
         // the value 2)
         dt.Rows [0] [1] = 5;
 
-        tv.SetNeedsDisplay ();
+        tv.SetNeedsDraw ();
         tv.Draw ();
 
         expected = @"
@@ -1985,7 +1985,7 @@ public class TableViewTests (ITestOutputHelper output)
 │B│C│D│
 ◄─┼─┼─┤
 │2│3│4│";
-        tableView.SetNeedsDisplay ();
+        tableView.SetNeedsDraw ();
         tableView.Draw ();
 
         TestHelpers.AssertDriverContentsAre (expected, output);
@@ -1998,7 +1998,7 @@ public class TableViewTests (ITestOutputHelper output)
 │B│C│D│
 ├─┼─┼─┤
 │2│3│4│";
-        tableView.SetNeedsDisplay ();
+        tableView.SetNeedsDraw ();
         tableView.Draw ();
 
         TestHelpers.AssertDriverContentsAre (expected, output);
@@ -2013,7 +2013,7 @@ public class TableViewTests (ITestOutputHelper output)
         tableView.Style.ShowHorizontalScrollIndicators = true;
         tableView.Style.ShowHorizontalHeaderUnderline = true;
         tableView.LayoutSubviews ();
-        tableView.SetNeedsDisplay ();
+        tableView.SetNeedsDraw ();
         tableView.Draw ();
 
         // normally we should have scroll indicators because DEF are of screen
@@ -2035,7 +2035,7 @@ public class TableViewTests (ITestOutputHelper output)
 │A│B│C│
 ├─┼─┼─┤
 │1│2│3│";
-        tableView.SetNeedsDisplay ();
+        tableView.SetNeedsDraw ();
         tableView.Draw ();
         TestHelpers.AssertDriverContentsAre (expected, output);
     }

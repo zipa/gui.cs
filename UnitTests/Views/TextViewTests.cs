@@ -6757,7 +6757,7 @@ TAB to jump between text field",
 
         _textView.NewKeyDownEvent (Key.Tab.WithShift);
         Assert.Equal ("TAB to jump between text fields.", _textView.Text);
-        Assert.True (_textView.NeedsDisplay);
+        Assert.True (_textView.NeedsDraw);
         Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -8272,7 +8272,7 @@ Line 2.",
         TestHelpers.AssertDriverContentsWithFrameAre ("Line 2.", _output);
 
         Assert.True (_textView.NewKeyDownEvent (Key.H.WithShift));
-        Assert.NotEqual (Rectangle.Empty, _textView._needsDisplayRect);
+        Assert.NotEqual (Rectangle.Empty, _textView._needsDrawRect);
         Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -8894,12 +8894,12 @@ line.
                          )
         ];
         TextView tv = CreateTextView ();
-        tv.DrawNormalColor += _textView_DrawColor;
-        tv.DrawReadOnlyColor += _textView_DrawColor;
-        tv.DrawSelectionColor += _textView_DrawColor;
-        tv.DrawUsedColor += _textView_DrawColor;
+        tv.DrawNormalColor += textView_DrawColor;
+        tv.DrawReadOnlyColor += textView_DrawColor;
+        tv.DrawSelectionColor += textView_DrawColor;
+        tv.DrawUsedColor += textView_DrawColor;
 
-        void _textView_DrawColor (object sender, CellEventArgs e)
+        void textView_DrawColor (object sender, CellEventArgs e)
         {
             Assert.Equal (e.Line [e.Col], text [e.UnwrappedPosition.Row] [e.UnwrappedPosition.Col]);
             eventCount++;

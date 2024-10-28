@@ -200,7 +200,7 @@ public class ThicknessTests (ITestOutputHelper output)
 
         t = new Thickness (1, 1, 1, 1);
         r = new Rectangle (1, 1, 40, 15);
-        top.SetNeedsDisplay ();
+        top.SetNeedsDraw ();
         Application.RunIteration (ref rs);
         t.Draw (r, ViewDiagnosticFlags.Ruler,  "Test");
 
@@ -231,7 +231,7 @@ public class ThicknessTests (ITestOutputHelper output)
 
         t = new Thickness (1, 2, 3, 4);
         r = new Rectangle (2, 2, 40, 15);
-        top.SetNeedsDisplay ();
+        top.SetNeedsDraw ();
         Application.RunIteration (ref rs);
         t.Draw (r, ViewDiagnosticFlags.Ruler,  "Test");
 
@@ -262,7 +262,7 @@ public class ThicknessTests (ITestOutputHelper output)
 
         t = new Thickness (-1, 1, 1, 1);
         r = new Rectangle (5, 5, 40, 15);
-        top.SetNeedsDisplay ();
+        top.SetNeedsDraw ();
         Application.RunIteration (ref rs);
         t.Draw (r, ViewDiagnosticFlags.Ruler, "Test");
 

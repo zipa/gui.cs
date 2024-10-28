@@ -103,7 +103,7 @@ public class Navigation : Scenario
 
         //                     progressBar.Fraction += 0.01f;
 
-        //                     Application.Invoke (() => progressBar.SetNeedsDisplay ());
+        //                     Application.Invoke (() => progressBar.SetNeedsDraw ());
         //                    ;
         //                 };
         //timer.Start ();

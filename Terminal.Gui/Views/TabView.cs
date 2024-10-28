@@ -216,7 +216,7 @@ public class TabView : View
     /// <summary>
     ///     Updates the control to use the latest state settings in <see cref="Style"/>. This can change the size of the
     ///     client area of the tab (for rendering the selected tab's content).  This method includes a call to
-    ///     <see cref="View.SetNeedsDisplay()"/>.
+    ///     <see cref="View.SetNeedsDraw"/>.
     /// </summary>
     public void ApplyStyleChanges ()
     {
@@ -288,7 +288,7 @@ public class TabView : View
 
     /// <summary>Updates <see cref="TabScrollOffset"/> to be a valid index of <see cref="Tabs"/>.</summary>
     /// <param name="value">The value to validate.</param>
-    /// <remarks>Changes will not be immediately visible in the display until you call <see cref="View.SetNeedsDisplay()"/>.</remarks>
+    /// <remarks>Changes will not be immediately visible in the display until you call <see cref="View.SetNeedsDraw"/>.</remarks>
     /// <returns>The valid <see cref="TabScrollOffset"/> for the given value.</returns>
     public int EnsureValidScrollOffsets (int value) { return Math.Max (Math.Min (value, Tabs.Count - 1), 0); }
 
@@ -312,7 +312,7 @@ public class TabView : View
         {
             Rectangle savedClip = SetClip ();
             _tabsBar.Draw ();
-            _contentView.SetNeedsDisplay ();
+            _contentView.SetNeedsDraw ();
             _contentView.Draw ();
 
             if (Driver is { })

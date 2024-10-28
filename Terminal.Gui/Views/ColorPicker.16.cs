@@ -176,7 +176,7 @@ public class ColorPicker16 : View
                                   this,
                                   new (value)
                                  );
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 

@@ -88,7 +88,7 @@ public class BorderEditor : AdornmentEditor
                 ((Border)AdornmentToEdit).Thickness = new (1);
             }
 
-            ((Border)AdornmentToEdit).SetNeedsDisplay ();
+            ((Border)AdornmentToEdit).SetNeedsDraw ();
             SetNeedsLayout ();
         }
 

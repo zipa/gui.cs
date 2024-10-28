@@ -40,7 +40,7 @@ public class Snake : Scenario
                           if (state.AdvanceState ())
                           {
                               // When updating from a Thread/Task always use Invoke
-                              Application.Invoke (() => { snakeView.SetNeedsDisplay (); });
+                              Application.Invoke (() => { snakeView.SetNeedsDraw (); });
                           }
 
                           long wait = state.SleepAfterAdvancingState - sw.ElapsedMilliseconds;

@@ -191,7 +191,7 @@ public class ScrollView : View
                     _horizontal.AutoHideScrollBars = value;
                 }
 
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
             }
         }
     }
@@ -228,7 +228,7 @@ public class ScrollView : View
     //            _contentView.Frame = new Rectangle (_contentOffset, value);
     //            _vertical.Size = GetContentSize ().Height;
     //            _horizontal.Size = GetContentSize ().Width;
-    //            SetNeedsDisplay ();
+    //            SetNeedsDraw ();
     //        }
     //    }
     //}
@@ -374,7 +374,7 @@ public class ScrollView : View
     /// <inheritdoc/>
     protected override bool OnDrawingContent (Rectangle viewport)
     {
-        SetViewsNeedsDisplay ();
+        SetViewsNeedsDraw ();
 
         // TODO: It's bad practice for views to always clear a view. It negates clipping.
         ClearViewport ();
@@ -469,7 +469,7 @@ public class ScrollView : View
             return view;
         }
 
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
         View container = view?.SuperView;
 
         if (container == this)
@@ -628,14 +628,14 @@ public class ScrollView : View
         {
             _horizontal.Position = Math.Max (0, -_contentOffset.X);
         }
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
-    private void SetViewsNeedsDisplay ()
+    private void SetViewsNeedsDraw ()
     {
         foreach (View view in _contentView.Subviews)
         {
-            view.SetNeedsDisplay ();
+            view.SetNeedsDraw ();
         }
     }
 

@@ -646,7 +646,7 @@ internal class CharMap : View, IDesignable
                 }
             }
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
             SelectedCodePointChanged?.Invoke (this, new (SelectedCodePoint, null));
         }
     }
@@ -657,7 +657,7 @@ internal class CharMap : View, IDesignable
         set
         {
             _rowHeight = value ? 2 : 1;
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -673,7 +673,7 @@ internal class CharMap : View, IDesignable
             _start = value;
             SelectedCodePoint = value;
             Viewport = Viewport with { Y = SelectedCodePoint / 16 * _rowHeight };
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 

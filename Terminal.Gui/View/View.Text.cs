@@ -148,7 +148,7 @@ public partial class View // Text Property APIs
         set
         {
             TextFormatter.VerticalAlignment = value;
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -237,6 +237,6 @@ public partial class View // Text Property APIs
             SetNeedsLayout ();
         }
 
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 }
