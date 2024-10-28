@@ -101,7 +101,8 @@ internal class CursesDriver : ConsoleDriver
         {
             // Not a valid location (outside screen or clip region)
             // Move within the clip region, then AddRune will actually move to Col, Row
-            Curses.move (Clip.Y, Clip.X);
+            Rectangle clipRect = Clip.GetBounds ();
+            Curses.move (clipRect.Y, clipRect.X);
         }
     }
 

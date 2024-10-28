@@ -200,6 +200,7 @@ public class AllViewsTester : Scenario
 
         _hostPane = new ()
         {
+            Id = "_hostPane",
             X = Pos.Right (_adornmentsEditor),
             Y = Pos.Bottom (_settingsPane),
             Width = Dim.Width (_layoutEditor),

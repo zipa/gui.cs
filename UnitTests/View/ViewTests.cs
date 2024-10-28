@@ -14,8 +14,8 @@ public class ViewTests (ITestOutputHelper output)
 
         view.DrawingContent += (s, e) =>
                             {
-                                Rectangle savedClip = Application.Driver!.Clip;
-                                Application.Driver!.Clip = new (1, 1, view.Viewport.Width, view.Viewport.Height);
+                                Region savedClip = Application.Driver!.Clip;
+                                Application.Driver!.Clip = new (new (1, 1, view.Viewport.Width, view.Viewport.Height));
 
                                 for (var row = 0; row < view.Viewport.Height; row++)
                                 {
@@ -78,8 +78,8 @@ public class ViewTests (ITestOutputHelper output)
 
         view.DrawingContent += (s, e) =>
                             {
-                                Rectangle savedClip = Application.Driver!.Clip;
-                                Application.Driver!.Clip = new (1, 1, view.Viewport.Width, view.Viewport.Height);
+                                Region savedClip = Application.Driver!.Clip;
+                                Application.Driver!.Clip = new (new (1, 1, view.Viewport.Width, view.Viewport.Height));
 
                                 for (var row = 0; row < view.Viewport.Height; row++)
                                 {

@@ -116,17 +116,11 @@ public partial class View
             return;
         }
 
-        // Get screen-relative coords
+        Region prevClip = SetClip ();
         Rectangle toClear = ViewportToScreen (rect);
-
-        Rectangle prevClip = Driver.Clip;
-
-        Driver.Clip = Rectangle.Intersect (prevClip, ViewportToScreen (Viewport with { Location = new (0, 0) }));
-
         Attribute prev = SetAttribute (new (color ?? GetNormalColor ().Background));
         Driver.FillRect (toClear);
         SetAttribute (prev);
-
         Driver.Clip = prevClip;
     }
 

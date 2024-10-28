@@ -23,14 +23,14 @@ public abstract class ConsoleDriver
     /// <summary>Gets the location and size of the terminal screen.</summary>
     internal Rectangle Screen => new (0, 0, Cols, Rows);
 
-    private Rectangle _clip;
+    private Region? _clip = null;
 
     /// <summary>
     ///     Gets or sets the clip rectangle that <see cref="AddRune(Rune)"/> and <see cref="AddStr(string)"/> are subject
     ///     to.
     /// </summary>
     /// <value>The rectangle describing the of <see cref="Clip"/> region.</value>
-    public Rectangle Clip
+    public Region? Clip
     {
         get => _clip;
         set
@@ -40,8 +40,13 @@ public abstract class ConsoleDriver
                 return;
             }
 
+            _clip = value;
+
             // Don't ever let Clip be bigger than Screen
-            _clip = Rectangle.Intersect (Screen, value);
+            if (_clip is { })
+            {
+                _clip.Intersect (Screen);
+            }
         }
     }
 
@@ -130,6 +135,8 @@ public abstract class ConsoleDriver
             return;
         }
 
+        Rectangle clipRect = Clip!.GetBounds ();
+
         if (validLocation)
         {
             rune = rune.MakePrintable ();
@@ -217,14 +224,14 @@ public abstract class ConsoleDriver
                     {
                         Contents [Row, Col].Rune = rune;
 
-                        if (Col < Clip.Right - 1)
+                        if (Col < clipRect.Right - 1)
                         {
                             Contents [Row, Col + 1].IsDirty = true;
                         }
                     }
                     else if (runeWidth == 2)
                     {
-                        if (Col == Clip.Right - 1)
+                        if (Col == clipRect.Right - 1)
                         {
                             // We're at the right edge of the clip, so we can't display a wide character.
                             // TODO: Figure out if it is better to show a replacement character or ' '
@@ -234,7 +241,7 @@ public abstract class ConsoleDriver
                         {
                             Contents [Row, Col].Rune = rune;
 
-                            if (Col < Clip.Right - 1)
+                            if (Col < clipRect.Right - 1)
                             {
                                 // Invalidate cell to right so that it doesn't get drawn
                                 // TODO: Figure out if it is better to show a replacement character or ' '
@@ -264,7 +271,7 @@ public abstract class ConsoleDriver
         {
             Debug.Assert (runeWidth <= 2);
 
-            if (validLocation && Col < Clip.Right)
+            if (validLocation && Col < clipRect.Right)
             {
                 lock (Contents!)
                 {
@@ -314,9 +321,11 @@ public abstract class ConsoleDriver
     public void ClearContents ()
     {
         Contents = new Cell [Rows, Cols];
+
         //CONCURRENCY: Unsynchronized access to Clip isn't safe.
         // TODO: ClearContents should not clear the clip; it should only clear the contents. Move clearing it elsewhere.
-        Clip = Screen;
+        Clip = new (Screen);
+        
         _dirtyLines = new bool [Rows];
 
         lock (Contents)
@@ -375,7 +384,8 @@ public abstract class ConsoleDriver
     /// <param name="rune">The Rune used to fill the rectangle</param>
     public void FillRect (Rectangle rect, Rune rune = default)
     {
-        rect = Rectangle.Intersect (rect, Clip);
+        // BUGBUG: This should be a method on Region
+        rect = Rectangle.Intersect (rect, Clip?.GetBounds () ?? Screen);
         lock (Contents!)
         {
             for (int r = rect.Y; r < rect.Y + rect.Height; r++)
@@ -427,7 +437,7 @@ public abstract class ConsoleDriver
     /// </returns>
     public bool IsValidLocation (int col, int row)
     {
-        return col >= 0 && row >= 0 && col < Cols && row < Rows && Clip.Contains (col, row);
+        return col >= 0 && row >= 0 && col < Cols && row < Rows && Clip!.Contains (col, row);
     }
 
     /// <summary>

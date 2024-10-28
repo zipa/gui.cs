@@ -1,4 +1,5 @@
-﻿namespace Terminal.Gui;
+﻿#nullable enable
+namespace Terminal.Gui;
 
 public partial class View
 {
@@ -18,17 +19,17 @@ public partial class View
     ///     The current screen-relative clip region, which can be then re-applied by setting
     ///     <see cref="ConsoleDriver.Clip"/>.
     /// </returns>
-    public Rectangle SetClip ()
+    public Region? SetClip ()
     {
         if (Driver is null)
         {
-            return Rectangle.Empty;
+            return null;
         }
 
-        Rectangle previous = Driver.Clip;
+        Region previous = Driver.Clip ?? new (Application.Screen);
 
         // Clamp the Clip to the entire visible area
-        Rectangle clip = Rectangle.Intersect (ViewportToScreen (Viewport with { Location = Point.Empty }), previous);
+        Rectangle clip = Rectangle.Intersect (ViewportToScreen (Viewport with { Location = Point.Empty }), previous.GetBounds());
 
         if (ViewportSettings.HasFlag (ViewportSettings.ClipContentOnly))
         {
@@ -37,7 +38,7 @@ public partial class View
             clip = Rectangle.Intersect (clip, visibleContent);
         }
 
-        Driver.Clip = clip;
+        Driver.Clip = new (clip);// !.Complement(clip);
 
         return previous;
     }

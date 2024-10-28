@@ -409,8 +409,8 @@ internal sealed class Menu : View
         DrawAdornments ();
         RenderLineCanvas ();
 
-        Rectangle savedClip = Driver.Clip;
-        Driver.Clip = new (0, 0, Driver.Cols, Driver.Rows);
+        Region savedClip = Driver.Clip;
+        Driver.Clip = new (new (0, 0, Driver.Cols, Driver.Rows));
         SetAttribute (GetNormalColor ());
 
         for (int i = Viewport.Y; i < _barItems!.Children.Length; i++)

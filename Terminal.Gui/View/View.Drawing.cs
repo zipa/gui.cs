@@ -33,7 +33,7 @@ public partial class View // Drawing APIs
         // By default, we clip to the viewport preventing drawing outside the viewport
         // We also clip to the content, but if a developer wants to draw outside the viewport, they can do
         // so via settings. SetClip honors the ViewportSettings.DisableVisibleContentClipping flag.
-        Rectangle prevClip = SetClip ();
+        Region prevClip = SetClip ();
 
         DoClearViewport (Viewport);
         DoDrawText (Viewport);
@@ -251,8 +251,6 @@ public partial class View // Drawing APIs
         // Get screen-relative coords
         Rectangle toClear = ViewportToScreen (Viewport with { Location = new (0, 0) });
 
-        Rectangle prevClip = Driver.Clip;
-
         if (ViewportSettings.HasFlag (ViewportSettings.ClearContentOnly))
         {
             Rectangle visibleContent = ViewportToScreen (new Rectangle (new (-Viewport.X, -Viewport.Y), GetContentSize ()));
@@ -262,8 +260,6 @@ public partial class View // Drawing APIs
         Attribute prev = SetAttribute (GetNormalColor ());
         Driver.FillRect (toClear);
         SetAttribute (prev);
-
-        Driver.Clip = prevClip;
         SetNeedsDraw ();
     }
 

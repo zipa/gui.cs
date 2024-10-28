@@ -769,7 +769,7 @@ public class ScrollBarView : View
 
         // I'm forced to do this here because the Clear method is
         // changing the color attribute and is different of this one
-        Driver.FillRect (Driver.Clip);
+        Driver.FillRect (Driver.Clip.GetBounds());
         e.Cancel = true;
     }
 

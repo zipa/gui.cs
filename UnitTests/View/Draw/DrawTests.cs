@@ -741,7 +741,7 @@ public class DrawTests (ITestOutputHelper _output)
 
         return;
 
-        void Top_LayoutComplete (object? sender, LayoutEventArgs e) { Application.Driver!.Clip = container.Frame; }
+        void Top_LayoutComplete (object? sender, LayoutEventArgs e) { Application.Driver!.Clip = new (container.Frame); }
     }
 
     [Fact]
@@ -944,13 +944,13 @@ public class DrawTests (ITestOutputHelper _output)
         view.Border.Thickness = new (1);
         view.BeginInit ();
         view.EndInit ();
-        Assert.Equal (view.Frame, Application.Driver?.Clip);
+        Assert.Equal (view.Frame, Application.Driver?.Clip?.GetBounds ());
 
         // Act
         view.SetClip ();
 
         // Assert
-        Assert.Equal (expectedClip, Application.Driver?.Clip);
+        Assert.Equal (expectedClip, Application.Driver?.Clip?.GetBounds());
         view.Dispose ();
     }
 
@@ -977,14 +977,14 @@ public class DrawTests (ITestOutputHelper _output)
         view.Border.Thickness = new (1);
         view.BeginInit ();
         view.EndInit ();
-        Assert.Equal (view.Frame, Application.Driver?.Clip);
+        Assert.Equal (view.Frame, Application.Driver?.Clip.GetBounds ());
         view.Viewport = view.Viewport with { X = 1, Y = 1 };
 
         // Act
         view.SetClip ();
 
         // Assert
-        Assert.Equal (expectedClip, Application.Driver?.Clip);
+        Assert.Equal (expectedClip, Application.Driver?.Clip.GetBounds ());
         view.Dispose ();
     }
 

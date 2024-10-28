@@ -698,7 +698,7 @@ public class MenuBarTests (ITestOutputHelper output)
         Dialog.DefaultShadow = ShadowStyle.None;
         Button.DefaultShadow = ShadowStyle.None;
 
-        Assert.Equal (new (0, 0, 40, 15), Application.Driver?.Clip);
+        Assert.Equal (new (0, 0, 40, 15), Application.Driver?.Clip.GetBounds());
         TestHelpers.AssertDriverContentsWithFrameAre (@"", output);
 
         List<string> items = new ()
