@@ -1,7 +1,7 @@
 ﻿#nullable enable
+#define HACK_DRAW_OVERLAPPED
 using System.ComponentModel;
 using System.Diagnostics;
-using Microsoft.CodeAnalysis.Operations;
 
 namespace Terminal.Gui;
 
@@ -430,23 +430,25 @@ public partial class View // Drawing APIs
             return;
         }
 
+#if HACK_DRAW_OVERLAPPED
         IEnumerable<View> subviewsNeedingDraw = _subviews.Where (view => (view.Visible && (view.NeedsDraw || view.SubViewNeedsDraw))
-                                                                      );//|| view.Arrangement.HasFlag (ViewArrangement.Overlapped));
+                                                                      || view.Arrangement.HasFlag (ViewArrangement.Overlapped));
+#else
+        IEnumerable<View> subviewsNeedingDraw = _subviews.Where (view => (view.Visible && (view.NeedsDraw || view.SubViewNeedsDraw)));
+#endif
 
         foreach (View view in subviewsNeedingDraw)
         {
+#if HACK_DRAW_OVERLAPPED
             if (view.Arrangement.HasFlag (ViewArrangement.Overlapped))
             {
-                //view.SetNeedsDraw ();
-            }
-            view.Draw ();
-        }
 
-        //var overlapped = subviewsNeedingDraw;
-        //foreach (View view in overlapped)
-        //{
-        //    view.Draw ();
-        //}
+                view.SetNeedsDraw ();
+            }
+#endif
+            view.Draw ();
+
+        }
     }
 
     #endregion DrawSubviews
