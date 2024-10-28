@@ -135,7 +135,7 @@ internal class NetWinVTConsole
 
 internal class NetEvents : IDisposable
 {
-    private CancellationTokenSource _inputReadyCancellationTokenSource;
+    private readonly CancellationTokenSource _netEventsDisposed = new CancellationTokenSource ();
     private readonly ManualResetEventSlim _waitForStart = new (false);
 
     //CancellationTokenSource _waitForStartCancellationTokenSource;
@@ -154,11 +154,25 @@ internal class NetEvents : IDisposable
     public NetEvents (ConsoleDriver consoleDriver)
     {
         _consoleDriver = consoleDriver ?? throw new ArgumentNullException (nameof (consoleDriver));
-        _inputReadyCancellationTokenSource = new CancellationTokenSource ();
 
-        Task.Run (ProcessInputQueue, _inputReadyCancellationTokenSource.Token);
+        Task.Run (() =>
+                  {
+                      try
+                      {
+                          ProcessInputQueue ();
+                      }
+                      catch (OperationCanceledException)
+                      { }
+                  }, _netEventsDisposed.Token);
 
-        Task.Run (CheckWindowSizeChange, _inputReadyCancellationTokenSource.Token);
+            Task.Run (()=>{
+
+            try
+            {
+                CheckWindowSizeChange();
+            }
+            catch (OperationCanceledException)
+            { }}, _netEventsDisposed.Token);
 
         Parser.UnexpectedResponseHandler = ProcessRequestResponse;
     }
@@ -166,13 +180,12 @@ internal class NetEvents : IDisposable
 
     public InputResult? DequeueInput ()
     {
-        while (_inputReadyCancellationTokenSource != null
-               && !_inputReadyCancellationTokenSource.Token.IsCancellationRequested)
+        while (!_netEventsDisposed.Token.IsCancellationRequested)
         {
             _waitForStart.Set ();
             _winChange.Set ();
 
-            if (_inputQueue.TryTake (out var item,-1,_inputReadyCancellationTokenSource.Token))
+            if (_inputQueue.TryTake (out var item,-1,_netEventsDisposed.Token))
             {
                 return item;
             }
@@ -181,7 +194,7 @@ internal class NetEvents : IDisposable
         return null;
     }
 
-    private ConsoleKeyInfo ReadConsoleKeyInfo (CancellationToken cancellationToken, bool intercept = true)
+    private ConsoleKeyInfo ReadConsoleKeyInfo ( bool intercept = true)
     {
         // if there is a key available, return it without waiting
         //  (or dispatching work to the thread queue)
@@ -190,9 +203,9 @@ internal class NetEvents : IDisposable
             return Console.ReadKey (intercept);
         }
 
-        while (!cancellationToken.IsCancellationRequested)
+        while (!_netEventsDisposed.IsCancellationRequested)
         {
-            Task.Delay (100, cancellationToken).Wait (cancellationToken);
+            Task.Delay (100, _netEventsDisposed.Token).Wait (_netEventsDisposed.Token);
 
             foreach (var k in ShouldRelease ())
             {
@@ -205,7 +218,7 @@ internal class NetEvents : IDisposable
             }
         }
 
-        cancellationToken.ThrowIfCancellationRequested ();
+        _netEventsDisposed.Token.ThrowIfCancellationRequested ();
 
         return default (ConsoleKeyInfo);
     }
@@ -223,11 +236,11 @@ internal class NetEvents : IDisposable
 
     private void ProcessInputQueue ()
     {
-        while (_inputReadyCancellationTokenSource is { IsCancellationRequested: false })
+        while (!_netEventsDisposed.IsCancellationRequested)
         {
             try
             {
-                _waitForStart.Wait (_inputReadyCancellationTokenSource.Token);
+                _waitForStart.Wait (_netEventsDisposed.Token);
             }
             catch (OperationCanceledException)
             {
@@ -238,18 +251,11 @@ internal class NetEvents : IDisposable
 
             if (_inputQueue.Count == 0)
             {
-                while (_inputReadyCancellationTokenSource is { IsCancellationRequested: false })
+                while (!_netEventsDisposed.IsCancellationRequested)
                 {
                     ConsoleKeyInfo consoleKeyInfo;
 
-                    try
-                    {
-                        consoleKeyInfo = ReadConsoleKeyInfo (_inputReadyCancellationTokenSource.Token);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        return;
-                    }
+                    consoleKeyInfo = ReadConsoleKeyInfo ();
 
                     // Parse
                     foreach (var k in Parser.ProcessInput (Tuple.Create (consoleKeyInfo.KeyChar, consoleKeyInfo)))
@@ -259,7 +265,6 @@ internal class NetEvents : IDisposable
                 }
             }
         }
-
     }
     private void ProcessInputAfterParsing(ConsoleKeyInfo consoleKeyInfo,
                                             ref ConsoleKey key,
@@ -331,12 +336,12 @@ internal class NetEvents : IDisposable
 
     private void CheckWindowSizeChange ()
     {
-        void RequestWindowSize (CancellationToken cancellationToken)
+        void RequestWindowSize ()
         {
-            while (!cancellationToken.IsCancellationRequested)
+            while (!_netEventsDisposed.IsCancellationRequested)
             {
                 // Wait for a while then check if screen has changed sizes
-                Task.Delay (500, cancellationToken).Wait (cancellationToken);
+                Task.Delay (500, _netEventsDisposed.Token).Wait (_netEventsDisposed.Token);
 
                 int buffHeight, buffWidth;
 
@@ -362,17 +367,17 @@ internal class NetEvents : IDisposable
                 }
             }
 
-            cancellationToken.ThrowIfCancellationRequested ();
+            _netEventsDisposed.Token.ThrowIfCancellationRequested ();
         }
 
-        while (_inputReadyCancellationTokenSource is { IsCancellationRequested: false })
+        while (!_netEventsDisposed.IsCancellationRequested)
         {
             try
             {
-                _winChange.Wait (_inputReadyCancellationTokenSource.Token);
+                _winChange.Wait (_netEventsDisposed.Token);
                 _winChange.Reset ();
 
-                RequestWindowSize (_inputReadyCancellationTokenSource.Token);
+                RequestWindowSize ();
             }
             catch (OperationCanceledException)
             {
@@ -788,9 +793,8 @@ internal class NetEvents : IDisposable
 
     public void Dispose ()
     {
-        _inputReadyCancellationTokenSource?.Cancel ();
-        _inputReadyCancellationTokenSource?.Dispose ();
-        _inputReadyCancellationTokenSource = null;
+        _netEventsDisposed?.Cancel ();
+        _netEventsDisposed?.Dispose ();
 
         try
         {
