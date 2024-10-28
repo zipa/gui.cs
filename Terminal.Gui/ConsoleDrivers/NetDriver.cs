@@ -179,10 +179,18 @@ internal class NetEvents : IDisposable
         {
             _winChange.Set ();
 
-            if (_inputQueue.TryTake (out var item,-1,_netEventsDisposed.Token))
+            try
             {
-                return item;
+                if (_inputQueue.TryTake (out var item, -1, _netEventsDisposed.Token))
+                {
+                    return item;
+                }
             }
+            catch (OperationCanceledException)
+            {
+                return null;
+            }
+
         }
 
         return null;
