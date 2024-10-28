@@ -37,6 +37,10 @@ The @Terminal.Gui.Application MainLoop will iterate over all Views in an applica
 
 Each of these steps can be overridden by developers using the standard [Terminal.Gui cancellable event pattern](events.md). For example, the base @Terminal.Gui.View always clears the viewport. To override this, a subclass can override @Terminal.Gui.View.OnClearingViewport to simply return `true`. Or, a user of `View` can subscribe to the @Terminal.Gui.View.ClearingViewport event and set the `Cancel` argument to `true`.
 
+### Declaring that drawing is needed
+
+If a View need to redraw because something changed within it's Content Area it can call @Terminal.Gui.View.SetNeedsDisplay. If a View needs to be redrawn because something has changed the size of the Viewport, it can call @Terminal.Gui.View.SetNeedsLayout.
+
 ## Coordinate System for Drawing
 
 The @Terminal.Gui.View draw APIs all take coordinates specified in *Viewport-Relative* coordinates. That is, `0, 0` is the top-left cell visible to the user.
