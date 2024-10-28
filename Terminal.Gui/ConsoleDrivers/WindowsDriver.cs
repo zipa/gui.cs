@@ -1469,10 +1469,6 @@ internal class WindowsDriver : ConsoleDriver
         return new MainLoop (_mainLoopDriver);
     }
 
-    /// <summary>
-    /// How long after Esc has been pressed before we give up on getting an Ansi escape sequence
-    /// </summary>
-    private TimeSpan _escTimeout = TimeSpan.FromMilliseconds (50);
     private AnsiResponseParser<WindowsConsole.InputRecord> _parser = new ();
 
     internal void ProcessInput (WindowsConsole.InputRecord inputEvent)
@@ -1580,9 +1576,8 @@ internal class WindowsDriver : ConsoleDriver
 
     public IEnumerable<WindowsConsole.InputRecord> ShouldRelease ()
     {
-
         if (_parser.State == AnsiResponseParserState.ExpectingBracket &&
-            DateTime.Now - _parser.StateChangedAt > _escTimeout)
+            DateTime.Now - _parser.StateChangedAt > EscTimeout)
         {
             return _parser.Release ().Select (o => o.Item2);
         }
