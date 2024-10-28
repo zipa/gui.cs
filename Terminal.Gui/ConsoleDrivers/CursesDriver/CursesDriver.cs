@@ -471,6 +471,13 @@ internal class CursesDriver : ConsoleDriver
                 }
             }
 
+            // SIXELS
+            foreach (var s in Application.Sixel)
+            {
+                SetCursorPosition (s.ScreenPosition.X, s.ScreenPosition.Y);
+                Console.Write(s.SixelData);
+            }
+
             SetCursorPosition (0, 0);
 
             _currentCursorVisibility = savedVisibility;

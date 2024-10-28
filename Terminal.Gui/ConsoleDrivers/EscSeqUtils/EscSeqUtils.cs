@@ -1350,6 +1350,19 @@ public static class EscSeqUtils
     /// </summary>
     public static readonly AnsiEscapeSequenceRequest CSI_SendDeviceAttributes2 = new () { Request = CSI + ">0c", Terminator = "c" };
 
+    /*
+     TODO: depends on https://github.com/gui-cs/Terminal.Gui/pull/3768
+    /// <summary>
+    ///     CSI 16 t - Request sixel resolution (width and height in pixels)
+    /// </summary>
+    public static readonly AnsiEscapeSequenceRequest CSI_RequestSixelResolution = new () { Request = CSI + "16t", Terminator = "t" };
+
+    /// <summary>
+    ///     CSI 14 t - Request window size in pixels (width x height)
+    /// </summary>
+    public static readonly AnsiEscapeSequenceRequest CSI_RequestWindowSizeInPixels = new () { Request = CSI + "14t", Terminator = "t" };
+    */
+
     /// <summary>
     ///     CSI 1 8 t  | yes | yes |  yes  | report window size in chars
     ///     https://terminalguide.namepad.de/seq/csi_st-18/
