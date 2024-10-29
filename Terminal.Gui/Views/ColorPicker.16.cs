@@ -131,16 +131,14 @@ public class ColorPicker16 : View
     }
 
     ///<inheritdoc/>
-    protected override bool OnDrawingContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
-        base.OnDrawingContent (viewport);
-
         SetAttribute (HasFocus ? ColorScheme.Focus : GetNormalColor ());
         var colorIndex = 0;
 
-        for (var y = 0; y < Math.Max (2, viewport.Height / BoxHeight); y++)
+        for (var y = 0; y < Math.Max (2, Viewport.Height / BoxHeight); y++)
         {
-            for (var x = 0; x < Math.Max (8, viewport.Width / BoxWidth); x++)
+            for (var x = 0; x < Math.Max (8, Viewport.Width / BoxWidth); x++)
             {
                 int foregroundColorIndex = y == 0 ? colorIndex + _cols : colorIndex - _cols;
 

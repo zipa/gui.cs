@@ -21,6 +21,7 @@ public class BenchmarkResults
     public int UpdatedCount { get; set; } = 0;
     [JsonInclude]
     public int DrawCompleteCount { get; set; } = 0;
+
     [JsonInclude]
     public int LaidOutCount { get; set; } = 0;
 }

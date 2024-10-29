@@ -130,12 +130,12 @@ public class LegendAnnotation : View, IAnnotation
     // BUGBUG: Legend annotations are subviews. But for some reason the are rendered directly in OnDrawContent 
     // BUGBUG: instead of just being normal subviews. They get rendered as blank rects and thus we disable subview drawing.
     /// <inheritdoc />
-    protected override bool OnDrawingText (Rectangle viewport) { return true; }
+    protected override bool OnDrawingText () { return true; }
 
     // BUGBUG: Legend annotations are subviews. But for some reason the are rendered directly in OnDrawContent 
     // BUGBUG: instead of just being normal subviews. They get rendered as blank rects and thus we disable subview drawing.
     /// <inheritdoc />
-    protected override bool OnClearingViewport (Rectangle viewport) { return true; }
+    protected override bool OnClearingViewport () { return true; }
 
 
     /// <summary>Draws the Legend and all entries into the area within <see cref="View.Viewport"/></summary>

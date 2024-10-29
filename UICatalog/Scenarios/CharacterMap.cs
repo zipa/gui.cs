@@ -681,9 +681,9 @@ internal class CharMap : View, IDesignable
     private static int RowWidth => RowLabelWidth + COLUMN_WIDTH * 16;
     public event EventHandler<ListViewItemEventArgs> Hover;
 
-    protected override bool OnDrawingContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
-        if (viewport.Height == 0 || viewport.Width == 0)
+        if (Viewport.Height == 0 || Viewport.Width == 0)
         {
             return true;
         }

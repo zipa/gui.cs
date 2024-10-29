@@ -775,7 +775,7 @@ public class Slider<T> : View, IOrientation
     #region Drawing
 
     /// <inheritdoc/>
-    protected override bool OnDrawingContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
         // TODO: make this more surgical to reduce repaint
 

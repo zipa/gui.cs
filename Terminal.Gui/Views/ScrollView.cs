@@ -372,7 +372,7 @@ public class ScrollView : View
     }
 
     /// <inheritdoc/>
-    protected override bool OnDrawingContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
         SetViewsNeedsDraw ();
 

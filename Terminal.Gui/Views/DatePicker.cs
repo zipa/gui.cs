@@ -288,7 +288,7 @@ public class DatePicker : View
     }
 
     /// <inheritdoc />
-    protected override bool OnDrawingText (Rectangle viewport) { return true; }
+    protected override bool OnDrawingText () { return true; }
 
     private static string StandardizeDateFormat (string format)
     {

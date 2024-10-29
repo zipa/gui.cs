@@ -931,7 +931,7 @@ public class TextField : View
     }
 
     /// <inheritdoc/>
-    protected override bool OnDrawingContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
         _isDrawing = true;
 

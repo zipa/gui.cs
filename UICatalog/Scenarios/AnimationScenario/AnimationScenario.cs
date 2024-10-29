@@ -179,7 +179,7 @@ public class AnimationScenario : Scenario
         private Rectangle oldSize = Rectangle.Empty;
         public void NextFrame () { currentFrame = (currentFrame + 1) % frameCount; }
 
-        protected override bool OnDrawingContent (Rectangle viewport)
+        protected override bool OnDrawingContent ()
         {
             if (frameCount == 0)
             {

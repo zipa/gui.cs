@@ -382,7 +382,7 @@ public class FileDialog : Dialog, IDesignable
     }
 
     /// <inheritdoc/>
-    protected override bool OnDrawingContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
         if (!string.IsNullOrWhiteSpace (_feedback))
         {

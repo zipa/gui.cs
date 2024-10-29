@@ -37,25 +37,25 @@ internal class ShadowView : View
     }
 
     /// <inheritdoc />
-    protected override bool OnClearingViewport (Rectangle viewport)
+    protected override bool OnClearingViewport ()
     {
         // Prevent clearing (so we can have transparency)
         return true;
     }
 
     /// <inheritdoc/>
-    protected override bool OnDrawingContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
         switch (ShadowStyle)
         {
             case ShadowStyle.Opaque:
                 if (Orientation == Orientation.Vertical)
                 {
-                    DrawVerticalShadowOpaque (viewport);
+                    DrawVerticalShadowOpaque (Viewport);
                 }
                 else
                 {
-                    DrawHorizontalShadowOpaque (viewport);
+                    DrawHorizontalShadowOpaque (Viewport);
                 }
 
                 break;
@@ -67,11 +67,11 @@ internal class ShadowView : View
 
                 if (Orientation == Orientation.Vertical)
                 {
-                    DrawVerticalShadowTransparent (viewport);
+                    DrawVerticalShadowTransparent (Viewport);
                 }
                 else
                 {
-                    DrawHorizontalShadowTransparent (viewport);
+                    DrawHorizontalShadowTransparent (Viewport);
                 }
 
                 //SetAttribute (prevAttr);
@@ -114,10 +114,9 @@ internal class ShadowView : View
 
     private void DrawHorizontalShadowTransparent (Rectangle viewport)
     {
-        Rectangle screen = ViewportToScreen (viewport);
+        Rectangle screen = ViewportToScreen (Viewport);
 
-        // Fill the rest of the rectangle - note we skip the last since vertical will draw it
-        for (int i = Math.Max(0, screen.X + 1); i < screen.X + screen.Width - 1; i++)
+        for (int i = Math.Max(0, screen.X + 1); i < screen.X + screen.Width; i++)
         {
             Driver?.Move (i, screen.Y);
 
@@ -134,7 +133,7 @@ internal class ShadowView : View
         AddRune (0, 0, Glyphs.ShadowVerticalStart);
 
         // Fill the rest of the rectangle with the glyph
-        for (var i = 1; i < viewport.Height; i++)
+        for (var i = 1; i < viewport.Height - 1; i++)
         {
             AddRune (0, i, Glyphs.ShadowVertical);
         }
@@ -142,7 +141,7 @@ internal class ShadowView : View
 
     private void DrawVerticalShadowTransparent (Rectangle viewport)
     {
-        Rectangle screen = ViewportToScreen (viewport);
+        Rectangle screen = ViewportToScreen (Viewport);
 
         // Fill the rest of the rectangle
         for (int i = Math.Max (0, screen.Y); i < screen.Y + viewport.Height; i++)

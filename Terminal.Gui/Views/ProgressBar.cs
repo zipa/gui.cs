@@ -139,7 +139,7 @@ public class ProgressBar : View, IDesignable
     }
 
     ///<inheritdoc/>
-    protected override bool OnDrawingContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
         SetAttribute (GetHotNormalColor ());
 

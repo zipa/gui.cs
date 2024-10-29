@@ -3550,7 +3550,7 @@ public class TextView : View
     }
 
     /// <inheritdoc/>
-    protected override bool OnDrawingContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
         _isDrawing = true;
 
@@ -3616,7 +3616,7 @@ public class TextView : View
                     cols = Math.Max (cols, 1);
                 }
 
-                if (!TextModel.SetCol (ref col, viewport.Right, cols))
+                if (!TextModel.SetCol (ref col, Viewport.Right, cols))
                 {
                     break;
                 }
@@ -3639,7 +3639,7 @@ public class TextView : View
         if (row < bottom)
         {
             SetNormalColor ();
-            ClearRegion (viewport.Left, row, right, bottom);
+            ClearRegion (Viewport.Left, row, right, bottom);
         }
 
         //PositionCursor ();

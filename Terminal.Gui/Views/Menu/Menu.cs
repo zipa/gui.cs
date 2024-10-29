@@ -394,7 +394,7 @@ internal sealed class Menu : View
     }
 
     // By doing this we draw last, over everything else.
-    private void Top_DrawComplete (object? sender, EventArgs e)
+    private void Top_DrawComplete (object? sender, DrawEventArgs e)
     {
         if (!Visible)
         {

@@ -1,5 +1,5 @@
 ﻿#nullable enable
-#define HACK_DRAW_OVERLAPPED
+//#define HACK_DRAW_OVERLAPPED
 using System.ComponentModel;
 using System.Diagnostics;
 
@@ -24,36 +24,71 @@ public partial class View // Drawing APIs
     {
         if (!CanBeVisible (this) || (!NeedsDraw && !SubViewNeedsDraw))
         {
+            if (this is not Adornment)
+            {
+                Driver?.Clip.Exclude (FrameToScreen ());
+            }
+
             return;
         }
 
+        if (Border is { Diagnostics: ViewDiagnosticFlags.DrawIndicator })
+        {
+            if (Border.DrawIndicator is { })
+            {
+                Border.DrawIndicator.AdvanceAnimation (false);
+                Border.DrawIndicator.DrawText ();
+
+            }
+        }
+
+        // Frame/View-relative relative, thus the bounds location should be 0,0
+        //Debug.Assert(clipRegion.GetBounds().X == 0 && clipRegion.GetBounds ().Y == 0);
+
+        Region? saved = SetClipToFrame ();
         DoDrawAdornments ();
         DoSetAttribute ();
-
+        if (saved is { })
+        {
+            Driver!.Clip = saved;
+        }
         // By default, we clip to the viewport preventing drawing outside the viewport
         // We also clip to the content, but if a developer wants to draw outside the viewport, they can do
         // so via settings. SetClip honors the ViewportSettings.DisableVisibleContentClipping flag.
-        Region prevClip = SetClip ();
+        // Get our Viewport in screen coordinates
 
-        DoClearViewport (Viewport);
-        DoDrawText (Viewport);
-        DoDrawContent (Viewport);
+        saved = SetClipToViewport ();
 
-        DoDrawSubviews (Viewport);
+        DoClearViewport ();
+        DoDrawText ();
+        DoDrawContent ();
+
+        DoDrawSubviews ();
 
         // Restore the clip before rendering the line canvas and adornment subviews
         // because they may draw outside the viewport.
-        if (Driver is { })
+        if (saved is { })
         {
-            Driver.Clip = prevClip;
+            Driver!.Clip = saved;
         }
 
+        saved = SetClipToFrame ();
         DoRenderLineCanvas ();
         DoDrawAdornmentSubViews ();
         ClearNeedsDraw ();
 
         // We're done
         DoDrawComplete ();
+        if (saved is { })
+        {
+            Driver!.Clip = saved;
+        }
+
+        if (this is not Adornment)
+        {
+            Driver?.Clip.Exclude (FrameToScreen ());
+        }
+
     }
 
     #region DrawAdornments
@@ -62,34 +97,45 @@ public partial class View // Drawing APIs
     {
         // This causes the Adornment's subviews to be REDRAWN
         // TODO: Figure out how to make this more efficient
-        if (Margin?.Subviews is { })
+        if (Margin?.Subviews is { } && Margin.Thickness != Thickness.Empty)
         {
             foreach (View subview in Margin.Subviews)
             {
                 subview.SetNeedsDraw ();
             }
 
-            Margin?.DoDrawSubviews (Margin.Viewport);
+            Region? saved = Margin?.SetClipToFrame ();
+            Margin?.DoDrawSubviews ();
+            if (saved is { })
+            {
+                Driver!.Clip = saved;
+            }
         }
 
-        if (Border?.Subviews is { })
+        if (Border?.Subviews is { } && Border.Thickness != Thickness.Empty)
         {
             foreach (View subview in Border.Subviews)
             {
                 subview.SetNeedsDraw ();
             }
 
-            Border?.DoDrawSubviews (Border.Viewport);
+            Border?.DoDrawSubviews ();
         }
 
-        if (Padding?.Subviews is { })
+        if (Padding?.Subviews is { } && Padding.Thickness != Thickness.Empty)
         {
             foreach (View subview in Padding.Subviews)
             {
                 subview.SetNeedsDraw ();
             }
 
-            Padding?.DoDrawSubviews (Padding.Viewport);
+            Region? saved = Padding?.SetClipToFrame ();
+            Padding?.DoDrawSubviews ();
+            if (saved is { })
+            {
+                Driver!.Clip = saved;
+            }
+
         }
     }
 
@@ -102,12 +148,6 @@ public partial class View // Drawing APIs
 
         // TODO: add event.
 
-        // Subviews of Adornments count as subviews
-        if (!NeedsDraw && !SubViewNeedsDraw)
-        {
-            return;
-        }
-
         DrawAdornments ();
     }
 
@@ -118,9 +158,20 @@ public partial class View // Drawing APIs
     {
         // Each of these renders lines to either this View's LineCanvas 
         // Those lines will be finally rendered in OnRenderLineCanvas
-        Margin?.Draw ();
-        Border?.Draw ();
-        Padding?.Draw ();
+        if (Margin is { } && Margin.Thickness != Thickness.Empty)
+        {
+            Margin?.Draw ();
+        }
+
+        if (Border is { } && Border.Thickness != Thickness.Empty)
+        {
+            Border?.Draw ();
+        }
+
+        if (Padding is { } && Padding.Thickness != Thickness.Empty)
+        {
+            Padding?.Draw ();
+        }
     }
 
     /// <summary>
@@ -129,6 +180,7 @@ public partial class View // Drawing APIs
     ///     <see cref="LineCanvas"/> of this view's subviews will be rendered. If <see cref="SuperViewRendersLineCanvas"/> is
     ///     false (the default), this method will cause the <see cref="LineCanvas"/> be prepared to be rendered.
     /// </summary>
+    /// <param name="clipRegion"></param>
     /// <returns><see langword="true"/> to stop further drawing of the Adornments.</returns>
     protected virtual bool OnDrawingAdornments () { return false; }
 
@@ -147,11 +199,6 @@ public partial class View // Drawing APIs
         SettingAttribute?.Invoke (this, args);
 
         if (args.Cancel)
-        {
-            return;
-        }
-
-        if (!NeedsDraw && !SubViewNeedsDraw)
         {
             return;
         }
@@ -187,11 +234,10 @@ public partial class View // Drawing APIs
     #endregion
     #region ClearViewport
 
-    private void DoClearViewport (Rectangle viewport)
+    private void DoClearViewport ()
     {
-        Debug.Assert (viewport == Viewport);
 
-        if (OnClearingViewport (Viewport))
+        if (OnClearingViewport ())
         {
             return;
         }
@@ -215,9 +261,8 @@ public partial class View // Drawing APIs
     /// <summary>
     ///     Called when the <see cref="Viewport"/> is to be cleared.
     /// </summary>
-    /// <param name="viewport"></param>
     /// <returns><see langword="true"/> to stop further clearing.</returns>
-    protected virtual bool OnClearingViewport (Rectangle viewport) { return false; }
+    protected virtual bool OnClearingViewport () { return false; }
 
     /// <summary>Event invoked when the content area of the View is to be drawn.</summary>
     /// <remarks>
@@ -267,11 +312,10 @@ public partial class View // Drawing APIs
 
     #region DrawText
 
-    private void DoDrawText (Rectangle viewport)
+    private void DoDrawText ()
     {
-        Debug.Assert (viewport == Viewport);
 
-        if (OnDrawingText (Viewport))
+        if (OnDrawingText ())
         {
             return;
         }
@@ -295,9 +339,8 @@ public partial class View // Drawing APIs
     /// <summary>
     ///     Called when the <see cref="Text"/> of the View is to be drawn.
     /// </summary>
-    /// <param name="viewport"></param>
     /// <returns><see langword="true"/> to stop further drawing of  <see cref="Text"/>.</returns>
-    protected virtual bool OnDrawingText (Rectangle viewport) { return false; }
+    protected virtual bool OnDrawingText () { return false; }
 
     /// <summary>Raised when the <see cref="Text"/> of the View is to be drawn.</summary>
     /// <returns>
@@ -335,11 +378,9 @@ public partial class View // Drawing APIs
 
     #region DrawContent
 
-    private void DoDrawContent (Rectangle viewport)
+    private void DoDrawContent ()
     {
-        Debug.Assert (viewport == Viewport);
-
-        if (OnDrawingContent (Viewport))
+        if (OnDrawingContent ())
         {
             return;
         }
@@ -359,7 +400,7 @@ public partial class View // Drawing APIs
     /// <remarks>
     /// </remarks>
     /// <returns><see langword="true"/> to stop further drawing content.</returns>
-    protected virtual bool OnDrawingContent (Rectangle viewport) { return false; }
+    protected virtual bool OnDrawingContent () { return false; }
 
     /// <summary>Raised when  the View's content is to be drawn.</summary>
     /// <remarks>
@@ -375,11 +416,9 @@ public partial class View // Drawing APIs
 
     #region DrawSubviews
 
-    private void DoDrawSubviews (Rectangle viewport)
+    private void DoDrawSubviews ()
     {
-        Debug.Assert (viewport == Viewport);
-
-        if (OnDrawingSubviews (Viewport))
+        if (OnDrawingSubviews ())
         {
             return;
         }
@@ -403,9 +442,8 @@ public partial class View // Drawing APIs
     /// <summary>
     ///     Called when the <see cref="Subviews"/> are to be drawn.
     /// </summary>
-    /// <param name="viewport"></param>
     /// <returns><see langword="true"/> to stop further drawing of <see cref="Subviews"/>.</returns>
-    protected virtual bool OnDrawingSubviews (Rectangle viewport) { return false; }
+    protected virtual bool OnDrawingSubviews () { return false; }
 
     /// <summary>Raised when the <see cref="Subviews"/> are to be drawn.</summary>
     /// <remarks>
@@ -421,7 +459,7 @@ public partial class View // Drawing APIs
     /// </summary>
     public void DrawSubviews ()
     {
-        if (_subviews is null || !SubViewNeedsDraw)
+        if (_subviews is null)
         {
             return;
         }
@@ -430,10 +468,10 @@ public partial class View // Drawing APIs
         IEnumerable<View> subviewsNeedingDraw = _subviews.Where (view => (view.Visible && (view.NeedsDraw || view.SubViewNeedsDraw))
                                                                       || view.Arrangement.HasFlag (ViewArrangement.Overlapped));
 #else
-        IEnumerable<View> subviewsNeedingDraw = _subviews.Where (view => (view.Visible && (view.NeedsDraw || view.SubViewNeedsDraw)));
+        IEnumerable<View> subviewsNeedingDraw = _subviews.Where (view => (view.Visible));
 #endif
 
-        foreach (View view in subviewsNeedingDraw)
+        foreach (View view in subviewsNeedingDraw.Reverse())
         {
 #if HACK_DRAW_OVERLAPPED
             if (view.Arrangement.HasFlag (ViewArrangement.Overlapped))
@@ -443,8 +481,8 @@ public partial class View // Drawing APIs
             }
 #endif
             view.Draw ();
-
         }
+
     }
 
     #endregion DrawSubviews
@@ -466,6 +504,7 @@ public partial class View // Drawing APIs
     /// <summary>
     ///     Called when the <see cref="View.LineCanvas"/> is to be rendered. See <see cref="RenderLineCanvas"/>.
     /// </summary>
+    /// <param name="clipRegion"></param>
     /// <returns><see langword="true"/> to stop further drawing of <see cref="LineCanvas"/>.</returns>
     protected virtual bool OnRenderingLineCanvas () { return false; }
 
@@ -548,7 +587,7 @@ public partial class View // Drawing APIs
     {
         OnDrawComplete ();
 
-        DrawComplete?.Invoke (this, EventArgs.Empty);
+        DrawComplete?.Invoke (this, new (Viewport, Viewport));
 
         // Default implementation does nothing.
     }
@@ -561,7 +600,7 @@ public partial class View // Drawing APIs
     /// <summary>Raised when the View is completed drawing.</summary>
     /// <remarks>
     /// </remarks>
-    public event EventHandler<EventArgs>? DrawComplete;
+    public event EventHandler<DrawEventArgs>? DrawComplete;
 
     #endregion DrawComplete
 
@@ -648,9 +687,20 @@ public partial class View // Drawing APIs
             _needsDrawRect = new (x, y, w, h);
         }
 
-        Margin?.SetNeedsDraw ();
-        Border?.SetNeedsDraw ();
-        Padding?.SetNeedsDraw ();
+        if (Margin is { } && Margin.Thickness != Thickness.Empty)
+        {
+            Margin?.SetNeedsDraw ();
+        }
+
+        if (Border is { } && Border.Thickness != Thickness.Empty)
+        {
+            Border?.SetNeedsDraw ();
+        }
+
+        if (Padding is { } && Padding.Thickness != Thickness.Empty)
+        {
+            Padding?.SetNeedsDraw ();
+        }
 
         SuperView?.SetSubViewNeedsDraw ();
 
@@ -693,10 +743,21 @@ public partial class View // Drawing APIs
         _needsDrawRect = Rectangle.Empty;
         SubViewNeedsDraw = false;
 
-        Margin?.ClearNeedsDraw ();
-        Border?.ClearNeedsDraw ();
-        Padding?.ClearNeedsDraw ();
 
+        if (Margin is { } && Margin.Thickness != Thickness.Empty)
+        {
+            Margin?.ClearNeedsDraw ();
+        }
+
+        if (Border is { } && Border.Thickness != Thickness.Empty)
+        {
+            Border?.ClearNeedsDraw ();
+        }
+
+        if (Padding is { } && Padding.Thickness != Thickness.Empty)
+        {
+            Padding?.ClearNeedsDraw ();
+        }
         foreach (View subview in Subviews)
         {
             subview.ClearNeedsDraw ();

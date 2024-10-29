@@ -118,7 +118,7 @@ public partial class View // Layout APIs
                 // Now add our Frame location
                 parentScreen.Offset (screen.X, screen.Y);
 
-                return parentScreen;
+                return parentScreen with { Size = Frame.Size };
             }
 
             Point viewportOffset = current.GetViewportOffsetFromFrame ();
@@ -730,6 +730,14 @@ public partial class View // Layout APIs
         if (SuperView is { NeedsLayout: false })
         {
             SuperView?.SetNeedsLayout ();
+        }
+
+        if (SuperView is null)
+        {
+            foreach (var tl in Application.TopLevels)
+            {
+                tl.SetNeedsDraw ();
+            }
         }
 
         if (this is not Adornment adornment)

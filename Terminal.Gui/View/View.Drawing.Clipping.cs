@@ -3,6 +3,32 @@ namespace Terminal.Gui;
 
 public partial class View
 {
+    internal Region? SetClipToFrame ()
+    {
+        if (Driver is null)
+        {
+            return null;
+        }
+
+        Region previous = Driver.Clip ?? new (Application.Screen);
+
+        Region frameRegion = Driver.Clip!.Clone ();
+        // Translate viewportRegion to screen-relative coords
+        Rectangle screenRect = FrameToScreen ();
+        frameRegion.Intersect (screenRect);
+
+        if (this is Adornment adornment && adornment.Thickness != Thickness.Empty)
+        {
+            // Ensure adornments can't draw outside thier thickness
+            frameRegion.Exclude (adornment.Thickness.GetInside (Frame));
+        }
+
+        Driver.Clip = frameRegion;
+
+        return previous;
+
+    }
+
     /// <summary>Sets the <see cref="ConsoleDriver"/>'s clip region to <see cref="Viewport"/>.</summary>
     /// <remarks>
     ///     <para>
@@ -19,7 +45,7 @@ public partial class View
     ///     The current screen-relative clip region, which can be then re-applied by setting
     ///     <see cref="ConsoleDriver.Clip"/>.
     /// </returns>
-    public Region? SetClip ()
+    public Region? SetClipToViewport ()
     {
         if (Driver is null)
         {
@@ -28,19 +54,50 @@ public partial class View
 
         Region previous = Driver.Clip ?? new (Application.Screen);
 
-        // Clamp the Clip to the entire visible area
-        Rectangle clip = Rectangle.Intersect (ViewportToScreen (Viewport with { Location = Point.Empty }), previous.GetBounds());
+        Region viewportRegion = Driver.Clip!.Clone ();
+
+        Rectangle viewport = ViewportToScreen (new Rectangle (Point.Empty, Viewport.Size));
+        viewportRegion?.Intersect (viewport);
 
         if (ViewportSettings.HasFlag (ViewportSettings.ClipContentOnly))
         {
             // Clamp the Clip to the just content area that is within the viewport
             Rectangle visibleContent = ViewportToScreen (new Rectangle (new (-Viewport.X, -Viewport.Y), GetContentSize ()));
-            clip = Rectangle.Intersect (clip, visibleContent);
+            viewportRegion?.Intersect (visibleContent);
         }
 
-        Driver.Clip = new (clip);// !.Complement(clip);
+        if (this is Adornment adornment && adornment.Thickness != Thickness.Empty)
+        {
+            // Ensure adornments can't draw outside their thickness
+            viewportRegion?.Exclude (adornment.Thickness.GetInside (viewport));
+        }
+
+        Driver.Clip = viewportRegion;
 
         return previous;
     }
 
+    /// <summary>Gets the view-relative clip region.</summary>
+    public Region? GetClip ()
+    {
+        // get just the portion of the application clip that is within this view's Viewport
+        if (Driver is null)
+        {
+            return null;
+        }
+
+        // Get our Viewport in screen coordinates
+        Rectangle screen = ViewportToScreen (Viewport with { Location = Point.Empty });
+
+        // Get the clip region in screen coordinates
+        Region? clip = Driver.Clip;
+        if (clip is null)
+        {
+            return null;
+        }
+        Region? previous = Driver.Clip;
+        clip = clip.Clone ();
+        clip.Intersect (screen);
+        return clip;
+    }
 }

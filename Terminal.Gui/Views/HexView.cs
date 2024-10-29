@@ -421,7 +421,7 @@ public class HexView : View, IDesignable
     }
 
     ///<inheritdoc/>
-    protected override bool OnDrawingContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
         if (Source is null)
         {
@@ -434,16 +434,16 @@ public class HexView : View, IDesignable
         Move (0, 0);
 
         int nBlocks = BytesPerLine / NUM_BYTES_PER_HEX_COLUMN;
-        var data = new byte [nBlocks * NUM_BYTES_PER_HEX_COLUMN * viewport.Height];
+        var data = new byte [nBlocks * NUM_BYTES_PER_HEX_COLUMN * Viewport.Height];
         Source.Position = _displayStart;
         int n = _source!.Read (data, 0, data.Length);
 
         Attribute selectedAttribute = GetHotNormalColor ();
         Attribute editedAttribute = new Attribute (GetNormalColor ().Foreground.GetHighlightColor (), GetNormalColor ().Background);
         Attribute editingAttribute = new Attribute (GetFocusColor ().Background, GetFocusColor ().Foreground);
-        for (var line = 0; line < viewport.Height; line++)
+        for (var line = 0; line < Viewport.Height; line++)
         {
-            Rectangle lineRect = new (0, line, viewport.Width, 1);
+            Rectangle lineRect = new (0, line, Viewport.Width, 1);
 
             if (!Viewport.Contains (lineRect))
             {

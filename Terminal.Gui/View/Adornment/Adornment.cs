@@ -162,7 +162,7 @@ public class Adornment : View, IDesignable
     /// </summary>
     /// <param name="viewport"></param>
     /// <returns><see langword="true"/> to stop further clearing.</returns>
-    protected override bool OnClearingViewport (Rectangle viewport)
+    protected override bool OnClearingViewport ()
     {
         if (Thickness == Thickness.Empty)
         {
@@ -173,18 +173,21 @@ public class Adornment : View, IDesignable
         SetAttribute (normalAttr);
 
         // This just draws/clears the thickness, not the insides.
-        Thickness.Draw (ViewportToScreen (viewport), Diagnostics, ToString ());
+        Thickness.Draw (ViewportToScreen (Viewport), Diagnostics, ToString ());
+
+        //NeedsDraw = true;
 
         return true;
     }
 
     /// <inheritdoc/>
-    protected override bool OnDrawingText (Rectangle viewport) { return Thickness == Thickness.Empty; }
+    protected override bool OnDrawingText () { return Thickness == Thickness.Empty; }
 
     /// <inheritdoc/>
-    protected override bool OnDrawingSubviews (Rectangle viewport) { return Thickness == Thickness.Empty; }
+    protected override bool OnDrawingSubviews () { return Thickness == Thickness.Empty; }
 
     /// <summary>Does nothing for Adornment</summary>
+    /// <param name="clipRegion"></param>
     /// <returns></returns>
     protected override bool OnRenderingLineCanvas () { return true; }
 

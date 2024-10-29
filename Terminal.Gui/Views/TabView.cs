@@ -58,7 +58,7 @@ public class TabView : View
                     () =>
                     {
                         TabScrollOffset = Tabs.Count - 1;
-                        SelectedTab = Tabs.LastOrDefault()!;
+                        SelectedTab = Tabs.LastOrDefault ()!;
 
                         return true;
                     }
@@ -306,19 +306,19 @@ public class TabView : View
     }
 
     /// <inheritdoc/>
-    protected override bool OnDrawingContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
         if (Tabs.Any ())
         {
-            Region savedClip = SetClip ();
+            // Region savedClip = SetClip ();
             _tabsBar.Draw ();
             _contentView.SetNeedsDraw ();
             _contentView.Draw ();
 
-            if (Driver is { })
-            {
-                Driver.Clip = savedClip;
-            }
+            //if (Driver is { })
+            //{
+            //    Driver.Clip = savedClip;
+            //}
         }
 
         return true;
@@ -656,7 +656,7 @@ public class TabView : View
         }
 
         /// <inheritdoc />
-        protected override bool OnClearingViewport (Rectangle viewport)
+        protected override bool OnClearingViewport ()
         {
             // clear any old text
             ClearViewport ();
@@ -664,7 +664,7 @@ public class TabView : View
             return true;
         }
 
-        protected override bool OnDrawingContent (Rectangle viewport)
+        protected override bool OnDrawingContent ()
         {
             _host._tabLocations = _host.CalculateViewport (Viewport).ToArray ();
 
@@ -675,7 +675,7 @@ public class TabView : View
         }
 
         /// <inheritdoc />
-        protected override bool OnDrawingSubviews (Rectangle viewport)
+        protected override bool OnDrawingSubviews ()
         {
             RenderTabLine ();
 

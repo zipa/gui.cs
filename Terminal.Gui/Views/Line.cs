@@ -64,7 +64,7 @@ public class Line : View, IOrientation
     }
 
     /// <inheritdoc/>
-    protected override bool OnDrawingContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
         LineCanvas lc = LineCanvas;
 
@@ -78,7 +78,7 @@ public class Line : View, IOrientation
             lc = adornment.Parent?.LineCanvas;
         }
 
-        Point pos = ViewportToScreen (viewport).Location;
+        Point pos = ViewportToScreen (Viewport).Location;
         int length = Orientation == Orientation.Horizontal ? Frame.Width : Frame.Height;
 
         if (SuperView is {} && SuperViewRendersLineCanvas && Orientation == Orientation.Horizontal)

@@ -40,8 +40,14 @@ public class ShadowStyles : Scenario
             Title = "Shadow Window",
             Arrangement = ViewArrangement.Movable | ViewArrangement.Overlapped,
             BorderStyle = LineStyle.Double,
-            ShadowStyle = ShadowStyle.Transparent
+            ShadowStyle = ShadowStyle.Transparent,
         };
+
+        app.DrawingText += (s, e) =>
+                           {
+                               Application.Driver?.FillRect (app.ViewportToScreen (app.Viewport), '*');
+                               e.Cancel = true;
+                           };
 
         var buttonInWin = new Button
         {

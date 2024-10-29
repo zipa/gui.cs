@@ -446,7 +446,7 @@ public class ScrollBarView : View
     public virtual void OnChangedPosition () { ChangedPosition?.Invoke (this, EventArgs.Empty); }
 
     /// <inheritdoc/>
-    protected override bool OnDrawingContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
         if (ColorScheme is null || ((!ShowScrollIndicator || Size == 0) && AutoHideScrollBars && Visible))
         {

@@ -107,13 +107,13 @@ public class Border : Adornment
 #endif
         if (View.Diagnostics.HasFlag (ViewDiagnosticFlags.DrawIndicator))
         {
-            _drawIndicator = new SpinnerView ()
+            DrawIndicator = new SpinnerView ()
             {
                 X = 1,
                 Style = new SpinnerStyle.Dots2 (),
                 SpinDelay = 0,
             };
-            Add (_drawIndicator);
+            Add (DrawIndicator);
         }
     }
 
@@ -613,14 +613,14 @@ public class Border : Adornment
     #endregion Mouse Support
 
     /// <inheritdoc/>
-    protected override bool OnDrawingContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
         if (Thickness == Thickness.Empty)
         {
             return true;
         }
 
-        Rectangle screenBounds = ViewportToScreen (viewport);
+        Rectangle screenBounds = ViewportToScreen (Viewport);
 
         // TODO: v2 - this will eventually be two controls: "BorderView" and "Label" (for the title)
 
@@ -914,17 +914,19 @@ public class Border : Adornment
             }
         }
 
-        return true;
+        return true; ;
     }
 
-    private SpinnerView? _drawIndicator = null;
+    public SpinnerView? DrawIndicator { get; private set; } = null;
+
+    /// <param name="clipRegion"></param>
     /// <inheritdoc />
     protected override bool OnRenderingLineCanvas ()
     {
-        if (_drawIndicator is { })
+        if (DrawIndicator is { })
         {
-            _drawIndicator.AdvanceAnimation (false);
-            _drawIndicator.DrawText();
+            //DrawIndicator.AdvanceAnimation (false);
+            //DrawIndicator.DrawText();
         }
 
         RenderLineCanvas ();

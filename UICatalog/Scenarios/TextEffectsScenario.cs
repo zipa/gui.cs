@@ -132,9 +132,9 @@ internal class GradientsView : View
     private const int LABEL_HEIGHT = 1;
     private const int GRADIENT_WITH_LABEL_HEIGHT = GRADIENT_HEIGHT + LABEL_HEIGHT + 1; // +1 for spacing
 
-    protected override bool OnDrawingContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
-        DrawTopLineGradient (viewport);
+        DrawTopLineGradient (Viewport);
 
         var x = 2;
         var y = 3;
@@ -149,7 +149,7 @@ internal class GradientsView : View
 
         foreach ((string label, GradientDirection direction) in gradients)
         {
-            if (x + GRADIENT_WIDTH > viewport.Width)
+            if (x + GRADIENT_WIDTH > Viewport.Width)
             {
                 x = 2; // Reset to left margin
                 y += GRADIENT_WITH_LABEL_HEIGHT; // Move down to next row

@@ -553,7 +553,7 @@ namespace Terminal.Gui
         }
 
         /// <inheritdoc/>
-        protected override bool OnDrawingContent (Rectangle viewport)
+        protected override bool OnDrawingContent ()
         {
             if (_provider is null)
             {

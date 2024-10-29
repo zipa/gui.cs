@@ -392,6 +392,10 @@ public abstract class ConsoleDriver
             {
                 for (int c = rect.X; c < rect.X + rect.Width; c++)
                 {
+                    if (!IsValidLocation (c, r))
+                    {
+                        continue;
+                    }
                     Contents [r, c] = new Cell
                     {
                         Rune = (rune != default ? rune : (Rune)' '),

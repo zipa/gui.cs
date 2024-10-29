@@ -264,7 +264,7 @@ public class NumericUpDown<T> : View where T : notnull
 
     // Prevent the drawing of Text
     /// <inheritdoc />
-    protected override bool OnDrawingText (Rectangle viewport) { return true; }
+    protected override bool OnDrawingText () { return true; }
 }
 
 /// <summary>

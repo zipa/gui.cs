@@ -911,7 +911,7 @@ public class TableView : View, IDesignable
     }
 
     ///<inheritdoc/>
-    protected override bool OnDrawingContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
         Move (0, 0);
 

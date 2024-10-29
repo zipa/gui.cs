@@ -46,7 +46,7 @@
     },
     "Charmap": {
       "commandName": "Project",
-      "commandLineArgs": "\"Character Map\" -b"
+      "commandLineArgs": "Bars -b"
     }
   }
 }

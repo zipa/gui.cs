@@ -226,18 +226,6 @@ public class Scenario : IDisposable
 
     private void OnApplicationNotifyNewRunState (object? sender, RunStateEventArgs e)
     {
-        // Get a list of all subviews under Application.Top (and their subviews, etc.)
-        // and subscribe to their DrawComplete event
-        void SubscribeAllSubviews (View view)
-        {
-            view.DrawComplete += (s, a) => BenchmarkResults.DrawCompleteCount++;
-            view.SubviewsLaidOut += (s, a) => BenchmarkResults.LaidOutCount++;
-            foreach (View subview in view.Subviews)
-            {
-                SubscribeAllSubviews (subview);
-            }
-        }
-
         SubscribeAllSubviews (Application.Top!);
 
         _currentDemoKey = 0;
@@ -257,6 +245,19 @@ public class Scenario : IDisposable
                                     return true;
                                 });
 
+        return;
+
+        // Get a list of all subviews under Application.Top (and their subviews, etc.)
+        // and subscribe to their DrawComplete event
+        void SubscribeAllSubviews (View view)
+        {
+            view.DrawComplete += (s, a) => BenchmarkResults.DrawCompleteCount++;
+            view.SubviewsLaidOut += (s, a) => BenchmarkResults.LaidOutCount++;
+            foreach (View subview in view.Subviews)
+            {
+                SubscribeAllSubviews (subview);
+            }
+        }
     }
 
     // If the scenario doesn't close within the abort time, this will force it to quit

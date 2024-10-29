@@ -68,14 +68,14 @@ public class Margin : Adornment
     }
 
     /// <inheritdoc />
-    protected override bool OnClearingViewport (Rectangle viewport)
+    protected override bool OnClearingViewport ()
     {
         if (Thickness == Thickness.Empty)
         {
             return true;
         }
 
-        Rectangle screen = ViewportToScreen (viewport);
+        Rectangle screen = ViewportToScreen (Viewport);
 
         if (ShadowStyle != ShadowStyle.None)
         {

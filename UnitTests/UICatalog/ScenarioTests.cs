@@ -137,13 +137,12 @@ public class ScenarioTests : TestsAllViews
         }
     }
 
-
     /// <summary>
     ///     <para>This runs through all Scenarios defined in UI Catalog, calling Init, Setup, and Run and measuring the perf of each.</para>
     /// </summary>
     [Theory]
     [MemberData (nameof (AllScenarioTypes))]
-    public void All_Scenarios_Time (Type scenarioType)
+    public void All_Scenarios_Benchmark (Type scenarioType)
     {
         Assert.Null (_timeoutLock);
         _timeoutLock = new ();
@@ -167,6 +166,7 @@ public class ScenarioTests : TestsAllViews
         int updatedCount = 0;
         int drawCompleteCount = 0;
 
+        int addedCount = 0;
         int laidOutCount = 0;
 
         _output.WriteLine ($"Running Scenario '{scenarioType}'");
@@ -201,6 +201,7 @@ public class ScenarioTests : TestsAllViews
         _output.WriteLine ($"  called Driver.Refresh {refreshedCount} times.");
         _output.WriteLine ($"    which updated the screen {updatedCount} times.");
         _output.WriteLine ($"  called View.Draw {drawCompleteCount} times.");
+        _output.WriteLine ($"  added {addedCount} views.");
         _output.WriteLine ($"  called View.LayoutComplete {laidOutCount} times.");
 
         // Restore the configuration locations
@@ -264,6 +265,7 @@ public class ScenarioTests : TestsAllViews
             {
                 view.DrawComplete += (s, a) => drawCompleteCount++;
                 view.SubviewsLaidOut += (s, a) => laidOutCount++;
+                view.Added += (s, a) => addedCount++;
                 foreach (View subview in view.Subviews)
                 {
                     SubscribeAllSubviews (subview);

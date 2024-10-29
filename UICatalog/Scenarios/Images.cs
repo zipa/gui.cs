@@ -624,7 +624,7 @@ public class Images : Scenario
         public Image<Rgba32> FullResImage;
         private Image<Rgba32> _matchSize;
 
-        protected override bool OnDrawingContent (Rectangle bounds)
+        protected override bool OnDrawingContent ()
         {
             if (FullResImage == null)
             {
@@ -632,15 +632,15 @@ public class Images : Scenario
             }
 
             // if we have not got a cached resized image of this size
-            if (_matchSize == null || bounds.Width != _matchSize.Width || bounds.Height != _matchSize.Height)
+            if (_matchSize == null || Viewport.Width != _matchSize.Width || Viewport.Height != _matchSize.Height)
             {
                 // generate one
-                _matchSize = FullResImage.Clone (x => x.Resize (bounds.Width, bounds.Height));
+                _matchSize = FullResImage.Clone (x => x.Resize (Viewport.Width, Viewport.Height));
             }
 
-            for (var y = 0; y < bounds.Height; y++)
+            for (var y = 0; y < Viewport.Height; y++)
             {
-                for (var x = 0; x < bounds.Width; x++)
+                for (var x = 0; x < Viewport.Width; x++)
                 {
                     Rgba32 rgb = _matchSize [x, y];
 
@@ -682,8 +682,8 @@ public class Images : Scenario
         private (int columns, int rows) CalculateGridSize (Rectangle bounds)
         {
             // Characters are twice as wide as they are tall, so use 2:1 width-to-height ratio
-            int availableWidth = bounds.Width / 2; // Each color block is 2 character wide
-            int availableHeight = bounds.Height;
+            int availableWidth = Viewport.Width / 2; // Each color block is 2 character wide
+            int availableHeight = Viewport.Height;
 
             int numColors = _palette.Count;
 
@@ -701,7 +701,7 @@ public class Images : Scenario
             return (columns, rows);
         }
 
-        protected override bool OnDrawingContent (Rectangle bounds)
+        protected override bool OnDrawingContent ()
         {
             if (_palette == null || _palette.Count == 0)
             {
@@ -709,7 +709,7 @@ public class Images : Scenario
             }
 
             // Calculate the grid size based on the bounds
-            (int columns, int rows) = CalculateGridSize (bounds);
+            (int columns, int rows) = CalculateGridSize (Viewport);
 
             // Draw the colors in the palette
             for (var i = 0; i < _palette.Count && i < columns * rows; i++)

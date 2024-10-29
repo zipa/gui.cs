@@ -769,7 +769,7 @@ public class ListView : View, IDesignable
     }
 
     /// <inheritdoc/>
-    protected override bool OnDrawingContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
         Attribute current = ColorScheme?.Focus ?? Attribute.Default;
         SetAttribute (current);

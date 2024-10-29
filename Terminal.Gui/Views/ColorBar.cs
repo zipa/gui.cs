@@ -82,7 +82,7 @@ internal abstract class ColorBar : View, IColorBar
     }
 
     /// <inheritdoc/>
-    protected override bool OnDrawingContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
         var xOffset = 0;
 
@@ -96,7 +96,7 @@ internal abstract class ColorBar : View, IColorBar
             xOffset = Text.EnumerateRunes ().Sum (c => c.GetColumns ());
         }
 
-        _barWidth = viewport.Width - xOffset;
+        _barWidth = Viewport.Width - xOffset;
         _barStartsAt = xOffset;
 
         DrawBar (xOffset, 0, _barWidth);

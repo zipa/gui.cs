@@ -15,7 +15,7 @@ public class Region : IDisposable
     ///     Initializes a new instance of the <see cref="Region"/> class with the specified rectangle.
     /// </summary>
     /// <param name="rectangle">The initial rectangle for the region.</param>
-    public Region (Rectangle rectangle) { _rectangles = new() { rectangle }; }
+    public Region (Rectangle rectangle) { _rectangles = new () { rectangle }; }
 
     /// <summary>
     ///     Adds the specified rectangle to the region.
@@ -168,6 +168,20 @@ public class Region : IDisposable
     /// </summary>
     /// <returns>An array of <see cref="Rectangle"/> objects that make up the region.</returns>
     public Rectangle [] GetRegionScans () { return _rectangles.ToArray (); }
+
+    /// <summary>
+    ///     Offsets all rectangles in the region by the specified amounts.
+    /// </summary>
+    /// <param name="offsetX">The amount to offset along the x-axis.</param>
+    /// <param name="offsetY">The amount to offset along the y-axis.</param>
+    public void Offset (int offsetX, int offsetY)
+    {
+        for (int i = 0; i < _rectangles.Count; i++)
+        {
+            var rect = _rectangles [i];
+            _rectangles [i] = new Rectangle (rect.Left + offsetX, rect.Top + offsetY, rect.Width, rect.Height);
+        }
+    }
 
     /// <summary>
     ///     Merges overlapping rectangles into a minimal set of non-overlapping rectangles.

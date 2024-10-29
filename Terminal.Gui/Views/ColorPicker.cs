@@ -99,7 +99,7 @@ public partial class ColorPicker : View
     public event EventHandler<ColorEventArgs>? ColorChanged;
 
     /// <inheritdoc/>
-    protected override bool OnDrawingContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
         Attribute normal = GetNormalColor ();
         SetAttribute (new (SelectedColor, normal.Background));

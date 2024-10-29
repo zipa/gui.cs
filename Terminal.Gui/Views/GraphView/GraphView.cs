@@ -197,7 +197,7 @@ public class GraphView : View, IDesignable
     }
 
     ///<inheritdoc/>
-    protected override bool OnDrawingContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
         if (CellSize.X == 0 || CellSize.Y == 0)
         {

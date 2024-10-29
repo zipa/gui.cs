@@ -183,10 +183,10 @@ public class SpinnerView : View, IDesignable
     }
 
     /// <inheritdoc />
-    protected override bool OnClearingViewport (Rectangle viewport) { return true; }
+    protected override bool OnClearingViewport () { return true; }
 
     /// <inheritdoc />
-    protected override bool OnDrawingText (Rectangle viewport)
+    protected override bool OnDrawingText ()
     {
         if (Sequence is { Length: > 0 } && _currentIdx < Sequence.Length)
         {

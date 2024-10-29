@@ -15,17 +15,30 @@ public sealed class SimpleDialog : Scenario
         Window appWindow = new ()
         {
             Title = GetQuitKeyAndName (),
+            BorderStyle = LineStyle.None
         };
+
+
+        appWindow.DrawingText += (s, e) =>
+                                 {
+                                     Application.Driver?.FillRect (appWindow.ViewportToScreen (appWindow.Viewport), '*');
+                                     e.Cancel = true;
+                                 };
 
         Dialog dialog = new () { Id = "dialog", Width = 20, Height = 4, Title = "Dialog" };
         dialog.Arrangement |= ViewArrangement.Resizable;
 
         var button = new Button
         {
-            Id = "button", X = Pos.Center (), Y = 1, Text = "_Press me!",
-            WantContinuousButtonPressed = false,
+            Id = "button", 
+            X = 0,
+            Y = 0, 
+            NoDecorations = true,
+            NoPadding = true,
+            Text = "A",
+            //WantContinuousButtonPressed = false,
             HighlightStyle = HighlightStyle.None,
-            ShadowStyle = ShadowStyle.None,
+            ShadowStyle = ShadowStyle.Transparent,
         };
 
         button.Accepting += (s, e) =>
@@ -34,7 +47,7 @@ public sealed class SimpleDialog : Scenario
                                 e.Cancel = true;
                             };
         appWindow.Add (button);
-        
+
         // Run - Start the application.
         Application.Run (appWindow);
         dialog.Dispose ();

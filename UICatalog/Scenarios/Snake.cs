@@ -314,7 +314,7 @@ public class Snake : Scenario
 
         public SnakeState State { get; }
 
-        protected override bool OnDrawingContent (Rectangle viewport)
+        protected override bool OnDrawingContent ()
         {
             SetAttribute (white);
             ClearViewport ();

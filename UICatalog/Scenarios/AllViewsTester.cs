@@ -171,7 +171,7 @@ public class AllViewsTester : Scenario
 
         _settingsPane.Add (label, _demoTextView);
 
-        _eventLog = new()
+        _eventLog = new ()
         {
             // X = Pos.Right(_layoutEditor)
         };
@@ -254,7 +254,7 @@ public class AllViewsTester : Scenario
 
         // Instantiate view
         var view = (View)Activator.CreateInstance (type)!;
-        _eventLog!.ViewToLog = _curView;
+        _eventLog!.ViewToLog = view;
 
         if (view is IDesignable designable)
         {

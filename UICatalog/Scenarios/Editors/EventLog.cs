@@ -22,7 +22,7 @@ public class EventLog : ListView
 
         X = Pos.AnchorEnd ();
         Y = 0;
-        Width = Dim.Func (() => Math.Min (SuperView!.Viewport.Width / 2, MaxLength + GetAdornmentsThickness ().Horizontal));
+        Width = Dim.Func (() => Math.Min (SuperView!.Viewport.Width / 3, MaxLength + GetAdornmentsThickness ().Horizontal));
         Height = Dim.Fill ();
 
         ExpandButton = new ()

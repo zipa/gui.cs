@@ -116,7 +116,7 @@ public partial class View
             return;
         }
 
-        Region prevClip = SetClip ();
+        Region prevClip = SetClipToViewport ();
         Rectangle toClear = ViewportToScreen (rect);
         Attribute prev = SetAttribute (new (color ?? GetNormalColor ().Background));
         Driver.FillRect (toClear);
