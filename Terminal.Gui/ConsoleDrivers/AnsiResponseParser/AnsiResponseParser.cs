@@ -2,25 +2,25 @@
 
 namespace Terminal.Gui;
 
-
 internal abstract class AnsiResponseParserBase : IAnsiResponseParser
 {
-    protected object lockExpectedResponses = new object();
+    protected object lockExpectedResponses = new ();
 
-    protected object lockState = new object ();
+    protected object lockState = new ();
+
     /// <summary>
-    /// Responses we are expecting to come in.
+    ///     Responses we are expecting to come in.
     /// </summary>
     protected readonly List<AnsiResponseExpectation> expectedResponses = new ();
 
     /// <summary>
-    /// Collection of responses that we <see cref="StopExpecting"/>.
+    ///     Collection of responses that we <see cref="StopExpecting"/>.
     /// </summary>
     protected readonly List<AnsiResponseExpectation> lateResponses = new ();
 
     /// <summary>
-    /// Responses that you want to look out for that will come in continuously e.g. mouse events.
-    /// Key is the terminator.
+    ///     Responses that you want to look out for that will come in continuously e.g. mouse events.
+    ///     Key is the terminator.
     /// </summary>
     protected readonly List<AnsiResponseExpectation> persistentExpectations = new ();
 
@@ -47,21 +47,20 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     // These all are valid terminators on ansi responses,
     // see CSI in https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h3-Functions-using-CSI-_-ordered-by-the-final-character_s
     // No - N or O
-    protected readonly HashSet<char> _knownTerminators = new (new []
-    {
-        '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
-        // No - N or O
-        'P', 'Q', 'R', 'S', 'T', 'W', 'X', 'Z',
-        '^', '`', '~',
-        'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
-        'l', 'm', 'n',
-        'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
-    });
+    protected readonly HashSet<char> _knownTerminators = new (
+                                                              new []
+                                                              {
+                                                                  '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
 
-    protected AnsiResponseParserBase (IHeld heldContent)
-    {
-        this.heldContent = heldContent;
-    }
+                                                                  // No - N or O
+                                                                  'P', 'Q', 'R', 'S', 'T', 'W', 'X', 'Z',
+                                                                  '^', '`', '~',
+                                                                  'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
+                                                                  'l', 'm', 'n',
+                                                                  'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
+                                                              });
+
+    protected AnsiResponseParserBase (IHeld heldContent) { this.heldContent = heldContent; }
 
     protected void ResetState ()
     {
@@ -187,8 +186,8 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
             if (MatchResponse (
                                cur,
                                expectedResponses,
-                               invokeCallback: true,
-                               removeExpectation: true))
+                               true,
+                               true))
             {
                 return false;
             }
@@ -197,8 +196,8 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
             if (MatchResponse (
                                cur,
                                lateResponses,
-                               invokeCallback: false,
-                               removeExpectation: true))
+                               false,
+                               true))
             {
                 return false;
             }
@@ -207,8 +206,8 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
             if (MatchResponse (
                                cur,
                                persistentExpectations,
-                               invokeCallback: true,
-                               removeExpectation: false))
+                               true,
+                               false))
             {
                 return false;
             }
@@ -222,11 +221,12 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
             State = AnsiResponseParserState.Normal;
 
             // Maybe swallow anyway if user has custom delegate
-            var swallow =  ShouldSwallowUnexpectedResponse ();
+            bool swallow = ShouldSwallowUnexpectedResponse ();
 
             if (swallow)
             {
                 heldContent.ClearHeld ();
+
                 // Do not send back to input stream
                 return false;
             }
@@ -239,14 +239,15 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     }
 
     /// <summary>
-    /// <para>
-    /// When overriden in a derived class, indicates whether the unexpected response
-    /// currently in <see cref="heldContent"/> should be released or swallowed.
-    /// Use this to enable default event for escape codes.
-    /// </para>
-    /// 
-    /// <remarks>Note this is only called for complete responses.
-    /// Based on <see cref="_knownTerminators"/></remarks>
+    ///     <para>
+    ///         When overriden in a derived class, indicates whether the unexpected response
+    ///         currently in <see cref="heldContent"/> should be released or swallowed.
+    ///         Use this to enable default event for escape codes.
+    ///     </para>
+    ///     <remarks>
+    ///         Note this is only called for complete responses.
+    ///         Based on <see cref="_knownTerminators"/>
+    ///     </remarks>
     /// </summary>
     /// <returns></returns>
     protected abstract bool ShouldSwallowUnexpectedResponse ();
@@ -254,7 +255,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     private bool MatchResponse (string cur, List<AnsiResponseExpectation> collection, bool invokeCallback, bool removeExpectation)
     {
         // Check for expected responses
-        var matchingResponse = collection.FirstOrDefault (r => r.Matches (cur));
+        AnsiResponseExpectation? matchingResponse = collection.FirstOrDefault (r => r.Matches (cur));
 
         if (matchingResponse?.Response != null)
         {
@@ -262,6 +263,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
             {
                 matchingResponse.Response.Invoke (heldContent);
             }
+
             ResetState ();
 
             if (removeExpectation)
@@ -275,23 +277,23 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
         return false;
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public void ExpectResponse (string terminator, Action<string> response, bool persistent)
     {
         lock (lockExpectedResponses)
         {
             if (persistent)
             {
-                persistentExpectations.Add (new (terminator, (h) => response.Invoke (h.HeldToString ())));
+                persistentExpectations.Add (new (terminator, h => response.Invoke (h.HeldToString ())));
             }
             else
             {
-                expectedResponses.Add (new (terminator, (h) => response.Invoke (h.HeldToString ())));
+                expectedResponses.Add (new (terminator, h => response.Invoke (h.HeldToString ())));
             }
         }
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public bool IsExpecting (string terminator)
     {
         lock (lockExpectedResponses)
@@ -301,10 +303,9 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
         }
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public void StopExpecting (string terminator, bool persistent)
     {
-
         lock (lockExpectedResponses)
         {
             if (persistent)
@@ -313,9 +314,9 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
             }
             else
             {
-                var removed = expectedResponses.Where (r => r.Terminator == terminator).ToArray ();
+                AnsiResponseExpectation [] removed = expectedResponses.Where (r => r.Terminator == terminator).ToArray ();
 
-                foreach (var r in removed)
+                foreach (AnsiResponseExpectation r in removed)
                 {
                     expectedResponses.Remove (r);
                     lateResponses.Add (r);
@@ -329,14 +330,12 @@ internal class AnsiResponseParser<T> : AnsiResponseParserBase
 {
     public AnsiResponseParser () : base (new GenericHeld<T> ()) { }
 
-
     /// <inheritdoc cref="AnsiResponseParser.UnknownResponseHandler"/>
-    public Func<IEnumerable<Tuple<char, T>>, bool> UnexpectedResponseHandler { get; set; } = (_) => false;
-
+    public Func<IEnumerable<Tuple<char, T>>, bool> UnexpectedResponseHandler { get; set; } = _ => false;
 
     public IEnumerable<Tuple<char, T>> ProcessInput (params Tuple<char, T> [] input)
     {
-        List<Tuple<char, T>> output = new List<Tuple<char, T>> ();
+        List<Tuple<char, T>> output = new ();
 
         ProcessInputBase (
                           i => input [i].Item1,
@@ -352,64 +351,57 @@ internal class AnsiResponseParser<T> : AnsiResponseParserBase
         // Lock in case Release is called from different Thread from parse
         lock (lockState)
         {
-            foreach (Tuple<char, T> h in HeldToEnumerable())
+            foreach (Tuple<char, T> h in HeldToEnumerable ())
             {
                 yield return h;
             }
 
             ResetState ();
         }
-
     }
 
-    private IEnumerable<Tuple<char, T>> HeldToEnumerable ()
-    {
-        return (IEnumerable<Tuple<char, T>>)heldContent.HeldToObjects ();
-    }
+    private IEnumerable<Tuple<char, T>> HeldToEnumerable () { return (IEnumerable<Tuple<char, T>>)heldContent.HeldToObjects (); }
 
     /// <summary>
-    /// 'Overload' for specifying an expectation that requires the metadata as well as characters. Has
-    /// a unique name because otherwise most lamdas will give ambiguous overload errors.
+    ///     'Overload' for specifying an expectation that requires the metadata as well as characters. Has
+    ///     a unique name because otherwise most lamdas will give ambiguous overload errors.
     /// </summary>
     /// <param name="terminator"></param>
     /// <param name="response"></param>
     /// <param name="persistent"></param>
-    public void ExpectResponseT (string terminator, Action<IEnumerable<Tuple<char,T>>> response, bool persistent)
+    public void ExpectResponseT (string terminator, Action<IEnumerable<Tuple<char, T>>> response, bool persistent)
     {
         lock (lockExpectedResponses)
         {
             if (persistent)
             {
-                persistentExpectations.Add (new (terminator, (h) => response.Invoke (HeldToEnumerable ())));
+                persistentExpectations.Add (new (terminator, h => response.Invoke (HeldToEnumerable ())));
             }
             else
             {
-                expectedResponses.Add (new (terminator, (h) => response.Invoke (HeldToEnumerable ())));
+                expectedResponses.Add (new (terminator, h => response.Invoke (HeldToEnumerable ())));
             }
         }
     }
 
-    /// <inheritdoc />
-    protected override bool ShouldSwallowUnexpectedResponse ()
-    {
-        return UnexpectedResponseHandler.Invoke (HeldToEnumerable ());
-    }
+    /// <inheritdoc/>
+    protected override bool ShouldSwallowUnexpectedResponse () { return UnexpectedResponseHandler.Invoke (HeldToEnumerable ()); }
 }
 
 internal class AnsiResponseParser : AnsiResponseParserBase
 {
     /// <summary>
-    /// <para>
-    /// Delegate for handling unrecognized escape codes. Default behaviour
-    /// is to return <see langword="false"/> which simply releases the
-    /// characters back to input stream for downstream processing.
-    /// </para>
-    /// <para>
-    /// Implement a method to handle if you want and return <see langword="true"/> if you want the
-    /// keystrokes 'swallowed' (i.e. not returned to input stream).
-    /// </para>
+    ///     <para>
+    ///         Delegate for handling unrecognized escape codes. Default behaviour
+    ///         is to return <see langword="false"/> which simply releases the
+    ///         characters back to input stream for downstream processing.
+    ///     </para>
+    ///     <para>
+    ///         Implement a method to handle if you want and return <see langword="true"/> if you want the
+    ///         keystrokes 'swallowed' (i.e. not returned to input stream).
+    ///     </para>
     /// </summary>
-    public Func<string, bool> UnknownResponseHandler { get; set; } = (_) => false;
+    public Func<string, bool> UnknownResponseHandler { get; set; } = _ => false;
 
     public AnsiResponseParser () : base (new StringHeld ()) { }
 
@@ -430,16 +422,13 @@ internal class AnsiResponseParser : AnsiResponseParserBase
     {
         lock (lockState)
         {
-            var output = heldContent.HeldToString ();
+            string output = heldContent.HeldToString ();
             ResetState ();
 
             return output;
         }
     }
 
-    /// <inheritdoc />
-    protected override bool ShouldSwallowUnexpectedResponse ()
-    {
-        return UnknownResponseHandler.Invoke (heldContent.HeldToString ());
-    }
+    /// <inheritdoc/>
+    protected override bool ShouldSwallowUnexpectedResponse () { return UnknownResponseHandler.Invoke (heldContent.HeldToString ()); }
 }
