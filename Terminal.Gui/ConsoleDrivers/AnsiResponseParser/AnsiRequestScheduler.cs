@@ -3,8 +3,17 @@ using System.Collections.Concurrent;
 
 namespace Terminal.Gui;
 
-public class AnsiRequestScheduler (IAnsiResponseParser parser)
+/// <summary>
+/// Manages <see cref="AnsiEscapeSequenceRequest"/> made to an <see cref="IAnsiResponseParser"/>.
+/// Ensures there are not 2+ outstanding requests with the same terminator, throttles request sends
+/// to prevent console becoming unresponsive and handles evicting ignored requests (no reply from
+/// terminal).
+/// </summary>
+internal class AnsiRequestScheduler
 {
+    private readonly IAnsiResponseParser _parser;
+    private readonly Func<DateTime> _now;
+
     private readonly List<Tuple<AnsiEscapeSequenceRequest, DateTime>> _requests = new ();
 
     /// <summary>
@@ -19,8 +28,12 @@ public class AnsiRequestScheduler (IAnsiResponseParser parser)
     /// queued).
     /// </para>
     /// </summary>
-    private ConcurrentDictionary<string, DateTime> _lastSend = new ();
+    private readonly ConcurrentDictionary<string, DateTime> _lastSend = new ();
 
+    /// <summary>
+    /// Number of milliseconds after sending a request that we allow
+    /// another request to go out.
+    /// </summary>
     private TimeSpan _throttle = TimeSpan.FromMilliseconds (100);
     private TimeSpan _runScheduleThrottle = TimeSpan.FromMilliseconds (100);
 
@@ -31,6 +44,14 @@ public class AnsiRequestScheduler (IAnsiResponseParser parser)
     /// </summary>
     private TimeSpan _staleTimeout = TimeSpan.FromSeconds (5);
 
+
+    private DateTime _lastRun;
+    public AnsiRequestScheduler (IAnsiResponseParser parser, Func<DateTime>? now = null)
+    {
+        _parser = parser;
+        _now = now ?? (() => DateTime.Now);
+        _lastRun = _now ();
+    }
     /// <summary>
     /// Sends the <paramref name="request"/> immediately or queues it if there is already
     /// an outstanding request for the given <see cref="AnsiEscapeSequenceRequest.Terminator"/>.
@@ -50,7 +71,7 @@ public class AnsiRequestScheduler (IAnsiResponseParser parser)
         {
             EvictStaleRequests (request.Terminator);
 
-            // Try again after 
+            // Try again after evicting
             if (CanSend (request, out _))
             {
                 Send (request);
@@ -58,7 +79,7 @@ public class AnsiRequestScheduler (IAnsiResponseParser parser)
             }
         }
 
-        _requests.Add (Tuple.Create (request, DateTime.Now));
+        _requests.Add (Tuple.Create (request, _now()));
         return false;
     }
 
@@ -73,9 +94,9 @@ public class AnsiRequestScheduler (IAnsiResponseParser parser)
     {
         if (_lastSend.TryGetValue (withTerminator, out var dt))
         {
-            if (DateTime.Now - dt > _staleTimeout)
+            if (_now() - dt > _staleTimeout)
             {
-                parser.StopExpecting (withTerminator, false);
+                _parser.StopExpecting (withTerminator, false);
 
                 return true;
             }
@@ -84,7 +105,6 @@ public class AnsiRequestScheduler (IAnsiResponseParser parser)
         return false;
     }
 
-    private DateTime _lastRun = DateTime.Now;
 
     /// <summary>
     /// Identifies and runs any <see cref="_requests"/> that can be sent based on the
@@ -96,7 +116,7 @@ public class AnsiRequestScheduler (IAnsiResponseParser parser)
     /// if no outstanding requests or all have existing outstanding requests underway in parser.</returns>
     public bool RunSchedule (bool force = false)
     {
-        if (!force && DateTime.Now - _lastRun < _runScheduleThrottle)
+        if (!force && _now() - _lastRun < _runScheduleThrottle)
         {
             return false;
         }
@@ -116,8 +136,8 @@ public class AnsiRequestScheduler (IAnsiResponseParser parser)
 
     private void Send (AnsiEscapeSequenceRequest r)
     {
-        _lastSend.AddOrUpdate (r.Terminator, (s) => DateTime.Now, (s, v) => DateTime.Now);
-        parser.ExpectResponse (r.Terminator, r.ResponseReceived, false);
+        _lastSend.AddOrUpdate (r.Terminator, _=>_now(), (_, _) => _now());
+        _parser.ExpectResponse (r.Terminator, r.ResponseReceived, false);
         r.Send ();
     }
 
@@ -129,7 +149,7 @@ public class AnsiRequestScheduler (IAnsiResponseParser parser)
             return false;
         }
 
-        if (parser.IsExpecting (r.Terminator))
+        if (_parser.IsExpecting (r.Terminator))
         {
             reason = ReasonCannotSend.OutstandingRequest;
             return false;
@@ -143,7 +163,7 @@ public class AnsiRequestScheduler (IAnsiResponseParser parser)
     {
         if (_lastSend.TryGetValue (r.Terminator, out DateTime value))
         {
-            return DateTime.Now - value < _throttle;
+            return _now() - value < _throttle;
         }
 
         return false;
