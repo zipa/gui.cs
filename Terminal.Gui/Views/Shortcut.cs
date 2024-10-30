@@ -762,6 +762,8 @@ public class Shortcut : View, IOrientation, IDesignable
             };
             KeyView.ColorScheme = cs;
         }
+
+        CommandView.Margin.ColorScheme = base.ColorScheme;
     }
 
     /// <inheritdoc/>

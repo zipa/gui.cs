@@ -46,6 +46,9 @@ public partial class View // Adornments
     /// </summary>
     /// <remarks>
     ///     <para>
+    ///         The margin is typically transparent. This can be overriden by explicitly setting <see cref="ColorScheme"/>.
+    ///     </para>
+    ///     <para>
     ///         Enabling <see cref="ShadowStyle"/> will change the Thickness of the Margin to include the shadow.
     ///     </para>
     ///     <para>

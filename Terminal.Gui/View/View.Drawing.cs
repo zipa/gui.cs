@@ -25,23 +25,8 @@ public partial class View // Drawing APIs
         Region? saved = null;
         if (CanBeVisible (this) && (NeedsDraw || SubViewNeedsDraw))
         {
-            if (Border is { Diagnostics: ViewDiagnosticFlags.DrawIndicator })
-            {
-                if (Border.DrawIndicator is { })
-                {
-                    Border.DrawIndicator.AdvanceAnimation (false);
-                    Border.DrawIndicator.DrawText ();
-
-                }
-            }
-
-            // Frame/View-relative relative, thus the bounds location should be 0,0
-            //Debug.Assert(clipRegion.GetBounds().X == 0 && clipRegion.GetBounds ().Y == 0);
-
             saved = SetClipToFrame ();
             DoDrawAdornments ();
-            DoSetAttribute ();
-
             Application.SetClip (saved);
 
             // By default, we clip to the viewport preventing drawing outside the viewport
@@ -51,19 +36,34 @@ public partial class View // Drawing APIs
 
             saved = SetClipToViewport ();
 
+            DoSetAttribute ();
+            DoDrawSubviews ();
+
+            DoSetAttribute ();
             DoClearViewport ();
+
+            DoSetAttribute ();
             DoDrawText ();
+
+            DoSetAttribute ();
             DoDrawContent ();
 
-            DoDrawSubviews ();
 
             // Restore the clip before rendering the line canvas and adornment subviews
             // because they may draw outside the viewport.
             Application.SetClip (saved);
 
             saved = SetClipToFrame ();
+
             DoRenderLineCanvas ();
             DoDrawAdornmentSubViews ();
+
+            if (Border is { Diagnostics: ViewDiagnosticFlags.DrawIndicator, DrawIndicator: { } })
+            {
+                Border.DrawIndicator.AdvanceAnimation (false);
+                Border.DrawIndicator.Render ();
+            }
+
             ClearNeedsDraw ();
         }
 
@@ -71,7 +71,8 @@ public partial class View // Drawing APIs
         DoDrawComplete ();
         Application.SetClip (saved);
 
-        if (this is not Adornment && Driver?.Clip is {})
+
+        if (this is not Adornment && Driver?.Clip is { })
         {
             Application.ExcludeFromClip (FrameToScreen ());
         }
@@ -454,7 +455,7 @@ public partial class View // Drawing APIs
         IEnumerable<View> subviewsNeedingDraw = _subviews.Where (view => (view.Visible));
 #endif
 
-        foreach (View view in subviewsNeedingDraw.Reverse())
+        foreach (View view in subviewsNeedingDraw.Reverse ())
         {
 #if HACK_DRAW_OVERLAPPED
             if (view.Arrangement.HasFlag (ViewArrangement.Overlapped))

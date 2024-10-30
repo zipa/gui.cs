@@ -1,9 +1,17 @@
 ﻿#nullable enable
 
+using Microsoft.VisualBasic;
+using static Terminal.Gui.SpinnerStyle;
+using static Unix.Terminal.Curses;
+using System.Text;
+
 namespace Terminal.Gui;
 
 /// <summary>The Margin for a <see cref="View"/>. Accessed via <see cref="View.Margin"/></summary>
 /// <remarks>
+///     <para>
+///         The margin is typically transparent. This can be overriden by explicitly setting <see cref="ColorScheme"/>.
+///     </para>
 ///     <para>See the <see cref="Adornment"/> class.</para>
 /// </remarks>
 public class Margin : Adornment
@@ -70,6 +78,7 @@ public class Margin : Adornment
     /// <inheritdoc />
     protected override bool OnClearingViewport ()
     {
+        return ColorScheme is null;
         if (Thickness == Thickness.Empty)
         {
             return true;
@@ -86,6 +95,25 @@ public class Margin : Adornment
         // This just draws/clears the thickness, not the insides.
         Thickness.Draw (screen, Diagnostics, ToString ());
 
+        return true;
+    }
+
+    /// <inheritdoc />
+    protected override bool OnDrawingContent ()
+    {
+        Rectangle screen = FrameToScreen();
+        for (int r = 0; r < screen.Height; r++)
+        {
+            for (int c = 0; c < screen.Width; c++)
+            {
+                Driver?.Move (c, r);
+
+                if (Driver?.Contents is { } && c < Driver.Contents.GetLength (1) && r < Driver.Contents.GetLength (0))
+                {
+                    Driver.AddRune (Driver.Contents [r, c].Rune);
+                }
+            }
+        }
         return true;
     }
 

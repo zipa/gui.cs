@@ -17,8 +17,15 @@ public class AdvancedClipping : Scenario
         Window app = new ()
         {
             Title = GetQuitKeyAndName (),
-            BorderStyle = LineStyle.None
+            //BorderStyle = LineStyle.None
         };
+
+        app.DrawingText += (s, e) =>
+                           {
+                               Application.Driver?.FillRect (app.ViewportToScreen (app.Viewport), CM.Glyphs.Dot);
+                               //app.SetSubViewNeedsDraw();
+                               e.Cancel = true;
+                           };
 
         //var arrangementEditor = new ArrangementEditor()
         //{
@@ -30,26 +37,27 @@ public class AdvancedClipping : Scenario
 
         View tiledView1 = CreateTiledView (1, 0, 0);
 
-
         ProgressBar tiledProgressBar = new ()
         {
             X = 0,
-            Y = 1,
+            Y = Pos.AnchorEnd(),
             Width = Dim.Fill (),
             Id = "tiledProgressBar",
+            BidirectionalMarquee = true,
+            ProgressBarStyle = ProgressBarStyle.MarqueeBlocks
            // BorderStyle = LineStyle.Rounded
         };
         tiledView1.Add (tiledProgressBar);
 
-        View tiledView2 = CreateTiledView (2, 2, 2);
+        View tiledView2 = CreateTiledView (2, 4, 2);
 
         app.Add (tiledView1);
         app.Add (tiledView2);
 
-        //View tiledView3 = CreateTiledView (3, 6, 6);
-        //app.Add (tiledView3);
+        View tiledView3 = CreateTiledView (3, 8, 4);
+        app.Add (tiledView3);
 
-        //using View overlappedView1 = CreateOverlappedView (1, 30, 2);
+        // View overlappedView1 = CreateOverlappedView (1, 30, 2);
 
         //ProgressBar progressBar = new ()
         //{
@@ -69,23 +77,15 @@ public class AdvancedClipping : Scenario
         //app.Add (overlappedView2);
         //app.Add (overlappedView3);
 
-        Timer progressTimer = new Timer (250)
+        Timer progressTimer = new Timer (150)
         {
             AutoReset = true
         };
 
         progressTimer.Elapsed += (s, e) =>
                                  {
-
-                                     if (tiledProgressBar.Fraction == 1.0)
-                                     {
-                                         tiledProgressBar.Fraction = 0;
-                                     }
-
+                                     tiledProgressBar.Pulse();
                                      Application.Wakeup ();
-
-                                     tiledProgressBar.Fraction += 0.1f;
-                                    // tiledProgressBar.SetNeedsDraw ();
                                  };
 
         progressTimer.Start ();
@@ -123,8 +123,8 @@ public class AdvancedClipping : Scenario
         {
             X = x,
             Y = y,
-            Height = Dim.Auto (minimumContentDim: 4),
-            Width = Dim.Auto (minimumContentDim: 14),
+            Height = Dim.Auto (minimumContentDim: 8),
+            Width = Dim.Auto (minimumContentDim: 15),
             Title = $"Tiled{id} _{GetNextHotKey ()}",
             Id = $"Tiled{id}",
             Text = $"Tiled{id}",
@@ -133,14 +133,16 @@ public class AdvancedClipping : Scenario
             TabStop = TabBehavior.TabStop,
             Arrangement = ViewArrangement.Movable | ViewArrangement.Resizable
         };
-        tiled.Padding.Thickness = new (1);
-        tiled.Padding.Diagnostics =  ViewDiagnosticFlags.Thickness;
+        //tiled.Padding.Thickness = new (1);
+        //tiled.Padding.Diagnostics =  ViewDiagnosticFlags.Thickness;
+
+        tiled.Margin.Thickness = new (1);
 
         FrameView fv = new ()
         {
             Title = "FrameView",
             Width = 15,
-            Height = 1,
+            Height = 3,
         };
         tiled.Add (fv);
         

@@ -64,6 +64,39 @@ public class Border : Adornment
 
         HighlightStyle |= HighlightStyle.Pressed;
         Highlight += Border_Highlight;
+
+        ThicknessChanged += OnThicknessChanged;
+    }
+
+    private void OnThicknessChanged (object? sender, EventArgs e)
+    {
+        if (IsInitialized)
+        {
+            ShowHideDrawIndicator();
+        }
+    }
+
+    private void ShowHideDrawIndicator ()
+    {
+        if (View.Diagnostics.HasFlag (ViewDiagnosticFlags.DrawIndicator) && Thickness != Thickness.Empty)
+        {
+            if (DrawIndicator is null)
+            {
+                DrawIndicator = new SpinnerView ()
+                {
+                    X = 1,
+                    Style = new SpinnerStyle.Dots2 (),
+                    SpinDelay = 0,
+                };
+                Add (DrawIndicator);
+            }
+        }
+        else if (DrawIndicator is { })
+        {
+            Remove (DrawIndicator);
+            DrawIndicator!.Dispose ();
+            DrawIndicator = null;
+        }
     }
 
 #if SUBVIEW_BASED_BORDER
@@ -80,6 +113,7 @@ public class Border : Adornment
     {
         base.BeginInit ();
 
+        ShowHideDrawIndicator ();
 #if SUBVIEW_BASED_BORDER
         if (Parent is { })
         {
@@ -105,16 +139,6 @@ public class Border : Adornment
             LayoutStarted += OnLayoutStarted;
     }
 #endif
-        if (View.Diagnostics.HasFlag (ViewDiagnosticFlags.DrawIndicator))
-        {
-            DrawIndicator = new SpinnerView ()
-            {
-                X = 1,
-                Style = new SpinnerStyle.Dots2 (),
-                SpinDelay = 0,
-            };
-            Add (DrawIndicator);
-        }
     }
 
 #if SUBVIEW_BASED_BORDER

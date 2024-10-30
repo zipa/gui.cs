@@ -437,8 +437,8 @@ public abstract class ConsoleDriver
     /// </returns>
     public virtual bool IsRuneSupported (Rune rune) { return Rune.IsValid (rune.Value); }
 
-    /// <summary>Tests whether the specified coordinate are valid for drawing.</summary>
-    /// <param name="rune"></param>
+    /// <summary>Tests whether the specified coordinate are valid for drawing the specified Rune.</summary>
+    /// <param name="rune">Used to determine if one or two columns are required.</param>
     /// <param name="col">The column.</param>
     /// <param name="row">The row.</param>
     /// <returns>

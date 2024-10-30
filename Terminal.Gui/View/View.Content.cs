@@ -170,7 +170,6 @@ public partial class View
     public Point ContentToScreen (in Point location)
     {
         // Subtract the ViewportOffsetFromFrame to get the Viewport-relative location.
-        Point viewportOffset = GetViewportOffsetFromFrame ();
         Point contentRelativeToViewport = location;
         contentRelativeToViewport.Offset (-Viewport.X, -Viewport.Y);
 

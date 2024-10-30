@@ -186,14 +186,22 @@ public class SpinnerView : View, IDesignable
     protected override bool OnClearingViewport () { return true; }
 
     /// <inheritdoc />
-    protected override bool OnDrawingText ()
+    protected override bool OnDrawingContent ()
+    {
+        Render ();
+        return true;
+    }
+
+    /// <summary>
+    ///    Renders the current frame of the spinner.
+    /// </summary>
+    public void Render ()
     {
         if (Sequence is { Length: > 0 } && _currentIdx < Sequence.Length)
         {
             Move (Viewport.X, Viewport.Y);
             View.Driver?.AddStr (Sequence [_currentIdx]);
         }
-        return true;
     }
 
     /// <inheritdoc/>
