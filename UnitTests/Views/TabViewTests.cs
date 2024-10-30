@@ -677,6 +677,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         tv.SelectedTab = tab2;
 
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -695,6 +696,7 @@ public class TabViewTests (ITestOutputHelper output)
         tab1.DisplayText = "12345678910";
         tab2.DisplayText = "13";
 
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -709,6 +711,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         //switch to tab2
         tv.SelectedTab = tab2;
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -725,6 +728,7 @@ public class TabViewTests (ITestOutputHelper output)
         tab1.DisplayText = "12345678910";
         tab2.DisplayText = "abcdefghijklmnopq";
 
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -749,6 +753,7 @@ public class TabViewTests (ITestOutputHelper output)
         tv.ApplyStyleChanges ();
         tv.LayoutSubviews ();
 
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -802,6 +807,7 @@ public class TabViewTests (ITestOutputHelper output)
         // Test two tab names that fit 
         tab1.DisplayText = "12";
         tab2.DisplayText = "13";
+        Application.ClipToScreen ();
 
         tv.Draw ();
 
@@ -817,6 +823,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         tv.SelectedTab = tab2;
 
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -835,6 +842,7 @@ public class TabViewTests (ITestOutputHelper output)
         tab1.DisplayText = "12345678910";
         tab2.DisplayText = "13";
 
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -849,6 +857,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         //switch to tab2
         tv.SelectedTab = tab2;
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -865,6 +874,7 @@ public class TabViewTests (ITestOutputHelper output)
         tab1.DisplayText = "12345678910";
         tab2.DisplayText = "abcdefghijklmnopq";
 
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -887,6 +897,7 @@ public class TabViewTests (ITestOutputHelper output)
         tv.Height = 5;
         tv.Layout ();
 
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -909,6 +920,7 @@ public class TabViewTests (ITestOutputHelper output)
         tv.Height = 5;
         tv.Layout ();
 
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -937,6 +949,7 @@ public class TabViewTests (ITestOutputHelper output)
         tab1.DisplayText = "12";
         tab2.DisplayText = "13";
 
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -951,6 +964,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         tv.SelectedTab = tab2;
 
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -969,6 +983,7 @@ public class TabViewTests (ITestOutputHelper output)
         tab1.DisplayText = "12345678910";
         tab2.DisplayText = "13";
 
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -983,6 +998,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         //switch to tab2
         tv.SelectedTab = tab2;
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -999,6 +1015,7 @@ public class TabViewTests (ITestOutputHelper output)
         tab1.DisplayText = "12345678910";
         tab2.DisplayText = "abcdefghijklmnopq";
 
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -1026,6 +1043,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         tab2.DisplayText = "Les Mise" + char.ConvertFromUtf32 (int.Parse ("0301", NumberStyles.HexNumber)) + "rables";
 
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -1040,6 +1058,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         tv.SelectedTab = tab2;
 
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -1117,6 +1136,7 @@ public class TabViewTests (ITestOutputHelper output)
         // Test two tab names that fit 
         tab1.DisplayText = "12";
         tab2.DisplayText = "13";
+        Application.ClipToScreen ();
 
         tv.Draw ();
 
@@ -1134,6 +1154,7 @@ public class TabViewTests (ITestOutputHelper output)
         tab1.DisplayText = "12345678910";
         tab2.DisplayText = "13";
 
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -1148,6 +1169,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         //switch to tab2
         tv.SelectedTab = tab2;
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -1164,6 +1186,7 @@ public class TabViewTests (ITestOutputHelper output)
         tab1.DisplayText = "12345678910";
         tab2.DisplayText = "abcdefghijklmnopq";
 
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -1207,6 +1230,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         tv.SelectedTab = tab2;
 
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (

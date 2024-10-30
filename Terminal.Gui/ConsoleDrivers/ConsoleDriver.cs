@@ -128,7 +128,7 @@ public abstract class ConsoleDriver
     public void AddRune (Rune rune)
     {
         int runeWidth = -1;
-        bool validLocation = IsValidLocation (Col, Row);
+        bool validLocation = IsValidLocation (rune, Col, Row);
 
         if (Contents is null)
         {
@@ -231,11 +231,16 @@ public abstract class ConsoleDriver
                     }
                     else if (runeWidth == 2)
                     {
-                        if (Col == clipRect.Right - 1)
+                        if (!Clip.Contains (Col + 1, Row))
                         {
                             // We're at the right edge of the clip, so we can't display a wide character.
                             // TODO: Figure out if it is better to show a replacement character or ' '
                             Contents [Row, Col].Rune = Rune.ReplacementChar;
+                        }
+                        else if (!Clip.Contains (Col, Row))
+                        {
+                            // Our 1st column is outside the clip, so we can't display a wide character.
+                            Contents [Row, Col+1].Rune = Rune.ReplacementChar;
                         }
                         else
                         {
@@ -392,7 +397,7 @@ public abstract class ConsoleDriver
             {
                 for (int c = rect.X; c < rect.X + rect.Width; c++)
                 {
-                    if (!IsValidLocation (c, r))
+                    if (!IsValidLocation (rune, c, r))
                     {
                         continue;
                     }
@@ -433,15 +438,24 @@ public abstract class ConsoleDriver
     public virtual bool IsRuneSupported (Rune rune) { return Rune.IsValid (rune.Value); }
 
     /// <summary>Tests whether the specified coordinate are valid for drawing.</summary>
+    /// <param name="rune"></param>
     /// <param name="col">The column.</param>
     /// <param name="row">The row.</param>
     /// <returns>
     ///     <see langword="false"/> if the coordinate is outside the screen bounds or outside of <see cref="Clip"/>.
     ///     <see langword="true"/> otherwise.
     /// </returns>
-    public bool IsValidLocation (int col, int row)
+    public bool IsValidLocation (Rune rune, int col, int row)
     {
-        return col >= 0 && row >= 0 && col < Cols && row < Rows && Clip!.Contains (col, row);
+        if (rune.GetColumns () < 2)
+        {
+            return col >= 0 && row >= 0 && col < Cols && row < Rows && Clip!.Contains (col, row);
+        }
+        else
+        {
+
+            return Clip!.Contains (col, row) || Clip!.Contains (col + 1, row);
+        }
     }
 
     /// <summary>

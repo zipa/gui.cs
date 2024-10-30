@@ -292,63 +292,71 @@ public class DrawTests (ITestOutputHelper _output)
         top.Dispose ();
     }
 
-    // TODO: Refactor this test to not depend on TextView etc... Make it as primitive as possible
+    // TODO: Simplify this test to just use AddRune directly
     [Fact]
-    [AutoInitShutdown]
+    [SetupFakeDriver]
     [Trait ("Category", "Unicode")]
-    public void Clipping_AddRune_Left_Or_Right_Replace_Previous_Or_Next_Wide_Rune_With_Space ()
+    public void Clipping_Wide_Runes ()
     {
-        var tv = new TextView
+        ((FakeDriver)Application.Driver!).SetBufferSize (30, 1);
+
+        var top = new View ()
         {
+            Id = "top",
+            Width = Dim.Fill (),
+            Height = Dim.Fill (),
+        };
+        var frameView = new View ()
+        {
+            Id = "frameView",
             Width = Dim.Fill (),
             Height = Dim.Fill (),
             Text = """
                    これは広いルーンラインです。
-                   これは広いルーンラインです。
-                   これは広いルーンラインです。
-                   これは広いルーンラインです。
-                   これは広いルーンラインです。
-                   これは広いルーンラインです。
-                   これは広いルーンラインです。
-                   これは広いルーンラインです。
-                   """
+                   """,
         };
-        var win = new Window { Width = Dim.Fill (), Height = Dim.Fill () };
-        win.Add (tv);
-        var top = new Toplevel ();
-        top.Add (win);
+        frameView.Border.LineStyle = LineStyle.Single;
+        frameView.Border.Thickness = new (1, 0, 0, 0);
 
-        var view = new View { Text = "ワイドルーン。", Height = Dim.Fill (), Width = Dim.Fill () };
+        top.Add (frameView);
+        Application.ClipToScreen ();
+        top.Layout ();
+        top.Draw ();
 
-        // Don't have unit tests use things that aren't absolutely critical for the test, like Dialog
-        var dg = new Window { X = 2, Y = 2, Width = 14, Height = 3 };
-        dg.Add (view);
-        RunState rsTop = Application.Begin (top);
-        RunState rsDiag = Application.Begin (dg);
-        ((FakeDriver)Application.Driver!).SetBufferSize (30, 10);
-
-        const string expectedOutput = """
-
-                                      ┌────────────────────────────┐
-                                      │これは広いルーンラインです。│
-                                      │�┌────────────┐�ラインです。│
-                                      │�│ワイドルーン│�ラインです。│
-                                      │�└────────────┘�ラインです。│
-                                      │これは広いルーンラインです。│
-                                      │これは広いルーンラインです。│
-                                      │これは広いルーンラインです。│
-                                      │これは広いルーンラインです。│
-                                      └────────────────────────────┘
+        string expectedOutput = """
+                                      │これは広いルーンラインです。
                                       """;
 
-        Rectangle pos = TestHelpers.AssertDriverContentsWithFrameAre (expectedOutput, _output);
-        Assert.Equal (new (0, 0, 30, 10), pos);
+        TestHelpers.AssertDriverContentsWithFrameAre (expectedOutput, _output);
 
-        Application.End (rsDiag);
-        dg.Dispose ();
-        Application.End (rsTop);
-        top.Dispose ();
+        var view = new View
+        {
+            Text = "0123456789",
+            //Text = "ワイドルー。",
+            X = 2,
+            Height = Dim.Auto (),
+            Width = Dim.Auto (),
+            BorderStyle = LineStyle.Single
+        };
+        view.Border.Thickness = new (1, 0, 1, 0);
+
+        top.Add (view);
+        top.Layout ();
+        Application.ClipToScreen ();
+        top.Draw ();
+        //                            012345678901234567890123456789012345678
+        //                            012 34 56 78 90 12 34 56 78 90 12 34 56 78
+        //                            │こ れ  は 広 い  ル ー ン  ラ イ ン で  す 。
+        //                            01 2345678901234 56 78 90 12 34 56 
+        //                            │� |0123456989│� ン  ラ イ ン で  す 。
+        expectedOutput = """
+                         │�│0123456789│�ンラインです。
+                         """;
+
+        TestHelpers.AssertDriverContentsWithFrameAre (expectedOutput, _output);
     }
+
+    // TODO: Add more AddRune tests to cover all the cases where wide runes are clipped
 
     [Fact]
     [AutoInitShutdown]

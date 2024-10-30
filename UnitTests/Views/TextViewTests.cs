@@ -722,8 +722,8 @@ public class TextViewTests
         string envText = tv.Text;
         var top = new Toplevel ();
         top.Add (tv);
-        Application.Begin (top);
-        Application.LayoutAndDrawToplevels ();
+        RunState rs = Application.Begin (top);
+        Application.RunIteration (ref rs);
 
         Assert.False (tv.WordWrap);
         Assert.Equal (Point.Empty, tv.CursorPosition);
@@ -739,7 +739,7 @@ This is the second line.
         tv.CursorPosition = new Point (3, 0);
         Assert.Equal (new Point (3, 0), tv.CursorPosition);
         Assert.True (tv.NewKeyDownEvent (Key.Backspace));
-        tv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (new Point (2, 0), tv.CursorPosition);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -753,7 +753,7 @@ This is the second line.
         tv.CursorPosition = new Point (0, 1);
         Assert.Equal (new Point (0, 1), tv.CursorPosition);
         Assert.True (tv.NewKeyDownEvent (Key.Backspace));
-        tv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (new Point (22, 0), tv.CursorPosition);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -764,7 +764,7 @@ Ths is the first line.This is the second line.
                                                      );
 
         Assert.True (tv.NewKeyDownEvent (Key.Enter));
-        tv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (new Point (0, 1), tv.CursorPosition);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -780,6 +780,7 @@ This is the second line.
             Assert.True (tv.NewKeyDownEvent (Key.Z.WithCtrl));
         }
 
+        Application.RunIteration (ref rs);
         Assert.Equal (envText, tv.Text);
         Assert.Equal (new Point (3, 0), tv.CursorPosition);
         Assert.False (tv.IsDirty);
@@ -795,8 +796,8 @@ This is the second line.
         string envText = tv.Text;
         var top = new Toplevel ();
         top.Add (tv);
-        Application.Begin (top);
-        Application.LayoutAndDrawToplevels ();
+        RunState rs = Application.Begin (top);
+        Application.RunIteration (ref rs);
 
         Assert.True (tv.WordWrap);
         Assert.Equal (Point.Empty, tv.CursorPosition);
@@ -812,7 +813,7 @@ This is the second line.
         tv.CursorPosition = new Point (3, 0);
         Assert.Equal (new Point (3, 0), tv.CursorPosition);
         Assert.True (tv.NewKeyDownEvent (Key.Backspace));
-        tv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (new Point (2, 0), tv.CursorPosition);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -826,7 +827,7 @@ This is the second line.
         tv.CursorPosition = new Point (0, 1);
         Assert.Equal (new Point (0, 1), tv.CursorPosition);
         Assert.True (tv.NewKeyDownEvent (Key.Backspace));
-        tv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (new Point (22, 0), tv.CursorPosition);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -837,7 +838,7 @@ Ths is the first line.This is the second line.
                                                      );
 
         Assert.True (tv.NewKeyDownEvent (Key.Enter));
-        tv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (new Point (0, 1), tv.CursorPosition);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -852,6 +853,7 @@ This is the second line.
         {
             Assert.True (tv.NewKeyDownEvent (Key.Z.WithCtrl));
         }
+        Application.RunIteration (ref rs);
 
         Assert.Equal (envText, tv.Text);
         Assert.Equal (new Point (3, 0), tv.CursorPosition);
@@ -868,8 +870,8 @@ This is the second line.
         string envText = tv.Text;
         var top = new Toplevel ();
         top.Add (tv);
-        Application.Begin (top);
-        Application.LayoutAndDrawToplevels ();
+        RunState rs = Application.Begin (top);
+        Application.RunIteration (ref rs);
 
         Assert.False (tv.WordWrap);
         Assert.Equal (Point.Empty, tv.CursorPosition);
@@ -885,7 +887,7 @@ This is the second line.
         tv.CursorPosition = new Point (2, 0);
         Assert.Equal (new Point (2, 0), tv.CursorPosition);
         Assert.True (tv.NewKeyDownEvent (Key.Delete));
-        tv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (new Point (2, 0), tv.CursorPosition);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -899,7 +901,7 @@ This is the second line.
         tv.CursorPosition = new Point (22, 0);
         Assert.Equal (new Point (22, 0), tv.CursorPosition);
         Assert.True (tv.NewKeyDownEvent (Key.Delete));
-        tv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (new Point (22, 0), tv.CursorPosition);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -910,7 +912,7 @@ Ths is the first line.This is the second line.
                                                      );
 
         Assert.True (tv.NewKeyDownEvent (Key.Enter));
-        tv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (new Point (0, 1), tv.CursorPosition);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -941,8 +943,8 @@ This is the second line.
         string envText = tv.Text;
         var top = new Toplevel ();
         top.Add (tv);
-        Application.Begin (top);
-        Application.LayoutAndDrawToplevels ();
+        RunState rs = Application.Begin (top);
+        Application.RunIteration (ref rs);
 
         Assert.True (tv.WordWrap);
         Assert.Equal (Point.Empty, tv.CursorPosition);
@@ -958,7 +960,7 @@ This is the second line.
         tv.CursorPosition = new Point (2, 0);
         Assert.Equal (new Point (2, 0), tv.CursorPosition);
         Assert.True (tv.NewKeyDownEvent (Key.Delete));
-        tv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (new Point (2, 0), tv.CursorPosition);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -972,7 +974,7 @@ This is the second line.
         tv.CursorPosition = new Point (22, 0);
         Assert.Equal (new Point (22, 0), tv.CursorPosition);
         Assert.True (tv.NewKeyDownEvent (Key.Delete));
-        tv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (new Point (22, 0), tv.CursorPosition);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -983,7 +985,7 @@ Ths is the first line.This is the second line.
                                                      );
 
         Assert.True (tv.NewKeyDownEvent (Key.Enter));
-        tv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (new Point (0, 1), tv.CursorPosition);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -998,6 +1000,8 @@ This is the second line.
         {
             Assert.True (tv.NewKeyDownEvent (Key.Z.WithCtrl));
         }
+
+        Application.RunIteration (ref rs);
 
         Assert.Equal (envText, tv.Text);
         Assert.Equal (new Point (2, 0), tv.CursorPosition);
@@ -8349,6 +8353,7 @@ line.
         tv.CursorPosition = new Point (6, 2);
         Assert.Equal (new Point (5, 2), tv.CursorPosition);
         top.LayoutSubviews ();
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (

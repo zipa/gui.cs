@@ -93,7 +93,7 @@ internal class CursesDriver : ConsoleDriver
             return;
         }
 
-        if (IsValidLocation (col, row))
+        if (IsValidLocation (default, col, row))
         {
             Curses.move (row, col);
         }

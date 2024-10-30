@@ -210,11 +210,13 @@ public class TextFieldTests (ITestOutputHelper output)
 
         // Caption should appear when not focused and no text
         Assert.False (tf.HasFocus);
+        Application.ClipToScreen ();
         tf.Draw ();
         TestHelpers.AssertDriverContentsAre ("Enter txt", output);
 
         // but disapear when text is added
         tf.Text = content;
+        Application.ClipToScreen ();
         tf.Draw ();
         TestHelpers.AssertDriverContentsAre (content, output);
         Application.Top.Dispose ();
@@ -232,12 +234,14 @@ public class TextFieldTests (ITestOutputHelper output)
         // Caption has no effect when focused
         tf.Caption = "Enter txt";
         Assert.True (tf.HasFocus);
+        Application.ClipToScreen ();
         tf.Draw ();
         TestHelpers.AssertDriverContentsAre ("", output);
 
         Application.Driver?.SendKeys ('\t', ConsoleKey.Tab, false, false, false);
 
         Assert.False (tf.HasFocus);
+        Application.ClipToScreen ();
         tf.Draw ();
         TestHelpers.AssertDriverContentsAre ("Enter txt", output);
         Application.Top.Dispose ();
@@ -1993,6 +1997,7 @@ Les Misérables",
 
         // incorrect order will result with a wrong accent place
         tf.Text = "Les Mis" + char.ConvertFromUtf32 (int.Parse ("0301", NumberStyles.HexNumber)) + "erables";
+        Application.ClipToScreen ();
         tf.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (

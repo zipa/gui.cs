@@ -1154,6 +1154,7 @@ public class TextAnnotationTests
         // user scrolls up one unit of graph space
         gv.ScrollOffset = new PointF (0, 1f);
         gv.SetNeedsDraw ();
+        Application.ClipToScreen ();
         gv.Draw ();
 
         // we expect the text annotation to go down one line since
@@ -1247,6 +1248,7 @@ public class TextAnnotationTests
                             new TextAnnotation { Text = "hey!", ScreenPosition = new Point (3, 1) }
                            );
         gv.LayoutSubviews ();
+        Application.ClipToScreen ();
         gv.Draw ();
 
         var expected =
@@ -1262,6 +1264,7 @@ public class TextAnnotationTests
         // user scrolls up one unit of graph space
         gv.ScrollOffset = new PointF (0, 1f);
         gv.SetNeedsDraw ();
+        Application.ClipToScreen ();
         gv.Draw ();
 
         // we expect no change in the location of the annotation (only the axis label changes)
@@ -1280,6 +1283,7 @@ public class TextAnnotationTests
         // user scrolls up one unit of graph space
         gv.ScrollOffset = new PointF (0, 1f);
         gv.SetNeedsDraw ();
+        Application.ClipToScreen ();
         gv.Draw ();
 
         // we expect no change in the location of the annotation (only the axis label changes)

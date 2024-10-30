@@ -69,16 +69,16 @@ public class ClipRegionTests
         driver.Clip = new (Rectangle.Empty);
 
         // negative
-        Assert.False (driver.IsValidLocation (4, 5));
-        Assert.False (driver.IsValidLocation (5, 4));
-        Assert.False (driver.IsValidLocation (10, 9));
-        Assert.False (driver.IsValidLocation (9, 10));
-        Assert.False (driver.IsValidLocation (-1, 0));
-        Assert.False (driver.IsValidLocation (0, -1));
-        Assert.False (driver.IsValidLocation (-1, -1));
-        Assert.False (driver.IsValidLocation (driver.Cols, driver.Rows - 1));
-        Assert.False (driver.IsValidLocation (driver.Cols, driver.Rows - 1));
-        Assert.False (driver.IsValidLocation (driver.Cols, driver.Rows));
+        Assert.False (driver.IsValidLocation (default, 4, 5));
+        Assert.False (driver.IsValidLocation (default, 5, 4));
+        Assert.False (driver.IsValidLocation (default, 10, 9));
+        Assert.False (driver.IsValidLocation (default, 9, 10));
+        Assert.False (driver.IsValidLocation (default, -1, 0));
+        Assert.False (driver.IsValidLocation (default, 0, -1));
+        Assert.False (driver.IsValidLocation (default, -1, -1));
+        Assert.False (driver.IsValidLocation (default, driver.Cols, driver.Rows - 1));
+        Assert.False (driver.IsValidLocation (default, driver.Cols, driver.Rows - 1));
+        Assert.False (driver.IsValidLocation (default, driver.Cols, driver.Rows));
 
         Application.Shutdown ();
     }
@@ -98,36 +98,36 @@ public class ClipRegionTests
         Application.Driver!.Cols = 10;
 
         // positive
-        Assert.True (driver.IsValidLocation (0, 0));
-        Assert.True (driver.IsValidLocation (1, 1));
-        Assert.True (driver.IsValidLocation (driver.Cols - 1, driver.Rows - 1));
+        Assert.True (driver.IsValidLocation (default, 0, 0));
+        Assert.True (driver.IsValidLocation (default, 1, 1));
+        Assert.True (driver.IsValidLocation (default, driver.Cols - 1, driver.Rows - 1));
 
         // negative
-        Assert.False (driver.IsValidLocation (-1, 0));
-        Assert.False (driver.IsValidLocation (0, -1));
-        Assert.False (driver.IsValidLocation (-1, -1));
-        Assert.False (driver.IsValidLocation (driver.Cols, driver.Rows - 1));
-        Assert.False (driver.IsValidLocation (driver.Cols, driver.Rows - 1));
-        Assert.False (driver.IsValidLocation (driver.Cols, driver.Rows));
+        Assert.False (driver.IsValidLocation (default, -1, 0));
+        Assert.False (driver.IsValidLocation (default, 0, -1));
+        Assert.False (driver.IsValidLocation (default, -1, -1));
+        Assert.False (driver.IsValidLocation (default, driver.Cols, driver.Rows - 1));
+        Assert.False (driver.IsValidLocation (default, driver.Cols, driver.Rows - 1));
+        Assert.False (driver.IsValidLocation (default, driver.Cols, driver.Rows));
 
         // Define a clip rectangle
         driver.Clip = new(new Rectangle(5, 5, 5, 5));
 
         // positive
-        Assert.True (driver.IsValidLocation (5, 5));
-        Assert.True (driver.IsValidLocation (9, 9));
+        Assert.True (driver.IsValidLocation (default, 5, 5));
+        Assert.True (driver.IsValidLocation (default, 9, 9));
 
         // negative
-        Assert.False (driver.IsValidLocation (4, 5));
-        Assert.False (driver.IsValidLocation (5, 4));
-        Assert.False (driver.IsValidLocation (10, 9));
-        Assert.False (driver.IsValidLocation (9, 10));
-        Assert.False (driver.IsValidLocation (-1, 0));
-        Assert.False (driver.IsValidLocation (0, -1));
-        Assert.False (driver.IsValidLocation (-1, -1));
-        Assert.False (driver.IsValidLocation (driver.Cols, driver.Rows - 1));
-        Assert.False (driver.IsValidLocation (driver.Cols, driver.Rows - 1));
-        Assert.False (driver.IsValidLocation (driver.Cols, driver.Rows));
+        Assert.False (driver.IsValidLocation (default, 4, 5));
+        Assert.False (driver.IsValidLocation (default, 5, 4));
+        Assert.False (driver.IsValidLocation (default, 10, 9));
+        Assert.False (driver.IsValidLocation (default, 9, 10));
+        Assert.False (driver.IsValidLocation (default, -1, 0));
+        Assert.False (driver.IsValidLocation (default, 0, -1));
+        Assert.False (driver.IsValidLocation (default, -1, -1));
+        Assert.False (driver.IsValidLocation (default, driver.Cols, driver.Rows - 1));
+        Assert.False (driver.IsValidLocation (default, driver.Cols, driver.Rows - 1));
+        Assert.False (driver.IsValidLocation (default, driver.Cols, driver.Rows));
 
         Application.Shutdown ();
     }
