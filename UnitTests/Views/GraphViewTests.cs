@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Terminal.Gui.ViewMouseTests;
 using Xunit.Abstractions;
 
 namespace Terminal.Gui.ViewsTests;
@@ -684,6 +685,7 @@ public class MultiBarSeriesTests
         fakeXAxis.LabelPoints.Clear ();
         gv.LayoutSubviews ();
         gv.SetNeedsDraw ();
+        Application.ClipToScreen ();
         gv.Draw ();
 
         Assert.Equal (3, fakeXAxis.LabelPoints.Count);
@@ -1546,6 +1548,7 @@ public class PathAnnotationTests
             // change the text and redraw
             view.Text = "ff1234";
             mount.SetNeedsDraw ();
+            Application.ClipToScreen ();
             mount.Draw ();
 
             // should have the new text rendered

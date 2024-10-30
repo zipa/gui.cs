@@ -194,7 +194,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         var bottomLabel = new Label { X = 15, Y = 15, Text = "At 15,15" };
         var top = new Toplevel ();
         top.Add (topLabel, sv, bottomLabel);
-        Application.Begin (top);
+        RunState rs = Application.Begin (top);
         Application.LayoutAndDrawToplevels ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -250,7 +250,7 @@ public class ScrollViewTests (ITestOutputHelper output)
 
         sv.Add (new Window { X = 3, Y = 3, Width = 20, Height = 20 });
 
-        Application.LayoutAndDrawToplevels ();
+        Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -297,7 +297,7 @@ public class ScrollViewTests (ITestOutputHelper output)
                                               );
 
         sv.ContentOffset = new (20, 20);
-        Application.LayoutAndDrawToplevels ();
+        Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -412,6 +412,7 @@ public class ScrollViewTests (ITestOutputHelper output)
 
         top.LayoutSubviews ();
 
+        Application.ClipToScreen ();
         top.Draw ();
 
         View contentBottomRightCorner = sv.Subviews.First (v => v is ScrollBarView.ContentBottomRightCorner);
@@ -566,8 +567,8 @@ public class ScrollViewTests (ITestOutputHelper output)
         win.Add (scrollView);
         var top = new Toplevel ();
         top.Add (win);
-        Application.Begin (top);
-        Application.LayoutAndDrawToplevels ();
+        RunState rs = Application.Begin (top);
+        Application.RunIteration(ref rs);
 
         var expected = @"
  ┌──────────────────┐
@@ -591,7 +592,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         Assert.Equal (new (1, 1, 21, 14), pos);
 
         Assert.True (scrollView.NewKeyDownEvent (Key.CursorRight));
-        top.Draw ();
+        Application.RunIteration (ref rs);
 
         expected = @"
  ┌──────────────────┐
@@ -615,7 +616,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         Assert.Equal (new (1, 1, 21, 14), pos);
 
         Assert.True (scrollView.NewKeyDownEvent (Key.CursorRight));
-        top.Draw ();
+        Application.RunIteration (ref rs);
 
         expected = @"
  ┌──────────────────┐
@@ -639,7 +640,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         Assert.Equal (new (1, 1, 21, 14), pos);
 
         Assert.True (scrollView.NewKeyDownEvent (Key.CursorRight));
-        top.Draw ();
+        Application.RunIteration (ref rs);
 
         expected = @"
  ┌──────────────────┐
@@ -663,7 +664,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         Assert.Equal (new (1, 1, 21, 14), pos);
 
         Assert.True (scrollView.NewKeyDownEvent (Key.CursorRight));
-        top.Draw ();
+        Application.RunIteration (ref rs);
 
         expected = @"
  ┌──────────────────┐
@@ -687,7 +688,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         Assert.Equal (new (1, 1, 21, 14), pos);
 
         Assert.True (scrollView.NewKeyDownEvent (Key.CursorRight));
-        top.Draw ();
+        Application.RunIteration (ref rs);
 
         expected = @"
  ┌──────────────────┐
@@ -711,7 +712,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         Assert.Equal (new (1, 1, 21, 14), pos);
 
         Assert.True (scrollView.NewKeyDownEvent (Key.CursorRight));
-        top.Draw ();
+        Application.RunIteration (ref rs);
 
         expected = @"
  ┌──────────────────┐
@@ -735,7 +736,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         Assert.Equal (new (1, 1, 21, 14), pos);
 
         Assert.True (scrollView.NewKeyDownEvent (Key.CursorRight));
-        top.Draw ();
+        Application.RunIteration (ref rs);
 
         expected = @"
  ┌──────────────────┐
@@ -758,7 +759,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         Assert.Equal (new (1, 1, 21, 14), pos);
 
         Assert.True (scrollView.NewKeyDownEvent (Key.End.WithCtrl));
-        top.Draw ();
+        Application.RunIteration (ref rs);
 
         expected = @"
  ┌──────────────────┐
@@ -782,7 +783,7 @@ public class ScrollViewTests (ITestOutputHelper output)
 
         Assert.True (scrollView.NewKeyDownEvent (Key.Home.WithCtrl));
         Assert.True (scrollView.NewKeyDownEvent (Key.CursorDown));
-        top.Draw ();
+        Application.RunIteration (ref rs);
 
         expected = @"
  ┌──────────────────┐
@@ -805,7 +806,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         Assert.Equal (new (1, 1, 21, 14), pos);
 
         Assert.True (scrollView.NewKeyDownEvent (Key.CursorDown));
-        top.Draw ();
+        Application.RunIteration (ref rs);
 
         expected = @"
  ┌──────────────────┐
@@ -828,7 +829,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         Assert.Equal (new (1, 1, 21, 14), pos);
 
         Assert.True (scrollView.NewKeyDownEvent (Key.CursorDown));
-        top.Draw ();
+        Application.RunIteration (ref rs);
 
         expected = @"
  ┌──────────────────┐
@@ -851,7 +852,7 @@ public class ScrollViewTests (ITestOutputHelper output)
         Assert.Equal (new (1, 1, 21, 14), pos);
 
         Assert.True (scrollView.NewKeyDownEvent (Key.End));
-        top.Draw ();
+        Application.RunIteration (ref rs);
 
         expected = @"
  ┌──────────────────┐
@@ -897,8 +898,8 @@ public class ScrollViewTests (ITestOutputHelper output)
 
         var top = new Toplevel ();
         top.Add (sv);
-        Application.Begin (top);
-        Application.LayoutAndDrawToplevels ();
+        RunState rs = Application.Begin (top);
+        Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -916,8 +917,7 @@ public class ScrollViewTests (ITestOutputHelper output)
                                                      );
 
         sv.ContentOffset = new (5, 5);
-        sv.LayoutSubviews ();
-        Application.LayoutAndDrawToplevels ();
+        Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"

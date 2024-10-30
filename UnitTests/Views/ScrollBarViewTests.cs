@@ -311,8 +311,8 @@ public class ScrollBarViewTests
         top.Add (label);
 
         var sbv = new ScrollBarView (label, true, false) { Size = 100 };
-        Application.Begin (top);
-        Application.LayoutAndDrawToplevels ();
+        RunState rs = Application.Begin (top);
+        Application.RunIteration (ref rs);
 
         Assert.True (sbv.Visible);
 
@@ -330,7 +330,7 @@ This is a tes▼
 
         sbv.Visible = false;
         Assert.False (sbv.Visible);
-        top.Draw ();
+        Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -346,7 +346,7 @@ This is a test
 
         sbv.Visible = true;
         Assert.True (sbv.Visible);
-        top.Draw ();
+        Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -362,7 +362,7 @@ This is a tes▼
 
         sbv.Visible = false;
         Assert.False (sbv.Visible);
-        top.Draw ();
+        Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -561,9 +561,9 @@ This is a test
 
         var sbv = new ScrollBarView (label, true) { Size = 100 };
         sbv.OtherScrollBarView.Size = 100;
-        Application.Begin (top);
-        Application.LayoutAndDrawToplevels ();
+        RunState rs = Application.Begin (top);
 
+        Application.RunIteration (ref rs);
         Assert.Equal (100, sbv.Size);
         Assert.Equal (100, sbv.OtherScrollBarView.Size);
         Assert.True (sbv.ShowScrollIndicator);
@@ -618,7 +618,7 @@ This is a test
         Assert.True (sbv.OtherScrollBarView.ShowScrollIndicator);
         Assert.True (sbv.Visible);
         Assert.True (sbv.OtherScrollBarView.Visible);
-        top.Draw ();
+        Application.RunIteration (ref rs);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"

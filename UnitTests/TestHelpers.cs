@@ -210,7 +210,6 @@ public class SetupFakeDriverAttribute : BeforeAfterTestAttribute
         Application.Driver = new FakeDriver { Rows = 25, Cols = 25 };
 
         base.Before (methodUnderTest);
-
     }
 }
 
