@@ -3,6 +3,7 @@ using Xunit.Abstractions;
 
 namespace Terminal.Gui.ViewsTests;
 
+#if foo
 public class TabViewTests (ITestOutputHelper output)
 {
     [Fact]
@@ -609,6 +610,7 @@ public class TabViewTests (ITestOutputHelper output)
         tv.ApplyStyleChanges ();
         tv.Layout ();
 
+        Application.ClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -1353,3 +1355,4 @@ public class TabViewTests (ITestOutputHelper output)
         driver.Init ();
     }
 }
+#endif

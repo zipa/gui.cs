@@ -1338,6 +1338,7 @@ public class LegendTests
         legend.AddEntry (new GraphCellToRender ((Rune)'B'), "Bat");
 
         gv.Annotations.Add (legend);
+        gv.Layout ();
         gv.Draw ();
 
         var expected =

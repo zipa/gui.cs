@@ -22,7 +22,7 @@ public partial class View // Drawing APIs
     /// </remarks>
     public void Draw ()
     {
-        Region? saved = null;
+        Region? saved = Driver?.Clip;
         if (CanBeVisible (this) && (NeedsDraw || SubViewNeedsDraw))
         {
             saved = SetClipToFrame ();
@@ -39,15 +39,14 @@ public partial class View // Drawing APIs
             DoSetAttribute ();
             DoDrawSubviews ();
 
-            DoSetAttribute ();
+            //DoSetAttribute ();
             DoClearViewport ();
 
-            DoSetAttribute ();
+            //DoSetAttribute ();
             DoDrawText ();
 
-            DoSetAttribute ();
+            //DoSetAttribute ();
             DoDrawContent ();
-
 
             // Restore the clip before rendering the line canvas and adornment subviews
             // because they may draw outside the viewport.
@@ -55,7 +54,10 @@ public partial class View // Drawing APIs
 
             saved = SetClipToFrame ();
 
+            //DoSetAttribute ();
             DoRenderLineCanvas ();
+
+            //DoSetAttribute ();
             DoDrawAdornmentSubViews ();
 
             if (Border is { Diagnostics: ViewDiagnosticFlags.DrawIndicator, DrawIndicator: { } })
@@ -70,7 +72,6 @@ public partial class View // Drawing APIs
         // We're done
         DoDrawComplete ();
         Application.SetClip (saved);
-
 
         if (this is not Adornment && Driver?.Clip is { })
         {
