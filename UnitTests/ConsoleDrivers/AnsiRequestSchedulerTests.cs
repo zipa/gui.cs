@@ -65,6 +65,85 @@ public class AnsiRequestSchedulerTests
         Assert.False (result); // Should be queued
         _parserMock.Verify ();
     }
+
+
+    [Fact]
+    public void RunSchedule_ThrottleNotExceeded_AllowSend ()
+    {
+        // Arrange
+        var request = new AnsiEscapeSequenceRequest
+        {
+            Request = "\u001b[0c", // ESC [ 0 c
+            Terminator = "c",
+            ResponseReceived = r => { }
+        };
+
+        // Set up to expect no outstanding request for "c" i.e. parser instantly gets response and resolves it
+        _parserMock.Setup (p => p.IsExpecting ("c")).Returns (false).Verifiable(Times.Exactly (2));
+        _parserMock.Setup (p => p.ExpectResponse ("c", It.IsAny<Action<string>> (), false)).Verifiable (Times.Exactly (2));
+
+        _scheduler.SendOrSchedule (request);
+
+        // Simulate time passing beyond throttle
+        SetTime (101); // Exceed throttle limit
+
+
+        // Act
+
+        // Send another request after the throttled time limit
+        var result = _scheduler.SendOrSchedule (request);
+
+        // Assert
+        Assert.Empty (_scheduler.QueuedRequests); // Should send and clear the request
+        Assert.True (result); // Should have found and sent the request
+        _parserMock.Verify ();
+    }
+
+    [Fact]
+    public void RunSchedule_ThrottleExceeded_QueueRequest ()
+    {
+        // Arrange
+        var request = new AnsiEscapeSequenceRequest
+        {
+            Request = "\u001b[0c", // ESC [ 0 c
+            Terminator = "c",
+            ResponseReceived = r => { }
+        };
+
+        // Set up to expect no outstanding request for "c" i.e. parser instantly gets response and resolves it
+        _parserMock.Setup (p => p.IsExpecting ("c")).Returns (false).Verifiable (Times.Exactly (2));
+        _parserMock.Setup (p => p.ExpectResponse ("c", It.IsAny<Action<string>> (), false)).Verifiable (Times.Exactly (2));
+
+        _scheduler.SendOrSchedule (request);
+
+        // Simulate time passing
+        SetTime (55); // Does not exceed throttle limit
+
+
+        // Act
+
+        // Send another request after the throttled time limit
+        var result = _scheduler.SendOrSchedule (request);
+
+        // Assert
+        Assert.Single (_scheduler.QueuedRequests); // Should have been queued
+        Assert.False(result); // Should have been queued
+
+        // Throttle still not exceeded
+        Assert.False(_scheduler.RunSchedule ());
+
+        SetTime (90);
+
+        // Throttle still not exceeded
+        Assert.False (_scheduler.RunSchedule ());
+
+        SetTime (105);
+
+        // Throttle exceeded - so send the request
+        Assert.True (_scheduler.RunSchedule ());
+
+        _parserMock.Verify ();
+    }
     private void SetTime (int milliseconds)
     {
         // This simulates the passing of time by setting the Now function to return a specific time.
