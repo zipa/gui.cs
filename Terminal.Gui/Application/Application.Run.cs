@@ -537,11 +537,7 @@ public static partial class Application // Run (Begin, Run, End, Stop)
     // TODO: Rename this to DrawRunnables in https://github.com/gui-cs/Terminal.Gui/issues/2491
     private static void DrawToplevels (bool forceDraw)
     {
-        // Reset the clip region to the entire screen
-        if (Driver is { })
-        {
-            Driver.Clip = new (Screen);
-        }
+        ClipToScreen ();
 
         foreach (Toplevel tl in TopLevels)
         {
@@ -550,11 +546,11 @@ public static partial class Application // Run (Begin, Run, End, Stop)
                 tl.SetNeedsDraw ();
             }
 
-            //Region? saved = Driver?.Clip.Clone ();
             tl.Draw ();
-            //Driver.Clip = saved;
-            Driver?.Clip.Exclude (tl.FrameToScreen ());
+            ExcludeFromClip (tl.FrameToScreen ());
         }
+
+        ClipToScreen ();
     }
 
 

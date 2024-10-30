@@ -409,8 +409,9 @@ internal sealed class Menu : View
         DrawAdornments ();
         RenderLineCanvas ();
 
-        Region savedClip = Driver.Clip;
-        Driver.Clip = new (new (0, 0, Driver.Cols, Driver.Rows));
+        // BUGBUG: Views should not change the clip. Doing so is an indcation of poor design or a bug in the framework.
+        Region? savedClip = Application.ClipToScreen ();
+
         SetAttribute (GetNormalColor ());
 
         for (int i = Viewport.Y; i < _barItems!.Children.Length; i++)
@@ -578,7 +579,7 @@ internal sealed class Menu : View
             }
         }
 
-        Driver.Clip = savedClip;
+        Application.SetClip (savedClip);
     }
 
     public override Point? PositionCursor ()

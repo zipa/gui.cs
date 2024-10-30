@@ -14,8 +14,7 @@ public class ViewTests (ITestOutputHelper output)
 
         view.DrawingContent += (s, e) =>
                             {
-                                Region savedClip = Application.Driver!.Clip;
-                                Application.Driver!.Clip = new (new (1, 1, view.Viewport.Width, view.Viewport.Height));
+                                Region savedClip = view.SetClipToViewport ();
 
                                 for (var row = 0; row < view.Viewport.Height; row++)
                                 {
@@ -27,7 +26,7 @@ public class ViewTests (ITestOutputHelper output)
                                     }
                                 }
 
-                                Application.Driver!.Clip = savedClip;
+                                Application.SetClip (savedClip);
                                 e.Cancel = true;
                             };
         var top = new Toplevel ();
@@ -77,23 +76,22 @@ public class ViewTests (ITestOutputHelper output)
         var view = new FrameView { Width = Dim.Fill (), Height = Dim.Fill () };
 
         view.DrawingContent += (s, e) =>
-                            {
-                                Region savedClip = Application.Driver!.Clip;
-                                Application.Driver!.Clip = new (new (1, 1, view.Viewport.Width, view.Viewport.Height));
+                               {
+                                   Region savedClip = view.SetClipToViewport ();
 
-                                for (var row = 0; row < view.Viewport.Height; row++)
-                                {
-                                    Application.Driver?.Move (1, row + 1);
+                                   for (var row = 0; row < view.Viewport.Height; row++)
+                                   {
+                                       Application.Driver?.Move (1, row + 1);
 
-                                    for (var col = 0; col < view.Viewport.Width; col++)
-                                    {
-                                        Application.Driver?.AddStr ($"{col}");
-                                    }
-                                }
+                                       for (var col = 0; col < view.Viewport.Width; col++)
+                                       {
+                                           Application.Driver?.AddStr ($"{col}");
+                                       }
+                                   }
 
-                                Application.Driver!.Clip = savedClip;
-                                e.Cancel = true;
-                            };
+                                   Application.SetClip (savedClip);
+                                   e.Cancel = true;
+                               };
         var top = new Toplevel ();
         top.Add (view);
         Application.Begin (top);
@@ -311,6 +309,7 @@ At 0,0
         Assert.Equal (new (3, 3, 10, 1), view.Frame);
         Assert.Equal (new (0, 0, 10, 1), view.Viewport);
         Assert.Equal (new (0, 0, 10, 1), view._needsDrawRect);
+        Application.ClipToScreen ();
         top.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -405,6 +404,8 @@ At 0,0
         Assert.Equal (new (1, 1, 10, 1), view.Frame);
         Assert.Equal (new (0, 0, 10, 1), view.Viewport);
         Assert.Equal (new (0, 0, 10, 1), view._needsDrawRect);
+        Application.ClipToScreen ();
+
         top.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (

@@ -51,8 +51,9 @@ public class DrawTests (ITestOutputHelper _output)
         // Only valid location w/in Viewport is 0, 0 (view) - 2, 2 (screen)
         Assert.Equal ((Rune)' ', Application.Driver?.Contents! [2, 2].Rune);
 
+        // When we exit Draw, the view is excluded from the clip. So drawing at 0,0, is not valid and is clipped.
         view.AddRune (0, 0, Rune.ReplacementChar);
-        Assert.Equal (Rune.ReplacementChar, Application.Driver?.Contents! [2, 2].Rune);
+        Assert.Equal ((Rune)' ', Application.Driver?.Contents! [2, 2].Rune);
 
         view.AddRune (-1, -1, Rune.ReplacementChar);
         Assert.Equal ((Rune)'M', Application.Driver?.Contents! [1, 1].Rune);
@@ -92,6 +93,7 @@ public class DrawTests (ITestOutputHelper _output)
                                                       _output);
 
         Rectangle toFill = new (x, y, width, height);
+        Application.ClipToScreen ();
         view.FillRect (toFill);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -132,6 +134,8 @@ public class DrawTests (ITestOutputHelper _output)
  └─┘",
                                                       _output);
         toFill = new (-1, -1, width + 1, height + 1);
+
+        Application.ClipToScreen ();
         view.FillRect (toFill);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -152,6 +156,7 @@ public class DrawTests (ITestOutputHelper _output)
  └─┘",
                                                       _output);
         toFill = new (0, 0, width * 2, height * 2);
+        Application.ClipToScreen ();
         view.FillRect (toFill);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -189,8 +194,18 @@ public class DrawTests (ITestOutputHelper _output)
  └─┘",
                                                       _output);
 
+        // On Draw exit the view is excluded from the clip, so this will do nothing.
         view.ClearViewport ();
+        TestHelpers.AssertDriverContentsWithFrameAre (
+                                                      @"
+ ┌─┐
+ │X│
+ └─┘",
+                                                      _output);
 
+        Application.ClipToScreen ();
+
+        view.ClearViewport ();
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
  ┌─┐
@@ -226,7 +241,7 @@ public class DrawTests (ITestOutputHelper _output)
  │X│
  └─┘",
                                                       _output);
-
+        Application.ClipToScreen ();
         view.ClearViewport ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -950,7 +965,7 @@ public class DrawTests (ITestOutputHelper _output)
         view.SetClipToViewport ();
 
         // Assert
-        Assert.Equal (expectedClip, Application.Driver?.Clip?.GetBounds());
+        Assert.Equal (expectedClip, Application.Driver?.Clip?.GetBounds ());
         view.Dispose ();
     }
 

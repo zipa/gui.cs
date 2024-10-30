@@ -67,4 +67,44 @@ public static partial class Application // Screen related stuff
 
         return true;
     }
+
+    #region Clip Support
+    /// <summary>
+    ///     Sets the clip region to the screen.
+    /// </summary>
+    /// <returns>The previous clip region.</returns>>
+    public static Region? ClipToScreen ()
+    {
+        Region? previous = Driver?.Clip;
+        if (Driver is { })
+        {
+            Driver.Clip = new (Screen);
+        }
+
+        return previous;
+    }
+
+    /// <summary>
+    ///     Sets the clip to the specified region.
+    /// </summary>
+    /// <param name="region"></param>
+    public static void SetClip (Region? region)
+    {
+        if (Driver is { } && region is {})
+        {
+            Driver.Clip = region;
+        }
+    }
+
+    /// <summary>
+    ///      Removes the specified rectangle from the Clip.
+    /// </summary>
+    /// <param name="rectangle"></param>
+    public static void ExcludeFromClip (Rectangle rectangle)
+    {
+        Driver?.Clip?.Exclude (rectangle);
+    }
+
+    #endregion Clip Support
+
 }

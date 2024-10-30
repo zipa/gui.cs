@@ -1779,7 +1779,7 @@ public class TextField : View
             render = render [..Viewport.Width];
         }
 
-        Driver.AddStr (render);
+        Driver?.AddStr (render);
     }
 
     private void SetClipboard (IEnumerable<Rune> text)

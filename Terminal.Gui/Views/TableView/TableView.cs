@@ -1282,19 +1282,19 @@ public class TableView : View, IDesignable
             {
                 // invert the color of the current cell for the first character
                 SetAttribute (new Attribute (cellColor.Background, cellColor.Foreground));
-                Driver.AddRune ((Rune)render [0]);
+                Driver?.AddRune ((Rune)render [0]);
 
                 if (render.Length > 1)
                 {
                     SetAttribute (cellColor);
-                    Driver.AddStr (render.Substring (1));
+                    Driver?.AddStr (render.Substring (1));
                 }
             }
         }
         else
         {
             SetAttribute (cellColor);
-            Driver.AddStr (render);
+            Driver?.AddStr (render);
         }
     }
 

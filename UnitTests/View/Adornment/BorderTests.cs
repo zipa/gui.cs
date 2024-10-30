@@ -38,6 +38,7 @@ public class BorderTests (ITestOutputHelper output)
 
         view.CanFocus = true;
         view.SetFocus ();
+        Application.ClipToScreen ();
         view.Draw ();
         Assert.Equal (view.GetFocusColor (), view.Border.GetFocusColor ());
         Assert.Equal (view.ColorScheme.Focus.Foreground, view.Border.GetFocusColor ().Foreground);

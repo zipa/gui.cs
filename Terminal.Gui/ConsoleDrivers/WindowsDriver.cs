@@ -1439,7 +1439,7 @@ internal class WindowsDriver : ConsoleDriver
 
         _outputBuffer = new WindowsConsole.ExtendedCharInfo [Rows * Cols];
         // CONCURRENCY: Unsynchronized access to Clip is not safe.
-        Clip = new (new (0, 0, Cols, Rows));
+        Clip = new (Screen);
 
         _damageRegion = new WindowsConsole.SmallRect
         {
@@ -1859,7 +1859,7 @@ internal class WindowsDriver : ConsoleDriver
     {
         _outputBuffer = new WindowsConsole.ExtendedCharInfo [Rows * Cols];
         // CONCURRENCY: Unsynchronized access to Clip is not safe.
-        Clip = new (new (0, 0, Cols, Rows));
+        Clip = new (Screen);
 
         _damageRegion = new WindowsConsole.SmallRect
         {

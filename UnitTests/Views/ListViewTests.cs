@@ -54,7 +54,7 @@ public class ListViewTests (ITestOutputHelper output)
         win.Add (lv);
         var top = new Toplevel ();
         top.Add (win);
-        Application.Begin (top);
+        RunState rs = Application.Begin (top);
         ((FakeDriver)Application.Driver!).SetBufferSize (12, 12);
         Application.LayoutAndDrawToplevels ();
 
@@ -78,8 +78,7 @@ public class ListViewTests (ITestOutputHelper output)
                                                      );
 
         Assert.True (lv.ScrollVertical (10));
-        //Application.Refresh ();
-        lv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (-1, lv.SelectedItem);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -100,7 +99,7 @@ public class ListViewTests (ITestOutputHelper output)
                                                      );
 
         Assert.True (lv.MoveDown ());
-        lv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (0, lv.SelectedItem);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -121,7 +120,7 @@ public class ListViewTests (ITestOutputHelper output)
                                                      );
 
         Assert.True (lv.MoveEnd ());
-        lv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (19, lv.SelectedItem);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -142,7 +141,7 @@ public class ListViewTests (ITestOutputHelper output)
                                                      );
 
         Assert.True (lv.ScrollVertical (-20));
-        lv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (19, lv.SelectedItem);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -163,7 +162,7 @@ public class ListViewTests (ITestOutputHelper output)
                                                      );
 
         Assert.True (lv.MoveDown ());
-        lv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (19, lv.SelectedItem);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -184,7 +183,7 @@ public class ListViewTests (ITestOutputHelper output)
                                                      );
 
         Assert.True (lv.ScrollVertical (-20));
-        lv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (19, lv.SelectedItem);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -205,7 +204,7 @@ public class ListViewTests (ITestOutputHelper output)
                                                      );
 
         Assert.True (lv.MoveDown ());
-        lv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (19, lv.SelectedItem);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -226,7 +225,7 @@ public class ListViewTests (ITestOutputHelper output)
                                                      );
 
         Assert.True (lv.MoveHome ());
-        lv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (0, lv.SelectedItem);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -247,7 +246,7 @@ public class ListViewTests (ITestOutputHelper output)
                                                      );
 
         Assert.True (lv.ScrollVertical (20));
-        lv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (0, lv.SelectedItem);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -268,7 +267,7 @@ public class ListViewTests (ITestOutputHelper output)
                                                      );
 
         Assert.True (lv.MoveUp ());
-        lv.Draw ();
+        Application.RunIteration (ref rs);
         Assert.Equal (0, lv.SelectedItem);
 
         TestHelpers.AssertDriverContentsWithFrameAre (

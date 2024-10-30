@@ -22,71 +22,58 @@ public partial class View // Drawing APIs
     /// </remarks>
     public void Draw ()
     {
-        if (!CanBeVisible (this) || (!NeedsDraw && !SubViewNeedsDraw))
+        Region? saved = null;
+        if (CanBeVisible (this) && (NeedsDraw || SubViewNeedsDraw))
         {
-            if (this is not Adornment)
+            if (Border is { Diagnostics: ViewDiagnosticFlags.DrawIndicator })
             {
-                Driver?.Clip.Exclude (FrameToScreen ());
+                if (Border.DrawIndicator is { })
+                {
+                    Border.DrawIndicator.AdvanceAnimation (false);
+                    Border.DrawIndicator.DrawText ();
+
+                }
             }
 
-            return;
+            // Frame/View-relative relative, thus the bounds location should be 0,0
+            //Debug.Assert(clipRegion.GetBounds().X == 0 && clipRegion.GetBounds ().Y == 0);
+
+            saved = SetClipToFrame ();
+            DoDrawAdornments ();
+            DoSetAttribute ();
+
+            Application.SetClip (saved);
+
+            // By default, we clip to the viewport preventing drawing outside the viewport
+            // We also clip to the content, but if a developer wants to draw outside the viewport, they can do
+            // so via settings. SetClip honors the ViewportSettings.DisableVisibleContentClipping flag.
+            // Get our Viewport in screen coordinates
+
+            saved = SetClipToViewport ();
+
+            DoClearViewport ();
+            DoDrawText ();
+            DoDrawContent ();
+
+            DoDrawSubviews ();
+
+            // Restore the clip before rendering the line canvas and adornment subviews
+            // because they may draw outside the viewport.
+            Application.SetClip (saved);
+
+            saved = SetClipToFrame ();
+            DoRenderLineCanvas ();
+            DoDrawAdornmentSubViews ();
+            ClearNeedsDraw ();
         }
-
-        if (Border is { Diagnostics: ViewDiagnosticFlags.DrawIndicator })
-        {
-            if (Border.DrawIndicator is { })
-            {
-                Border.DrawIndicator.AdvanceAnimation (false);
-                Border.DrawIndicator.DrawText ();
-
-            }
-        }
-
-        // Frame/View-relative relative, thus the bounds location should be 0,0
-        //Debug.Assert(clipRegion.GetBounds().X == 0 && clipRegion.GetBounds ().Y == 0);
-
-        Region? saved = SetClipToFrame ();
-        DoDrawAdornments ();
-        DoSetAttribute ();
-        if (saved is { })
-        {
-            Driver!.Clip = saved;
-        }
-        // By default, we clip to the viewport preventing drawing outside the viewport
-        // We also clip to the content, but if a developer wants to draw outside the viewport, they can do
-        // so via settings. SetClip honors the ViewportSettings.DisableVisibleContentClipping flag.
-        // Get our Viewport in screen coordinates
-
-        saved = SetClipToViewport ();
-
-        DoClearViewport ();
-        DoDrawText ();
-        DoDrawContent ();
-
-        DoDrawSubviews ();
-
-        // Restore the clip before rendering the line canvas and adornment subviews
-        // because they may draw outside the viewport.
-        if (saved is { })
-        {
-            Driver!.Clip = saved;
-        }
-
-        saved = SetClipToFrame ();
-        DoRenderLineCanvas ();
-        DoDrawAdornmentSubViews ();
-        ClearNeedsDraw ();
 
         // We're done
         DoDrawComplete ();
-        if (saved is { })
-        {
-            Driver!.Clip = saved;
-        }
+        Application.SetClip (saved);
 
-        if (this is not Adornment)
+        if (this is not Adornment && Driver?.Clip is {})
         {
-            Driver?.Clip.Exclude (FrameToScreen ());
+            Application.ExcludeFromClip (FrameToScreen ());
         }
 
     }
@@ -106,10 +93,8 @@ public partial class View // Drawing APIs
 
             Region? saved = Margin?.SetClipToFrame ();
             Margin?.DoDrawSubviews ();
-            if (saved is { })
-            {
-                Driver!.Clip = saved;
-            }
+            Application.SetClip (saved);
+
         }
 
         if (Border?.Subviews is { } && Border.Thickness != Thickness.Empty)
@@ -119,7 +104,9 @@ public partial class View // Drawing APIs
                 subview.SetNeedsDraw ();
             }
 
+            Region? saved = Border?.SetClipToFrame ();
             Border?.DoDrawSubviews ();
+            Application.SetClip (saved);
         }
 
         if (Padding?.Subviews is { } && Padding.Thickness != Thickness.Empty)
@@ -131,11 +118,7 @@ public partial class View // Drawing APIs
 
             Region? saved = Padding?.SetClipToFrame ();
             Padding?.DoDrawSubviews ();
-            if (saved is { })
-            {
-                Driver!.Clip = saved;
-            }
-
+            Application.SetClip (saved);
         }
     }
 

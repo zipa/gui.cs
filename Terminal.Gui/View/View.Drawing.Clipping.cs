@@ -23,7 +23,7 @@ public partial class View
             frameRegion.Exclude (adornment.Thickness.GetInside (Frame));
         }
 
-        Driver.Clip = frameRegion;
+        Application.SetClip (frameRegion);
 
         return previous;
 
@@ -72,7 +72,7 @@ public partial class View
             viewportRegion?.Exclude (adornment.Thickness.GetInside (viewport));
         }
 
-        Driver.Clip = viewportRegion;
+        Application.SetClip (viewportRegion);
 
         return previous;
     }

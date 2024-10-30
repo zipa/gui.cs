@@ -325,7 +325,7 @@ public abstract class ConsoleDriver
         //CONCURRENCY: Unsynchronized access to Clip isn't safe.
         // TODO: ClearContents should not clear the clip; it should only clear the contents. Move clearing it elsewhere.
         Clip = new (Screen);
-        
+
         _dirtyLines = new bool [Rows];
 
         lock (Contents)

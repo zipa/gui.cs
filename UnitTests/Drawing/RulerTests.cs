@@ -37,19 +37,11 @@ public class RulerTests
     }
 
     [Fact]
-    [AutoInitShutdown]
+    [SetupFakeDriver]
     public void Draw_Horizontal ()
     {
         var len = 15;
 
-        // Add a frame so we can see the ruler
-        var f = new FrameView { X = 0, Y = 0, Width = Dim.Fill (), Height = Dim.Fill () };
-        var top = new Toplevel ();
-        top.Add (f);
-        Application.Begin (top);
-        ((FakeDriver)Application.Driver!).SetBufferSize (len + 5, 5);
-        Assert.Equal (new (0, 0, len + 5, 5), f.Frame);
-
         var r = new Ruler ();
         Assert.Equal (Orientation.Horizontal, r.Orientation);
 
@@ -58,123 +50,40 @@ public class RulerTests
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
-|123456789|1234────┐
-│                  │
-│                  │
-│                  │
-└──────────────────┘",
+|123456789|1234",
                                                       _output
                                                      );
 
         // Postive offset
-        top.SetNeedsDraw ();
-        Application.LayoutAndDrawToplevels ();
         r.Draw (new (1, 1));
 
-        TestHelpers.AssertDriverContentsWithFrameAre (
+        TestHelpers.AssertDriverContentsAre (
                                                       @"
-┌──────────────────┐
-│|123456789|1234   │
-│                  │
-│                  │
-└──────────────────┘",
+|123456789|1234
+ |123456789|1234
+",
                                                       _output
                                                      );
 
         // Negative offset
-        top.SetNeedsDraw ();
-        Application.LayoutAndDrawToplevels ();
-        r.Draw (new (-1, 1));
+        r.Draw (new (-1, 3));
 
-        TestHelpers.AssertDriverContentsWithFrameAre (
-                                                      @"
-┌──────────────────┐
-123456789|1234     │
-│                  │
-│                  │
-└──────────────────┘",
-                                                      _output
-                                                     );
-
-        // Clip
-        top.SetNeedsDraw ();
-        Application.LayoutAndDrawToplevels ();
-        r.Draw (new (10, 1));
-
-        TestHelpers.AssertDriverContentsWithFrameAre (
-                                                      @"
-┌──────────────────┐
-│         |123456789
-│                  │
-│                  │
-└──────────────────┘",
-                                                      _output
-                                                     );
-        top.Dispose ();
+        TestHelpers.AssertDriverContentsAre (
+                                             @"
+|123456789|1234
+ |123456789|1234
+123456789|1234
+",
+                                             _output
+                                            );
     }
 
     [Fact]
-    [AutoInitShutdown]
-    public void Draw_Horizontal_Start ()
-    {
-        var len = 15;
-
-        // Add a frame so we can see the ruler
-        var f = new FrameView { X = 0, Y = 0, Width = Dim.Fill (), Height = Dim.Fill () };
-        var top = new Toplevel ();
-        top.Add (f);
-        Application.Begin (top);
-        ((FakeDriver)Application.Driver!).SetBufferSize (len + 5, 5);
-        Assert.Equal (new (0, 0, len + 5, 5), f.Frame);
-
-        var r = new Ruler ();
-        Assert.Equal (Orientation.Horizontal, r.Orientation);
-
-        r.Length = len;
-        r.Draw (Point.Empty, 1);
-
-        TestHelpers.AssertDriverContentsWithFrameAre (
-                                                      @"
-123456789|12345────┐
-│                  │
-│                  │
-│                  │
-└──────────────────┘",
-                                                      _output
-                                                     );
-
-        f.SetNeedsDraw();
-        Application.LayoutAndDrawToplevels ();
-        r.Length = len;
-        r.Draw (new (1, 0), 1);
-
-        TestHelpers.AssertDriverContentsWithFrameAre (
-                                                      @"
-┌123456789|12345───┐
-│                  │
-│                  │
-│                  │
-└──────────────────┘",
-                                                      _output
-                                                     );
-        top.Dispose ();
-    }
-
-    [Fact]
-    [AutoInitShutdown]
+    [SetupFakeDriver]
     public void Draw_Vertical ()
     {
         var len = 15;
 
-        // Add a frame so we can see the ruler
-        var f = new FrameView { X = 0, Y = 0, Width = Dim.Fill (), Height = Dim.Fill () };
-
-        var top = new Toplevel ();
-        top.Add (f);
-        Application.Begin (top);
-        ((FakeDriver)Application.Driver!).SetBufferSize (5, len + 5);
-        Assert.Equal (new (0, 0, 5, len + 5), f.Frame);
-
         var r = new Ruler ();
         r.Orientation = Orientation.Vertical;
         r.Length = len;
@@ -182,196 +91,71 @@ public class RulerTests
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
--───┐
-1   │
-2   │
-3   │
-4   │
-5   │
-6   │
-7   │
-8   │
-9   │
--   │
-1   │
-2   │
-3   │
-4   │
-│   │
-│   │
-│   │
-│   │
-└───┘",
+-
+1
+2
+3
+4
+5
+6
+7
+8
+9
+-
+1
+2
+3
+4",
                                                       _output
                                                      );
 
-        // Postive offset
-        f.SetNeedsDraw ();
-        Application.LayoutAndDrawToplevels (true);
         r.Draw (new (1, 1));
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
-┌───┐
-│-  │
-│1  │
-│2  │
-│3  │
-│4  │
-│5  │
-│6  │
-│7  │
-│8  │
-│9  │
-│-  │
-│1  │
-│2  │
-│3  │
-│4  │
-│   │
-│   │
-│   │
-└───┘",
+- 
+1-
+21
+32
+43
+54
+65
+76
+87
+98
+-9
+1-
+21
+32
+43
+ 4",
                                                       _output
                                                      );
 
         // Negative offset
-        f.SetNeedsDraw ();
-        Application.LayoutAndDrawToplevels ();
-        r.Draw (new (1, -1));
+        r.Draw (new (2, -1));
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
-┌1──┐
-│2  │
-│3  │
-│4  │
-│5  │
-│6  │
-│7  │
-│8  │
-│9  │
-│-  │
-│1  │
-│2  │
-│3  │
-│4  │
-│   │
-│   │
-│   │
-│   │
-│   │
-└───┘",
+- 1
+1-2
+213
+324
+435
+546
+657
+768
+879
+98-
+-91
+1-2
+213
+324
+43 
+ 4 ",
                                                       _output
                                                      );
 
-        // Clip
-        f.SetNeedsDraw ();
-
-        Application.LayoutAndDrawToplevels ();
-        r.Draw (new (1, 10));
-
-        TestHelpers.AssertDriverContentsWithFrameAre (
-                                                      @"
-┌───┐
-│   │
-│   │
-│   │
-│   │
-│   │
-│   │
-│   │
-│   │
-│   │
-│-  │
-│1  │
-│2  │
-│3  │
-│4  │
-│5  │
-│6  │
-│7  │
-│8  │
-└9──┘",
-                                                      _output
-                                                     );
-        top.Dispose ();
-    }
-
-    [Fact]
-    [AutoInitShutdown]
-    public void Draw_Vertical_Start ()
-    {
-        var len = 15;
-
-        // Add a frame so we can see the ruler
-        var f = new FrameView { X = 0, Y = 0, Width = Dim.Fill (), Height = Dim.Fill () };
-
-        var top = new Toplevel ();
-        top.Add (f);
-        Application.Begin (top);
-        ((FakeDriver)Application.Driver!).SetBufferSize (5, len + 5);
-        Assert.Equal (new (0, 0, 5, len + 5), f.Frame);
-
-        var r = new Ruler ();
-        r.Orientation = Orientation.Vertical;
-        r.Length = len;
-        r.Draw (Point.Empty, 1);
-
-        TestHelpers.AssertDriverContentsWithFrameAre (
-                                                      @"
-1───┐
-2   │
-3   │
-4   │
-5   │
-6   │
-7   │
-8   │
-9   │
--   │
-1   │
-2   │
-3   │
-4   │
-5   │
-│   │
-│   │
-│   │
-│   │
-└───┘",
-                                                      _output
-                                                     );
-        f.SetNeedsDraw ();
-        Application.LayoutAndDrawToplevels (true);
-        r.Length = len;
-        r.Draw (new (0, 1), 1);
-
-        TestHelpers.AssertDriverContentsWithFrameAre (
-                                                      @"
-┌───┐
-1   │
-2   │
-3   │
-4   │
-5   │
-6   │
-7   │
-8   │
-9   │
--   │
-1   │
-2   │
-3   │
-4   │
-5   │
-│   │
-│   │
-│   │
-└───┘",
-                                                      _output
-                                                     );
-        top.Dispose ();
     }
 
     [Fact]

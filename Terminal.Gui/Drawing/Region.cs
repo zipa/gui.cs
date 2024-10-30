@@ -71,7 +71,7 @@ public class Region : IDisposable
     }
 
     /// <summary>
-    ///     Removes the portion of the specified rectangle from the region.
+    ///     Removes the specified rectangle from the region.
     /// </summary>
     /// <param name="rectangle">The rectangle to exclude from the region.</param>
     public void Exclude (Rectangle rectangle) { _rectangles = _rectangles.SelectMany (r => SubtractRectangle (r, rectangle)).ToList (); }

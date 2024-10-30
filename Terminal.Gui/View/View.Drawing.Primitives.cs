@@ -121,7 +121,7 @@ public partial class View
         Attribute prev = SetAttribute (new (color ?? GetNormalColor ().Background));
         Driver.FillRect (toClear);
         SetAttribute (prev);
-        Driver.Clip = prevClip;
+        Application.SetClip (prevClip);
     }
 
     #endregion Drawing Primitives

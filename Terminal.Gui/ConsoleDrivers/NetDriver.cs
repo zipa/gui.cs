@@ -1237,12 +1237,12 @@ internal class NetDriver : ConsoleDriver
             catch (IOException)
             {
                 // CONCURRENCY: Unsynchronized access to Clip is not safe.
-                Clip = new (new (0, 0, Cols, Rows));
+                Clip = new (Screen);
             }
             catch (ArgumentOutOfRangeException)
             {
                 // CONCURRENCY: Unsynchronized access to Clip is not safe.
-                Clip = new (new (0, 0, Cols, Rows));
+                Clip = new (Screen);
             }
         }
         else
@@ -1251,7 +1251,7 @@ internal class NetDriver : ConsoleDriver
         }
 
         // CONCURRENCY: Unsynchronized access to Clip is not safe.
-        Clip = new (new (0, 0, Cols, Rows));
+        Clip = new (Screen);
     }
 
     #endregion
