@@ -2,6 +2,7 @@
 // mainloop.cs: Linux/Curses MainLoop implementation.
 //
 
+using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 
 namespace Terminal.Gui;
@@ -36,18 +37,13 @@ internal class UnixMainLoop : IMainLoopDriver
         PollNval = 32
     }
 
-    public const int KEY_RESIZE = unchecked ((int)0xffffffffffffffff);
-    private static readonly nint _ignore = Marshal.AllocHGlobal (1);
-
     private readonly CursesDriver _cursesDriver;
-    private readonly Dictionary<int, Watch> _descriptorWatchers = new ();
-    private readonly int [] _wakeUpPipes = new int [2];
     private MainLoop _mainLoop;
-    private bool _pollDirty = true;
     private Pollfd [] _pollMap;
-    private bool _winChanged;
+    private readonly ConcurrentQueue<PollData> _pollDataQueue = new ();
     private readonly ManualResetEventSlim _eventReady = new (false);
     internal readonly ManualResetEventSlim _waitForInput = new (false);
+    private readonly ManualResetEventSlim _windowSizeChange = new (false);
     private readonly CancellationTokenSource _eventReadyTokenSource = new ();
     private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
 
@@ -57,11 +53,13 @@ internal class UnixMainLoop : IMainLoopDriver
         _cursesDriver = (CursesDriver)Application.Driver;
     }
 
+    public EscSeqRequests EscSeqRequests { get; } = new ();
+
     void IMainLoopDriver.Wakeup ()
     {
         if (!ConsoleDriver.RunningUnitTests)
         {
-            write (_wakeUpPipes [1], _ignore, 1);
+            _eventReady.Set ();
         }
     }
 
@@ -76,30 +74,99 @@ internal class UnixMainLoop : IMainLoopDriver
 
         try
         {
-            pipe (_wakeUpPipes);
-
-            AddWatch (
-                      _wakeUpPipes [0],
-                      Condition.PollIn,
-                      ml =>
-                      {
-                          read (_wakeUpPipes [0], _ignore, 1);
-
-                          return true;
-                      }
-                     );
+            // Setup poll for stdin (fd 0) and pipe (fd 1)
+            _pollMap = new Pollfd [1];
+            _pollMap [0].fd = 0;         // stdin (file descriptor 0)
+            _pollMap [0].events = (short)Condition.PollIn; // Monitor input for reading
         }
         catch (DllNotFoundException e)
         {
             throw new NotSupportedException ("libc not found", e);
         }
 
+        EscSeqUtils.ContinuousButtonPressed += EscSeqUtils_ContinuousButtonPressed;
+
         Task.Run (CursesInputHandler, _inputHandlerTokenSource.Token);
+        Task.Run (WindowSizeHandler, _inputHandlerTokenSource.Token);
+    }
+
+    private static readonly int TIOCGWINSZ = GetTIOCGWINSZValue ();
+
+    private const string PlaceholderLibrary = "compiled-binaries/libGetTIOCGWINSZ"; // Placeholder, won't directly load
+
+    [DllImport (PlaceholderLibrary, EntryPoint = "get_tiocgwinsz_value")]
+    private static extern int GetTIOCGWINSZValueInternal ();
+
+    public static int GetTIOCGWINSZValue ()
+    {
+        // Determine the correct library path based on the OS
+        string libraryPath = Path.Combine (
+                                           AppContext.BaseDirectory,
+                                           "compiled-binaries",
+                                           RuntimeInformation.IsOSPlatform (OSPlatform.OSX) ? "libGetTIOCGWINSZ.dylib" : "libGetTIOCGWINSZ.so");
+
+        // Load the native library manually
+        nint handle = NativeLibrary.Load (libraryPath);
+
+        // Ensure the handle is valid
+        if (handle == nint.Zero)
+        {
+            throw new DllNotFoundException ($"Unable to load library: {libraryPath}");
+        }
+
+        return GetTIOCGWINSZValueInternal ();
+    }
+
+    private void EscSeqUtils_ContinuousButtonPressed (object sender, MouseEventArgs e)
+    {
+        _pollDataQueue!.Enqueue (EnqueueMouseEvent (e.Flags, e.Position));
+    }
+
+    private void WindowSizeHandler ()
+    {
+        var ws = new Winsize ();
+        ioctl (0, TIOCGWINSZ, ref ws);
+
+        // Store initial window size
+        int rows = ws.ws_row;
+        int cols = ws.ws_col;
+
+        while (_inputHandlerTokenSource is { IsCancellationRequested: false })
+        {
+            try
+            {
+                _windowSizeChange.Wait (_inputHandlerTokenSource.Token);
+                _windowSizeChange.Reset ();
+
+                while (!_inputHandlerTokenSource.IsCancellationRequested)
+                {
+                    // Wait for a while then check if screen has changed sizes
+                    Task.Delay (500, _inputHandlerTokenSource.Token).Wait (_inputHandlerTokenSource.Token);
+
+                    ioctl (0, TIOCGWINSZ, ref ws);
+
+                    if (rows != ws.ws_row || cols != ws.ws_col)
+                    {
+                        rows = ws.ws_row;
+                        cols = ws.ws_col;
+
+                        _pollDataQueue!.Enqueue (EnqueueWindowSizeEvent (rows, cols));
+
+                        break;
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+
+            _eventReady.Set ();
+        }
     }
 
     internal bool _forceRead;
-    internal bool _suspendRead;
-    private int n;
+    private int _retries;
 
     private void CursesInputHandler ()
     {
@@ -107,8 +174,6 @@ internal class UnixMainLoop : IMainLoopDriver
         {
             try
             {
-                UpdatePollMap ();
-
                 if (!_inputHandlerTokenSource.IsCancellationRequested && !_forceRead)
                 {
                     _waitForInput.Wait (_inputHandlerTokenSource.Token);
@@ -118,46 +183,184 @@ internal class UnixMainLoop : IMainLoopDriver
             {
                 return;
             }
-            finally
+
+            if (_pollDataQueue?.Count == 0 || _forceRead)
             {
-                if (!_inputHandlerTokenSource.IsCancellationRequested)
+                while (!_inputHandlerTokenSource.IsCancellationRequested)
                 {
-                    _waitForInput.Reset ();
-                }
-            }
-
-            while (!_inputHandlerTokenSource.IsCancellationRequested)
-            {
-                if (!_suspendRead)
-                {
-                    n = poll (_pollMap, (uint)_pollMap.Length, 0);
-
-                    if (n == KEY_RESIZE)
-                    {
-                        _winChanged = true;
-
-                        break;
-                    }
+                    int n = poll (_pollMap, (uint)_pollMap.Length, 0);
 
                     if (n > 0)
                     {
+                        // Check if stdin has data
+                        if ((_pollMap [0].revents & (int)Condition.PollIn) != 0)
+                        {
+                            // Allocate memory for the buffer
+                            var buf = new byte [2048];
+                            nint bufPtr = Marshal.AllocHGlobal (buf.Length);
+
+                            try
+                            {
+                                // Read from the stdin
+                                int bytesRead = read (_pollMap [0].fd, bufPtr, buf.Length);
+
+                                if (bytesRead > 0)
+                                {
+                                    // Copy the data from unmanaged memory to a byte array
+                                    var buffer = new byte [bytesRead];
+                                    Marshal.Copy (bufPtr, buffer, 0, bytesRead);
+
+                                    // Convert the byte array to a string (assuming UTF-8 encoding)
+                                    string data = Encoding.UTF8.GetString (buffer);
+
+                                    if (EscSeqUtils.IncompleteCkInfos is { })
+                                    {
+                                        data = data.Insert (0, EscSeqUtils.ToString (EscSeqUtils.IncompleteCkInfos));
+                                        EscSeqUtils.IncompleteCkInfos = null;
+                                    }
+
+                                    // Enqueue the data
+                                    ProcessEnqueuePollData (data);
+                                }
+                            }
+                            finally
+                            {
+                                // Free the allocated memory
+                                Marshal.FreeHGlobal (bufPtr);
+                            }
+                        }
+
+                        if (_retries > 0)
+                        {
+                            _retries = 0;
+                        }
+
                         break;
                     }
-                }
 
-                if (!_forceRead)
-                {
-                    Task.Delay (100, _inputHandlerTokenSource.Token).Wait (_inputHandlerTokenSource.Token);
+                    if (EscSeqUtils.IncompleteCkInfos is null && EscSeqRequests is { Statuses.Count: > 0 })
+                    {
+                        if (_retries > 1)
+                        {
+                            EscSeqRequests.Statuses.TryDequeue (out EscSeqReqStatus seqReqStatus);
+
+                            lock (seqReqStatus.AnsiRequest._responseLock)
+                            {
+                                seqReqStatus.AnsiRequest.Response = string.Empty;
+                                seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, string.Empty);
+                            }
+
+                            _retries = 0;
+                        }
+                        else
+                        {
+                            _retries++;
+                        }
+                    }
+                    else
+                    {
+                        _retries = 0;
+                    }
+
+                    try
+                    {
+                        Task.Delay (100, _inputHandlerTokenSource.Token).Wait (_inputHandlerTokenSource.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return;
+                    }
                 }
             }
 
+            _waitForInput.Reset ();
             _eventReady.Set ();
         }
+    }
+
+    private void ProcessEnqueuePollData (string pollData)
+    {
+        foreach (string split in EscSeqUtils.SplitEscapeRawString (pollData))
+        {
+            EnqueuePollData (split);
+        }
+    }
+
+    private void EnqueuePollData (string pollDataPart)
+    {
+        ConsoleKeyInfo [] cki = EscSeqUtils.ToConsoleKeyInfoArray (pollDataPart);
+
+        ConsoleKey key = 0;
+        ConsoleModifiers mod = 0;
+        ConsoleKeyInfo newConsoleKeyInfo = default;
+
+        EscSeqUtils.DecodeEscSeq (
+                                  EscSeqRequests,
+                                  ref newConsoleKeyInfo,
+                                  ref key,
+                                  cki,
+                                  ref mod,
+                                  out string c1Control,
+                                  out string code,
+                                  out string [] values,
+                                  out string terminating,
+                                  out bool isMouse,
+                                  out List<MouseFlags> mouseFlags,
+                                  out Point pos,
+                                  out EscSeqReqStatus seqReqStatus,
+                                  EscSeqUtils.ProcessMouseEvent
+                                 );
+
+        if (isMouse)
+        {
+            foreach (MouseFlags mf in mouseFlags)
+            {
+                _pollDataQueue!.Enqueue (EnqueueMouseEvent (mf, pos));
+            }
+
+            return;
+        }
+
+        if (seqReqStatus is { })
+        {
+            var ckiString = EscSeqUtils.ToString (cki);
+
+            lock (seqReqStatus.AnsiRequest._responseLock)
+            {
+                seqReqStatus.AnsiRequest.Response = ckiString;
+                seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, ckiString);
+            }
+
+            return;
+        }
+
+        if (newConsoleKeyInfo != default)
+        {
+            _pollDataQueue!.Enqueue (EnqueueKeyboardEvent (newConsoleKeyInfo));
+        }
+    }
+
+    private PollData EnqueueMouseEvent (MouseFlags mouseFlags, Point pos)
+    {
+        var mouseEvent = new MouseEvent { Position = pos, MouseFlags = mouseFlags };
+
+        return new () { EventType = EventType.Mouse, MouseEvent = mouseEvent };
+    }
+
+    private PollData EnqueueKeyboardEvent (ConsoleKeyInfo keyInfo)
+    {
+        return new () { EventType = EventType.Key, KeyEvent = keyInfo };
+    }
+
+    private PollData EnqueueWindowSizeEvent (int rows, int cols)
+    {
+        return new () { EventType = EventType.WindowSize, WindowSizeEvent = new () { Size = new (cols, rows) } };
     }
 
     bool IMainLoopDriver.EventsPending ()
     {
         _waitForInput.Set ();
+        _windowSizeChange.Set ();
 
         if (_mainLoop.CheckTimersAndIdleHandlers (out int waitTimeout))
         {
@@ -182,7 +385,7 @@ internal class UnixMainLoop : IMainLoopDriver
 
         if (!_eventReadyTokenSource.IsCancellationRequested)
         {
-            return n > 0 || _mainLoop.CheckTimersAndIdleHandlers (out _) || _winChanged;
+            return _pollDataQueue.Count > 0 || _mainLoop.CheckTimersAndIdleHandlers (out _);
         }
 
         return true;
@@ -190,51 +393,27 @@ internal class UnixMainLoop : IMainLoopDriver
 
     void IMainLoopDriver.Iteration ()
     {
-        if (_winChanged)
+        // Dequeue and process the data
+        while (_pollDataQueue.TryDequeue (out PollData inputRecords))
         {
-            _winChanged = false;
-            _cursesDriver.ProcessInput ();
-
-            // This is needed on the mac. See https://github.com/gui-cs/Terminal.Gui/pull/2922#discussion_r1365992426
-            _cursesDriver.ProcessWinChange ();
-        }
-
-        n = 0;
-
-        if (_pollMap is null)
-        {
-            return;
-        }
-
-        foreach (Pollfd p in _pollMap)
-        {
-            Watch watch;
-
-            if (p.revents == 0)
+            if (inputRecords is { })
             {
-                continue;
-            }
-
-            if (!_descriptorWatchers.TryGetValue (p.fd, out watch))
-            {
-                continue;
-            }
-
-            if (!watch.Callback (_mainLoop))
-            {
-                _descriptorWatchers.Remove (p.fd);
+                _cursesDriver.ProcessInput (inputRecords);
             }
         }
     }
 
     void IMainLoopDriver.TearDown ()
     {
-        _descriptorWatchers?.Clear ();
+        EscSeqUtils.ContinuousButtonPressed -= EscSeqUtils_ContinuousButtonPressed;
 
         _inputHandlerTokenSource?.Cancel ();
         _inputHandlerTokenSource?.Dispose ();
-
         _waitForInput?.Dispose ();
+
+        _windowSizeChange.Dispose();
+
+        _pollDataQueue?.Clear ();
 
         _eventReadyTokenSource?.Cancel ();
         _eventReadyTokenSource?.Dispose ();
@@ -243,43 +422,14 @@ internal class UnixMainLoop : IMainLoopDriver
         _mainLoop = null;
     }
 
-    /// <summary>Watches a file descriptor for activity.</summary>
-    /// <remarks>
-    ///     When the condition is met, the provided callback is invoked.  If the callback returns false, the watch is
-    ///     automatically removed. The return value is a token that represents this watch, you can use this token to remove the
-    ///     watch by calling RemoveWatch.
-    /// </remarks>
-    internal object AddWatch (int fileDescriptor, Condition condition, Func<MainLoop, bool> callback)
+    internal void WriteRaw (string ansiRequest)
     {
-        if (callback is null)
-        {
-            throw new ArgumentNullException (nameof (callback));
-        }
+        // Write to stdout (fd 1)
+        write (STDOUT_FILENO, ansiRequest, ansiRequest.Length);
 
-        var watch = new Watch { Condition = condition, Callback = callback, File = fileDescriptor };
-        _descriptorWatchers [fileDescriptor] = watch;
-        _pollDirty = true;
-
-        return watch;
+        // Flush the stdout buffer immediately using fsync
+        fsync (STDOUT_FILENO);
     }
-
-    /// <summary>Removes an active watch from the mainloop.</summary>
-    /// <remarks>The token parameter is the value returned from AddWatch</remarks>
-    internal void RemoveWatch (object token)
-    {
-        if (!ConsoleDriver.RunningUnitTests)
-        {
-            if (token is not Watch watch)
-            {
-                return;
-            }
-
-            _descriptorWatchers.Remove (watch.File);
-        }
-    }
-
-    [DllImport ("libc")]
-    private static extern int pipe ([In] [Out] int [] pipes);
 
     [DllImport ("libc")]
     private static extern int poll ([In] [Out] Pollfd [] ufds, uint nfds, int timeout);
@@ -287,28 +437,21 @@ internal class UnixMainLoop : IMainLoopDriver
     [DllImport ("libc")]
     private static extern int read (int fd, nint buf, nint n);
 
-    private void UpdatePollMap ()
-    {
-        if (!_pollDirty)
-        {
-            return;
-        }
-
-        _pollDirty = false;
-
-        _pollMap = new Pollfd [_descriptorWatchers.Count];
-        var i = 0;
-
-        foreach (int fd in _descriptorWatchers.Keys)
-        {
-            _pollMap [i].fd = fd;
-            _pollMap [i].events = (short)_descriptorWatchers [fd].Condition;
-            i++;
-        }
-    }
+    // File descriptor for stdout
+    private const int STDOUT_FILENO = 1;
 
     [DllImport ("libc")]
-    private static extern int write (int fd, nint buf, nint n);
+    private static extern int write (int fd, string buf, int n);
+
+    [DllImport ("libc", SetLastError = true)]
+    private static extern int fsync (int fd);
+
+    // Get the stdout pointer for flushing
+    [DllImport ("libc", SetLastError = true)]
+    private static extern nint stdout ();
+
+    [DllImport ("libc", SetLastError = true)]
+    private static extern int ioctl (int fd, int request, ref Winsize ws);
 
     [StructLayout (LayoutKind.Sequential)]
     private struct Pollfd
@@ -324,4 +467,75 @@ internal class UnixMainLoop : IMainLoopDriver
         public Condition Condition;
         public int File;
     }
+
+    /// <summary>
+    ///     Window or terminal size structure. This information is stored by the kernel in order to provide a consistent
+    ///     interface, but is not used by the kernel.
+    /// </summary>
+    [StructLayout (LayoutKind.Sequential)]
+    public struct Winsize
+    {
+        public ushort ws_row;    // Number of rows
+        public ushort ws_col;    // Number of columns
+        public ushort ws_xpixel; // Width in pixels (unused)
+        public ushort ws_ypixel; // Height in pixels (unused)
+    }
+
+    #region Events
+
+    public enum EventType
+    {
+        Key = 1,
+        Mouse = 2,
+        WindowSize = 3
+    }
+
+    public struct MouseEvent
+    {
+        public Point Position;
+        public MouseFlags MouseFlags;
+    }
+
+    public struct WindowSizeEvent
+    {
+        public Size Size;
+    }
+
+    public struct PollData
+    {
+        public EventType EventType;
+        public ConsoleKeyInfo KeyEvent;
+        public MouseEvent MouseEvent;
+        public WindowSizeEvent WindowSizeEvent;
+
+        public readonly override string ToString ()
+        {
+            return EventType switch
+                   {
+                       EventType.Key => ToString (KeyEvent),
+                       EventType.Mouse => MouseEvent.ToString (),
+                       EventType.WindowSize => WindowSizeEvent.ToString (),
+                       _ => "Unknown event type: " + EventType
+                   };
+        }
+
+        /// <summary>Prints a ConsoleKeyInfoEx structure</summary>
+        /// <param name="cki"></param>
+        /// <returns></returns>
+        public readonly string ToString (ConsoleKeyInfo cki)
+        {
+            var ke = new Key ((KeyCode)cki.KeyChar);
+            var sb = new StringBuilder ();
+            sb.Append ($"Key: {(KeyCode)cki.Key} ({cki.Key})");
+            sb.Append ((cki.Modifiers & ConsoleModifiers.Shift) != 0 ? " | Shift" : string.Empty);
+            sb.Append ((cki.Modifiers & ConsoleModifiers.Control) != 0 ? " | Control" : string.Empty);
+            sb.Append ((cki.Modifiers & ConsoleModifiers.Alt) != 0 ? " | Alt" : string.Empty);
+            sb.Append ($", KeyChar: {ke.AsRune.MakePrintable ()} ({(uint)cki.KeyChar}) ");
+            string s = sb.ToString ().TrimEnd (',').TrimEnd (' ');
+
+            return $"[ConsoleKeyInfo({s})]";
+        }
+    }
+
+    #endregion
 }

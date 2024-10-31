@@ -143,6 +143,19 @@ public partial class Curses
         return false;
     }
 
+    public static bool ChangeWindowSize (int l, int c)
+    {
+        if (l != lines || c != cols)
+        {
+            lines = l;
+            cols = c;
+
+            return true;
+        }
+
+        return false;
+    }
+
     public static int clearok (nint win, bool bf) { return methods.clearok (win, bf); }
     public static int COLOR_PAIRS () { return methods.COLOR_PAIRS (); }
     public static int curs_set (int visibility) { return methods.curs_set (visibility); }

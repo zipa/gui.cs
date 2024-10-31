@@ -55,8 +55,6 @@ public partial class Curses
     public const int COLOR_GRAY = 0x8;
     public const int KEY_CODE_YES = 0x100;
     public const int ERR = unchecked ((int)0xffffffff);
-    public const int TIOCGWINSZ = 0x5413;
-    public const int TIOCGWINSZ_MAC = 0x40087468;
     [Flags]
     public enum Event : long
     {
