@@ -19,7 +19,7 @@ internal class AnsiRequestScheduler
     /// </summary>
     internal Func<DateTime> Now { get; set; }
 
-    private readonly List<Tuple<AnsiEscapeSequenceRequest, DateTime>> _queuedRequests = new ();
+    private readonly HashSet<Tuple<AnsiEscapeSequenceRequest, DateTime>> _queuedRequests = new ();
 
     internal IReadOnlyCollection<AnsiEscapeSequenceRequest> QueuedRequests => _queuedRequests.Select (r => r.Item1).ToList ();
 
@@ -69,6 +69,10 @@ internal class AnsiRequestScheduler
     /// <returns><see langword="true"/> if request was sent immediately. <see langword="false"/> if it was queued.</returns>
     public bool SendOrSchedule (AnsiEscapeSequenceRequest request)
     {
+        return SendOrSchedule (request, true);
+    }
+    private bool SendOrSchedule (AnsiEscapeSequenceRequest request,bool addToQueue)
+    {
         if (CanSend (request, out ReasonCannotSend reason))
         {
             Send (request);
@@ -91,7 +95,10 @@ internal class AnsiRequestScheduler
             }
         }
 
-        _queuedRequests.Add (Tuple.Create (request, Now ()));
+        if (addToQueue)
+        {
+            _queuedRequests.Add (Tuple.Create (request, Now ()));
+        }
 
         return false;
     }
@@ -137,14 +144,17 @@ internal class AnsiRequestScheduler
             return false;
         }
 
-        Tuple<AnsiEscapeSequenceRequest, DateTime>? opportunity = _queuedRequests.FirstOrDefault (r => CanSend (r.Item1, out _));
+        // Get oldest request
+        Tuple<AnsiEscapeSequenceRequest, DateTime>? opportunity = _queuedRequests.MinBy (r=>r.Item2);
 
         if (opportunity != null)
         {
-            _queuedRequests.Remove (opportunity);
-            Send (opportunity.Item1);
-
-            return true;
+            // Give it another go
+            if (SendOrSchedule (opportunity.Item1, false))
+            {
+                _queuedRequests.Remove (opportunity);
+                return true;
+            }
         }
 
         return false;

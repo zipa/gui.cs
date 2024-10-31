@@ -144,6 +144,53 @@ public class AnsiRequestSchedulerTests
 
         _parserMock.Verify ();
     }
+
+    [Fact]
+    public void EvictStaleRequests_RemovesStaleRequest_AfterTimeout ()
+    {
+        // Arrange
+        var request1 = new AnsiEscapeSequenceRequest
+        {
+            Request = "\u001b[0c",
+            Terminator = "c",
+            ResponseReceived = r => { }
+        };
+
+        // Send
+        _parserMock.Setup (p => p.IsExpecting ("c")).Returns (false).Verifiable (Times.Once);
+        _parserMock.Setup (p => p.ExpectResponse ("c", It.IsAny<Action<string>> (), false)).Verifiable (Times.Exactly (2));
+
+        Assert.True (_scheduler.SendOrSchedule (request1));
+
+        // Parser already has an ongoing request for "c"
+        _parserMock.Setup (p => p.IsExpecting ("c")).Returns (true).Verifiable (Times.Exactly (2));
+
+        // Cannot send because there is already outstanding request
+        Assert.False(_scheduler.SendOrSchedule (request1));
+        Assert.Single (_scheduler.QueuedRequests);
+
+        // Simulate request going stale
+        SetTime (5001); // Exceeds stale timeout
+
+        // Parser should be told to give up on this one (evicted)
+        _parserMock.Setup (p => p.StopExpecting ("c", false))
+                   .Callback (() =>
+                    {
+                        // When we tell parser to evict - it should now tell us it is no longer expecting
+                        _parserMock.Setup (p => p.IsExpecting ("c")).Returns (false).Verifiable (Times.Once);
+                    }).Verifiable ();
+
+        // When we send again the evicted one should be
+        var evicted = _scheduler.RunSchedule ();
+
+        Assert.True (evicted); // Stale request should be evicted
+        Assert.Empty (_scheduler.QueuedRequests);
+
+        // Assert
+        _parserMock.Verify ();
+    }
+
+
     private void SetTime (int milliseconds)
     {
         // This simulates the passing of time by setting the Now function to return a specific time.
