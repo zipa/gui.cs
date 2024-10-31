@@ -633,7 +633,7 @@ public abstract class ConsoleDriver
 
             if (index == 0 && keyInfo.KeyChar != EscSeqUtils.KeyEsc)
             {
-                break;
+                continue;
             }
 
             response.Append (keyInfo.KeyChar);
