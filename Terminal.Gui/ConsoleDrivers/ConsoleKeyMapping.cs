@@ -704,6 +704,32 @@ public static class ConsoleKeyMapping
                 return (uint)ConsoleKey.F24;
             case KeyCode.Tab | KeyCode.ShiftMask:
                 return (uint)ConsoleKey.Tab;
+            case KeyCode.Space:
+                return (uint)ConsoleKey.Spacebar;
+            default:
+                uint c = (char)keyValue;
+
+                if (c is >= (char)ConsoleKey.A and <= (char)ConsoleKey.Z)
+                {
+                    return c;
+                }
+
+                if ((c - 32) is >= (char)ConsoleKey.A and <= (char)ConsoleKey.Z)
+                {
+                    return (c - 32);
+                }
+
+                if (Enum.IsDefined (typeof (ConsoleKey), keyValue.ToString ()))
+                {
+                    return (uint)keyValue;
+                }
+
+                // DEL
+                if ((uint)keyValue == 127)
+                {
+                    return (uint)ConsoleKey.Backspace;
+                }
+                break;
         }
 
         isConsoleKey = false;
@@ -866,6 +892,14 @@ public static class ConsoleKeyMapping
                 break;
             case ConsoleKey.Tab:
                 keyCode = KeyCode.Tab;
+
+                break;
+            case ConsoleKey.Spacebar:
+                keyCode = KeyCode.Space;
+
+                break;
+            case ConsoleKey.Backspace:
+                keyCode = KeyCode.Backspace;
 
                 break;
             default:

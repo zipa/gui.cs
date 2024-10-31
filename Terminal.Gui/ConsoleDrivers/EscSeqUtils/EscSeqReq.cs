@@ -29,14 +29,22 @@ public class EscSeqRequests
     ///     <see cref="EscSeqReqStatus"/> instance to <see cref="Statuses"/> list.
     /// </summary>
     /// <param name="ansiRequest">The <see cref="AnsiEscapeSequenceRequest"/> object.</param>
-    public void Add (AnsiEscapeSequenceRequest ansiRequest)
+    /// <param name="driver">The driver in use.</param>
+    public void Add (AnsiEscapeSequenceRequest ansiRequest, ConsoleDriver? driver = null)
     {
         lock (Statuses)
         {
             Statuses.Enqueue (new (ansiRequest));
-            Console.Out.Write (ansiRequest.Request);
-            Console.Out.Flush ();
-            Thread.Sleep (100); // Allow time for the terminal to respond
+
+            if (driver is null)
+            {
+                Console.Out.Write (ansiRequest.Request);
+                Console.Out.Flush ();
+            }
+            else
+            {
+                driver.WriteRaw (ansiRequest.Request);
+            }
         }
     }
 
