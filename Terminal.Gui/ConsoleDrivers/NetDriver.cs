@@ -198,7 +198,7 @@ internal class NetEvents : IDisposable
         return null;
     }
 
-    private static ConsoleKeyInfo ReadConsoleKeyInfo (CancellationToken cancellationToken, bool intercept = true)
+    private ConsoleKeyInfo ReadConsoleKeyInfo (CancellationToken cancellationToken, bool intercept = true)
     {
         // if there is a key available, return it without waiting
         //  (or dispatching work to the thread queue)
@@ -215,6 +215,30 @@ internal class NetEvents : IDisposable
             {
                 return Console.ReadKey (intercept);
             }
+
+            if (EscSeqUtils.IncompleteCkInfos is null && EscSeqRequests is { Statuses.Count: > 0 })
+            {
+                if (_retries > 1)
+                {
+                    EscSeqRequests.Statuses.TryDequeue (out EscSeqReqStatus seqReqStatus);
+
+                    lock (seqReqStatus.AnsiRequest._responseLock)
+                    {
+                        seqReqStatus.AnsiRequest.Response = string.Empty;
+                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, string.Empty);
+                    }
+
+                    _retries = 0;
+                }
+                else
+                {
+                    _retries++;
+                }
+            }
+            else
+            {
+                _retries = 0;
+            }
         }
 
         cancellationToken.ThrowIfCancellationRequested ();
@@ -223,6 +247,7 @@ internal class NetEvents : IDisposable
     }
 
     internal bool _forceRead;
+    private int _retries;
 
     private void ProcessInputQueue ()
     {
@@ -230,7 +255,10 @@ internal class NetEvents : IDisposable
         {
             try
             {
-                _waitForStart.Wait (_inputReadyCancellationTokenSource.Token);
+                if (!_forceRead)
+                {
+                    _waitForStart.Wait (_inputReadyCancellationTokenSource.Token);
+                }
             }
             catch (OperationCanceledException)
             {
@@ -258,6 +286,11 @@ internal class NetEvents : IDisposable
                         return;
                     }
 
+                    if (EscSeqUtils.IncompleteCkInfos is { })
+                    {
+                        EscSeqUtils.InsertArray (EscSeqUtils.IncompleteCkInfos, _cki);
+                    }
+
                     if ((consoleKeyInfo.KeyChar == (char)KeyCode.Esc && !_isEscSeq)
                         || (consoleKeyInfo.KeyChar != (char)KeyCode.Esc && _isEscSeq))
                     {
@@ -277,7 +310,7 @@ internal class NetEvents : IDisposable
 
                         _isEscSeq = true;
 
-                        if (consoleKeyInfo.KeyChar != Key.Esc && consoleKeyInfo.KeyChar <= Key.Space)
+                        if (_cki is { } && _cki [^1].KeyChar != Key.Esc && consoleKeyInfo.KeyChar != Key.Esc && consoleKeyInfo.KeyChar <= Key.Space)
                         {
                             ProcessRequestResponse (ref newConsoleKeyInfo, ref key, _cki, ref mod);
                             _cki = null;
@@ -321,6 +354,11 @@ internal class NetEvents : IDisposable
                     }
 
                     ProcessMapConsoleKeyInfo (consoleKeyInfo);
+
+                    if (_retries > 0)
+                    {
+                        _retries = 0;
+                    }
 
                     break;
                 }
@@ -460,17 +498,13 @@ internal class NetEvents : IDisposable
         if (seqReqStatus is { })
         {
             //HandleRequestResponseEvent (c1Control, code, values, terminating);
-            StringBuilder sb = new ();
 
-            foreach (ConsoleKeyInfo keyChar in cki)
-            {
-                sb.Append (keyChar.KeyChar);
-            }
+            var ckiString = EscSeqUtils.ToString (cki);
 
             lock (seqReqStatus.AnsiRequest._responseLock)
             {
-                seqReqStatus.AnsiRequest.Response = sb.ToString ();
-                seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, sb.ToString ());
+                seqReqStatus.AnsiRequest.Response = ckiString;
+                seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, ckiString);
             }
 
             return;
@@ -1165,7 +1199,7 @@ internal class NetDriver : ConsoleDriver
 
         return new MainLoop (_mainLoopDriver);
     }
-    
+
     private void ProcessInput (InputResult inputEvent)
     {
         switch (inputEvent.EventType)
@@ -1457,12 +1491,12 @@ internal class NetDriver : ConsoleDriver
                                                  };
 
                 _mainLoopDriver._netEvents.EscSeqRequests.Add (ansiRequest);
+
+                _mainLoopDriver._netEvents._forceRead = true;
             }
 
-            if (!_ansiResponseTokenSource.IsCancellationRequested && Console.KeyAvailable)
+            if (!_ansiResponseTokenSource.IsCancellationRequested)
             {
-                _mainLoopDriver._netEvents._forceRead = true;
-
                 _mainLoopDriver._netEvents._waitForStart.Set ();
 
                 if (!_mainLoopDriver._waitForProbe.IsSet)
@@ -1496,6 +1530,9 @@ internal class NetDriver : ConsoleDriver
 
         return response;
     }
+
+    /// <inheritdoc />
+    public override void WriteRaw (string ansi) { throw new NotImplementedException (); }
 
     private MouseEventArgs ToDriverMouse (NetEvents.MouseEvent me)
     {

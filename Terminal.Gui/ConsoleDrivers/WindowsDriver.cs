@@ -18,9 +18,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Text;
 using static Terminal.Gui.ConsoleDrivers.ConsoleKeyMapping;
-using static Terminal.Gui.SpinnerStyle;
 
 namespace Terminal.Gui;
 
@@ -1066,9 +1064,6 @@ internal class WindowsDriver : ConsoleDriver
 
     public override bool SupportsTrueColor => RunningUnitTests || (Environment.OSVersion.Version.Build >= 14931 && _isWindowsTerminal);
 
-    /// <inheritdoc />
-    public override bool IsReportingMouseMoves { get; internal set; }
-
     public WindowsConsole WinConsole { get; private set; }
 
     public WindowsConsole.KeyEventRecord FromVKPacketToKeyEventRecord (WindowsConsole.KeyEventRecord keyEvent)
@@ -1196,7 +1191,7 @@ internal class WindowsDriver : ConsoleDriver
         }
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public override string WriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest)
     {
         if (_mainLoopDriver is null)
@@ -1217,12 +1212,11 @@ internal class WindowsDriver : ConsoleDriver
 
         try
         {
-            if (WinConsole?.WriteANSI (ansiRequest.Request) == true)
-            {
-                Thread.Sleep (100); // Allow time for the terminal to respond
+            WriteRaw (ansiRequest.Request);
 
-                return ReadAnsiResponseDefault (ansiRequest);
-            }
+            Thread.Sleep (100); // Allow time for the terminal to respond
+
+            return ReadAnsiResponseDefault (ansiRequest);
         }
         catch (Exception)
         {
@@ -1232,17 +1226,16 @@ internal class WindowsDriver : ConsoleDriver
         {
             _mainLoopDriver._suspendRead = false;
         }
-
-        return string.Empty;
     }
 
     #region Not Implemented
 
-    public override void StartReportingMouseMoves () { throw new NotImplementedException (); }
-
-    public override void StopReportingMouseMoves () { throw new NotImplementedException (); }
-
     public override void Suspend () { throw new NotImplementedException (); }
+
+    public override void WriteRaw (string ansi)
+    {
+        WinConsole?.WriteANSI (ansi);
+    }
 
     #endregion
 
