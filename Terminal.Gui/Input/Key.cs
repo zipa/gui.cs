@@ -208,13 +208,13 @@ public class Key : EventArgs, IEquatable<Key>
         get => _keyCode;
         init
         {
-#if DEBUG
-            if (GetIsKeyCodeAtoZ (value) && (value & KeyCode.Space) != 0)
-            {
-                throw new ArgumentException ($"Invalid KeyCode: {value} is invalid.", nameof (value));
-            }
+//#if DEBUG
+//            if (GetIsKeyCodeAtoZ (value) && (value & KeyCode.Space) != 0)
+//            {
+//                throw new ArgumentException ($"Invalid KeyCode: {value} is invalid.", nameof (value));
+//            }
 
-#endif
+//#endif
             _keyCode = value;
         }
     }
