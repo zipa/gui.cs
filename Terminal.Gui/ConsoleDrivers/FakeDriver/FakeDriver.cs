@@ -40,9 +40,6 @@ public class FakeDriver : ConsoleDriver
     public static Behaviors FakeBehaviors = new ();
     public override bool SupportsTrueColor => false;
 
-    /// <inheritdoc />
-    public override bool IsReportingMouseMoves { get; internal set; }
-
     public FakeDriver ()
     {
         Cols = FakeConsole.WindowWidth = FakeConsole.BufferWidth = FakeConsole.WIDTH;
@@ -396,13 +393,10 @@ public class FakeDriver : ConsoleDriver
     }
 
     /// <inheritdoc />
-    public override void StartReportingMouseMoves () { throw new NotImplementedException (); }
-
-    /// <inheritdoc />
-    public override void StopReportingMouseMoves () { throw new NotImplementedException (); }
-
-    /// <inheritdoc />
     public override string WriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest) { throw new NotImplementedException (); }
+
+    /// <inheritdoc />
+    public override void WriteRaw (string ansi) { throw new NotImplementedException (); }
 
     public void SetBufferSize (int width, int height)
     {

@@ -1414,38 +1414,19 @@ internal class NetDriver : ConsoleDriver
 
     #region Mouse Handling
 
-    public override bool IsReportingMouseMoves { get; internal set; }
-
-    public override void StartReportingMouseMoves ()
+    public void StartReportingMouseMoves ()
     {
         if (!RunningUnitTests)
         {
             Console.Out.Write (EscSeqUtils.CSI_EnableMouseEvents);
-
-            IsReportingMouseMoves = true;
         }
     }
 
-    public override void StopReportingMouseMoves ()
+    public void StopReportingMouseMoves ()
     {
         if (!RunningUnitTests)
         {
             Console.Out.Write (EscSeqUtils.CSI_DisableMouseEvents);
-
-            IsReportingMouseMoves = false;
-
-            while (_mainLoopDriver is { _netEvents: { } } && Console.KeyAvailable)
-            {
-                _mainLoopDriver._netEvents._waitForStart.Set ();
-                _mainLoopDriver._netEvents._waitForStart.Reset ();
-
-                _mainLoopDriver._netEvents._forceRead = true;
-            }
-
-            if (_mainLoopDriver is { _netEvents: { } })
-            {
-                _mainLoopDriver._netEvents._forceRead = false;
-            }
         }
     }
 

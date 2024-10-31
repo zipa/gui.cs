@@ -61,23 +61,14 @@ public class AnsiEscapeSequenceRequest
     public static bool TryExecuteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest, out AnsiEscapeSequenceResponse result)
     {
         var error = new StringBuilder ();
-        var savedIsReportingMouseMoves = false;
-        ConsoleDriver? driver = null;
         var values = new string? [] { null };
 
         try
         {
-            driver = Application.Driver;
-
-            savedIsReportingMouseMoves = driver!.IsReportingMouseMoves;
-
-            if (savedIsReportingMouseMoves)
-            {
-                driver.StopReportingMouseMoves ();
-            }
+            ConsoleDriver? driver = Application.Driver;
 
             // Send the ANSI escape sequence
-            ansiRequest.Response = driver.WriteAnsiRequest (ansiRequest);
+            ansiRequest.Response = driver?.WriteAnsiRequest (ansiRequest)!;
 
             if (!string.IsNullOrEmpty (ansiRequest.Response) && !ansiRequest.Response.StartsWith (EscSeqUtils.KeyEsc))
             {
@@ -104,12 +95,7 @@ public class AnsiEscapeSequenceRequest
         {
             if (string.IsNullOrEmpty (error.ToString ()))
             {
-                (string? c1Control, string? code, values, string? terminator) = EscSeqUtils.GetEscapeResult (ansiRequest.Response.ToCharArray ());
-            }
-
-            if (savedIsReportingMouseMoves)
-            {
-                driver?.StartReportingMouseMoves ();
+                (string? _, string? _, values, string? _) = EscSeqUtils.GetEscapeResult (ansiRequest.Response.ToCharArray ());
             }
         }
 

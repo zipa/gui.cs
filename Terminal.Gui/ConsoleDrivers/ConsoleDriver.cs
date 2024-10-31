@@ -144,7 +144,7 @@ public abstract class ConsoleDriver
                     // are correctly combined with the base char, but are ALSO treated as 1 column
                     // width codepoints E.g. `echo "[e`u{0301}`u{0301}]"` will output `[é  ]`.
                     // 
-                    // Until this is addressed (see Issue #), we do our best by 
+                    // Until this is addressed (see Issue #), we do our best by
                     // a) Attempting to normalize any CM with the base char to it's left
                     // b) Ignoring any CMs that don't normalize
                     if (Col > 0)
@@ -167,7 +167,7 @@ public abstract class ConsoleDriver
                             if (normalized.Length == 1)
                             {
                                 // It normalized! We can just set the Cell to the left with the
-                                // normalized codepoint 
+                                // normalized codepoint
                                 Contents [Row, Col - 1].Rune = (Rune)normalized [0];
 
                                 // Ignore. Don't move to next column because we're already there
@@ -377,7 +377,7 @@ public abstract class ConsoleDriver
                 {
                     Contents [r, c] = new Cell
                     {
-                        Rune = (rune != default ? rune : (Rune)' '),
+                        Rune = rune != default ? rune : (Rune)' ',
                         Attribute = CurrentAttribute, IsDirty = true
                     };
                     _dirtyLines! [r] = true;
@@ -562,11 +562,6 @@ public abstract class ConsoleDriver
 
     #region Mouse and Keyboard
 
-    /// <summary>
-    /// Gets whether the mouse is reporting move events.
-    /// </summary>
-    public abstract bool IsReportingMouseMoves { get; internal set; }
-
     /// <summary>Event fired when a key is pressed down. This is a precursor to <see cref="KeyUp"/>.</summary>
     public event EventHandler<Key>? KeyDown;
 
@@ -614,37 +609,34 @@ public abstract class ConsoleDriver
     public abstract void SendKeys (char keyChar, ConsoleKey key, bool shift, bool alt, bool ctrl);
 
     /// <summary>
-    ///     Provide handling for the terminal start reporting mouse events.
-    /// </summary>
-    public abstract void StartReportingMouseMoves ();
-
-    /// <summary>
-    ///     Provide handling for the terminal stop reporting mouse events.
-    /// </summary>
-    public abstract void StopReportingMouseMoves ();
-
-    /// <summary>
     ///     Provide handling for the terminal write ANSI escape sequence request.
     /// </summary>
     /// <param name="ansiRequest">The <see cref="AnsiEscapeSequenceRequest"/> object.</param>
     /// <returns>The request response.</returns>
     public abstract string WriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest);
 
+    /// <summary>
+    ///     Provide proper writing to send escape sequence recognized by the <see cref="ConsoleDriver"/>.
+    /// </summary>
+    /// <param name="ansi"></param>
+    public abstract void WriteRaw (string ansi);
+
     internal string ReadAnsiResponseDefault (AnsiEscapeSequenceRequest ansiRequest)
     {
         var response = new StringBuilder ();
-        int index = 0;
+        var index = 0;
 
         while (Console.KeyAvailable)
         {
             // Peek the next key
             ConsoleKeyInfo keyInfo = Console.ReadKey (true); // true to not display on the console
 
-            if ((index == 0 && keyInfo.KeyChar == EscSeqUtils.KeyEsc) || (index > 0 && keyInfo.KeyChar != EscSeqUtils.KeyEsc))
+            if (index == 0 && keyInfo.KeyChar != EscSeqUtils.KeyEsc)
             {
-                // Append the current key to the response
-                response.Append (keyInfo.KeyChar);
+                break;
             }
+
+            response.Append (keyInfo.KeyChar);
 
             // Read until no key is available if no terminator was specified or
             // check if the key is terminator (ANSI escape sequence ends)
