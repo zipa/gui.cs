@@ -150,8 +150,8 @@ public class LegendAnnotation : View, IAnnotation
 
         if (BorderStyle != LineStyle.None)
         {
-            OnDrawingAdornments ();
-            OnRenderingLineCanvas ();
+            DrawAdornments ();
+            RenderLineCanvas ();
         }
 
         var linesDrawn = 0;
