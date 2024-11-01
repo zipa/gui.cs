@@ -2345,7 +2345,11 @@ internal class WindowsMainLoop : IMainLoopDriver
     {
         _consoleDriver = consoleDriver ?? throw new ArgumentNullException (nameof (consoleDriver));
         _winConsole = ((WindowsDriver)consoleDriver).WinConsole;
-        _winConsole._mainLoop = this;
+
+        if (!ConsoleDriver.RunningUnitTests)
+        {
+            _winConsole._mainLoop = this;
+        }
     }
 
     public EscSeqRequests EscSeqRequests { get; } = new ();
