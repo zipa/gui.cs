@@ -941,21 +941,10 @@ public class Border : Adornment
         return true; ;
     }
 
+    /// <summary>
+    ///     Gets the subview used to render <see cref="ViewDiagnosticFlags.DrawIndicator"/>.
+    /// </summary>
     public SpinnerView? DrawIndicator { get; private set; } = null;
-
-    /// <param name="clipRegion"></param>
-    /// <inheritdoc />
-    protected override bool OnRenderingLineCanvas ()
-    {
-        if (DrawIndicator is { })
-        {
-            //DrawIndicator.AdvanceAnimation (false);
-            //DrawIndicator.DrawText();
-        }
-
-        RenderLineCanvas ();
-        return true;
-    }
 
     private void SetupGradientLineCanvas (LineCanvas lc, Rectangle rect)
     {

@@ -255,9 +255,6 @@ public partial class View : Responder, ISupportInitializeNotification
 
     private bool _enabled = true;
 
-    // This is a cache of the Enabled property so that we can restore it when the superview is re-enabled.
-    private bool _oldEnabled;
-
     /// <summary>Gets or sets a value indicating whether this <see cref="Responder"/> can respond to user interaction.</summary>
     public bool Enabled
     {

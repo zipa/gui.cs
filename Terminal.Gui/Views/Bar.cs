@@ -202,9 +202,6 @@ public class Bar : View, IOrientation, IDesignable
         LayoutBarItems (args.OldContentSize);
     }
 
-    // This is used to calculate the minimum width of the Bar when the width is NOT Dim.Auto
-    private int? _minimumDimAutoWidth;
-
     private void LayoutBarItems (Size contentSize)
     {
         View? prevBarItem = null;

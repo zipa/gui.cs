@@ -160,7 +160,6 @@ public class Adornment : View, IDesignable
     /// <summary>
     ///     Called when the <see cref="Thickness"/> of the Adornment is to be cleared.
     /// </summary>
-    /// <param name="viewport"></param>
     /// <returns><see langword="true"/> to stop further clearing.</returns>
     protected override bool OnClearingViewport ()
     {
@@ -187,7 +186,6 @@ public class Adornment : View, IDesignable
     protected override bool OnDrawingSubviews () { return Thickness == Thickness.Empty; }
 
     /// <summary>Does nothing for Adornment</summary>
-    /// <param name="clipRegion"></param>
     /// <returns></returns>
     protected override bool OnRenderingLineCanvas () { return true; }
 

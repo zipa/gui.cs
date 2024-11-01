@@ -89,7 +89,7 @@ public class SpinnerView : View, IDesignable
     /// <summary>Gets or sets the number of milliseconds to wait between characters in the animation.</summary>
     /// <remarks>
     ///     This is the maximum speed the spinner will rotate at.  You still need to call
-    ///     <see cref="SpinnerView.AdvanceAnimation()"/> or <see cref="SpinnerView.AutoSpin"/> to advance/start animation.
+    ///     <see cref="SpinnerView.AdvanceAnimation(bool)"/> or <see cref="SpinnerView.AutoSpin"/> to advance/start animation.
     /// </remarks>
     public int SpinDelay
     {

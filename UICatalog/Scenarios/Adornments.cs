@@ -1,4 +1,5 @@
-﻿using Terminal.Gui;
+﻿using System;
+using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
@@ -35,9 +36,8 @@ public class Adornments : Scenario
             Title = "The _Window",
             Arrangement = ViewArrangement.Movable,
 
-            // X = Pos.Center (),
-            Width = Dim.Percent (60),
-            Height = Dim.Percent (90)
+            Width = Dim.Fill (Dim.Func (() => editor.Frame.Width )),
+            Height = Dim.Fill ()
         };
         app.Add (window);
 
@@ -84,7 +84,7 @@ public class Adornments : Scenario
         };
 
         window.Margin.Data = "Margin";
-        window.Margin.Text = "Margin Text"; 
+        window.Margin.Text = "Margin Text";
         window.Margin.Thickness = new (0);
 
         window.Border.Data = "Border";
@@ -104,7 +104,6 @@ public class Adornments : Scenario
         longLabel.TextFormatter.WordWrap = true;
         window.Add (tf1, color, button, label, btnButtonInWindow, labelAnchorEnd, longLabel);
 
-        window.ClearingViewport += (s, e) => e.Cancel = true;
         window.Initialized += (s, e) =>
                               {
                                   editor.ViewToEdit = window;

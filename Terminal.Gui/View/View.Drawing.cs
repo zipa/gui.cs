@@ -37,15 +37,15 @@ public partial class View // Drawing APIs
             saved = SetClipToViewport ();
 
             DoSetAttribute ();
-            DoDrawSubviews ();
-
-            //DoSetAttribute ();
             DoClearViewport ();
 
-            //DoSetAttribute ();
+            DoSetAttribute ();
+            DoDrawSubviews ();
+
+            DoSetAttribute ();
             DoDrawText ();
 
-            //DoSetAttribute ();
+            DoSetAttribute ();
             DoDrawContent ();
 
             // Restore the clip before rendering the line canvas and adornment subviews
