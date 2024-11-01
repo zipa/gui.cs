@@ -49,8 +49,7 @@ internal class UnixMainLoop : IMainLoopDriver
 
     public UnixMainLoop (ConsoleDriver consoleDriver = null)
     {
-        // UnixDriver doesn't use the consoleDriver parameter, but the WindowsDriver does.
-        _cursesDriver = (CursesDriver)Application.Driver;
+        _cursesDriver = (CursesDriver)consoleDriver ?? throw new ArgumentNullException (nameof (consoleDriver));
     }
 
     public EscSeqRequests EscSeqRequests { get; } = new ();
@@ -74,7 +73,7 @@ internal class UnixMainLoop : IMainLoopDriver
 
         try
         {
-            // Setup poll for stdin (fd 0) and pipe (fd 1)
+            // Setup poll for stdin (fd 0)
             _pollMap = new Pollfd [1];
             _pollMap [0].fd = 0;         // stdin (file descriptor 0)
             _pollMap [0].events = (short)Condition.PollIn; // Monitor input for reading
@@ -244,7 +243,7 @@ internal class UnixMainLoop : IMainLoopDriver
                         {
                             EscSeqRequests.Statuses.TryDequeue (out EscSeqReqStatus seqReqStatus);
 
-                            lock (seqReqStatus.AnsiRequest._responseLock)
+                            lock (seqReqStatus!.AnsiRequest._responseLock)
                             {
                                 seqReqStatus.AnsiRequest.Response = string.Empty;
                                 seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, string.Empty);
@@ -446,10 +445,6 @@ internal class UnixMainLoop : IMainLoopDriver
     [DllImport ("libc", SetLastError = true)]
     private static extern int fsync (int fd);
 
-    // Get the stdout pointer for flushing
-    [DllImport ("libc", SetLastError = true)]
-    private static extern nint stdout ();
-
     [DllImport ("libc", SetLastError = true)]
     private static extern int ioctl (int fd, int request, ref Winsize ws);
 
@@ -459,13 +454,6 @@ internal class UnixMainLoop : IMainLoopDriver
         public int fd;
         public short events;
         public readonly short revents;
-    }
-
-    private class Watch
-    {
-        public Func<MainLoop, bool> Callback;
-        public Condition Condition;
-        public int File;
     }
 
     /// <summary>
