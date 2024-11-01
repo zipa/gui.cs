@@ -190,6 +190,42 @@ public class AnsiRequestSchedulerTests
         _parserMock.Verify ();
     }
 
+    [Fact]
+    public void RunSchedule_DoesNothing_WhenQueueIsEmpty ()
+    {
+        // Act
+        var result = _scheduler.RunSchedule ();
+
+        // Assert
+        Assert.False (result); // No requests to process
+        Assert.Empty (_scheduler.QueuedRequests);
+    }
+
+    [Fact]
+    public void SendOrSchedule_ManagesIndependentTerminatorsCorrectly ()
+    {
+        // Arrange
+        var request1 = new AnsiEscapeSequenceRequest { Request = "\u001b[0c", Terminator = "c", ResponseReceived = r => { } };
+        var request2 = new AnsiEscapeSequenceRequest { Request = "\u001b[0x", Terminator = "x", ResponseReceived = r => { } };
+
+        // Already have a 'c' ongoing
+        _parserMock.Setup (p => p.IsExpecting ("c")).Returns (true).Verifiable (Times.Once);
+
+        // 'x' is free
+        _parserMock.Setup (p => p.IsExpecting ("x")).Returns (false).Verifiable (Times.Once);
+        _parserMock.Setup (p => p.ExpectResponse ("x", It.IsAny<Action<string>> (), false)).Verifiable (Times.Once);
+
+        // Act
+        var a = _scheduler.SendOrSchedule (request1);
+        var b = _scheduler.SendOrSchedule (request2);
+
+        // Assert
+        Assert.False (a);
+        Assert.True (b);
+        Assert.Equal(request1, Assert.Single (_scheduler.QueuedRequests));
+        _parserMock.Verify ();
+    }
+
 
     private void SetTime (int milliseconds)
     {
