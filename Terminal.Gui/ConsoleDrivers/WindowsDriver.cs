@@ -24,6 +24,8 @@ namespace Terminal.Gui;
 
 internal class WindowsConsole
 {
+    internal WindowsMainLoop _mainLoop;
+
     public const int STD_OUTPUT_HANDLE = -11;
     public const int STD_INPUT_HANDLE = -10;
 
@@ -149,7 +151,13 @@ internal class WindowsConsole
 
     internal bool WriteANSI (string ansi)
     {
-        return WriteConsole (_screenBuffer, ansi, (uint)ansi.Length, out uint _, nint.Zero);
+        if (WriteConsole (_screenBuffer, ansi, (uint)ansi.Length, out uint _, nint.Zero))
+        {
+            // Flush the output to make sure it's sent immediately
+            return FlushFileBuffers (_screenBuffer);
+        }
+
+        return false;
     }
 
     public void ReadFromConsoleOutput (Size size, Coord coords, ref SmallRect window)
@@ -800,7 +808,7 @@ internal class WindowsConsole
     [DllImport ("kernel32.dll", EntryPoint = "ReadConsoleInputW", CharSet = CharSet.Unicode)]
     public static extern bool ReadConsoleInput (
         nint hConsoleInput,
-        nint lpBuffer,
+        out InputRecord lpBuffer,
         uint nLength,
         out uint lpNumberOfEventsRead
     );
@@ -832,6 +840,9 @@ internal class WindowsConsole
         out uint lpNumberOfCharsWritten,
         nint lpReserved
     );
+
+    [DllImport ("kernel32.dll", SetLastError = true)]
+    static extern bool FlushFileBuffers (nint hFile);
 
     [DllImport ("kernel32.dll")]
     private static extern bool SetConsoleCursorPosition (nint hConsoleOutput, Coord dwCursorPosition);
@@ -900,35 +911,110 @@ internal class WindowsConsole
         }
     }
 
+    private int _retries;
+
     public InputRecord [] ReadConsoleInput ()
     {
         const int bufferSize = 1;
-        nint pRecord = Marshal.AllocHGlobal (Marshal.SizeOf<InputRecord> () * bufferSize);
+        InputRecord inputRecord = default;
         uint numberEventsRead = 0;
+        StringBuilder ansiSequence = new StringBuilder ();
+        bool readingSequence = false;
 
-        try
+        while (true)
         {
-
-            if (PeekConsoleInput (_inputHandle, out InputRecord inputRecord, 1, out uint eventsRead) && eventsRead > 0)
+            try
             {
-                ReadConsoleInput (
-                                  _inputHandle,
-                                  pRecord,
-                                  bufferSize,
-                                  out numberEventsRead);
-            }
+                // Peek to check if there is any input available
+                if (PeekConsoleInput (_inputHandle, out _, bufferSize, out uint eventsRead) && eventsRead > 0)
+                {
+                    // Read the input since it is available
+                    ReadConsoleInput (
+                                      _inputHandle,
+                                      out inputRecord,
+                                      bufferSize,
+                                      out numberEventsRead);
 
-            return numberEventsRead == 0
-                       ? null
-                       : new [] { Marshal.PtrToStructure<InputRecord> (pRecord) };
-        }
-        catch (Exception)
-        {
-            return null;
-        }
-        finally
-        {
-            Marshal.FreeHGlobal (pRecord);
+                    if (inputRecord.EventType == EventType.Key)
+                    {
+                        KeyEventRecord keyEvent = inputRecord.KeyEvent;
+
+                        if (keyEvent.bKeyDown)
+                        {
+                            char inputChar = keyEvent.UnicodeChar;
+
+                            // Check if input is part of an ANSI escape sequence
+                            if (inputChar == '\u001B') // Escape character
+                            {
+                                // Peek to check if there is any input available with key event and bKeyDown
+                                if (PeekConsoleInput (_inputHandle, out InputRecord peekRecord, bufferSize, out eventsRead) && eventsRead > 0)
+                                {
+                                    if (peekRecord is { EventType: EventType.Key, KeyEvent.bKeyDown: true })
+                                    {
+                                        // It's really an ANSI request response
+                                        readingSequence = true;
+                                        ansiSequence.Clear (); // Start a new sequence
+                                        ansiSequence.Append (inputChar);
+
+                                        continue;
+                                    }
+                                }
+                            }
+                            else if (readingSequence)
+                            {
+                                ansiSequence.Append (inputChar);
+
+                                // Check if the sequence has ended with an expected command terminator
+                                if (_mainLoop.EscSeqRequests is { } && _mainLoop.EscSeqRequests.HasResponse (inputChar.ToString (), out EscSeqReqStatus seqReqStatus))
+                                {
+                                    // Finished reading the sequence and remove the enqueued request
+                                    _mainLoop.EscSeqRequests.Remove (seqReqStatus);
+
+                                    lock (seqReqStatus!.AnsiRequest._responseLock)
+                                    {
+                                        seqReqStatus.AnsiRequest.Response = ansiSequence.ToString ();
+                                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, seqReqStatus.AnsiRequest.Response);
+                                    }
+                                }
+
+                                continue;
+                            }
+                        }
+                    }
+                }
+
+                if (EscSeqUtils.IncompleteCkInfos is null && _mainLoop.EscSeqRequests is { Statuses.Count: > 0 })
+                {
+                    if (_retries > 1)
+                    {
+                        _mainLoop.EscSeqRequests.Statuses.TryDequeue (out EscSeqReqStatus seqReqStatus);
+
+                        lock (seqReqStatus!.AnsiRequest._responseLock)
+                        {
+                            seqReqStatus.AnsiRequest.Response = string.Empty;
+                            seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, string.Empty);
+                        }
+
+                        _retries = 0;
+                    }
+                    else
+                    {
+                        _retries++;
+                    }
+                }
+                else
+                {
+                    _retries = 0;
+                }
+
+                return numberEventsRead == 0
+                           ? null
+                           : [inputRecord];
+            }
+            catch (Exception)
+            {
+                return null;
+            }
         }
     }
 
@@ -1191,6 +1277,9 @@ internal class WindowsDriver : ConsoleDriver
         }
     }
 
+    private readonly ManualResetEventSlim _waitAnsiResponse = new (false);
+    private readonly CancellationTokenSource _ansiResponseTokenSource = new ();
+
     /// <inheritdoc/>
     public override string WriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest)
     {
@@ -1199,43 +1288,65 @@ internal class WindowsDriver : ConsoleDriver
             return string.Empty;
         }
 
-        while (Console.KeyAvailable)
-        {
-            _mainLoopDriver._forceRead = true;
-
-            _mainLoopDriver._waitForProbe.Set ();
-            _mainLoopDriver._waitForProbe.Reset ();
-        }
-
-        _mainLoopDriver._forceRead = false;
-        _mainLoopDriver._suspendRead = true;
+        var response = string.Empty;
 
         try
         {
-            WriteRaw (ansiRequest.Request);
+            lock (ansiRequest._responseLock)
+            {
+                ansiRequest.ResponseFromInput += (s, e) =>
+                                                 {
+                                                     Debug.Assert (s == ansiRequest);
 
-            Thread.Sleep (100); // Allow time for the terminal to respond
+                                                     ansiRequest.Response = response = e;
 
-            return ReadAnsiResponseDefault (ansiRequest);
+                                                     _waitAnsiResponse.Set ();
+                                                 };
+
+                _mainLoopDriver.EscSeqRequests.Add (ansiRequest, this);
+
+                _mainLoopDriver._forceRead = true;
+            }
+
+            if (!_ansiResponseTokenSource.IsCancellationRequested)
+            {
+                _mainLoopDriver._waitForProbe.Set ();
+
+                _waitAnsiResponse.Wait (_ansiResponseTokenSource.Token);
+            }
         }
-        catch (Exception)
+        catch (OperationCanceledException)
         {
             return string.Empty;
         }
         finally
         {
-            _mainLoopDriver._suspendRead = false;
+            _mainLoopDriver._forceRead = false;
+
+            if (_mainLoopDriver.EscSeqRequests.Statuses.TryPeek (out EscSeqReqStatus request))
+            {
+                if (_mainLoopDriver.EscSeqRequests.Statuses.Count > 0
+                    && string.IsNullOrEmpty (request.AnsiRequest.Response))
+                {
+                    // Bad request or no response at all
+                    _mainLoopDriver.EscSeqRequests.Statuses.TryDequeue (out _);
+                }
+            }
+
+            _waitAnsiResponse.Reset ();
         }
+
+        return response;
     }
-
-    #region Not Implemented
-
-    public override void Suspend () { throw new NotImplementedException (); }
 
     public override void WriteRaw (string ansi)
     {
         WinConsole?.WriteANSI (ansi);
     }
+
+    #region Not Implemented
+
+    public override void Suspend () { throw new NotImplementedException (); }
 
     #endregion
 
@@ -2234,7 +2345,10 @@ internal class WindowsMainLoop : IMainLoopDriver
     {
         _consoleDriver = consoleDriver ?? throw new ArgumentNullException (nameof (consoleDriver));
         _winConsole = ((WindowsDriver)consoleDriver).WinConsole;
+        _winConsole._mainLoop = this;
     }
+
+    public EscSeqRequests EscSeqRequests { get; } = new ();
 
     void IMainLoopDriver.Setup (MainLoop mainLoop)
     {
@@ -2343,7 +2457,6 @@ internal class WindowsMainLoop : IMainLoopDriver
     }
 
     internal bool _forceRead;
-    internal bool _suspendRead;
 
     private void WindowsInputHandler ()
     {
@@ -2351,7 +2464,7 @@ internal class WindowsMainLoop : IMainLoopDriver
         {
             try
             {
-                if (!_inputHandlerTokenSource.IsCancellationRequested)
+                if (!_inputHandlerTokenSource.IsCancellationRequested && !_forceRead)
                 {
                     _waitForProbe.Wait (_inputHandlerTokenSource.Token);
                 }
@@ -2377,21 +2490,23 @@ internal class WindowsMainLoop : IMainLoopDriver
             {
                 while (!_inputHandlerTokenSource.IsCancellationRequested)
                 {
-                    if (!_suspendRead)
+                    WindowsConsole.InputRecord [] inpRec = _winConsole.ReadConsoleInput ();
+
+                    if (inpRec is { })
                     {
-                        WindowsConsole.InputRecord[] inpRec = _winConsole.ReadConsoleInput ();
+                        _resultQueue!.Enqueue (inpRec);
 
-                        if (inpRec is { })
-                        {
-                            _resultQueue!.Enqueue (inpRec);
-
-                            break;
-                        }
+                        break;
                     }
 
                     if (!_forceRead)
                     {
-                        Task.Delay (100, _inputHandlerTokenSource.Token).Wait (_inputHandlerTokenSource.Token);
+                        try
+                        {
+                            Task.Delay (100, _inputHandlerTokenSource.Token).Wait (_inputHandlerTokenSource.Token);
+                        }
+                        catch (OperationCanceledException)
+                        { }
                     }
                 }
             }

@@ -621,37 +621,6 @@ public abstract class ConsoleDriver
     /// <param name="ansi"></param>
     public abstract void WriteRaw (string ansi);
 
-    internal string ReadAnsiResponseDefault (AnsiEscapeSequenceRequest ansiRequest)
-    {
-        var response = new StringBuilder ();
-        var index = 0;
-
-        while (Console.KeyAvailable)
-        {
-            // Peek the next key
-            ConsoleKeyInfo keyInfo = Console.ReadKey (true); // true to not display on the console
-
-            if (index == 0 && keyInfo.KeyChar != EscSeqUtils.KeyEsc)
-            {
-                continue;
-            }
-
-            response.Append (keyInfo.KeyChar);
-
-            // Read until no key is available if no terminator was specified or
-            // check if the key is terminator (ANSI escape sequence ends)
-            if (!string.IsNullOrEmpty (ansiRequest.Terminator) && keyInfo.KeyChar == ansiRequest.Terminator [^1])
-            {
-                // Break out of the loop when terminator is found
-                break;
-            }
-
-            index++;
-        }
-
-        return response.ToString ();
-    }
-
     #endregion
 }
 
