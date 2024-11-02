@@ -210,7 +210,8 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         View w = new View ()
         {
             Width = Dim.Fill (),
-            Height = Dim.Fill ()
+            Height = Dim.Fill (),
+            CanFocus = true
         };
 
         var lbl = new Label ()
