@@ -66,7 +66,8 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         View w = new View ()
         {
             Width = Dim.Fill(),
-            Height = Dim.Fill ()
+            Height = Dim.Fill (),
+            CanFocus = true
         };
 
         w.Padding.Thickness = new (1);
@@ -189,7 +190,8 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         View w = new View ()
         {
             Width = Dim.Fill (),
-            Height = Dim.Fill ()
+            Height = Dim.Fill (),
+            CanFocus = true
         };
 
         var lbl = new Label ()
@@ -349,7 +351,10 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
                                         .Select (g => new PointF (g.Key, g.Count ()))
                                         .ToList ();
         //  _graphView.ScrollOffset  = new PointF(,0);
-        _graphView.SetNeedsDisplay ();
+        if (_sentSeries.Points.Count > 0 || _answeredSeries.Points.Count > 0)
+        {
+            _graphView.SetNeedsDisplay ();
+        }
 
     }
 
