@@ -12,12 +12,49 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         // Init
         Application.Init ();
 
+        TabView tv = new TabView
+        {
+            Width = Dim.Fill (),
+            Height = Dim.Fill ()
+        };
+
+        Tab single = new Tab ();
+        single.DisplayText = "Single";
+        single.View = BuildSingleTab ();
+
+        Tab bulk = new ();
+        bulk.DisplayText = "Multi";
+        bulk.View = BuildBulkTab ();
+
+        tv.AddTab (single, true);
+        tv.AddTab (bulk, false);
+
         // Setup - Create a top-level application window and configure it.
         Window appWindow = new ()
         {
             Title = GetQuitKeyAndName (),
         };
-        appWindow.Padding.Thickness = new (1);
+
+        appWindow.Add (tv);
+
+        // Run - Start the application.
+        Application.Run (appWindow);
+        bulk.View.Dispose ();
+        single.View.Dispose ();
+        appWindow.Dispose ();
+
+        // Shutdown - Calling Application.Shutdown is required.
+        Application.Shutdown ();
+    }
+    private View BuildSingleTab ()
+    {
+        View w = new View ()
+        {
+            Width = Dim.Fill(),
+            Height = Dim.Fill ()
+        };
+
+        w.Padding.Thickness = new (1);
 
         var scrRequests = new List<string>
         {
@@ -28,19 +65,19 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         };
 
         var cbRequests = new ComboBox () { Width = 40, Height = 5, ReadOnly = true, Source = new ListWrapper<string> (new (scrRequests)) };
-        appWindow.Add (cbRequests);
+        w.Add (cbRequests);
 
         var label = new Label { Y = Pos.Bottom (cbRequests) + 1, Text = "Request:" };
         var tfRequest = new TextField { X = Pos.Left (label), Y = Pos.Bottom (label), Width = 20 };
-        appWindow.Add (label, tfRequest);
+        w.Add (label, tfRequest);
 
         label = new Label { X = Pos.Right (tfRequest) + 1, Y = Pos.Top (tfRequest) - 1, Text = "Value:" };
         var tfValue = new TextField { X = Pos.Left (label), Y = Pos.Bottom (label), Width = 6 };
-        appWindow.Add (label, tfValue);
+        w.Add (label, tfValue);
 
         label = new Label { X = Pos.Right (tfValue) + 1, Y = Pos.Top (tfValue) - 1, Text = "Terminator:" };
         var tfTerminator = new TextField { X = Pos.Left (label), Y = Pos.Bottom (label), Width = 4 };
-        appWindow.Add (label, tfTerminator);
+        w.Add (label, tfTerminator);
 
         cbRequests.SelectedItemChanged += (s, e) =>
                                           {
@@ -76,24 +113,24 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
 
         label = new Label { Y = Pos.Bottom (tfRequest) + 2, Text = "Response:" };
         var tvResponse = new TextView { X = Pos.Left (label), Y = Pos.Bottom (label), Width = 40, Height = 4, ReadOnly = true };
-        appWindow.Add (label, tvResponse);
+        w.Add (label, tvResponse);
 
         label = new Label { X = Pos.Right (tvResponse) + 1, Y = Pos.Top (tvResponse) - 1, Text = "Error:" };
         var tvError = new TextView { X = Pos.Left (label), Y = Pos.Bottom (label), Width = 40, Height = 4, ReadOnly = true };
-        appWindow.Add (label, tvError);
+        w.Add (label, tvError);
 
         label = new Label { X = Pos.Right (tvError) + 1, Y = Pos.Top (tvError) - 1, Text = "Value:" };
         var tvValue = new TextView { X = Pos.Left (label), Y = Pos.Bottom (label), Width = 6, Height = 4, ReadOnly = true };
-        appWindow.Add (label, tvValue);
+        w.Add (label, tvValue);
 
         label = new Label { X = Pos.Right (tvValue) + 1, Y = Pos.Top (tvValue) - 1, Text = "Terminator:" };
         var tvTerminator = new TextView { X = Pos.Left (label), Y = Pos.Bottom (label), Width = 4, Height = 4, ReadOnly = true };
-        appWindow.Add (label, tvTerminator);
+        w.Add (label, tvTerminator);
 
         var btnResponse = new Button { X = Pos.Center (), Y = Pos.Bottom (tvResponse) + 2, Text = "Send Request", IsDefault = true };
 
         var lblSuccess = new Label { X = Pos.Center (), Y = Pos.Bottom (btnResponse) + 1 };
-        appWindow.Add (lblSuccess);
+        w.Add (lblSuccess);
 
         btnResponse.Accepting += (s, e) =>
                               {
@@ -125,15 +162,21 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
                                       lblSuccess.Text = "Error";
                                   }
                               };
-        appWindow.Add (btnResponse);
+        w.Add (btnResponse);
 
-        appWindow.Add (new Label { Y = Pos.Bottom (lblSuccess) + 2, Text = "You can send other requests by editing the TextFields." });
+        w.Add (new Label { Y = Pos.Bottom (lblSuccess) + 2, Text = "You can send other requests by editing the TextFields." });
 
-        // Run - Start the application.
-        Application.Run (appWindow);
-        appWindow.Dispose ();
+        return w;
+    }
 
-        // Shutdown - Calling Application.Shutdown is required.
-        Application.Shutdown ();
+    private View BuildBulkTab ()
+    {
+        View w = new View ()
+        {
+            Width = Dim.Fill (),
+            Height = Dim.Fill ()
+        };
+
+        return w;
     }
 }
