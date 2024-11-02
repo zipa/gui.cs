@@ -155,8 +155,6 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         var lblSuccess = new Label { X = Pos.Center (), Y = Pos.Bottom (btnResponse) + 1 };
         w.Add (lblSuccess);
 
-        Application.Driver.GetParser ().StoppedExpecting += (s,e)=>OnFail(e.CurrentValue,tvResponse,tvError,tvValue,tvTerminator, lblSuccess);
-
         btnResponse.Accepting += (s, e) =>
                                  {
                                      var ansiEscapeSequenceRequest = new AnsiEscapeSequenceRequest
@@ -171,7 +169,8 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
                                                                           {
                                                                               Request = ansiEscapeSequenceRequest.Request,
                                                                               Terminator = ansiEscapeSequenceRequest.Terminator,
-                                                                              ResponseReceived = (s)=>OnSuccess(s, tvResponse, tvError, tvValue, tvTerminator,lblSuccess)
+                                                                              ResponseReceived = (s)=>OnSuccess(s, tvResponse, tvError, tvValue, tvTerminator,lblSuccess),
+                                                                              Abandoned =()=> OnFail (tvResponse, tvError, tvValue, tvTerminator, lblSuccess)
                                                                           });
                                  };
 
@@ -193,12 +192,12 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
             lblSuccess.Text = "Successful";
     }
 
-    private void OnFail (string terminator, TextView tvResponse, TextView tvError, TextView tvValue, TextView tvTerminator, Label lblSuccess)
+    private void OnFail (TextView tvResponse, TextView tvError, TextView tvValue, TextView tvTerminator, Label lblSuccess)
     {
         tvResponse.Text = string.Empty;
         tvError.Text = "No Response";
         tvValue.Text = string.Empty;
-        tvTerminator.Text = terminator;
+        tvTerminator.Text = string.Empty;
 
         lblSuccess.ColorScheme = Colors.ColorSchemes ["Error"];
         lblSuccess.Text = "Error";

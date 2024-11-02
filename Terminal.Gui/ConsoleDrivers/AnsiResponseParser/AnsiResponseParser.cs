@@ -27,9 +27,6 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     private AnsiResponseParserState _state = AnsiResponseParserState.Normal;
 
     /// <inheritdoc />
-    public event EventHandler<EventArgs<string>>? StoppedExpecting;
-
-    /// <inheritdoc />
     public AnsiResponseParserState State
     {
         get => _state;
@@ -309,8 +306,6 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     /// <inheritdoc/>
     public void StopExpecting (string terminator, bool persistent)
     {
-        StoppedExpecting?.Invoke (this, new (terminator));
-
         lock (lockExpectedResponses)
         {
             if (persistent)

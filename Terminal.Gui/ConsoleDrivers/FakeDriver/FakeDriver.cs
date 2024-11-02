@@ -395,7 +395,7 @@ public class FakeDriver : ConsoleDriver
     private AnsiResponseParser _parser = new ();
 
     /// <inheritdoc />
-    public override IAnsiResponseParser GetParser () => _parser;
+    internal override IAnsiResponseParser GetParser () => _parser;
 
     /// <inheritdoc />
     internal override void RawWrite (string str) { }

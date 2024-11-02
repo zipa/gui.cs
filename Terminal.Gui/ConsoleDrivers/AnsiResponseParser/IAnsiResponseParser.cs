@@ -8,11 +8,6 @@ namespace Terminal.Gui;
 public interface IAnsiResponseParser
 {
     /// <summary>
-    /// Called when parser is told to <see cref="StopExpecting"/> a response for a given request
-    /// </summary>
-    public event EventHandler<EventArgs<string>> StoppedExpecting;
-
-    /// <summary>
     ///     Current state of the parser based on what sequence of characters it has
     ///     read from the console input stream.
     /// </summary>
