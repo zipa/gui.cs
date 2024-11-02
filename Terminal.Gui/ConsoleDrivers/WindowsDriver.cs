@@ -974,6 +974,8 @@ internal class WindowsConsole
                                     {
                                         seqReqStatus.AnsiRequest.Response = ansiSequence.ToString ();
                                         seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, seqReqStatus.AnsiRequest.Response);
+                                        // Clear the terminator for not be enqueued
+                                        inputRecord = default (InputRecord);
                                     }
                                 }
 
