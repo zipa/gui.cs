@@ -103,6 +103,16 @@ internal class AnsiRequestScheduler
         return false;
     }
 
+    private void EvictStaleRequests ()
+    {
+        foreach (var stale in _lastSend.Where (v => IsStale (v.Value)).Select (k => k.Key))
+        {
+            EvictStaleRequests (stale);
+        }
+    }
+
+    private bool IsStale (DateTime dt) => Now () - dt > _staleTimeout;
+
     /// <summary>
     ///     Looks to see if the last time we sent <paramref name="withTerminator"/>
     ///     is a long time ago. If so we assume that we will never get a response and
@@ -114,7 +124,7 @@ internal class AnsiRequestScheduler
     {
         if (_lastSend.TryGetValue (withTerminator, out DateTime dt))
         {
-            if (Now () - dt > _staleTimeout)
+            if (IsStale (dt))
             {
                 _parser.StopExpecting (withTerminator, false);
 
@@ -157,8 +167,11 @@ internal class AnsiRequestScheduler
             }
         }
 
+        EvictStaleRequests ();
+
         return false;
     }
+
 
     private void Send (AnsiEscapeSequenceRequest r)
     {
