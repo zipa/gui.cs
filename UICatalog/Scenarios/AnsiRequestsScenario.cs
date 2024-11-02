@@ -31,7 +31,8 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         TabView tv = new TabView
         {
             Width = Dim.Fill (),
-            Height = Dim.Fill ()
+            Height = Dim.Fill (),
+            CanFocus = true
         };
 
         Tab single = new Tab ();
@@ -68,7 +69,8 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         View w = new View ()
         {
             Width = Dim.Fill (),
-            Height = Dim.Fill ()
+            Height = Dim.Fill (),
+            CanFocus = true
         };
 
         w.Padding.Thickness = new (1);
