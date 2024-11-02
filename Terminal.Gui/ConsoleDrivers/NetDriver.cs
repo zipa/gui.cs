@@ -1844,6 +1844,12 @@ internal class NetMainLoop : IMainLoopDriver
     void IMainLoopDriver.Setup (MainLoop mainLoop)
     {
         _mainLoop = mainLoop;
+
+        if (ConsoleDriver.RunningUnitTests)
+        {
+            return;
+        }
+
         Task.Run (NetInputHandler, _inputHandlerTokenSource.Token);
     }
 

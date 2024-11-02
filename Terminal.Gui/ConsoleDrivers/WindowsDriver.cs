@@ -2346,10 +2346,10 @@ internal class WindowsMainLoop : IMainLoopDriver
     public WindowsMainLoop (ConsoleDriver consoleDriver = null)
     {
         _consoleDriver = consoleDriver ?? throw new ArgumentNullException (nameof (consoleDriver));
-        _winConsole = ((WindowsDriver)consoleDriver).WinConsole;
 
         if (!ConsoleDriver.RunningUnitTests)
         {
+            _winConsole = ((WindowsDriver)consoleDriver).WinConsole;
             _winConsole._mainLoop = this;
         }
     }
@@ -2359,6 +2359,12 @@ internal class WindowsMainLoop : IMainLoopDriver
     void IMainLoopDriver.Setup (MainLoop mainLoop)
     {
         _mainLoop = mainLoop;
+
+        if (ConsoleDriver.RunningUnitTests)
+        {
+            return;
+        }
+
         Task.Run (WindowsInputHandler, _inputHandlerTokenSource.Token);
 #if HACK_CHECK_WINCHANGED
         Task.Run (CheckWinChange);

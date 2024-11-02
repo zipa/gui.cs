@@ -54,13 +54,7 @@ internal class UnixMainLoop : IMainLoopDriver
 
     public EscSeqRequests EscSeqRequests { get; } = new ();
 
-    void IMainLoopDriver.Wakeup ()
-    {
-        if (!ConsoleDriver.RunningUnitTests)
-        {
-            _eventReady.Set ();
-        }
-    }
+    void IMainLoopDriver.Wakeup () { _eventReady.Set (); }
 
     void IMainLoopDriver.Setup (MainLoop mainLoop)
     {
