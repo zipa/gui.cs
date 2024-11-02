@@ -2517,7 +2517,15 @@ internal class WindowsMainLoop : IMainLoopDriver
                 }
             }
 
-            _eventReady.Set ();
+            if (_eventReady.IsSet)
+            {
+                // it's already in an iteration and ensures set to iterate again
+                Application.Invoke (() => _eventReady.Set ());
+            }
+            else
+            {
+                _eventReady.Set ();
+            }
         }
     }
 
