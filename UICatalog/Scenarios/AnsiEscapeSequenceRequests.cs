@@ -196,7 +196,7 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
 
         var lbl = new Label ()
         {
-            Text = "This scenario tests Ansi request/response processing. Use the TextView to ensure regular user interaction continues as normal during sends",
+            Text = "This scenario tests Ansi request/response processing. Use the TextView to ensure regular user interaction continues as normal during sends. Responses are in red, queued messages are in green.",
             Height = 2,
             Width = Dim.Fill ()
         };
