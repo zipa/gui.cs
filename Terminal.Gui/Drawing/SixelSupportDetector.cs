@@ -1,12 +1,12 @@
 ﻿using System.Text.RegularExpressions;
 
 namespace Terminal.Gui;
-/* TODO : Depends on https://github.com/gui-cs/Terminal.Gui/pull/3768
+
 /// <summary>
 ///     Uses Ansi escape sequences to detect whether sixel is supported
 ///     by the terminal.
 /// </summary>
-public class SixelSupportDetector : ISixelSupportDetector
+public class SixelSupportDetector
 {
     /// <summary>
     /// Sends Ansi escape sequences to the console to determine whether
@@ -15,102 +15,130 @@ public class SixelSupportDetector : ISixelSupportDetector
     /// </summary>
     /// <returns>Description of sixel support, may include assumptions where
     /// expected response codes are not returned by console.</returns>
-    public SixelSupportResult Detect ()
+    public void Detect (Action<SixelSupportResult> resultCallback)
     {
         var result = new SixelSupportResult ();
-
-        result.IsSupported = IsSixelSupportedByDar ();
-
-        if (result.IsSupported)
-        {
-            if (TryGetResolutionDirectly (out var res))
-            {
-                result.Resolution = res;
-            }
-            else if(TryComputeResolution(out res))
-            {
-                result.Resolution = res;
-            }
-
-            result.SupportsTransparency = IsWindowsTerminal () || IsXtermWithTransparency ();
-        }
-
-        return result;
+        result.SupportsTransparency = IsWindowsTerminal () || IsXtermWithTransparency ();
+        IsSixelSupportedByDar (result, resultCallback);
     }
 
 
-    private bool TryGetResolutionDirectly (out Size resolution)
+    private void TryGetResolutionDirectly (SixelSupportResult result, Action<SixelSupportResult> resultCallback)
     {
         // Expect something like:
         //<esc>[6;20;10t
+        QueueRequest (EscSeqUtils.CSI_RequestSixelResolution,
+                      (r) =>
+                      {
+                          // Terminal supports directly responding with resolution
+                          var match = Regex.Match (r, @"\[\d+;(\d+);(\d+)t$");
 
-        if (AnsiEscapeSequenceRequest.TryExecuteAnsiRequest (EscSeqUtils.CSI_RequestSixelResolution, out var response))
-        {
-            // Terminal supports directly responding with resolution
-            var match = Regex.Match (response.Response, @"\[\d+;(\d+);(\d+)t$");
+                          if (match.Success)
+                          {
+                              if (int.TryParse (match.Groups [1].Value, out var ry) &&
+                                  int.TryParse (match.Groups [2].Value, out var rx))
+                              {
+                                  result.Resolution = new Size (rx, ry);
+                              }
+                          }
 
-            if (match.Success)
-            {
-                if (int.TryParse (match.Groups [1].Value, out var ry) &&
-                    int.TryParse (match.Groups [2].Value, out var rx))
-                {
-                    resolution = new Size (rx, ry);
+                          // Finished
+                          resultCallback.Invoke (result);
 
-                    return true;
-                }
-            }
-        }
-
-        resolution = default;
-        return false;
+                      },
+                      // Request failed, so try to compute instead
+                      ()=>TryComputeResolution (result,resultCallback));
     }
 
 
-    private bool TryComputeResolution (out Size resolution)
+    private void TryComputeResolution (SixelSupportResult result, Action<SixelSupportResult> resultCallback)
+    {
+        string windowSize;
+        string sizeInChars;
+
+        QueueRequest (EscSeqUtils.CSI_RequestWindowSizeInPixels,
+                      (r1)=>
+                      {
+                          windowSize = r1;
+
+                          QueueRequest (EscSeqUtils.CSI_ReportTerminalSizeInChars,
+                                        (r2) =>
+                                        {
+                                            sizeInChars = r2;
+                                            ComputeResolution (result,windowSize,sizeInChars);
+                                            resultCallback (result);
+
+                                        }, abandoned: () => resultCallback (result));
+                      },abandoned: ()=>resultCallback(result));
+    }
+
+    private void ComputeResolution (SixelSupportResult result, string windowSize, string sizeInChars)
     {
         // Fallback to window size in pixels and characters
-        if (AnsiEscapeSequenceRequest.TryExecuteAnsiRequest (EscSeqUtils.CSI_RequestWindowSizeInPixels, out var pixelSizeResponse)
-            && AnsiEscapeSequenceRequest.TryExecuteAnsiRequest (EscSeqUtils.CSI_ReportTerminalSizeInChars, out var charSizeResponse))
+        // Example [4;600;1200t
+        var pixelMatch = Regex.Match (windowSize, @"\[\d+;(\d+);(\d+)t$");
+
+        // Example [8;30;120t
+        var charMatch = Regex.Match (sizeInChars, @"\[\d+;(\d+);(\d+)t$");
+
+        if (pixelMatch.Success && charMatch.Success)
         {
-            // Example [4;600;1200t
-            var pixelMatch = Regex.Match (pixelSizeResponse.Response, @"\[\d+;(\d+);(\d+)t$");
+            // Extract pixel dimensions
+            if (int.TryParse (pixelMatch.Groups [1].Value, out var pixelHeight)
+                && int.TryParse (pixelMatch.Groups [2].Value, out var pixelWidth)
+                &&
 
-            // Example [8;30;120t
-            var charMatch = Regex.Match (charSizeResponse.Response, @"\[\d+;(\d+);(\d+)t$");
-
-            if (pixelMatch.Success && charMatch.Success)
+                // Extract character dimensions
+                int.TryParse (charMatch.Groups [1].Value, out var charHeight)
+                && int.TryParse (charMatch.Groups [2].Value, out var charWidth)
+                && charWidth != 0
+                && charHeight != 0) // Avoid divide by zero
             {
-                // Extract pixel dimensions
-                if (int.TryParse (pixelMatch.Groups [1].Value, out var pixelHeight)
-                    && int.TryParse (pixelMatch.Groups [2].Value, out var pixelWidth)
-                    &&
+                // Calculate the character cell size in pixels
+                var cellWidth = (int)Math.Round ((double)pixelWidth / charWidth);
+                var cellHeight = (int)Math.Round ((double)pixelHeight / charHeight);
 
-                    // Extract character dimensions
-                    int.TryParse (charMatch.Groups [1].Value, out var charHeight)
-                    && int.TryParse (charMatch.Groups [2].Value, out var charWidth)
-                    && charWidth != 0
-                    && charHeight != 0) // Avoid divide by zero
-                {
-                    // Calculate the character cell size in pixels
-                    var cellWidth = (int)Math.Round ((double)pixelWidth / charWidth);
-                    var cellHeight = (int)Math.Round ((double)pixelHeight / charHeight);
-
-                    // Set the resolution based on the character cell size
-                    resolution = new Size (cellWidth, cellHeight);
-
-                    return true;
-                }
+                // Set the resolution based on the character cell size
+                result.Resolution = new Size (cellWidth, cellHeight);
             }
         }
-
-        resolution = default;
-        return false;
     }
-    private bool IsSixelSupportedByDar ()
+
+    private void IsSixelSupportedByDar (SixelSupportResult result,Action<SixelSupportResult> resultCallback)
     {
-        return AnsiEscapeSequenceRequest.TryExecuteAnsiRequest (EscSeqUtils.CSI_SendDeviceAttributes, out AnsiEscapeSequenceResponse darResponse)
-            ? darResponse.Response.Split (';').Contains ("4")
-            : false;
+        QueueRequest (
+              EscSeqUtils.CSI_SendDeviceAttributes,
+              (r) =>
+              {
+                  result.IsSupported = ResponseIndicatesSupport (r);
+
+                  if (result.IsSupported)
+                  {
+                      TryGetResolutionDirectly (result, resultCallback);
+                  }
+                  else
+                  {
+                      resultCallback (result);
+                  }
+              },abandoned: () => resultCallback(result));
+    }
+
+    private void QueueRequest (AnsiEscapeSequenceRequest req, Action<string> responseCallback, Action abandoned)
+    {
+        var newRequest = new AnsiEscapeSequenceRequest
+        {
+            Request = req.Request,
+            Terminator = req.Terminator,
+            ResponseReceived = responseCallback,
+            Abandoned = abandoned
+        };
+
+        Application.Driver.QueueAnsiRequest (newRequest);
+    }
+
+    private bool ResponseIndicatesSupport (string response)
+    {
+        return response.Split (';').Contains ("4");
     }
 
     private bool IsWindowsTerminal ()
@@ -130,4 +158,4 @@ public class SixelSupportDetector : ISixelSupportDetector
 
         return false;
     }
-}*/
+}

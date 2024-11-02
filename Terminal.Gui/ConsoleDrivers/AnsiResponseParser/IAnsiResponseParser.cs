@@ -24,17 +24,18 @@ public interface IAnsiResponseParser
     ///     sent an ANSI request out).
     /// </summary>
     /// <param name="terminator">The terminator you expect to see on response.</param>
+    /// <param name="response">Callback to invoke when the response is seen in console input.</param>
+    /// <param name="abandoned"></param>
     /// <param name="persistent">
     ///     <see langword="true"/> if you want this to persist permanently
     ///     and be raised for every event matching the <paramref name="terminator"/>.
     /// </param>
-    /// <param name="response">Callback to invoke when the response is seen in console input.</param>
     /// <exception cref="ArgumentException">
     ///     If trying to register a persistent request for a terminator
     ///     that already has one.
     ///     exists.
     /// </exception>
-    void ExpectResponse (string terminator, Action<string> response, bool persistent);
+    void ExpectResponse (string terminator, Action<string> response,Action? abandoned, bool persistent);
 
     /// <summary>
     ///     Returns true if there is an existing expectation (i.e. we are waiting a response

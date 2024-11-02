@@ -281,17 +281,17 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     }
 
     /// <inheritdoc/>
-    public void ExpectResponse (string terminator, Action<string> response, bool persistent)
+    public void ExpectResponse (string terminator, Action<string> response,Action? abandoned, bool persistent)
     {
         lock (lockExpectedResponses)
         {
             if (persistent)
             {
-                persistentExpectations.Add (new (terminator, h => response.Invoke (h.HeldToString ())));
+                persistentExpectations.Add (new (terminator, h => response.Invoke (h.HeldToString ()), abandoned));
             }
             else
             {
-                expectedResponses.Add (new (terminator, h => response.Invoke (h.HeldToString ())));
+                expectedResponses.Add (new (terminator, h => response.Invoke (h.HeldToString ()), abandoned));
             }
         }
     }
@@ -315,7 +315,13 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
         {
             if (persistent)
             {
-                persistentExpectations.RemoveAll (r => r.Matches (terminator));
+                AnsiResponseExpectation [] removed = persistentExpectations.Where (r => r.Matches (terminator)).ToArray ();
+
+                foreach (var toRemove in removed)
+                {
+                    persistentExpectations.Remove (toRemove);
+                    toRemove.Abandoned?.Invoke ();
+                }
             }
             else
             {
@@ -325,6 +331,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
                 {
                     expectedResponses.Remove (r);
                     lateResponses.Add (r);
+                    r.Abandoned?.Invoke ();
                 }
             }
         }
@@ -373,18 +380,19 @@ internal class AnsiResponseParser<T> : AnsiResponseParserBase
     /// </summary>
     /// <param name="terminator"></param>
     /// <param name="response"></param>
+    /// <param name="abandoned"></param>
     /// <param name="persistent"></param>
-    public void ExpectResponseT (string terminator, Action<IEnumerable<Tuple<char, T>>> response, bool persistent)
+    public void ExpectResponseT (string terminator, Action<IEnumerable<Tuple<char, T>>> response,Action? abandoned, bool persistent)
     {
         lock (lockExpectedResponses)
         {
             if (persistent)
             {
-                persistentExpectations.Add (new (terminator, h => response.Invoke (HeldToEnumerable ())));
+                persistentExpectations.Add (new (terminator, h => response.Invoke (HeldToEnumerable ()), abandoned));
             }
             else
             {
-                expectedResponses.Add (new (terminator, h => response.Invoke (HeldToEnumerable ())));
+                expectedResponses.Add (new (terminator, h => response.Invoke (HeldToEnumerable ()), abandoned));
             }
         }
     }

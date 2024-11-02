@@ -23,6 +23,11 @@ public class AnsiEscapeSequenceRequest
     public Action<string> ResponseReceived;
 
     /// <summary>
+    ///     Invoked if the console fails to responds to the ANSI response code
+    /// </summary>
+    public Action? Abandoned;
+
+    /// <summary>
     ///     <para>
     ///         The terminator that uniquely identifies the type of response as responded
     ///         by the console. e.g. for

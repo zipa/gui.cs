@@ -176,7 +176,7 @@ internal class AnsiRequestScheduler
     private void Send (AnsiEscapeSequenceRequest r)
     {
         _lastSend.AddOrUpdate (r.Terminator, _ => Now (), (_, _) => Now ());
-        _parser.ExpectResponse (r.Terminator, r.ResponseReceived, false);
+        _parser.ExpectResponse (r.Terminator, r.ResponseReceived, r.Abandoned, false);
         r.Send ();
     }
 
