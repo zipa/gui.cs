@@ -592,7 +592,7 @@ internal class CursesDriver : ConsoleDriver
 
     private readonly AnsiResponseParser _parser = new ();
     /// <inheritdoc />
-    protected override IAnsiResponseParser GetParser () => _parser;
+    public override IAnsiResponseParser GetParser () => _parser;
 
     internal void ProcessInput ()
     {

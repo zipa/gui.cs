@@ -1180,7 +1180,7 @@ internal class WindowsDriver : ConsoleDriver
     }
 
     /// <inheritdoc />
-    protected override IAnsiResponseParser GetParser () => _parser;
+    public override IAnsiResponseParser GetParser () => _parser;
 
     /// <inheritdoc />
     internal override void RawWrite (string str) => WinConsole?.WriteANSI (str);

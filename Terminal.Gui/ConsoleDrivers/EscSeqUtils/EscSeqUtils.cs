@@ -1329,7 +1329,7 @@ public static class EscSeqUtils
     ///     ESC [ ? 6 n - Request Cursor Position Report (?) (DECXCPR)
     ///     https://terminalguide.namepad.de/seq/csi_sn__p-6/
     /// </summary>
-    public static readonly string CSI_RequestCursorPositionReport = CSI + "?6n";
+    public static readonly AnsiEscapeSequenceRequest CSI_RequestCursorPositionReport = new () { Request = CSI + "?6n", Terminator = "R" };
 
     /// <summary>
     ///     The terminal reply to <see cref="CSI_RequestCursorPositionReport"/>. ESC [ ? (y) ; (x) R
@@ -1354,13 +1354,13 @@ public static class EscSeqUtils
     ///     32 = Text macros
     ///     42 = ISO Latin-2 character set
     /// </summary>
-    public static readonly string CSI_SendDeviceAttributes = CSI + "0c";
+    public static readonly AnsiEscapeSequenceRequest CSI_SendDeviceAttributes = new () { Request = CSI + "0c", Terminator = "c" };
 
     /// <summary>
     ///     ESC [ > 0 c - Send Device Attributes (Secondary DA)
     ///     Windows Terminal v1.18+ emits: "\x1b[>0;10;1c" (vt100, firmware version 1.0, vt220)
     /// </summary>
-    public static readonly string CSI_SendDeviceAttributes2 = CSI + ">0c";
+    public static readonly AnsiEscapeSequenceRequest CSI_SendDeviceAttributes2 = new () { Request = CSI + ">0c", Terminator = "c" };
 
     /// <summary>
     ///     The terminator indicating a reply to <see cref="CSI_SendDeviceAttributes"/> or
@@ -1385,7 +1385,8 @@ public static class EscSeqUtils
     ///     CSI 1 8 t  | yes | yes |  yes  | report window size in chars
     ///     https://terminalguide.namepad.de/seq/csi_st-18/
     /// </summary>
-    public static readonly string CSI_ReportTerminalSizeInChars = CSI + "18t";
+    public static readonly AnsiEscapeSequenceRequest CSI_ReportTerminalSizeInChars = new () { Request = CSI + "18t", Terminator = "t", Value = "8" };
+
 
     /// <summary>
     ///     The terminator indicating a reply to <see cref="CSI_ReportTerminalSizeInChars"/> : ESC [ 8 ; height ; width t

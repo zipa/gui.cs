@@ -48,4 +48,15 @@ public class AnsiEscapeSequenceRequest
     ///     sending many requests.
     /// </summary>
     public void Send () { Application.Driver?.RawWrite (Request); }
+
+
+    /// <summary>
+    ///     The value expected in the response e.g.
+    ///     <see>
+    ///         <cref>EscSeqUtils.CSI_ReportTerminalSizeInChars.Value</cref>
+    ///     </see>
+    ///     which will have a 't' as terminator but also other different request may return the same terminator with a
+    ///     different value.
+    /// </summary>
+    public string? Value { get; init; }
 }

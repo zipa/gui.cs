@@ -627,7 +627,7 @@ public abstract class ConsoleDriver
         GetRequestScheduler ().SendOrSchedule (request);
     }
 
-    protected abstract IAnsiResponseParser GetParser ();
+    public abstract IAnsiResponseParser GetParser ();
 
     internal AnsiRequestScheduler GetRequestScheduler ()
     {

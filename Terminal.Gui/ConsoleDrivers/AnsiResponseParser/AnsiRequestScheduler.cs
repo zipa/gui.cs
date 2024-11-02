@@ -50,7 +50,7 @@ internal class AnsiRequestScheduler
     ///     to respond. Only affects when we try to send a new request with the same terminator - at which point
     ///     we tell the parser to stop expecting the old request and start expecting the new request.
     /// </summary>
-    private readonly TimeSpan _staleTimeout = TimeSpan.FromSeconds (5);
+    private readonly TimeSpan _staleTimeout = TimeSpan.FromSeconds (1);
 
     private readonly DateTime _lastRun;
 

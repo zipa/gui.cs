@@ -994,7 +994,7 @@ internal class NetDriver : ConsoleDriver
     }
 
     /// <inheritdoc />
-    protected override IAnsiResponseParser GetParser () => _mainLoopDriver._netEvents.Parser;
+    public override IAnsiResponseParser GetParser () => _mainLoopDriver._netEvents.Parser;
 
     /// <inheritdoc />
     internal override void RawWrite (string str)
