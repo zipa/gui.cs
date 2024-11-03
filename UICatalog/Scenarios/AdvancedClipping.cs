@@ -20,36 +20,47 @@ public class AdvancedClipping : Scenario
             //BorderStyle = LineStyle.None
         };
 
-        app.DrawingText += (s, e) =>
+        app.DrawingContent += (s, e) =>
                            {
                                Application.Driver?.FillRect (app.ViewportToScreen (app.Viewport), CM.Glyphs.Dot);
-                               //app.SetSubViewNeedsDraw();
                                e.Cancel = true;
                            };
 
-        //var arrangementEditor = new ArrangementEditor()
-        //{
-        //    X = Pos.AnchorEnd (),
-        //    Y = 0,
-        //    AutoSelectViewToEdit = true,
-        //};
-        //app.Add (arrangementEditor);
+        var arrangementEditor = new ArrangementEditor ()
+        {
+            X = Pos.AnchorEnd (),
+            Y = 0,
+            AutoSelectViewToEdit = true,
+        };
+        app.Add (arrangementEditor);
 
         View tiledView1 = CreateTiledView (1, 0, 0);
 
-        ProgressBar tiledProgressBar = new ()
+        tiledView1.Width = 30;
+
+        ProgressBar tiledProgressBar1 = new ()
         {
             X = 0,
-            Y = Pos.AnchorEnd(),
+            Y = Pos.AnchorEnd (),
+            Width = Dim.Fill (),
+            Id = "tiledProgressBar",
+            BidirectionalMarquee = true,
+        };
+        tiledView1.Add (tiledProgressBar1);
+
+        View tiledView2 = CreateTiledView (2, 4, 2);
+
+        ProgressBar tiledProgressBar2 = new ()
+        {
+            X = 0,
+            Y = Pos.AnchorEnd (),
             Width = Dim.Fill (),
             Id = "tiledProgressBar",
             BidirectionalMarquee = true,
             ProgressBarStyle = ProgressBarStyle.MarqueeBlocks
-           // BorderStyle = LineStyle.Rounded
+            // BorderStyle = LineStyle.Rounded
         };
-        tiledView1.Add (tiledProgressBar);
-
-        View tiledView2 = CreateTiledView (2, 4, 2);
+        tiledView2.Add (tiledProgressBar2);
 
         app.Add (tiledView1);
         app.Add (tiledView2);
@@ -84,7 +95,8 @@ public class AdvancedClipping : Scenario
 
         progressTimer.Elapsed += (s, e) =>
                                  {
-                                     tiledProgressBar.Pulse();
+                                     tiledProgressBar1.Pulse ();
+                                     tiledProgressBar2.Pulse ();
                                      Application.Wakeup ();
                                  };
 
@@ -131,12 +143,13 @@ public class AdvancedClipping : Scenario
             BorderStyle = LineStyle.Single,
             CanFocus = true, // Can't drag without this? BUGBUG
             TabStop = TabBehavior.TabStop,
-            Arrangement = ViewArrangement.Movable | ViewArrangement.Resizable
+            Arrangement = ViewArrangement.Movable | ViewArrangement.Resizable,
+            ShadowStyle = ShadowStyle.Transparent
         };
         //tiled.Padding.Thickness = new (1);
         //tiled.Padding.Diagnostics =  ViewDiagnosticFlags.Thickness;
 
-        tiled.Margin.Thickness = new (1);
+        //tiled.Margin.Thickness = new (1);
 
         FrameView fv = new ()
         {
@@ -145,7 +158,7 @@ public class AdvancedClipping : Scenario
             Height = 3,
         };
         tiled.Add (fv);
-        
+
         return tiled;
     }
 

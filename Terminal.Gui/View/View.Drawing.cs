@@ -22,8 +22,13 @@ public partial class View // Drawing APIs
     /// </remarks>
     public void Draw ()
     {
+        if (!CanBeVisible (this))
+        {
+            return;
+        }
+
         Region? saved = Driver?.Clip;
-        if (CanBeVisible (this) && (NeedsDraw || SubViewNeedsDraw))
+        if (NeedsDraw || SubViewNeedsDraw)
         {
             saved = SetClipToFrame ();
             DoDrawAdornments ();
@@ -36,11 +41,16 @@ public partial class View // Drawing APIs
 
             saved = SetClipToViewport ();
 
+            // TODO: Simplify/optimize SetAttribute system.
             DoSetAttribute ();
             DoClearViewport ();
 
-            DoSetAttribute ();
-            DoDrawSubviews ();
+            if (SubViewNeedsDraw)
+            {
+                DoSetAttribute ();
+
+                DoDrawSubviews ();
+            }
 
             DoSetAttribute ();
             DoDrawText ();
@@ -69,35 +79,42 @@ public partial class View // Drawing APIs
             ClearNeedsDraw ();
         }
 
-        // We're done
-        DoDrawComplete ();
-        Application.SetClip (saved);
-
-        if (this is not Adornment && Driver?.Clip is { })
+        // This causes the Margin to be drawn in a second pass
+        // TODO: Figure out how to make this more efficient
+        if (Margin is { } && Margin?.Thickness != Thickness.Empty)
         {
-            Application.ExcludeFromClip (FrameToScreen ());
+            Margin!.CachedClip = Application.Driver?.Clip?.Clone ();
         }
 
+        // We're done drawing
+        DoDrawComplete ();
+        // QUESTION: SHould this go before DoDrawComplete?
+        Application.SetClip (saved);
+
+        // Exclude this view from the clip
+        if (this is not Adornment && Driver?.Clip is { })
+        {
+            Rectangle borderFrame = FrameToScreen ();
+
+            if (Border is { })
+            {
+                borderFrame = Border.FrameToScreen ();
+            }
+
+            Application.ExcludeFromClip (borderFrame);
+        }
     }
 
     #region DrawAdornments
 
     private void DoDrawAdornmentSubViews ()
     {
-        // This causes the Adornment's subviews to be REDRAWN
-        // TODO: Figure out how to make this more efficient
-        if (Margin?.Subviews is { } && Margin.Thickness != Thickness.Empty)
-        {
-            foreach (View subview in Margin.Subviews)
-            {
-                subview.SetNeedsDraw ();
-            }
-
-            Region? saved = Margin?.SetClipToFrame ();
-            Margin?.DoDrawSubviews ();
-            Application.SetClip (saved);
-
-        }
+        //if (Margin?.Subviews is { } && Margin.Thickness != Thickness.Empty)
+        //{
+        //    //Region? saved = Margin?.SetClipToFrame ();
+        //    //Margin?.DoDrawSubviews ();
+        //    //Application.SetClip (saved);
+        //}
 
         if (Border?.Subviews is { } && Border.Thickness != Thickness.Empty)
         {
@@ -145,7 +162,7 @@ public partial class View // Drawing APIs
         // Those lines will be finally rendered in OnRenderLineCanvas
         if (Margin is { } && Margin.Thickness != Thickness.Empty)
         {
-            Margin?.Draw ();
+            //Margin?.Draw ();
         }
 
         if (Border is { } && Border.Thickness != Thickness.Empty)
@@ -165,7 +182,6 @@ public partial class View // Drawing APIs
     ///     <see cref="LineCanvas"/> of this view's subviews will be rendered. If <see cref="SuperViewRendersLineCanvas"/> is
     ///     false (the default), this method will cause the <see cref="LineCanvas"/> be prepared to be rendered.
     /// </summary>
-    /// <param name="clipRegion"></param>
     /// <returns><see langword="true"/> to stop further drawing of the Adornments.</returns>
     protected virtual bool OnDrawingAdornments () { return false; }
 
@@ -467,7 +483,6 @@ public partial class View // Drawing APIs
 #endif
             view.Draw ();
         }
-
     }
 
     #endregion DrawSubviews
@@ -489,7 +504,6 @@ public partial class View // Drawing APIs
     /// <summary>
     ///     Called when the <see cref="View.LineCanvas"/> is to be rendered. See <see cref="RenderLineCanvas"/>.
     /// </summary>
-    /// <param name="clipRegion"></param>
     /// <returns><see langword="true"/> to stop further drawing of <see cref="LineCanvas"/>.</returns>
     protected virtual bool OnRenderingLineCanvas () { return false; }
 
@@ -575,6 +589,7 @@ public partial class View // Drawing APIs
         DrawComplete?.Invoke (this, new (Viewport, Viewport));
 
         // Default implementation does nothing.
+
     }
 
     /// <summary>
@@ -590,6 +605,8 @@ public partial class View // Drawing APIs
     #endregion DrawComplete
 
     #region NeedsDraw
+
+    // TODO: Change NeedsDraw to use a Region instead of Rectangle
 
     // TODO: Make _needsDrawRect nullable instead of relying on Empty
     // TODO: If null, it means ?

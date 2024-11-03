@@ -37,6 +37,13 @@ internal class ShadowView : View
     }
 
     /// <inheritdoc />
+    /// <inheritdoc />
+    protected override bool OnDrawingText ()
+    {
+        return true;
+    }
+
+    /// <inheritdoc />
     protected override bool OnClearingViewport ()
     {
         // Prevent clearing (so we can have transparency)
@@ -116,13 +123,16 @@ internal class ShadowView : View
     {
         Rectangle screen = ViewportToScreen (Viewport);
 
-        for (int i = Math.Max(0, screen.X + 1); i < screen.X + screen.Width; i++)
+        for (int r = Math.Max (0, screen.Y); r < screen.Y + screen.Height; r++)
         {
-            Driver?.Move (i, screen.Y);
-
-            if (i < Driver?.Contents!.GetLength (1) && screen.Y < Driver?.Contents?.GetLength (0))
+            for (int c = Math.Max (0, screen.X + 1); c < screen.X + screen.Width; c++)
             {
-                Driver.AddRune (Driver.Contents [screen.Y, i].Rune);
+                Driver?.Move (c, r);
+
+                if (c < Driver?.Contents!.GetLength (1) && r < Driver?.Contents?.GetLength (0))
+                {
+                    Driver.AddRune (Driver.Contents [r, c].Rune);
+                }
             }
         }
     }
@@ -144,13 +154,16 @@ internal class ShadowView : View
         Rectangle screen = ViewportToScreen (Viewport);
 
         // Fill the rest of the rectangle
-        for (int i = Math.Max (0, screen.Y); i < screen.Y + viewport.Height; i++)
+        for (int c = Math.Max (0, screen.X); c < screen.X + screen.Width; c++)
         {
-            Driver?.Move (screen.X, i);
-
-            if (Driver?.Contents is { } && screen.X < Driver.Contents.GetLength (1) && i < Driver.Contents.GetLength (0))
+            for (int r = Math.Max (0, screen.Y); r < screen.Y + viewport.Height; r++)
             {
-                Driver.AddRune (Driver.Contents [i, screen.X].Rune);
+                Driver?.Move (c, r);
+
+                if (Driver?.Contents is { } && screen.X < Driver.Contents.GetLength (1) && r < Driver.Contents.GetLength (0))
+                {
+                    Driver.AddRune (Driver.Contents [r, c].Rune);
+                }
             }
         }
     }

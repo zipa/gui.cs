@@ -77,7 +77,6 @@ public partial class View // SuperView/SubView hierarchy management (SuperView, 
 
         if (view.Enabled && !Enabled)
         {
-            view._oldEnabled = true;
             view.Enabled = false;
         }
 

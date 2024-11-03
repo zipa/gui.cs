@@ -547,12 +547,38 @@ public static partial class Application // Run (Begin, Run, End, Stop)
             }
 
             tl.Draw ();
-            ExcludeFromClip (tl.FrameToScreen ());
         }
+
+        DrawMargins (TopLevels.Cast<View> ().ToList ());
 
         ClipToScreen ();
     }
 
+    // TODO: This is inefficent
+    private static bool DrawMargins (List<View> peers)
+    {
+        if (peers.Count == 0)
+        {
+            return false;
+        }
+        foreach (View view in peers)
+        {
+            if (view.Margin is { CachedClip: { }})
+            {
+                view.Margin.NeedsDraw = true;
+                Region? saved = Driver?.Clip;
+                Application.SetClip (view.Margin.CachedClip);
+                view.Margin.Draw ();
+                Application.SetClip (saved);
+            }
+            view.Margin.CachedClip = null;
+
+            DrawMargins (view.Subviews.ToList ());
+            view.NeedsDraw = false;
+        }
+
+        return true;
+    }
 
     /// <summary>This event is raised on each iteration of the main loop.</summary>
     /// <remarks>See also <see cref="Timeout"/></remarks>

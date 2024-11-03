@@ -16,6 +16,11 @@ namespace Terminal.Gui;
 /// </remarks>
 public class Margin : Adornment
 {
+    private const int SHADOW_WIDTH = 1;
+    private const int SHADOW_HEIGHT = 1;
+    private const int PRESS_MOVE_HORIZONTAL = 1;
+    private const int PRESS_MOVE_VERTICAL = 0;
+
     /// <inheritdoc/>
     public Margin ()
     { /* Do nothing; A parameter-less constructor is required to support all views unit tests. */
@@ -34,6 +39,8 @@ public class Margin : Adornment
         // Margin should not be focusable
         CanFocus = false;
     }
+
+    public Region? CachedClip { get; set; }
 
     private bool _pressed;
 
@@ -88,43 +95,11 @@ public class Margin : Adornment
         if (ShadowStyle != ShadowStyle.None)
         {
             // Don't clear where the shadow goes
-            screen = Rectangle.Inflate (screen, -1, -1);
+            screen = Rectangle.Inflate (screen, -SHADOW_WIDTH, -SHADOW_HEIGHT);
         }
-
-        // This just draws/clears the thickness, not the insides.
-        Thickness.Draw (screen, Diagnostics, ToString ());
 
         return true;
     }
-
-    ///// <inheritdoc />
-    //protected override bool OnDrawingContent ()
-    //{
-    //    Rectangle screen = FrameToScreen();
-    //    for (int r = 0; r < screen.Height; r++)
-    //    {
-    //        for (int c = 0; c < screen.Width; c++)
-    //        {
-    //            Driver?.Move (c, r);
-
-    //            if (Driver?.Contents is { } && c < Driver.Contents.GetLength (1) && r < Driver.Contents.GetLength (0))
-    //            {
-    //                Driver.AddRune (Driver.Contents [r, c].Rune);
-    //            }
-    //        }
-    //    }
-    //    return true;
-    //}
-
-    ///// <inheritdoc />
-    ////protected override bool OnDrawSubviews (Rectangle viewport) { return true; }
-
-    //protected override bool OnDrawComplete (Rectangle viewport)
-    //{
-    //    DoDrawSubviews (viewport);
-
-    //    return true;
-    //}
 
     /// <summary>
     ///     Sets whether the Margin includes a shadow effect. The shadow is drawn on the right and bottom sides of the
@@ -149,22 +124,22 @@ public class Margin : Adornment
         if (ShadowStyle != ShadowStyle.None)
         {
             // Turn off shadow
-            Thickness = new (Thickness.Left, Thickness.Top, Thickness.Right - 1, Thickness.Bottom - 1);
+            Thickness = new (Thickness.Left, Thickness.Top, Thickness.Right - SHADOW_WIDTH, Thickness.Bottom - SHADOW_HEIGHT);
         }
 
         if (style != ShadowStyle.None)
         {
             // Turn on shadow
-            Thickness = new (Thickness.Left, Thickness.Top, Thickness.Right + 1, Thickness.Bottom + 1);
+            Thickness = new (Thickness.Left, Thickness.Top, Thickness.Right + SHADOW_WIDTH, Thickness.Bottom + SHADOW_HEIGHT);
         }
 
         if (style != ShadowStyle.None)
         {
             _rightShadow = new ()
             {
-                X = Pos.AnchorEnd (1),
+                X = Pos.AnchorEnd (SHADOW_WIDTH),
                 Y = 0,
-                Width = 1,
+                Width = SHADOW_WIDTH,
                 Height = Dim.Fill (),
                 ShadowStyle = style,
                 Orientation = Orientation.Vertical
@@ -173,11 +148,11 @@ public class Margin : Adornment
             _bottomShadow = new ()
             {
                 X = 0,
-                Y = Pos.AnchorEnd (1),
+                Y = Pos.AnchorEnd (SHADOW_HEIGHT),
                 Width = Dim.Fill (),
-                Height = 1,
+                Height = SHADOW_HEIGHT,
                 ShadowStyle = style,
-                Orientation = Orientation.Horizontal
+                Orientation = Orientation.Horizontal,
             };
             Add (_rightShadow, _bottomShadow);
         }
@@ -189,15 +164,9 @@ public class Margin : Adornment
     public override ShadowStyle ShadowStyle
     {
         get => base.ShadowStyle;
-        set
-        {
-            base.ShadowStyle = SetShadow (value);
-
-        }
+        set => base.ShadowStyle = SetShadow (value);
     }
 
-    private const int PRESS_MOVE_HORIZONTAL = 1;
-    private const int PRESS_MOVE_VERTICAL = 0;
 
     private void Margin_Highlight (object? sender, CancelEventArgs<HighlightStyle> e)
     {
