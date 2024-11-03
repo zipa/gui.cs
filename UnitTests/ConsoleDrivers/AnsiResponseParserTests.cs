@@ -1,7 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+﻿using System.Diagnostics;
 using System.Text;
 using Xunit.Abstractions;
 
@@ -24,8 +21,8 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
                             "\u001b[0c";            // Device Attributes response (e.g., terminal identification i.e. DAR)
 
 
-        string? response1 = null;
-        string? response2 = null;
+        string response1 = null;
+        string response2 = null;
 
         int i = 0;
 
@@ -224,7 +221,7 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
         output.WriteLine ("Running test case:" + caseName);
 
         var parser = new AnsiResponseParser ();
-        string? response = null;
+        string response = null;
 
         if (terminator.HasValue)
         {
@@ -326,8 +323,8 @@ public class AnsiResponseParserTests (ITestOutputHelper output)
     {
         var p = new AnsiResponseParser ();
 
-        string? responseA = null;
-        string? responseB = null;
+        string responseA = null;
+        string responseB = null;
 
         p.ExpectResponse ("z",(r)=>responseA=r, null, false);
 

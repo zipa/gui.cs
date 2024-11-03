@@ -62,7 +62,7 @@ public class Images : Scenario
     private SixelToRender _sixelImage;
 
     // Start by assuming no support
-    private SixelSupportResult? _sixelSupportResult = new SixelSupportResult ();
+    private SixelSupportResult _sixelSupportResult = new SixelSupportResult ();
     private CheckBox _cbSupportsSixel;
 
     public override void Main ()
