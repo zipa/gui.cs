@@ -28,7 +28,7 @@ public class MarginTests (ITestOutputHelper output)
 
         Application.Top.BeginInit ();
         Application.Top.EndInit ();
-        Application.LayoutAndDrawToplevels();
+        Application.LayoutAndDraw();
 
         TestHelpers.AssertDriverContentsAre (
                                              @"

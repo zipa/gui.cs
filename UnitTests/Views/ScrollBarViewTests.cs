@@ -178,7 +178,7 @@ public class ScrollBarViewTests
 
         Application.Begin (top);
         ((FakeDriver)Application.Driver!).SetBufferSize (width, height);
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         var expected = @"
 ┌─┐
@@ -231,7 +231,7 @@ public class ScrollBarViewTests
     {
         _scrollBar = new ScrollBarView (_hostView, true);
         Application.Begin (_hostView.SuperView as Toplevel);
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         AddHandlers ();
 
@@ -252,7 +252,7 @@ public class ScrollBarViewTests
     {
         _scrollBar = new ScrollBarView (_hostView, true);
         Application.Begin (_hostView.SuperView as Toplevel);
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         AddHandlers ();
 
@@ -288,7 +288,7 @@ public class ScrollBarViewTests
     {
         _scrollBar = new ScrollBarView (_hostView, true);
         Application.Begin (_hostView.SuperView as Toplevel);
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         AddHandlers ();
 
@@ -430,7 +430,7 @@ This is a test
 
                                                                                       Assert.Equal (newScrollBarView.Position, listView.LeftItem);
                                                                                       listView.SetNeedsDraw ();
-                                                                                      Application.LayoutAndDrawToplevels ();
+                                                                                      Application.LayoutAndDraw ();
 
                                                                                   };
 
@@ -511,7 +511,7 @@ This is a test
 
                                                                                             Assert.Equal (newScrollBarView.Position, listView.TopItem);
                                                                                             listView.SetNeedsDraw ();
-                                                                                            Application.LayoutAndDrawToplevels ();
+                                                                                            Application.LayoutAndDraw ();
 
                                                                                         };
 
@@ -646,7 +646,7 @@ This is a tes▼
 
         var sbv = new ScrollBarView (label, true, false) { Size = 100 };
         Application.Begin (top);
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         Assert.Equal (100, sbv.Size);
         Assert.Null (sbv.OtherScrollBarView);
@@ -691,7 +691,7 @@ This is a test
     {
         _scrollBar = new ScrollBarView (_hostView, true);
         Application.Begin (_hostView.SuperView as Toplevel);
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         AddHandlers ();
 
@@ -1168,7 +1168,7 @@ This is a test
 
         var sbv = new ScrollBarView (label, true, false) { Size = 5 };
         Application.Begin (top);
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         Assert.Equal (5, sbv.Size);
         Assert.Null (sbv.OtherScrollBarView);
@@ -1196,7 +1196,7 @@ This is a test             ",
         Assert.Equal (5, sbv.Size);
         Assert.False (sbv.ShowScrollIndicator);
         Assert.True (sbv.Visible);
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
         Assert.False (sbv.Visible);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
