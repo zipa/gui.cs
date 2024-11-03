@@ -1,6 +1,7 @@
 #nullable enable
 using System.Diagnostics;
 using Microsoft.CodeAnalysis;
+using static Unix.Terminal.Curses;
 
 namespace Terminal.Gui;
 
@@ -351,6 +352,28 @@ public partial class View // Layout APIs
     #endregion Frame/Position/Dimension
 
     #region Core Layout API
+
+    /// <summary>
+    ///     INTERNAL API - Performs layout of the specified views within the specified content size. Called by the Application main loop.
+    /// </summary>
+    /// <param name="views">The views to layout.</param>
+    /// <param name="contentSize">The size to bound the views by.</param>
+    /// <returns><see langword="true"/>If any of the views needed to be laid out.</returns>
+    internal static bool Layout (IEnumerable<View> views, Size contentSize)
+    {
+        bool neededLayout = false;
+
+        foreach (View v in views)
+        {
+            if (v.NeedsLayout)
+            {
+                neededLayout = true;
+                v.Layout (contentSize);
+            }
+        }
+
+        return neededLayout;
+    }
 
     /// <summary>
     ///     Performs layout of the view and its subviews within the specified content size.

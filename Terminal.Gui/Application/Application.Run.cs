@@ -503,81 +503,18 @@ public static partial class Application // Run (Begin, Run, End, Stop)
     /// <param name="forceDraw">If <see langword="true"/> the entire View hierarchy will be redrawn. The default is <see langword="false"/> and should only be overriden for testing.</param>
     public static void LayoutAndDrawToplevels (bool forceDraw = false)
     {
-        bool neededLayout = false;
-        neededLayout = LayoutToplevels ();
+        bool neededLayout = View.Layout (TopLevels.Reverse (), Screen.Size);
 
         if (forceDraw)
         {
             Driver?.ClearContents ();
         }
 
-        DrawToplevels (neededLayout || forceDraw);
+        Application.ClipToScreen ();
+        View.Draw (TopLevels, neededLayout || forceDraw);
+        Application.ClipToScreen ();
 
         Driver?.Refresh ();
-    }
-
-    // TODO: Rename this to LayoutRunnables in https://github.com/gui-cs/Terminal.Gui/issues/2491
-
-    private static bool LayoutToplevels ()
-    {
-        bool neededLayout = false;
-
-        foreach (Toplevel tl in TopLevels.Reverse ())
-        {
-            if (tl.NeedsLayout)
-            {
-                neededLayout = true;
-                tl.Layout (Screen.Size);
-            }
-        }
-
-        return neededLayout;
-    }
-
-    // TODO: Rename this to DrawRunnables in https://github.com/gui-cs/Terminal.Gui/issues/2491
-    private static void DrawToplevels (bool forceDraw)
-    {
-        ClipToScreen ();
-
-        foreach (Toplevel tl in TopLevels)
-        {
-            if (forceDraw)
-            {
-                tl.SetNeedsDraw ();
-            }
-
-            tl.Draw ();
-        }
-
-        DrawMargins (TopLevels.Cast<View> ().ToList ());
-
-        ClipToScreen ();
-    }
-
-    // TODO: This is inefficent
-    private static bool DrawMargins (List<View> peers)
-    {
-        if (peers.Count == 0)
-        {
-            return false;
-        }
-        foreach (View view in peers)
-        {
-            if (view.Margin is { CachedClip: { }})
-            {
-                view.Margin.NeedsDraw = true;
-                Region? saved = Driver?.Clip;
-                Application.SetClip (view.Margin.CachedClip);
-                view.Margin.Draw ();
-                Application.SetClip (saved);
-            }
-            view.Margin.CachedClip = null;
-
-            DrawMargins (view.Subviews.ToList ());
-            view.NeedsDraw = false;
-        }
-
-        return true;
     }
 
     /// <summary>This event is raised on each iteration of the main loop.</summary>

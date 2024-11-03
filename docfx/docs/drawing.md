@@ -43,9 +43,8 @@ If a View need to redraw because something changed within it's Content Area it c
 
 ### Clipping
 
-Clipping enables better performance by ensuring on regions of the terminal that need to be drawn actually get drawn by the @Terminal.Gui.ConsoleDriver. Terminal.Gui supports non-rectangular clip regions with @Terminal.Gui.Region. @Terminal.Gui.ConsoleDriver.Clip is the application managed clip region and is managed by @Terminal.Gui.Application. Developers cannot change this directly.
+Clipping enables better performance by ensuring on regions of the terminal that need to be drawn actually get drawn by the @Terminal.Gui.ConsoleDriver. Terminal.Gui supports non-rectangular clip regions with @Terminal.Gui.Region. @Terminal.Gui.ConsoleDriver.Clip is the application managed clip region and is managed by @Terminal.Gui.Application. Developers cannot change this directly, but can use @Terminal.Gui.Application.ClipToScreen, @Terminal.Gui.Application.SetClip(Region), @Terminal.Gui.View.ClipToFrame, and @Terminal.Gui.ClipToViewPort.
 
-The View drawing APIs, e.g. @Terminal.Gui.View.OnDrawingSubviews, are passed the clip region currently enforced in Viewport-relative coordinates. 
 
 ## Coordinate System for Drawing
 

@@ -7,6 +7,25 @@ namespace Terminal.Gui;
 
 public partial class View // Drawing APIs
 {
+
+    internal static void Draw (IEnumerable<View> views, bool force)
+    {
+        IEnumerable<View> viewsArray = views as View [] ?? views.ToArray ();
+
+        foreach (View view in viewsArray)
+        {
+            if (force)
+            {
+                view.SetNeedsDraw ();
+            }
+
+            view.Draw ();
+        }
+
+        Margin.DrawMargins (viewsArray);
+    }
+
+
     /// <summary>
     ///     Draws the view if it needs to be drawn.
     /// </summary>

@@ -42,8 +42,8 @@ public class DrawTests (ITestOutputHelper _output)
             Y = 1,
             Width = 3, Height = 3
         };
-        view.Margin.Thickness = new (1);
-        view.Margin.Diagnostics = ViewDiagnosticFlags.Thickness;
+        view.Padding.Thickness = new (1);
+        view.Padding.Diagnostics = ViewDiagnosticFlags.Thickness;
         view.BeginInit ();
         view.EndInit ();
         view.Draw ();
@@ -56,10 +56,10 @@ public class DrawTests (ITestOutputHelper _output)
         Assert.Equal ((Rune)' ', Application.Driver?.Contents! [2, 2].Rune);
 
         view.AddRune (-1, -1, Rune.ReplacementChar);
-        Assert.Equal ((Rune)'M', Application.Driver?.Contents! [1, 1].Rune);
+        Assert.Equal ((Rune)'P', Application.Driver?.Contents! [1, 1].Rune);
 
         view.AddRune (1, 1, Rune.ReplacementChar);
-        Assert.Equal ((Rune)'M', Application.Driver?.Contents! [3, 3].Rune);
+        Assert.Equal ((Rune)'P', Application.Driver?.Contents! [3, 3].Rune);
     }
 
     [Theory]

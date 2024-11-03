@@ -1,16 +1,14 @@
 ﻿#nullable enable
 
-using Microsoft.VisualBasic;
-using static Terminal.Gui.SpinnerStyle;
-using static Unix.Terminal.Curses;
-using System.Text;
-
 namespace Terminal.Gui;
 
 /// <summary>The Margin for a <see cref="View"/>. Accessed via <see cref="View.Margin"/></summary>
 /// <remarks>
 ///     <para>
-///         The margin is typically transparent. This can be overriden by explicitly setting <see cref="ColorScheme"/>.
+///         The Margin is transparent by default. This can be overriden by explicitly setting <see cref="ColorScheme"/>.
+///     </para>
+///     <para>
+///         Margins are drawn after all other Views in the application View hierarchy are drawn.
 ///     </para>
 ///     <para>See the <see cref="Adornment"/> class.</para>
 /// </remarks>
@@ -40,12 +38,45 @@ public class Margin : Adornment
         CanFocus = false;
     }
 
-    public Region? CachedClip { get; set; }
+    // When the Parent is drawn, we cache the clip region so we can draw the Margin after all other Views
+    // QUESTION: Why can't this just be the NeedsDisplay region?
+    internal Region? CachedClip { get; set; }
 
-    private bool _pressed;
+    // PERFORMANCE: Margins are ALWAYS drawn. This may be an issue for apps that have a large number of views with shadows.
+    /// <summary>
+    ///     INTERNAL API - Draws the margins for the specified views. This is called by the <see cref="Application"/> on each
+    ///     iteration of the main loop after all Views have been drawn.
+    /// </summary>
+    /// <param name="margins"></param>
+    /// <returns><see langword="true"/></returns>
+    internal static bool DrawMargins (IEnumerable<View> margins)
+    {
+        Stack<View> stack = new (margins);
 
-    private ShadowView? _bottomShadow;
-    private ShadowView? _rightShadow;
+        while (stack.Count > 0)
+        {
+            var view = stack.Pop ();
+
+            if (view.Margin is { CachedClip: { } })
+            {
+                view.Margin.NeedsDraw = true;
+                Region? saved = Driver?.Clip;
+                Application.SetClip (view.Margin.CachedClip);
+                view.Margin.Draw ();
+                Application.SetClip (saved);
+                view.Margin.CachedClip = null;
+            }
+
+            foreach (var subview in view.Subviews)
+            {
+                stack.Push (subview);
+            }
+
+            view.NeedsDraw = false;
+        }
+
+        return true;
+    }
 
     /// <inheritdoc/>
     public override void BeginInit ()
@@ -61,8 +92,7 @@ public class Margin : Adornment
     }
 
     /// <summary>
-    ///     The color scheme for the Margin. If set to <see langword="null"/>, gets the <see cref="Adornment.Parent"/>'s
-    ///     <see cref="View.SuperView"/> scheme. color scheme.
+    ///     The color scheme for the Margin. If set to <see langword="null"/> (the default), the margin will be transparent.
     /// </summary>
     public override ColorScheme? ColorScheme
     {
@@ -82,7 +112,7 @@ public class Margin : Adornment
         }
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     protected override bool OnClearingViewport ()
     {
         if (Thickness == Thickness.Empty)
@@ -92,6 +122,12 @@ public class Margin : Adornment
 
         Rectangle screen = ViewportToScreen (Viewport);
 
+        // This just draws/clears the thickness, not the insides.
+        if (Diagnostics.HasFlag (ViewDiagnosticFlags.Thickness) || base.ColorScheme is { })
+        {
+            Thickness.Draw (screen, Diagnostics, ToString ());
+        }
+
         if (ShadowStyle != ShadowStyle.None)
         {
             // Don't clear where the shadow goes
@@ -100,6 +136,12 @@ public class Margin : Adornment
 
         return true;
     }
+
+    #region Shadow
+
+    private bool _pressed;
+    private ShadowView? _bottomShadow;
+    private ShadowView? _rightShadow;
 
     /// <summary>
     ///     Sets whether the Margin includes a shadow effect. The shadow is drawn on the right and bottom sides of the
@@ -152,7 +194,7 @@ public class Margin : Adornment
                 Width = Dim.Fill (),
                 Height = SHADOW_HEIGHT,
                 ShadowStyle = style,
-                Orientation = Orientation.Horizontal,
+                Orientation = Orientation.Horizontal
             };
             Add (_rightShadow, _bottomShadow);
         }
@@ -167,7 +209,6 @@ public class Margin : Adornment
         set => base.ShadowStyle = SetShadow (value);
     }
 
-
     private void Margin_Highlight (object? sender, CancelEventArgs<HighlightStyle> e)
     {
         if (Thickness == Thickness.Empty || ShadowStyle == ShadowStyle.None)
@@ -180,7 +221,11 @@ public class Margin : Adornment
             // If the view is pressed and the highlight is being removed, move the shadow back.
             // Note, for visual effects reasons, we only move horizontally.
             // TODO: Add a setting or flag that lets the view move vertically as well.
-            Thickness = new (Thickness.Left - PRESS_MOVE_HORIZONTAL, Thickness.Top - PRESS_MOVE_VERTICAL, Thickness.Right + PRESS_MOVE_HORIZONTAL, Thickness.Bottom + PRESS_MOVE_VERTICAL);
+            Thickness = new (
+                             Thickness.Left - PRESS_MOVE_HORIZONTAL,
+                             Thickness.Top - PRESS_MOVE_VERTICAL,
+                             Thickness.Right + PRESS_MOVE_HORIZONTAL,
+                             Thickness.Bottom + PRESS_MOVE_VERTICAL);
 
             if (_rightShadow is { })
             {
@@ -202,7 +247,11 @@ public class Margin : Adornment
             // If the view is not pressed and we want highlight move the shadow
             // Note, for visual effects reasons, we only move horizontally.
             // TODO: Add a setting or flag that lets the view move vertically as well.
-            Thickness = new (Thickness.Left + PRESS_MOVE_HORIZONTAL, Thickness.Top + PRESS_MOVE_VERTICAL, Thickness.Right - PRESS_MOVE_HORIZONTAL, Thickness.Bottom - PRESS_MOVE_VERTICAL);
+            Thickness = new (
+                             Thickness.Left + PRESS_MOVE_HORIZONTAL,
+                             Thickness.Top + PRESS_MOVE_VERTICAL,
+                             Thickness.Right - PRESS_MOVE_HORIZONTAL,
+                             Thickness.Bottom - PRESS_MOVE_VERTICAL);
             _pressed = true;
 
             if (_rightShadow is { })
@@ -227,20 +276,25 @@ public class Margin : Adornment
                 case ShadowStyle.Transparent:
                     // BUGBUG: This doesn't work right for all Border.Top sizes - Need an API on Border that gives top-right location of line corner.
                     _rightShadow.Y = Parent!.Border.Thickness.Top > 0 ? ScreenToViewport (Parent.Border.GetBorderRectangle ().Location).Y + 1 : 0;
+
                     break;
 
                 case ShadowStyle.Opaque:
                     // BUGBUG: This doesn't work right for all Border.Top sizes - Need an API on Border that gives top-right location of line corner.
                     _rightShadow.Y = Parent!.Border.Thickness.Top > 0 ? ScreenToViewport (Parent.Border.GetBorderRectangle ().Location).Y + 1 : 0;
                     _bottomShadow.X = Parent.Border.Thickness.Left > 0 ? ScreenToViewport (Parent.Border.GetBorderRectangle ().Location).X + 1 : 0;
+
                     break;
 
                 case ShadowStyle.None:
                 default:
                     _rightShadow.Y = 0;
                     _bottomShadow.X = 0;
+
                     break;
             }
         }
     }
+
+    #endregion Shadow
 }

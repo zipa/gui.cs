@@ -168,9 +168,6 @@ public class Adornment : View, IDesignable
             return true;
         }
 
-        Attribute normalAttr = GetNormalColor ();
-        SetAttribute (normalAttr);
-
         // This just draws/clears the thickness, not the insides.
         Thickness.Draw (ViewportToScreen (Viewport), Diagnostics, ToString ());
 
