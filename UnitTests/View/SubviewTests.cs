@@ -145,7 +145,7 @@ public class SubviewTests
                                Assert.False (v2AddedToWin.CanFocus);
                                Assert.False (svAddedTov1.CanFocus);
 
-                               Application.LayoutAndDrawToplevels ();
+                               Application.LayoutAndDraw ();
                            };
 
         winAddedToTop.Initialized += (s, e) =>
@@ -201,7 +201,7 @@ public class SubviewTests
 
         Application.Iteration += (s, a) =>
                                  {
-                                     Application.LayoutAndDrawToplevels ();
+                                     Application.LayoutAndDraw ();
                                      top.Running = false;
                                  };
 
@@ -253,7 +253,7 @@ public class SubviewTests
                              Assert.False (v1.CanFocus);
                              Assert.False (v2.CanFocus);
 
-                             Application.LayoutAndDrawToplevels ();
+                             Application.LayoutAndDraw ();
                          };
 
         w.Initialized += (s, e) =>
@@ -297,7 +297,7 @@ public class SubviewTests
 
                                      v1.Add (sv1);
 
-                                     Application.LayoutAndDrawToplevels ();
+                                     Application.LayoutAndDraw ();
                                      t.Running = false;
                                  };
 

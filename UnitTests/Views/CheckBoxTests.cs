@@ -359,7 +359,7 @@ public class CheckBoxTests (ITestOutputHelper output)
         Assert.Equal (new (0, 0, 30, 5), pos);
 
         checkBox.CheckedState = CheckState.Checked;
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         expected = @$"
 ┌┤Test Demo 你├──────────────┐
@@ -429,7 +429,7 @@ public class CheckBoxTests (ITestOutputHelper output)
         Application.RunIteration (ref rs);
         Assert.Equal (new (1, 2, 25, 1), checkBox2.Frame);
         Assert.Equal (_size25x1, checkBox2.TextFormatter.ConstrainToSize);
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         expected = @$"
 ┌┤Test Demo 你├──────────────┐
@@ -480,7 +480,7 @@ public class CheckBoxTests (ITestOutputHelper output)
         Assert.Equal (new (0, 0, 30, 5), pos);
 
         checkBox.CheckedState = CheckState.Checked;
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         expected = @$"
 ┌┤Test Demo 你├──────────────┐
@@ -531,7 +531,7 @@ public class CheckBoxTests (ITestOutputHelper output)
         Assert.Equal (new (0, 0, 30, 5), pos);
 
         checkBox.CheckedState = CheckState.Checked;
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         expected = @$"
 ┌┤Test Demo 你├──────────────┐

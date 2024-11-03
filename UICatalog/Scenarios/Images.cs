@@ -288,7 +288,7 @@ public class Images : Scenario
 
         _imageView.SetImage (img);
         ApplyShowTabViewHack ();
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
     }
 
     private void ApplyShowTabViewHack ()

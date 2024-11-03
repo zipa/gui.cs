@@ -609,7 +609,7 @@ internal sealed class Menu : View
         Application.UngrabMouse ();
         _host.CloseAllMenus ();
         Application.Driver!.ClearContents ();
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         _host.Run (action);
     }

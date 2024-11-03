@@ -200,7 +200,7 @@ public static partial class Application // Keyboard handling
                     Command.Refresh,
                     static () =>
                     {
-                        LayoutAndDrawToplevels ();
+                        LayoutAndDraw ();
 
                         return true;
                     }

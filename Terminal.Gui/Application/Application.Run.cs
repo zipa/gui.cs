@@ -495,13 +495,12 @@ public static partial class Application // Run (Begin, Run, End, Stop)
     /// <summary>Wakes up the running application that might be waiting on input.</summary>
     public static void Wakeup () { MainLoop?.Wakeup (); }
 
-    // TODO: Rename this to LayoutAndDrawRunnables in https://github.com/gui-cs/Terminal.Gui/issues/2491
     /// <summary>
     /// Causes any Toplevels that need layout to be laid out. Then draws any Toplevels that need dispplay. Only Views that need to be laid out (see <see cref="View.NeedsLayout"/>) will be laid out.
     /// Only Views that need to be drawn (see <see cref="View.NeedsDraw"/>) will be drawn.
     /// </summary>
     /// <param name="forceDraw">If <see langword="true"/> the entire View hierarchy will be redrawn. The default is <see langword="false"/> and should only be overriden for testing.</param>
-    public static void LayoutAndDrawToplevels (bool forceDraw = false)
+    public static void LayoutAndDraw (bool forceDraw = false)
     {
         bool neededLayout = View.Layout (TopLevels.Reverse (), Screen.Size);
 
@@ -588,7 +587,7 @@ public static partial class Application // Run (Begin, Run, End, Stop)
             return firstIteration;
         }
 
-        LayoutAndDrawToplevels ();
+        LayoutAndDraw ();
 
         if (PositionCursor ())
         {
@@ -688,6 +687,6 @@ public static partial class Application // Run (Begin, Run, End, Stop)
         runState.Toplevel = null;
         runState.Dispose ();
 
-        LayoutAndDrawToplevels ();
+        LayoutAndDraw ();
     }
 }

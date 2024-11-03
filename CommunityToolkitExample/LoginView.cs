@@ -59,7 +59,7 @@ internal partial class LoginView : IRecipient<Message<LoginActions>>
                 }
         }
         SetText();
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
     }
 
     private void SetText ()

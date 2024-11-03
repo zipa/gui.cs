@@ -214,7 +214,7 @@ public class GraphViewExample : Scenario
                                ? ViewDiagnosticFlags.Thickness
                                  | ViewDiagnosticFlags.Ruler
                                : ViewDiagnosticFlags.Off;
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
     }
 
     private void Margin (bool left, bool increase)

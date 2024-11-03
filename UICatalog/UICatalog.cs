@@ -754,7 +754,7 @@ public class UICatalogApp
                                                               {
                                                                   Application.Force16Colors = args.NewValue == CheckState.Checked;
                                                                   MiForce16Colors!.Checked = Application.Force16Colors;
-                                                                  Application.LayoutAndDrawToplevels ();
+                                                                  Application.LayoutAndDraw ();
                                                               };
 
             _statusBar.Add (
@@ -1266,7 +1266,7 @@ public class UICatalogApp
 
                                           ((CheckBox)ShForce16Colors!.CommandView!).CheckedState =
                                               Application.Force16Colors ? CheckState.Checked : CheckState.UnChecked;
-                                          Application.LayoutAndDrawToplevels ();
+                                          Application.LayoutAndDraw ();
                                       };
             menuItems.Add (MiForce16Colors);
 

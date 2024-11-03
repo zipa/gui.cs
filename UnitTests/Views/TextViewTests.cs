@@ -6742,7 +6742,7 @@ This is the second line.
         Assert.True (_textView.Multiline);
         _textView.NewKeyDownEvent (Key.Tab);
         Assert.Equal ("\tTAB to jump between text fields.", _textView.Text);
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -6751,7 +6751,7 @@ TAB to jump between text field",
                                                      );
 
         _textView.TabWidth = 4;
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -6762,7 +6762,7 @@ TAB to jump between text field",
         _textView.NewKeyDownEvent (Key.Tab.WithShift);
         Assert.Equal ("TAB to jump between text fields.", _textView.Text);
         Assert.True (_textView.NeedsDraw);
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -6828,7 +6828,7 @@ TAB to jump between text field",
         top.Add (win);
         Application.Begin (top);
         ((FakeDriver)Application.Driver!).SetBufferSize (15, 15);
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         //this passes
         Rectangle pos = TestHelpers.AssertDriverContentsWithFrameAre (
@@ -6857,7 +6857,7 @@ TAB to jump between text field",
         tv.Used = false;
         tv.CursorPosition = Point.Empty;
         tv.InsertText ("\r\naaa\r\nbbb");
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -6906,7 +6906,7 @@ TAB to jump between text field",
         top.Add (win);
         Application.Begin (top);
         ((FakeDriver)Application.Driver!).SetBufferSize (15, 15);
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         //this passes
         Rectangle pos = TestHelpers.AssertDriverContentsWithFrameAre (
@@ -6935,7 +6935,7 @@ TAB to jump between text field",
         tv.Used = false;
         tv.CursorPosition = Point.Empty;
         tv.InsertText ("\naaa\nbbb");
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -7004,7 +7004,7 @@ TAB to jump between text field",
         var top = new Toplevel ();
         top.Add (tv);
         Application.Begin (top);
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         Assert.False (tv.WordWrap);
         Assert.Equal (Point.Empty, tv.CursorPosition);
@@ -8177,7 +8177,7 @@ line.
         var top = new Toplevel ();
         top.Add (tv);
         Application.Begin (top);
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         Assert.Equal (Point.Empty, tv.CursorPosition);
         Assert.Equal (0, tv.LeftColumn);
@@ -8191,7 +8191,7 @@ aaaa
 
         tv.CursorPosition = new Point (5, 0);
         Assert.True (tv.NewKeyDownEvent (Key.Backspace));
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
         Assert.Equal (0, tv.LeftColumn);
 
         TestHelpers.AssertDriverContentsAre (
@@ -8202,7 +8202,7 @@ aaa
                                             );
 
         Assert.True (tv.NewKeyDownEvent (Key.Backspace));
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
         Assert.Equal (0, tv.LeftColumn);
 
         TestHelpers.AssertDriverContentsAre (
@@ -8213,7 +8213,7 @@ aa
                                             );
 
         Assert.True (tv.NewKeyDownEvent (Key.Backspace));
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
         Assert.Equal (0, tv.LeftColumn);
 
         TestHelpers.AssertDriverContentsAre (
@@ -8224,7 +8224,7 @@ a
                                             );
 
         Assert.True (tv.NewKeyDownEvent (Key.Backspace));
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
         Assert.Equal (0, tv.LeftColumn);
 
         TestHelpers.AssertDriverContentsAre (
@@ -8235,7 +8235,7 @@ a
                                             );
 
         Assert.True (tv.NewKeyDownEvent (Key.Backspace));
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
         Assert.Equal (0, tv.LeftColumn);
 
         TestHelpers.AssertDriverContentsAre (
@@ -8257,7 +8257,7 @@ a
         _textView.Text = "Line 1.\nLine 2.";
         _textView.WordWrap = true;
         Application.Begin (top);
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         Assert.True (_textView.WordWrap);
 
@@ -8272,12 +8272,12 @@ Line 2.",
         Assert.Equal ("Line 1.", _textView.SelectedText);
 
         Assert.True (_textView.NewKeyDownEvent (new Key (del)));
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
         TestHelpers.AssertDriverContentsWithFrameAre ("Line 2.", _output);
 
         Assert.True (_textView.NewKeyDownEvent (Key.H.WithShift));
         Assert.NotEqual (Rectangle.Empty, _textView._needsDrawRect);
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -8915,7 +8915,7 @@ line.
         var top = new Toplevel ();
         top.Add (tv);
         Application.Begin (top);
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -8927,7 +8927,7 @@ This is the second line.",
         tv.Width = 10;
         tv.Height = 25;
         tv.WordWrap = true;
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -8969,7 +8969,7 @@ line.  ",
         var top = new Toplevel ();
         top.Add (tv);
         RunState rs = Application.Begin (top);
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         Assert.True (tv.InheritsPreviousAttribute);
 
@@ -9011,7 +9011,7 @@ Error   ";
         TestHelpers.AssertDriverAttributesAre (expectedColor, _output, Application.Driver, attributes);
 
         tv.WordWrap = true;
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
         TestHelpers.AssertDriverContentsWithFrameAre (expectedText, _output);
         TestHelpers.AssertDriverAttributesAre (expectedColor, _output, Application.Driver, attributes);
 
@@ -9023,7 +9023,7 @@ Error   ";
         tv.IsSelecting = false;
         tv.CursorPosition = new (2, 4);
         tv.Paste ();
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         expectedText = @"
 TopLevel  
@@ -9058,7 +9058,7 @@ Dialogror ";
         tv.IsSelecting = false;
         tv.CursorPosition = new (2, 4);
         tv.Paste ();
-        Application.LayoutAndDrawToplevels ();
+        Application.LayoutAndDraw ();
 
         expectedText = @"
 TopLevel  

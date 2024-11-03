@@ -176,7 +176,7 @@ public class SingleBackgroundWorker : Scenario
                                                             $"Worker {_startStaging}.{_startStaging:fff} was completed at {DateTime.Now}."
                                                            );
                                                   _listLog.SetNeedsDraw ();
-                                                  Application.LayoutAndDrawToplevels ();
+                                                  Application.LayoutAndDraw ();
 
                                                   var builderUI =
                                                       new StagingUIController (_startStaging, e.Result as ObservableCollection<string>);

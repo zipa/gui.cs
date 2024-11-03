@@ -63,7 +63,7 @@ public static partial class Application // Screen related stuff
             t.SetNeedsLayout ();
         }
 
-        LayoutAndDrawToplevels ();
+        LayoutAndDraw ();
 
         return true;
     }
