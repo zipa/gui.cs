@@ -164,6 +164,11 @@ public static class EscSeqUtils
     public static ConsoleKeyInfo []? IncompleteCkInfos { get; set; }
 
     /// <summary>
+    ///     Represent a response that was requested by an invalid terminator.
+    /// </summary>
+    public static string? InvalidRequestTerminator { get; set; }
+
+    /// <summary>
     ///     Decodes an ANSI escape sequence.
     /// </summary>
     /// <param name="escSeqRequests">The <see cref="EscSeqRequests"/> which may contain a request.</param>
@@ -347,12 +352,22 @@ public static class EscSeqUtils
                         mod |= GetConsoleModifiers (values [1]);
                     }
 
-                    newConsoleKeyInfo = new (
-                                             keyChar,
-                                             key,
-                                             (mod & ConsoleModifiers.Shift) != 0,
-                                             (mod & ConsoleModifiers.Alt) != 0,
-                                             (mod & ConsoleModifiers.Control) != 0);
+                    if (keyChar != 0 || key != 0 || mod != 0)
+                    {
+                        newConsoleKeyInfo = new (
+                                                 keyChar,
+                                                 key,
+                                                 (mod & ConsoleModifiers.Shift) != 0,
+                                                 (mod & ConsoleModifiers.Alt) != 0,
+                                                 (mod & ConsoleModifiers.Control) != 0);
+                    }
+                    else
+                    {
+                        // It's request response that wasn't handled by a valid request terminator
+                        System.Diagnostics.Debug.Assert (escSeqRequests is { Statuses.Count: > 0 });
+
+                        InvalidRequestTerminator = ToString (cki);
+                    }
                 }
                 else
                 {
