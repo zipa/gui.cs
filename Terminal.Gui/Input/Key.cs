@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using Terminal.Gui.ConsoleDrivers;
 
 namespace Terminal.Gui;
 
@@ -288,7 +289,10 @@ public class Key : EventArgs, IEquatable<Key>
             return false;
         }
 
-        if ((keyCode & ~KeyCode.Space & ~KeyCode.ShiftMask) is >= KeyCode.A and <= KeyCode.Z)
+        // A to Z may have á, à, ã, â, with Oem1, etc
+        ConsoleKeyInfo cki = ConsoleKeyMapping.GetConsoleKeyInfoFromKeyCode (keyCode);
+
+        if (cki.Key is >= ConsoleKey.A and <= ConsoleKey.Z)
         {
             return true;
         }
@@ -521,9 +525,12 @@ public class Key : EventArgs, IEquatable<Key>
         // Handle special cases and modifiers on their own
         if (key != KeyCode.SpecialMask && (baseKey != KeyCode.Null || hasModifiers))
         {
-            if ((key & KeyCode.SpecialMask) != 0 && (baseKey & ~KeyCode.Space) is >= KeyCode.A and <= KeyCode.Z)
+            // A to Z may have á, à, ã, â, with Oem1, etc
+            ConsoleKeyInfo cki = ConsoleKeyMapping.GetConsoleKeyInfoFromKeyCode (baseKey);
+
+            if ((key & KeyCode.SpecialMask) != 0 && cki.Key is >= ConsoleKey.A and <= ConsoleKey.Z)
             {
-                sb.Append (baseKey & ~KeyCode.Space);
+                sb.Append (((char)(baseKey & ~KeyCode.Space)).ToString ());
             }
             else
             {
@@ -706,7 +713,7 @@ public class Key : EventArgs, IEquatable<Key>
 
             if (GetIsKeyCodeAtoZ (keyCode) && (keyCode & KeyCode.Space) != 0)
             {
-                keyCode = keyCode & ~KeyCode.Space;
+                keyCode &= ~KeyCode.Space;
             }
 
             key = new (keyCode | modifiers);

@@ -17,7 +17,7 @@ public class KeyTests
             { "Alt+A", Key.A.WithAlt },
             { "Shift+A", Key.A.WithShift },
             { "A", Key.A.WithShift },
-            { "â", new ((KeyCode)'â') },
+            { "â", new ((KeyCode)'Â') },
             { "Shift+â", new ((KeyCode)'â' | KeyCode.ShiftMask) },
             { "Shift+Â", new ((KeyCode)'Â' | KeyCode.ShiftMask) },
             { "Ctrl+Shift+CursorUp", Key.CursorUp.WithShift.WithCtrl },
@@ -342,12 +342,10 @@ public class KeyTests
     [InlineData ((KeyCode)'{', "{")]
     [InlineData ((KeyCode)'\'', "\'")]
     [InlineData ((KeyCode)'ó', "ó")]
-    [InlineData (
-                    (KeyCode)'Ó' | KeyCode.ShiftMask,
-                    "Shift+Ó"
-                )] // TODO: This is not correct, it should be Shift+ó or just Ó
+    [InlineData ((KeyCode)'Ó' | KeyCode.ShiftMask, "Ó")]
+    [InlineData ((KeyCode)'ó' | KeyCode.ShiftMask, "Ó")]
     [InlineData ((KeyCode)'Ó', "Ó")]
-    [InlineData ((KeyCode)'ç' | KeyCode.ShiftMask | KeyCode.AltMask | KeyCode.CtrlMask, "Ctrl+Alt+Shift+ç")]
+    [InlineData ((KeyCode)'ç' | KeyCode.ShiftMask | KeyCode.AltMask | KeyCode.CtrlMask, "Ctrl+Alt+Shift+Ç")]
     [InlineData ((KeyCode)'a', "a")] // 97 or Key.Space | Key.A
     [InlineData ((KeyCode)'A', "a")] // 65 or equivalent to Key.A, but A-Z are mapped to lower case by drivers
     [InlineData (KeyCode.ShiftMask | KeyCode.A, "A")]
@@ -470,7 +468,7 @@ public class KeyTests
     [InlineData ("Alt+A", KeyCode.A | KeyCode.AltMask)]
     [InlineData ("Shift+A", KeyCode.A | KeyCode.ShiftMask)]
     [InlineData ("A", KeyCode.A | KeyCode.ShiftMask)]
-    [InlineData ("â", (KeyCode)'â')]
+    [InlineData ("â", (KeyCode)'Â')]
     [InlineData ("Shift+â", (KeyCode)'â' | KeyCode.ShiftMask)]
     [InlineData ("Shift+Â", (KeyCode)'Â' | KeyCode.ShiftMask)]
     [InlineData ("Ctrl+Shift+CursorUp", KeyCode.ShiftMask | KeyCode.CtrlMask | KeyCode.CursorUp)]

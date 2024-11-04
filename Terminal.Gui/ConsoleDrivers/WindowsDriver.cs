@@ -1891,12 +1891,13 @@ internal class WindowsDriver : ConsoleDriver
                 // If (ShiftMask is on and CapsLock is off) or (ShiftMask is off and CapsLock is on) add the ShiftMask
                 if (char.IsUpper (keyInfo.KeyChar))
                 {
-                    return (KeyCode)(uint)keyInfo.Key | KeyCode.ShiftMask;
+                    // Always return the KeyChar because it may be an À, À with Oem1, etc
+                    return (KeyCode)keyInfo.KeyChar | KeyCode.ShiftMask;
                 }
             }
 
-            // Return the Key (not KeyChar!)
-            return (KeyCode)keyInfo.Key;
+            // Always return the KeyChar because it may be an á, à with Oem1, etc
+            return (KeyCode)keyInfo.KeyChar;
         }
 
         // Handle control keys whose VK codes match the related ASCII value (those below ASCII 33) like ESC

@@ -249,7 +249,7 @@ public static class ConsoleKeyMapping
     {
         var modifiers = new ConsoleModifiers ();
 
-        if (key.HasFlag (KeyCode.ShiftMask))
+        if (key.HasFlag (KeyCode.ShiftMask) || char.IsUpper ((char)key))
         {
             modifiers |= ConsoleModifiers.Shift;
         }
@@ -590,7 +590,8 @@ public static class ConsoleKeyMapping
 
                 if (uc != UnicodeCategory.NonSpacingMark && uc != UnicodeCategory.OtherLetter)
                 {
-                    consoleKey = char.ToUpper (stFormD [i]);
+                    char ck = char.ToUpper (stFormD [i]);
+                    consoleKey = (uint)(ck > 0 && ck <= 255 ? char.ToUpper (stFormD [i]) : 0);
                     scode = GetScanCode ("VirtualKey", char.ToUpper (stFormD [i]), 0);
 
                     if (scode is { })
