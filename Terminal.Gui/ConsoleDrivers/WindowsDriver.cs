@@ -8,13 +8,14 @@
 // 2) The values provided during Init (and the first WindowsConsole.EventType.WindowBufferSize) are not correct.
 //
 // If HACK_CHECK_WINCHANGED is defined then we ignore WindowsConsole.EventType.WindowBufferSize events
-// and instead check the console size every every 500ms in a thread in WidowsMainLoop. 
+// and instead check the console size every 500ms in a thread in WidowsMainLoop. 
 // As of Windows 11 23H2 25947.1000 and/or WT 1.19.2682 tearing no longer occurs when using 
 // the WindowsConsole.EventType.WindowBufferSize event. However, on Init the window size is
 // still incorrect so we still need this hack.
 
 #define HACK_CHECK_WINCHANGED
 
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -920,6 +921,7 @@ internal class WindowsConsole
         uint numberEventsRead = 0;
         StringBuilder ansiSequence = new StringBuilder ();
         bool readingSequence = false;
+        bool raisedResponse = false;
 
         while (true)
         {
@@ -972,6 +974,7 @@ internal class WindowsConsole
 
                                     lock (seqReqStatus!.AnsiRequest._responseLock)
                                     {
+                                        raisedResponse = true;
                                         seqReqStatus.AnsiRequest.Response = ansiSequence.ToString ();
                                         seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, seqReqStatus.AnsiRequest.Response);
                                         // Clear the terminator for not be enqueued
@@ -985,16 +988,31 @@ internal class WindowsConsole
                     }
                 }
 
-                if (EscSeqUtils.IncompleteCkInfos is null && _mainLoop.EscSeqRequests is { Statuses.Count: > 0 })
+                if (readingSequence && !raisedResponse && EscSeqUtils.IncompleteCkInfos is null && _mainLoop.EscSeqRequests is { Statuses.Count: > 0 })
+                {
+                    _mainLoop.EscSeqRequests.Statuses.TryDequeue (out EscSeqReqStatus seqReqStatus);
+
+                    lock (seqReqStatus!.AnsiRequest._responseLock)
+                    {
+                        seqReqStatus.AnsiRequest.Response = ansiSequence.ToString ();
+                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, seqReqStatus.AnsiRequest.Response);
+                    }
+
+                    _retries = 0;
+                }
+                else if (EscSeqUtils.IncompleteCkInfos is null && _mainLoop.EscSeqRequests is { Statuses.Count: > 0 })
                 {
                     if (_retries > 1)
                     {
-                        _mainLoop.EscSeqRequests.Statuses.TryDequeue (out EscSeqReqStatus seqReqStatus);
-
-                        lock (seqReqStatus!.AnsiRequest._responseLock)
+                        if (_mainLoop.EscSeqRequests.Statuses.TryPeek (out EscSeqReqStatus seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.Response))
                         {
-                            seqReqStatus.AnsiRequest.Response = string.Empty;
-                            seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, string.Empty);
+                            lock (seqReqStatus!.AnsiRequest._responseLock)
+                            {
+                                _mainLoop.EscSeqRequests.Statuses.TryDequeue (out _);
+
+                                seqReqStatus.AnsiRequest.Response = string.Empty;
+                                seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, string.Empty);
+                            }
                         }
 
                         _retries = 0;
@@ -2337,7 +2355,7 @@ internal class WindowsMainLoop : IMainLoopDriver
     private readonly ManualResetEventSlim _eventReady = new (false);
 
     // The records that we keep fetching
-    private readonly Queue<WindowsConsole.InputRecord []> _resultQueue = new ();
+    private readonly ConcurrentQueue<WindowsConsole.InputRecord []> _resultQueue = new ();
     internal readonly ManualResetEventSlim _waitForProbe = new (false);
     private readonly WindowsConsole _winConsole;
     private CancellationTokenSource _eventReadyTokenSource = new ();
@@ -2422,11 +2440,12 @@ internal class WindowsMainLoop : IMainLoopDriver
     {
         while (_resultQueue.Count > 0)
         {
-            WindowsConsole.InputRecord [] inputRecords = _resultQueue.Dequeue ();
-
-            if (inputRecords is { Length: > 0 })
+            if (_resultQueue.TryDequeue (out WindowsConsole.InputRecord [] inputRecords))
             {
-                ((WindowsDriver)_consoleDriver).ProcessInput (inputRecords [0]);
+                if (inputRecords is { Length: > 0 })
+                {
+                    ((WindowsDriver)_consoleDriver).ProcessInput (inputRecords [0]);
+                }
             }
         }
 #if HACK_CHECK_WINCHANGED
@@ -2524,15 +2543,7 @@ internal class WindowsMainLoop : IMainLoopDriver
                 }
             }
 
-            if (_eventReady.IsSet)
-            {
-                // it's already in an iteration and ensures set to iterate again
-                Application.Invoke (() => _eventReady.Set ());
-            }
-            else
-            {
-                _eventReady.Set ();
-            }
+            _eventReady.Set ();
         }
     }
 

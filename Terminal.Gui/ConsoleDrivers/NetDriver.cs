@@ -2,6 +2,7 @@
 // NetDriver.cs: The System.Console-based .NET driver, works on Windows and Unix, but is not particularly efficient.
 //
 
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
@@ -140,7 +141,7 @@ internal class NetEvents : IDisposable
 
     //CancellationTokenSource _waitForStartCancellationTokenSource;
     private readonly ManualResetEventSlim _winChange = new (false);
-    private readonly Queue<InputResult?> _inputQueue = new ();
+    private readonly ConcurrentQueue<InputResult?> _inputQueue = new ();
     private readonly ConsoleDriver _consoleDriver;
     private ConsoleKeyInfo [] _cki;
     private bool _isEscSeq;
@@ -191,7 +192,10 @@ internal class NetEvents : IDisposable
 #endif
             if (_inputQueue.Count > 0)
             {
-                return _inputQueue.Dequeue ();
+                if (_inputQueue.TryDequeue (out InputResult? result))
+                {
+                    return result;
+                }
             }
         }
 
@@ -200,17 +204,10 @@ internal class NetEvents : IDisposable
 
     private ConsoleKeyInfo ReadConsoleKeyInfo (CancellationToken cancellationToken, bool intercept = true)
     {
-        // if there is a key available, return it without waiting
-        //  (or dispatching work to the thread queue)
-        if (Console.KeyAvailable)
-        {
-            return Console.ReadKey (intercept);
-        }
-
         while (!cancellationToken.IsCancellationRequested)
         {
-            Task.Delay (100, cancellationToken).Wait (cancellationToken);
-
+            // if there is a key available, return it without waiting
+            //  (or dispatching work to the thread queue)
             if (Console.KeyAvailable)
             {
                 return Console.ReadKey (intercept);
@@ -220,12 +217,15 @@ internal class NetEvents : IDisposable
             {
                 if (_retries > 1)
                 {
-                    EscSeqRequests.Statuses.TryDequeue (out EscSeqReqStatus seqReqStatus);
-
-                    lock (seqReqStatus.AnsiRequest._responseLock)
+                    if (EscSeqRequests.Statuses.TryPeek (out EscSeqReqStatus seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.Response))
                     {
-                        seqReqStatus.AnsiRequest.Response = string.Empty;
-                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, string.Empty);
+                        lock (seqReqStatus!.AnsiRequest._responseLock)
+                        {
+                            EscSeqRequests.Statuses.TryDequeue (out _);
+
+                            seqReqStatus.AnsiRequest.Response = string.Empty;
+                            seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, string.Empty);
+                        }
                     }
 
                     _retries = 0;
@@ -238,6 +238,11 @@ internal class NetEvents : IDisposable
             else
             {
                 _retries = 0;
+            }
+
+            if (!_forceRead)
+            {
+                Task.Delay (100, cancellationToken).Wait (cancellationToken);
             }
         }
 
@@ -310,7 +315,10 @@ internal class NetEvents : IDisposable
 
                         _isEscSeq = true;
 
-                        if (_cki is { } && _cki [^1].KeyChar != Key.Esc && consoleKeyInfo.KeyChar != Key.Esc && consoleKeyInfo.KeyChar <= Key.Space)
+                        if ((_cki is { } && _cki [^1].KeyChar != Key.Esc && consoleKeyInfo.KeyChar != Key.Esc && consoleKeyInfo.KeyChar <= Key.Space)
+                            || (_cki is { } && _cki [^1].KeyChar != '\u001B' && consoleKeyInfo.KeyChar == 127)
+                            || (_cki is { } && char.IsLetter (_cki [^1].KeyChar) && char.IsLower (consoleKeyInfo.KeyChar) && char.IsLetter (consoleKeyInfo.KeyChar))
+                            || (_cki is { Length: > 2 } && char.IsLetter (_cki [^1].KeyChar) && char.IsLetter (consoleKeyInfo.KeyChar)))
                         {
                             ProcessRequestResponse (ref newConsoleKeyInfo, ref key, _cki, ref mod);
                             _cki = null;
@@ -510,7 +518,26 @@ internal class NetEvents : IDisposable
             return;
         }
 
-        HandleKeyboardEvent (newConsoleKeyInfo);
+        if (!string.IsNullOrEmpty (EscSeqUtils.InvalidRequestTerminator))
+        {
+            if (EscSeqRequests.Statuses.TryDequeue (out EscSeqReqStatus result))
+            {
+                lock (result.AnsiRequest._responseLock)
+                {
+                    result.AnsiRequest.Response = EscSeqUtils.InvalidRequestTerminator;
+                    result.AnsiRequest.RaiseResponseFromInput (result.AnsiRequest, EscSeqUtils.InvalidRequestTerminator);
+
+                    EscSeqUtils.InvalidRequestTerminator = null;
+                }
+            }
+
+            return;
+        }
+
+        if (newConsoleKeyInfo != default)
+        {
+            HandleKeyboardEvent (newConsoleKeyInfo);
+        }
     }
 
     [UnconditionalSuppressMessage ("AOT", "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.", Justification = "<Pending>")]
@@ -1822,7 +1849,7 @@ internal class NetMainLoop : IMainLoopDriver
 
     private readonly ManualResetEventSlim _eventReady = new (false);
     private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
-    private readonly Queue<InputResult?> _resultQueue = new ();
+    private readonly ConcurrentQueue<InputResult?> _resultQueue = new ();
     internal readonly ManualResetEventSlim _waitForProbe = new (false);
     private readonly CancellationTokenSource _eventReadyTokenSource = new ();
     private MainLoop _mainLoop;
@@ -1897,11 +1924,12 @@ internal class NetMainLoop : IMainLoopDriver
         while (_resultQueue.Count > 0)
         {
             // Always dequeue even if it's null and invoke if isn't null
-            InputResult? dequeueResult = _resultQueue.Dequeue ();
-
-            if (dequeueResult is { })
+            if (_resultQueue.TryDequeue (out InputResult? dequeueResult))
             {
-                ProcessInput?.Invoke (dequeueResult.Value);
+                if (dequeueResult is { })
+                {
+                    ProcessInput?.Invoke (dequeueResult.Value);
+                }
             }
         }
     }
@@ -1960,10 +1988,10 @@ internal class NetMainLoop : IMainLoopDriver
 
             try
             {
-                while (_resultQueue.Count > 0 && _resultQueue.Peek () is null)
+                while (_resultQueue.Count > 0 && _resultQueue.TryPeek (out InputResult? result) && result is null)
                 {
                     // Dequeue null values
-                    _resultQueue.Dequeue ();
+                    _resultQueue.TryDequeue (out _);
                 }
             }
             catch (InvalidOperationException) // Peek can raise an exception

@@ -176,6 +176,13 @@ internal class UnixMainLoop : IMainLoopDriver
             {
                 return;
             }
+            finally
+            {
+                if (!_inputHandlerTokenSource.IsCancellationRequested)
+                {
+                    _waitForInput.Reset ();
+                }
+            }
 
             if (_pollDataQueue?.Count == 0 || _forceRead)
             {
@@ -235,12 +242,15 @@ internal class UnixMainLoop : IMainLoopDriver
                     {
                         if (_retries > 1)
                         {
-                            EscSeqRequests.Statuses.TryDequeue (out EscSeqReqStatus seqReqStatus);
-
-                            lock (seqReqStatus!.AnsiRequest._responseLock)
+                            if (EscSeqRequests.Statuses.TryPeek (out EscSeqReqStatus seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.Response))
                             {
-                                seqReqStatus.AnsiRequest.Response = string.Empty;
-                                seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, string.Empty);
+                                lock (seqReqStatus!.AnsiRequest._responseLock)
+                                {
+                                    EscSeqRequests.Statuses.TryDequeue (out _);
+
+                                    seqReqStatus.AnsiRequest.Response = string.Empty;
+                                    seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, string.Empty);
+                                }
                             }
 
                             _retries = 0;
@@ -257,7 +267,10 @@ internal class UnixMainLoop : IMainLoopDriver
 
                     try
                     {
-                        Task.Delay (100, _inputHandlerTokenSource.Token).Wait (_inputHandlerTokenSource.Token);
+                        if (!_forceRead)
+                        {
+                            Task.Delay (100, _inputHandlerTokenSource.Token).Wait (_inputHandlerTokenSource.Token);
+                        }
                     }
                     catch (OperationCanceledException)
                     {
@@ -266,7 +279,6 @@ internal class UnixMainLoop : IMainLoopDriver
                 }
             }
 
-            _waitForInput.Reset ();
             _eventReady.Set ();
         }
     }
@@ -322,6 +334,22 @@ internal class UnixMainLoop : IMainLoopDriver
             {
                 seqReqStatus.AnsiRequest.Response = ckiString;
                 seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, ckiString);
+            }
+
+            return;
+        }
+
+        if (!string.IsNullOrEmpty (EscSeqUtils.InvalidRequestTerminator))
+        {
+            if (EscSeqRequests.Statuses.TryDequeue (out EscSeqReqStatus result))
+            {
+                lock (result.AnsiRequest._responseLock)
+                {
+                    result.AnsiRequest.Response = EscSeqUtils.InvalidRequestTerminator;
+                    result.AnsiRequest.RaiseResponseFromInput (result.AnsiRequest, EscSeqUtils.InvalidRequestTerminator);
+
+                    EscSeqUtils.InvalidRequestTerminator = null;
+                }
             }
 
             return;
@@ -420,8 +448,7 @@ internal class UnixMainLoop : IMainLoopDriver
         // Write to stdout (fd 1)
         write (STDOUT_FILENO, ansiRequest, ansiRequest.Length);
 
-        // Flush the stdout buffer immediately using fsync
-        fsync (STDOUT_FILENO);
+        Task.Delay (100, _inputHandlerTokenSource.Token).Wait (_inputHandlerTokenSource.Token);
     }
 
     [DllImport ("libc")]
@@ -435,9 +462,6 @@ internal class UnixMainLoop : IMainLoopDriver
 
     [DllImport ("libc")]
     private static extern int write (int fd, string buf, int n);
-
-    [DllImport ("libc", SetLastError = true)]
-    private static extern int fsync (int fd);
 
     [DllImport ("libc", SetLastError = true)]
     private static extern int ioctl (int fd, int request, ref Winsize ws);
