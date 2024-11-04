@@ -32,7 +32,7 @@ public partial class View // Drawing APIs
     ///         or <see cref="NeedsLayout"/> set.
     ///     </para>
     ///     <para>
-    ///         // TODO: Add docs for the drawing process.
+    ///         See the View Drawing Deep Dive for more information: <see href="https://gui-cs.github.io/Terminal.GuiV2Docs/docs/drawing.html"/>.
     ///     </para>
     /// </remarks>
     public void Draw ()
@@ -44,12 +44,16 @@ public partial class View // Drawing APIs
 
         Region? saved = GetClip ();
 
+        // TODO: This can be further optimized by checking NeedsDraw below and only clearing, drawing text, drawing content, etc. if it is true.
         if (NeedsDraw || SubViewNeedsDraw)
         {
+            // Draw the Border and Padding.
+            // We clip to the frame to prevent drawing outside the frame.
             saved = ClipFrame ();
             DoDrawBorderAndPadding ();
             SetClip (saved);
 
+            // Draw the content within the Viewport
             // By default, we clip to the viewport preventing drawing outside the viewport
             // We also clip to the content, but if a developer wants to draw outside the viewport, they can do
             // so via settings. SetClip honors the ViewportSettings.DisableVisibleContentClipping flag.
@@ -57,19 +61,23 @@ public partial class View // Drawing APIs
 
             saved = ClipViewport ();
 
+            // Clear the viewport
             // TODO: Simplify/optimize SetAttribute system.
             DoSetAttribute ();
             DoClearViewport ();
 
+            // Draw the subviews
             if (SubViewNeedsDraw)
             {
                 DoSetAttribute ();
                 DoDrawSubviews ();
             }
 
+            // Draw the text
             DoSetAttribute ();
             DoDrawText ();
 
+            // Draw the content
             DoSetAttribute ();
             DoDrawContent ();
 
@@ -79,10 +87,14 @@ public partial class View // Drawing APIs
 
             saved = ClipFrame ();
 
+            // Draw the line canvas
             DoRenderLineCanvas ();
 
+            // Re-draw the border and padding subviews
+            // HACK: This is a hack to ensure that the border and padding subviews are drawn after the line canvas.
             DoDrawBorderAndPaddingSubViews ();
 
+            // Advance the diagnostics draw indicator
             Border?.AdvanceDrawIndicator ();
 
             ClearNeedsDraw ();
@@ -99,7 +111,7 @@ public partial class View // Drawing APIs
         SetClip (saved);
 
         // Exclude this view (not including Margin) from the Clip
-        if (this is not Adornment && GetClip () is { })
+        if (this is not Adornment)
         {
             Rectangle borderFrame = FrameToScreen ();
 
@@ -463,6 +475,7 @@ public partial class View // Drawing APIs
             return;
         }
 
+        // Draw the subviews in reverse order to leverage clipping.
         foreach (View view in _subviews.Where (view => view.Visible).Reverse ())
         {
             view.Draw ();
@@ -592,11 +605,10 @@ public partial class View // Drawing APIs
     #region NeedsDraw
 
     // TODO: Change NeedsDraw to use a Region instead of Rectangle
-
     // TODO: Make _needsDrawRect nullable instead of relying on Empty
-    // TODO: If null, it means ?
-    // TODO: If Empty, it means no need to redraw
-    // TODO: If not Empty, it means the region that needs to be redrawn
+    //      TODO: If null, it means ?
+    //      TODO: If Empty, it means no need to redraw
+    //      TODO: If not Empty, it means the region that needs to be redrawn
     // The viewport-relative region that needs to be redrawn. Marked internal for unit tests.
     internal Rectangle _needsDrawRect = Rectangle.Empty;
 
@@ -612,7 +624,7 @@ public partial class View // Drawing APIs
     /// </remarks>
     public bool NeedsDraw
     {
-        // TODO: Figure out if we can decouple NeedsDraw from NeedsLayout. This is a temporary fix.
+        // TODO: Figure out if we can decouple NeedsDraw from NeedsLayout.
         get => Visible && (_needsDrawRect != Rectangle.Empty || NeedsLayout);
         set
         {
@@ -627,22 +639,8 @@ public partial class View // Drawing APIs
         }
     }
 
-    private bool _subViewNeedsDraw;
-
     /// <summary>Gets whether any Subviews need to be redrawn.</summary>
-    public bool SubViewNeedsDraw
-    {
-        get => _subViewNeedsDraw;
-        private set
-        {
-            //if (!Visible)
-            //{
-            //    _subViewNeedsDraw = false;
-            //    return;
-            //}
-            _subViewNeedsDraw = value;
-        }
-    }
+    public bool SubViewNeedsDraw { get; private set; }
 
     /// <summary>Sets that the <see cref="Viewport"/> of this View needs to be redrawn.</summary>
     /// <remarks>
@@ -653,7 +651,7 @@ public partial class View // Drawing APIs
     {
         Rectangle viewport = Viewport;
 
-        if (/*!Visible || */(_needsDrawRect != Rectangle.Empty && viewport.IsEmpty))
+        if (!Visible || (_needsDrawRect != Rectangle.Empty && viewport.IsEmpty))
         {
             // This handles the case where the view has not been initialized yet
             return;
@@ -675,10 +673,11 @@ public partial class View // Drawing APIs
     /// <param name="viewPortRelativeRegion">The <see cref="Viewport"/>relative region that needs to be redrawn.</param>
     public void SetNeedsDraw (Rectangle viewPortRelativeRegion)
     {
-        //if (!Visible)
-        //{
-        //    return;
-        //}
+        if (!Visible)
+        {
+            return;
+        }
+
         if (_needsDrawRect.IsEmpty)
         {
             _needsDrawRect = viewPortRelativeRegion;
@@ -692,10 +691,7 @@ public partial class View // Drawing APIs
             _needsDrawRect = new (x, y, w, h);
         }
 
-        //if (Margin is { } && Margin.Thickness != Thickness.Empty)
-        //{
-        //    Margin?.SetNeedsDraw ();
-        //}
+        // Do not set on Margin - it will be drawn in a separate pass.
 
         if (Border is { } && Border.Thickness != Thickness.Empty)
         {
@@ -709,7 +705,7 @@ public partial class View // Drawing APIs
 
         SuperView?.SetSubViewNeedsDraw ();
 
-        if (this is Adornment adornment /*and (Gui.Padding or Gui.Border)*/)
+        if (this is Adornment adornment)
         {
             adornment.Parent?.SetSubViewNeedsDraw ();
         }
@@ -729,11 +725,10 @@ public partial class View // Drawing APIs
     /// <summary>Sets <see cref="SubViewNeedsDraw"/> to <see langword="true"/> for this View and all Superviews.</summary>
     public void SetSubViewNeedsDraw ()
     {
-        //if (!Visible)
-        //{
-        //    SubViewNeedsDraw = false;
-        //    return;
-        //}
+        if (!Visible)
+        {
+            return;
+        }
 
         SubViewNeedsDraw = true;
 
