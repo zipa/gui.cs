@@ -19,6 +19,8 @@ public class AllViewsTester : Scenario
     private ListView? _classListView;
     private AdornmentsEditor? _adornmentsEditor;
 
+    private ArrangementEditor? _arrangementEditor;
+
     private LayoutEditor? _layoutEditor;
     private FrameView? _settingsPane;
     private RadioGroup? _orientation;
@@ -88,23 +90,31 @@ public class AllViewsTester : Scenario
             X = Pos.Right (_classListView),
             Y = 0,
             Width = Dim.Auto (),
-            Height = Dim.Fill (),
+            Height = Dim.Auto (),
             ColorScheme = Colors.ColorSchemes ["TopLevel"],
-            BorderStyle = LineStyle.Single,
+            BorderStyle = LineStyle.Rounded,
             AutoSelectViewToEdit = false,
             AutoSelectAdornments = false
         };
+        _adornmentsEditor.ExpanderButton.Orientation = Orientation.Vertical;
 
-        var expandButton = new ExpanderButton
+        _arrangementEditor = new ()
         {
-            CanFocus = false,
-            Orientation = Orientation.Horizontal
+            Title = "Arrangement [_3]",
+            X = Pos.Right (_classListView),
+            Y = Pos.Bottom (_adornmentsEditor),
+            Width = Dim.Width (_adornmentsEditor),
+            Height = Dim.Fill (),
+            ColorScheme = Colors.ColorSchemes ["TopLevel"],
+            BorderStyle = LineStyle.Rounded,
+            AutoSelectViewToEdit = false,
+            AutoSelectAdornments = false
         };
-        _adornmentsEditor.Border.Add (expandButton);
+        _arrangementEditor.ExpanderButton.Orientation = Orientation.Vertical;
 
         _layoutEditor = new ()
         {
-            Title = "Layout [_3]",
+            Title = "Layout [_4]",
             X = Pos.Right (_adornmentsEditor),
             Y = 0,
 
@@ -119,7 +129,7 @@ public class AllViewsTester : Scenario
 
         _settingsPane = new ()
         {
-            Title = "Settings [_4]",
+            Title = "Settings [_5]",
             X = Pos.Right (_adornmentsEditor),
             Y = Pos.Bottom (_layoutEditor),
             Width = Dim.Width (_layoutEditor),
@@ -211,12 +221,12 @@ public class AllViewsTester : Scenario
             Arrangement = ViewArrangement.Resizable,
             BorderStyle = LineStyle.RoundedDotted
         };
-        _hostPane.Border.ColorScheme = app.ColorScheme;
-        _hostPane.Padding.Thickness = new (1);
+        _hostPane.Border!.ColorScheme = app.ColorScheme;
+        _hostPane.Padding!.Thickness = new (1);
         _hostPane.Padding.Diagnostics = ViewDiagnosticFlags.Ruler;
         _hostPane.Padding.ColorScheme = app.ColorScheme;
 
-        app.Add (_classListView, _adornmentsEditor, _layoutEditor, _settingsPane, _eventLog, _hostPane);
+        app.Add (_classListView, _adornmentsEditor, _arrangementEditor, _layoutEditor, _settingsPane, _eventLog, _hostPane);
 
         app.Initialized += App_Initialized;
 
@@ -284,6 +294,7 @@ public class AllViewsTester : Scenario
 
         _hostPane!.Add (_curView);
         _layoutEditor!.ViewToEdit = _curView;
+        _arrangementEditor!.ViewToEdit = _curView;
         _curView.SetNeedsLayout ();
     }
 
@@ -295,6 +306,7 @@ public class AllViewsTester : Scenario
             _curView.SubviewsLaidOut -= CurrentView_LayoutComplete;
             _hostPane!.Remove (_curView);
             _layoutEditor!.ViewToEdit = null;
+            _arrangementEditor!.ViewToEdit = null;
 
             _curView.Dispose ();
             _curView = null;

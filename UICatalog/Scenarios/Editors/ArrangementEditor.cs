@@ -65,8 +65,6 @@ public sealed class ArrangementEditor : EditorBase
         UseMinimumSize = true,
         Type = SliderType.Multiple,
         AllowEmpty = true,
-        BorderStyle = LineStyle.Dotted,
-        Title = "_Arrangement"
     };
 
     protected override void OnViewToEditChanged ()
