@@ -732,7 +732,7 @@ public partial class View // Drawing APIs
 
         SubViewNeedsDraw = true;
 
-        if (this is Adornment adornment/* and (Gui.Padding or Gui.Border)*/)
+        if (this is Adornment adornment)
         {
             adornment.Parent?.SetSubViewNeedsDraw ();
         }
