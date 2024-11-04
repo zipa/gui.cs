@@ -82,7 +82,7 @@ public class AnsiEscapeSequenceRequest
 
             if (!ansiRequest.Response.EndsWith (ansiRequest.Terminator [^1]))
             {
-                char resp = string.IsNullOrEmpty (ansiRequest.Response) ? ' ' : ansiRequest.Response.Last ();
+                string resp = string.IsNullOrEmpty (ansiRequest.Response) ? "" : ansiRequest.Response.Last ().ToString ();
 
                 throw new InvalidOperationException ($"Terminator ends with '{resp}'\nand doesn't end with: '{ansiRequest.Terminator [^1]}'");
             }
