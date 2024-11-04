@@ -1,5 +1,7 @@
 ﻿#nullable enable
 
+using System.Collections.Concurrent;
+
 namespace Terminal.Gui;
 
 /// <summary>
@@ -95,5 +97,5 @@ public class EscSeqRequests
     }
 
     /// <summary>Gets the <see cref="EscSeqReqStatus"/> list.</summary>
-    public Queue<EscSeqReqStatus> Statuses { get; } = new ();
+    public ConcurrentQueue<EscSeqReqStatus> Statuses { get; } = new ();
 }
