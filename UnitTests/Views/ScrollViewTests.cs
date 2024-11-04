@@ -413,7 +413,7 @@ public class ScrollViewTests (ITestOutputHelper output)
 
         top.LayoutSubviews ();
 
-        Application.ClipToScreen ();
+        View.ClipToScreen ();
         top.Draw ();
 
         View contentBottomRightCorner = sv.Subviews.First (v => v is ScrollBarView.ContentBottomRightCorner);

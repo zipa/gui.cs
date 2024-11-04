@@ -38,7 +38,7 @@ public partial class View
     ///     <see cref="Adornment.Diagnostics"/> gets set to this property by default, enabling <see cref="ViewDiagnosticFlags.Ruler"/> and <see cref="ViewDiagnosticFlags.Thickness"/>.
     /// </para>
     /// <para>
-    ///     <see cref="ViewDiagnosticFlags.Hover"/> is enabled for all Views independently of Adornments.
+    ///     <see cref="ViewDiagnosticFlags.Hover"/> and <see cref="ViewDiagnosticFlags.DrawIndicator"/> are enabled for all Views independently of Adornments.
     /// </para>
     /// </remarks>
     public static ViewDiagnosticFlags Diagnostics { get; set; }

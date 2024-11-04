@@ -14,7 +14,7 @@ public class ViewTests (ITestOutputHelper output)
 
         view.DrawingContent += (s, e) =>
                             {
-                                Region savedClip = view.SetClipToViewport ();
+                                Region savedClip = view.ClipViewport ();
 
                                 for (var row = 0; row < view.Viewport.Height; row++)
                                 {
@@ -26,7 +26,7 @@ public class ViewTests (ITestOutputHelper output)
                                     }
                                 }
 
-                                Application.SetClip (savedClip);
+                                View.SetClip (savedClip);
                                 e.Cancel = true;
                             };
         var top = new Toplevel ();
@@ -77,7 +77,7 @@ public class ViewTests (ITestOutputHelper output)
 
         view.DrawingContent += (s, e) =>
                                {
-                                   Region savedClip = view.SetClipToViewport ();
+                                   Region savedClip = view.ClipViewport ();
 
                                    for (var row = 0; row < view.Viewport.Height; row++)
                                    {
@@ -89,7 +89,7 @@ public class ViewTests (ITestOutputHelper output)
                                        }
                                    }
 
-                                   Application.SetClip (savedClip);
+                                   View.SetClip (savedClip);
                                    e.Cancel = true;
                                };
         var top = new Toplevel ();
@@ -309,7 +309,7 @@ At 0,0
         Assert.Equal (new (3, 3, 10, 1), view.Frame);
         Assert.Equal (new (0, 0, 10, 1), view.Viewport);
         Assert.Equal (new (0, 0, 10, 1), view._needsDrawRect);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         top.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -404,7 +404,7 @@ At 0,0
         Assert.Equal (new (1, 1, 10, 1), view.Frame);
         Assert.Equal (new (0, 0, 10, 1), view.Viewport);
         Assert.Equal (new (0, 0, 10, 1), view._needsDrawRect);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
 
         top.Draw ();
 

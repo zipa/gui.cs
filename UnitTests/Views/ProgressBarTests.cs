@@ -36,7 +36,7 @@ public class ProgressBarTests
         for (var i = 0; i <= pb.Frame.Width; i++)
         {
             pb.Fraction += 0.2F;
-            Application.ClipToScreen ();
+            View.SetClipToScreen ();
             pb.Draw ();
 
             if (i == 0)
@@ -178,7 +178,7 @@ public class ProgressBarTests
         for (var i = 0; i < 38; i++)
         {
             pb.Pulse ();
-            Application.ClipToScreen ();
+            View.SetClipToScreen ();
             pb.Draw ();
 
             if (i == 0)
@@ -883,7 +883,7 @@ public class ProgressBarTests
         for (var i = 0; i < 38; i++)
         {
             pb.Pulse ();
-            Application.ClipToScreen ();
+            View.SetClipToScreen ();
             pb.Draw ();
 
             if (i == 0)

@@ -1,38 +1,123 @@
 ﻿#nullable enable
+using static Unix.Terminal.Curses;
+
 namespace Terminal.Gui;
 
 public partial class View
 {
-    internal Region? SetClipToFrame ()
+    /// <summary>
+    ///     Gets the current Clip region.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         There is a single clip region for the entire application.
+    ///     </para>
+    ///     <para>
+    ///         This method returns the current clip region, not a clone. If there is a need to modify the clip region, it is recommended to clone it first.
+    ///     </para>
+    /// </remarks>
+    /// <returns>The current Clip.</returns>
+    public static Region? GetClip ()
+    {
+        return Application.Driver?.Clip;
+    }
+
+    /// <summary>
+    ///     Sets the Clip to the specified region.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         There is a single clip region for the entire application. This method sets the clip region to the specified region.
+    ///     </para>
+    /// </remarks>
+    /// <param name="region"></param>
+    public static void SetClip (Region? region)
+    {
+        if (Driver is { } && region is { })
+        {
+            Driver.Clip = region;
+        }
+    }
+
+    /// <summary>
+    ///     Sets the Clip to be the rectangle of the screen.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         There is a single clip region for the entire application. This method sets the clip region to the screen.
+    ///     </para>
+    ///     <para>
+    ///         This method returns the current clip region, not a clone. If there is a need to modify the clip region, it is recommended to clone it first.
+    ///     </para>
+    /// </remarks>
+    /// <returns>
+    ///     The current Clip, which can be then re-applied <see cref="View.SetClip"/>
+    /// </returns>
+    public static Region? SetClipToScreen ()
+    {
+        Region? previous = GetClip ();
+        if (Driver is { })
+        {
+            Driver.Clip = new (Application.Screen);
+        }
+
+        return previous;
+    }
+
+    /// <summary>
+    ///      Removes the specified rectangle from the Clip.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         There is a single clip region for the entire application.
+    ///     </para>
+    /// </remarks>
+    /// <param name="rectangle"></param>
+    public static void ExcludeFromClip (Rectangle rectangle)
+    {
+        Driver?.Clip?.Exclude (rectangle);
+    }
+
+    /// <summary>
+    ///     Changes the Clip to the intersection of the current Clip and the <see cref="Frame"/> of this View.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         This method returns the current clip region, not a clone. If there is a need to modify the clip region, it is recommended to clone it first.
+    ///     </para>
+    /// </remarks>
+    /// <returns>
+    ///     The current Clip, which can be then re-applied <see cref="View.SetClip"/>
+    /// </returns>
+    internal Region? ClipFrame ()
     {
         if (Driver is null)
         {
             return null;
         }
 
-        Region previous = Driver.Clip ?? new (Application.Screen);
+        Region previous = GetClip () ?? new (Application.Screen);
 
-        Region frameRegion = Driver.Clip!.Clone ();
+        Region frameRegion = previous.Clone ();
         // Translate viewportRegion to screen-relative coords
         Rectangle screenRect = FrameToScreen ();
         frameRegion.Intersect (screenRect);
 
         if (this is Adornment adornment && adornment.Thickness != Thickness.Empty)
         {
-            // Ensure adornments can't draw outside thier thickness
+            // Ensure adornments can't draw outside their thickness
             frameRegion.Exclude (adornment.Thickness.GetInside (Frame));
         }
 
-        Application.SetClip (frameRegion);
+        View.SetClip (frameRegion);
 
         return previous;
-
     }
 
-    /// <summary>Sets the <see cref="ConsoleDriver"/>'s clip region to <see cref="Viewport"/>.</summary>
+    /// <summary>Changes the Clip to the intersection of the current Clip and the <see cref="Viewport"/> of this View.</summary>
     /// <remarks>
     ///     <para>
-    ///         By default, the clip rectangle is set to the intersection of the current clip region and the
+    ///         By default, sets the Clip to the intersection of the current clip region and the
     ///         <see cref="Viewport"/>. This ensures that drawing is constrained to the viewport, but allows
     ///         content to be drawn beyond the viewport.
     ///     </para>
@@ -40,21 +125,25 @@ public partial class View
     ///         If <see cref="ViewportSettings"/> has <see cref="Gui.ViewportSettings.ClipContentOnly"/> set, clipping will be
     ///         applied to just the visible content area.
     ///     </para>
+    /// <remarks>
+    ///     <para>
+    ///         This method returns the current clip region, not a clone. If there is a need to modify the clip region, it is recommended to clone it first.
+    ///     </para>
+    /// </remarks>
     /// </remarks>
     /// <returns>
-    ///     The current screen-relative clip region, which can be then re-applied by setting
-    ///     <see cref="ConsoleDriver.Clip"/>.
+    ///     The current Clip, which can be then re-applied <see cref="View.SetClip"/>
     /// </returns>
-    public Region? SetClipToViewport ()
+    public Region? ClipViewport ()
     {
         if (Driver is null)
         {
             return null;
         }
 
-        Region previous = Driver.Clip ?? new (Application.Screen);
+        Region previous = GetClip () ?? new (Application.Screen);
 
-        Region viewportRegion = Driver.Clip!.Clone ();
+        Region viewportRegion = previous.Clone ();
 
         Rectangle viewport = ViewportToScreen (new Rectangle (Point.Empty, Viewport.Size));
         viewportRegion?.Intersect (viewport);
@@ -72,32 +161,8 @@ public partial class View
             viewportRegion?.Exclude (adornment.Thickness.GetInside (viewport));
         }
 
-        Application.SetClip (viewportRegion);
+        View.SetClip (viewportRegion);
 
         return previous;
-    }
-
-    /// <summary>Gets the view-relative clip region.</summary>
-    public Region? GetClip ()
-    {
-        // get just the portion of the application clip that is within this view's Viewport
-        if (Driver is null)
-        {
-            return null;
-        }
-
-        // Get our Viewport in screen coordinates
-        Rectangle screen = ViewportToScreen (Viewport with { Location = Point.Empty });
-
-        // Get the clip region in screen coordinates
-        Region? clip = Driver.Clip;
-        if (clip is null)
-        {
-            return null;
-        }
-        Region? previous = Driver.Clip;
-        clip = clip.Clone ();
-        clip.Intersect (screen);
-        return clip;
     }
 }

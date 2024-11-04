@@ -496,7 +496,7 @@ public static partial class Application // Run (Begin, Run, End, Stop)
     public static void Wakeup () { MainLoop?.Wakeup (); }
 
     /// <summary>
-    /// Causes any Toplevels that need layout to be laid out. Then draws any Toplevels that need dispplay. Only Views that need to be laid out (see <see cref="View.NeedsLayout"/>) will be laid out.
+    /// Causes any Toplevels that need layout to be laid out. Then draws any Toplevels that need display. Only Views that need to be laid out (see <see cref="View.NeedsLayout"/>) will be laid out.
     /// Only Views that need to be drawn (see <see cref="View.NeedsDraw"/>) will be drawn.
     /// </summary>
     /// <param name="forceDraw">If <see langword="true"/> the entire View hierarchy will be redrawn. The default is <see langword="false"/> and should only be overriden for testing.</param>
@@ -509,9 +509,9 @@ public static partial class Application // Run (Begin, Run, End, Stop)
             Driver?.ClearContents ();
         }
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         View.Draw (TopLevels, neededLayout || forceDraw);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
 
         Driver?.Refresh ();
     }

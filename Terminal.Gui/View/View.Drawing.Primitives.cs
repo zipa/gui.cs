@@ -116,12 +116,12 @@ public partial class View
             return;
         }
 
-        Region prevClip = SetClipToViewport ();
+        Region prevClip = ClipViewport ();
         Rectangle toClear = ViewportToScreen (rect);
         Attribute prev = SetAttribute (new (color ?? GetNormalColor ().Background));
         Driver.FillRect (toClear);
         SetAttribute (prev);
-        Application.SetClip (prevClip);
+        View.SetClip (prevClip);
     }
 
     #endregion Drawing Primitives

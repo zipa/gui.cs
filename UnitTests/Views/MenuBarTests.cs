@@ -698,7 +698,7 @@ public class MenuBarTests (ITestOutputHelper output)
         Dialog.DefaultShadow = ShadowStyle.None;
         Button.DefaultShadow = ShadowStyle.None;
 
-        Assert.Equal (new (0, 0, 40, 15), Application.Driver?.Clip.GetBounds());
+        Assert.Equal (new (0, 0, 40, 15), View.GetClip ()!.GetBounds());
         TestHelpers.AssertDriverContentsWithFrameAre (@"", output);
 
         List<string> items = new ()
@@ -1595,7 +1595,7 @@ wo
 
         Assert.True (menu.NewMouseEvent (new () { Position = new (1, 0), Flags = MouseFlags.Button1Pressed, View = menu }));
         Assert.False (menu.IsMenuOpen);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         top.Draw ();
         TestHelpers.AssertDriverContentsAre (expectedMenu.ClosedMenuText, output);
         top.Dispose ();
@@ -1693,7 +1693,7 @@ wo
                                                      );
 
         Assert.True (menu._openMenu.NewKeyDownEvent (Key.CursorRight));
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         top.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -1805,7 +1805,7 @@ wo
                                                                                   );
 
                                      Assert.True (menu._openMenu.NewKeyDownEvent (Key.CursorRight));
-                                     Application.ClipToScreen ();
+                                     View.SetClipToScreen ();
                                      top.Draw ();
 
                                      TestHelpers.AssertDriverContentsWithFrameAre (
@@ -2013,7 +2013,7 @@ wo
                                      Assert.True (
                                                   ((MenuBar)top.Subviews [0])._openMenu.NewKeyDownEvent (Key.CursorRight)
                                                  );
-                                     Application.ClipToScreen ();
+                                     View.SetClipToScreen ();
                                      top.Draw ();
 
                                      TestHelpers.AssertDriverContentsWithFrameAre (
@@ -2088,14 +2088,14 @@ wo
         // Open second
         Assert.True (Application.Top.Subviews [1].NewKeyDownEvent (Key.CursorRight));
         Assert.True (menu.IsMenuOpen);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         top.Draw ();
         TestHelpers.AssertDriverContentsAre (expectedMenu.ExpectedSubMenuOpen (1), output);
 
         // Close menu
         Assert.True (menu.NewKeyDownEvent (menu.Key));
         Assert.False (menu.IsMenuOpen);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         top.Draw ();
         TestHelpers.AssertDriverContentsAre (expectedMenu.ClosedMenuText, output);
 
@@ -2129,21 +2129,21 @@ wo
         // Open first
         Assert.True (menu.NewKeyDownEvent (menu.Key));
         Assert.True (menu.IsMenuOpen);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         top.Draw ();
         TestHelpers.AssertDriverContentsAre (expectedMenu.ExpectedSubMenuOpen (0), output);
 
         // Open second
         Assert.True (top.Subviews [1].NewKeyDownEvent (Key.CursorRight));
         Assert.True (menu.IsMenuOpen);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         Application.Top.Draw ();
         TestHelpers.AssertDriverContentsAre (expectedMenu.ExpectedSubMenuOpen (1), output);
 
         // Close menu
         Assert.True (menu.NewKeyDownEvent (menu.Key));
         Assert.False (menu.IsMenuOpen);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         top.Draw ();
         TestHelpers.AssertDriverContentsAre (expectedMenu.ClosedMenuText, output);
         top.Dispose ();
@@ -2212,7 +2212,7 @@ wo
         top.Add (menu);
         Application.Begin (top);
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         top.Draw ();
         TestHelpers.AssertDriverContentsAre (expectedMenu.ClosedMenuText, output);
 
@@ -2220,7 +2220,7 @@ wo
         {
             menu.OpenMenu (i);
             Assert.True (menu.IsMenuOpen);
-            Application.ClipToScreen ();
+            View.SetClipToScreen ();
             top.Draw ();
             TestHelpers.AssertDriverContentsAre (expectedMenu.ExpectedSubMenuOpen (i), output);
         }
@@ -2479,7 +2479,7 @@ Edit
         Assert.True (menu.NewKeyDownEvent (menu.Key));
         Assert.True (menu.IsMenuOpen);
         Assert.False (isMenuClosed);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         top.Draw ();
 
         expected = @"
@@ -2494,7 +2494,7 @@ Edit
         Assert.True (menu.NewKeyDownEvent (menu.Key));
         Assert.False (menu.IsMenuOpen);
         Assert.True (isMenuClosed);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         top.Draw ();
 
         expected = @"
@@ -2658,7 +2658,7 @@ Edit
         Assert.Equal (1, menu._selected);
         Assert.Equal (-1, menu._selectedSub);
         Assert.Null (menu._openSubMenu);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         top.Draw ();
         TestHelpers.AssertDriverContentsAre (expectedMenu.ExpectedSubMenuOpen (1), output);
 
@@ -2666,7 +2666,7 @@ Edit
         Assert.True (menu._openMenu.NewKeyDownEvent (Key.CursorRight));
         Assert.True (menu.IsMenuOpen);
         Assert.False (tf.HasFocus);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         top.Draw ();
         TestHelpers.AssertDriverContentsAre (expectedMenu.ExpectedSubMenuOpen (2), output);
 
@@ -2674,21 +2674,21 @@ Edit
         Assert.True (menu._openMenu.NewKeyDownEvent (Key.CursorLeft));
         Assert.True (menu.IsMenuOpen);
         Assert.False (tf.HasFocus);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         top.Draw ();
         TestHelpers.AssertDriverContentsAre (expectedMenu.ExpectedSubMenuOpen (1), output);
 
         Assert.True (menu._openMenu.NewKeyDownEvent (Key.CursorLeft));
         Assert.True (menu.IsMenuOpen);
         Assert.False (tf.HasFocus);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         top.Draw ();
         TestHelpers.AssertDriverContentsAre (expectedMenu.ExpectedSubMenuOpen (0), output);
 
         Assert.True (Application.RaiseKeyDownEvent (menu.Key));
         Assert.False (menu.IsMenuOpen);
         Assert.True (tf.HasFocus);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         top.Draw ();
         TestHelpers.AssertDriverContentsAre (expectedMenu.ClosedMenuText, output);
         top.Dispose ();
@@ -2759,7 +2759,7 @@ Edit
                     );
         Assert.True (menu.IsMenuOpen);
         Assert.False (tf.HasFocus);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         top.Draw ();
         TestHelpers.AssertDriverContentsAre (expectedMenu.ExpectedSubMenuOpen (1), output);
 
@@ -2770,7 +2770,7 @@ Edit
                     );
         Assert.True (menu.IsMenuOpen);
         Assert.False (tf.HasFocus);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         top.Draw ();
         TestHelpers.AssertDriverContentsAre (expectedMenu.ExpectedSubMenuOpen (2), output);
 
@@ -2781,7 +2781,7 @@ Edit
                     );
         Assert.True (menu.IsMenuOpen);
         Assert.False (tf.HasFocus);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         top.Draw ();
         TestHelpers.AssertDriverContentsAre (expectedMenu.ClosedMenuText, output);
 
@@ -2792,14 +2792,14 @@ Edit
                     );
         Assert.True (menu.IsMenuOpen);
         Assert.False (tf.HasFocus);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         top.Draw ();
         TestHelpers.AssertDriverContentsAre (expectedMenu.ExpectedSubMenuOpen (0), output);
 
         Assert.True (menu.NewMouseEvent (new () { Position = new (8, 0), Flags = MouseFlags.Button1Pressed, View = menu }));
         Assert.False (menu.IsMenuOpen);
         Assert.True (tf.HasFocus);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         top.Draw ();
         TestHelpers.AssertDriverContentsAre (expectedMenu.ClosedMenuText, output);
         top.Dispose ();

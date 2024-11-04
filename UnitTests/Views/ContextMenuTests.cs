@@ -132,7 +132,7 @@ public class ContextMenuTests (ITestOutputHelper output)
     {
         ((FakeDriver)Application.Driver!).SetBufferSize (20, 15);
 
-        Assert.Equal (new Rectangle (0, 0, 20, 15), Application.Driver?.Clip.GetBounds ());
+        Assert.Equal (new Rectangle (0, 0, 20, 15), View.GetClip ()!.GetBounds ());
         TestHelpers.AssertDriverContentsWithFrameAre ("", output);
 
         var top = new Toplevel { X = 2, Y = 2, Width = 15, Height = 4 };
@@ -267,7 +267,7 @@ public class ContextMenuTests (ITestOutputHelper output)
     {
         ((FakeDriver)Application.Driver!).SetBufferSize (20, 15);
 
-        Assert.Equal (new Rectangle (0, 0, 20, 15), Application.Driver?.Clip.GetBounds ());
+        Assert.Equal (new Rectangle (0, 0, 20, 15), View.GetClip ()!.GetBounds ());
         TestHelpers.AssertDriverContentsWithFrameAre ("", output);
 
         // Don't use Dialog here as it has more layout logic. Use Window instead.
@@ -1042,7 +1042,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         cm.Host.Height = 3;
 
         cm.Show (menuItems);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         Application.Top.Draw ();
         Assert.Equal (new Point (5, 12), cm.Position);
 

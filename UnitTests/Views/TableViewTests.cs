@@ -723,7 +723,7 @@ public class TableViewTests (ITestOutputHelper output)
 
         // since A is now pushed off screen we get indicator showing
         // that user can scroll left to see first column
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tableView.Draw ();
 
         expected =
@@ -738,7 +738,7 @@ public class TableViewTests (ITestOutputHelper output)
         tableView.NewKeyDownEvent (new () { KeyCode = KeyCode.CursorRight });
         tableView.NewKeyDownEvent (new () { KeyCode = KeyCode.CursorRight });
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tableView.Draw ();
 
         expected =
@@ -797,7 +797,7 @@ public class TableViewTests (ITestOutputHelper output)
 
         // Scroll right
         tableView.NewKeyDownEvent (new () { KeyCode = KeyCode.CursorRight });
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tableView.Draw ();
 
         // Note that with SmoothHorizontalScrolling only a single new column
@@ -845,7 +845,7 @@ public class TableViewTests (ITestOutputHelper output)
 
         // select last visible column
         tableView.SelectedColumn = 2; // column C
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tableView.Draw ();
 
         var expected =
@@ -857,7 +857,7 @@ public class TableViewTests (ITestOutputHelper output)
 
         // Scroll right
         tableView.NewKeyDownEvent (new () { KeyCode = KeyCode.CursorRight });
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tableView.Draw ();
 
         // notice that without smooth scrolling we just update the first column
@@ -1980,7 +1980,7 @@ public class TableViewTests (ITestOutputHelper output)
 ◄─┼─┼─┤
 │2│3│4│";
         tableView.SetNeedsDraw ();
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tableView.Draw ();
 
         TestHelpers.AssertDriverContentsAre (expected, output);
@@ -1994,7 +1994,7 @@ public class TableViewTests (ITestOutputHelper output)
 ├─┼─┼─┤
 │2│3│4│";
         tableView.SetNeedsDraw ();
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tableView.Draw ();
 
         TestHelpers.AssertDriverContentsAre (expected, output);
@@ -2010,7 +2010,7 @@ public class TableViewTests (ITestOutputHelper output)
         tableView.Style.ShowHorizontalHeaderUnderline = true;
         tableView.LayoutSubviews ();
         tableView.SetNeedsDraw ();
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tableView.Draw ();
 
         // normally we should have scroll indicators because DEF are of screen
@@ -2033,7 +2033,7 @@ public class TableViewTests (ITestOutputHelper output)
 ├─┼─┼─┤
 │1│2│3│";
         tableView.SetNeedsDraw ();
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tableView.Draw ();
         TestHelpers.AssertDriverContentsAre (expected, output);
     }
@@ -2609,7 +2609,7 @@ A B C
 
         Assert.True (pets.First ().IsPicked);
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -2629,7 +2629,7 @@ A B C
         Assert.True (pets.ElementAt (0).IsPicked);
         Assert.True (pets.ElementAt (1).IsPicked);
         Assert.False (pets.ElementAt (2).IsPicked);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -2649,7 +2649,7 @@ A B C
         Assert.False (pets.ElementAt (0).IsPicked);
         Assert.True (pets.ElementAt (1).IsPicked);
         Assert.False (pets.ElementAt (2).IsPicked);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -2677,7 +2677,7 @@ A B C
         wrapper.CheckedRows.Add (0);
         wrapper.CheckedRows.Add (2);
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         var expected =
@@ -2701,7 +2701,7 @@ A B C
         Assert.Contains (2, wrapper.CheckedRows);
         Assert.Equal (3, wrapper.CheckedRows.Count);
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -2717,7 +2717,7 @@ A B C
         // Untoggle the top 2
         tv.NewKeyDownEvent (Key.Space);
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -2746,7 +2746,7 @@ A B C
         tv.NewKeyDownEvent (Key.A.WithCtrl);
         tv.NewKeyDownEvent (Key.Space);
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         var expected =
@@ -2766,7 +2766,7 @@ A B C
         // Untoggle all again
         tv.NewKeyDownEvent (Key.Space);
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -2807,7 +2807,7 @@ A B C
 
         Assert.True (pets.All (p => p.IsPicked));
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         var expected =
@@ -2827,7 +2827,7 @@ A B C
         Assert.Empty (pets.Where (p => p.IsPicked));
 #pragma warning restore xUnit2029
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -2854,7 +2854,7 @@ A B C
         var wrapper = new CheckBoxTableSourceWrapperByIndex (tv, tv.Table);
         tv.Table = wrapper;
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         var expected =
@@ -2874,7 +2874,7 @@ A B C
 
         Assert.Single (wrapper.CheckedRows, 0);
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -2894,7 +2894,7 @@ A B C
         Assert.Contains (1, wrapper.CheckedRows);
         Assert.Equal (2, wrapper.CheckedRows.Count);
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -2913,7 +2913,7 @@ A B C
 
         Assert.Single (wrapper.CheckedRows, 1);
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -2945,7 +2945,7 @@ A B C
         wrapper.UseRadioButtons = true;
 
         tv.Table = wrapper;
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         var expected =
@@ -2968,7 +2968,7 @@ A B C
 
         Assert.True (pets.First ().IsPicked);
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -2989,7 +2989,7 @@ A B C
         Assert.True (pets.ElementAt (1).IsPicked);
         Assert.False (pets.ElementAt (2).IsPicked);
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -3010,7 +3010,7 @@ A B C
         Assert.False (pets.ElementAt (1).IsPicked);
         Assert.False (pets.ElementAt (2).IsPicked);
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =

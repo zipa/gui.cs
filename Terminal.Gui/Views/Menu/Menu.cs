@@ -406,11 +406,11 @@ internal sealed class Menu : View
             return;
         }
 
-        DrawAdornments ();
+        DrawBorderAndPadding ();
         RenderLineCanvas ();
 
         // BUGBUG: Views should not change the clip. Doing so is an indcation of poor design or a bug in the framework.
-        Region? savedClip = Application.ClipToScreen ();
+        Region? savedClip = View.SetClipToScreen ();
 
         SetAttribute (GetNormalColor ());
 
@@ -579,7 +579,7 @@ internal sealed class Menu : View
             }
         }
 
-        Application.SetClip (savedClip);
+        View.SetClip (savedClip);
     }
 
     public override Point? PositionCursor ()

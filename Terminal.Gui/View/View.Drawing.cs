@@ -46,19 +46,19 @@ public partial class View // Drawing APIs
             return;
         }
 
-        Region? saved = Driver?.Clip;
+        Region? saved = GetClip ();
         if (NeedsDraw || SubViewNeedsDraw)
         {
-            saved = SetClipToFrame ();
-            DoDrawAdornments ();
-            Application.SetClip (saved);
+            saved = ClipFrame ();
+            DoDrawBorderAndPadding ();
+            View.SetClip (saved);
 
             // By default, we clip to the viewport preventing drawing outside the viewport
             // We also clip to the content, but if a developer wants to draw outside the viewport, they can do
             // so via settings. SetClip honors the ViewportSettings.DisableVisibleContentClipping flag.
             // Get our Viewport in screen coordinates
 
-            saved = SetClipToViewport ();
+            saved = ClipViewport ();
 
             // TODO: Simplify/optimize SetAttribute system.
             DoSetAttribute ();
@@ -79,15 +79,13 @@ public partial class View // Drawing APIs
 
             // Restore the clip before rendering the line canvas and adornment subviews
             // because they may draw outside the viewport.
-            Application.SetClip (saved);
+            SetClip (saved);
 
-            saved = SetClipToFrame ();
+            saved = ClipFrame ();
 
-            //DoSetAttribute ();
             DoRenderLineCanvas ();
 
-            //DoSetAttribute ();
-            DoDrawAdornmentSubViews ();
+            DoDrawBorderAndPaddingSubViews ();
 
             if (Border is { Diagnostics: ViewDiagnosticFlags.DrawIndicator, DrawIndicator: { } })
             {
@@ -99,19 +97,21 @@ public partial class View // Drawing APIs
         }
 
         // This causes the Margin to be drawn in a second pass
-        // TODO: Figure out how to make this more efficient
+        // PERFORMANCE: If there is a Margin, it will be redrawn each iteration of the main loop.
         if (Margin is { } && Margin?.Thickness != Thickness.Empty)
         {
-            Margin!.CachedClip = Application.Driver?.Clip?.Clone ();
+            // PERFORMANCE: How expensive are these clones?
+            Margin!.CachedClip = GetClip ()!.Clone ();
         }
 
         // We're done drawing
         DoDrawComplete ();
-        // QUESTION: SHould this go before DoDrawComplete?
-        Application.SetClip (saved);
 
-        // Exclude this view from the clip
-        if (this is not Adornment && Driver?.Clip is { })
+        // QUESTION: Should this go before DoDrawComplete? What is more correct?
+        View.SetClip (saved);
+
+        // Exclude this view (not including Margin) from the Clip
+        if (this is not Adornment && GetClip () is { })
         {
             Rectangle borderFrame = FrameToScreen ();
 
@@ -120,21 +120,14 @@ public partial class View // Drawing APIs
                 borderFrame = Border.FrameToScreen ();
             }
 
-            Application.ExcludeFromClip (borderFrame);
+            ExcludeFromClip (borderFrame);
         }
     }
 
     #region DrawAdornments
 
-    private void DoDrawAdornmentSubViews ()
+    private void DoDrawBorderAndPaddingSubViews ()
     {
-        //if (Margin?.Subviews is { } && Margin.Thickness != Thickness.Empty)
-        //{
-        //    //Region? saved = Margin?.SetClipToFrame ();
-        //    //Margin?.DoDrawSubviews ();
-        //    //Application.SetClip (saved);
-        //}
-
         if (Border?.Subviews is { } && Border.Thickness != Thickness.Empty)
         {
             foreach (View subview in Border.Subviews)
@@ -142,9 +135,9 @@ public partial class View // Drawing APIs
                 subview.SetNeedsDraw ();
             }
 
-            Region? saved = Border?.SetClipToFrame ();
+            Region? saved = Border?.ClipFrame ();
             Border?.DoDrawSubviews ();
-            Application.SetClip (saved);
+            SetClip (saved);
         }
 
         if (Padding?.Subviews is { } && Padding.Thickness != Thickness.Empty)
@@ -154,36 +147,38 @@ public partial class View // Drawing APIs
                 subview.SetNeedsDraw ();
             }
 
-            Region? saved = Padding?.SetClipToFrame ();
+            Region? saved = Padding?.ClipFrame ();
             Padding?.DoDrawSubviews ();
-            Application.SetClip (saved);
+            SetClip (saved);
         }
     }
 
-    private void DoDrawAdornments ()
+    private void DoDrawBorderAndPadding ()
     {
-        if (OnDrawingAdornments ())
+        if (OnDrawingBorderAndPadding ())
         {
             return;
         }
 
         // TODO: add event.
 
-        DrawAdornments ();
+        DrawBorderAndPadding ();
     }
 
     /// <summary>
-    ///     Causes each of the View's Adornments to be drawn. This includes the <see cref="Margin"/>, <see cref="Border"/>, and <see cref="Padding"/>.
+    ///     Causes <see cref="Border"/> and <see cref="Padding"/> to be drawn.
     /// </summary>
-    public void DrawAdornments ()
+    /// <remarks>
+    ///     <para>
+    ///         <see cref="Margin"/> is drawn in a separate pass.
+    ///     </para>
+    /// </remarks>
+    public void DrawBorderAndPadding ()
     {
+        // We do not attempt to draw Margin. It is drawn in a separate pass.
+
         // Each of these renders lines to either this View's LineCanvas 
         // Those lines will be finally rendered in OnRenderLineCanvas
-        if (Margin is { } && Margin.Thickness != Thickness.Empty)
-        {
-            //Margin?.Draw ();
-        }
-
         if (Border is { } && Border.Thickness != Thickness.Empty)
         {
             Border?.Draw ();
@@ -202,7 +197,7 @@ public partial class View // Drawing APIs
     ///     false (the default), this method will cause the <see cref="LineCanvas"/> be prepared to be rendered.
     /// </summary>
     /// <returns><see langword="true"/> to stop further drawing of the Adornments.</returns>
-    protected virtual bool OnDrawingAdornments () { return false; }
+    protected virtual bool OnDrawingBorderAndPadding () { return false; }
 
     #endregion DrawAdornments
 
@@ -379,7 +374,6 @@ public partial class View // Drawing APIs
             TextFormatter.NeedsFormat = true;
         }
 
-        // This should NOT clear 
         // TODO: If the output is not in the Viewport, do nothing
         var drawRect = new Rectangle (ContentToScreen (Point.Empty), GetContentSize ());
 
@@ -484,22 +478,8 @@ public partial class View // Drawing APIs
             return;
         }
 
-#if HACK_DRAW_OVERLAPPED
-        IEnumerable<View> subviewsNeedingDraw = _subviews.Where (view => (view.Visible && (view.NeedsDraw || view.SubViewNeedsDraw))
-                                                                      || view.Arrangement.HasFlag (ViewArrangement.Overlapped));
-#else
-        IEnumerable<View> subviewsNeedingDraw = _subviews.Where (view => (view.Visible));
-#endif
-
-        foreach (View view in subviewsNeedingDraw.Reverse ())
+        foreach (View view in _subviews.Where (view => view.Visible).Reverse ())
         {
-#if HACK_DRAW_OVERLAPPED
-            if (view.Arrangement.HasFlag (ViewArrangement.Overlapped))
-            {
-
-                view.SetNeedsDraw ();
-            }
-#endif
             view.Draw ();
         }
     }
@@ -533,7 +513,7 @@ public partial class View // Drawing APIs
     /// <summary>
     ///     Gets or sets whether this View will use it's SuperView's <see cref="LineCanvas"/> for rendering any
     ///     lines. If <see langword="true"/> the rendering of any borders drawn by this Frame will be done by its parent's
-    ///     SuperView. If <see langword="false"/> (the default) this View's <see cref="OnDrawingAdornments"/> method will be
+    ///     SuperView. If <see langword="false"/> (the default) this View's <see cref="OnDrawingBorderAndPadding"/> method will be
     ///     called to render the borders.
     /// </summary>
     public virtual bool SuperViewRendersLineCanvas { get; set; } = false;
@@ -608,7 +588,6 @@ public partial class View // Drawing APIs
         DrawComplete?.Invoke (this, new (Viewport, Viewport));
 
         // Default implementation does nothing.
-
     }
 
     /// <summary>
@@ -763,7 +742,6 @@ public partial class View // Drawing APIs
     {
         _needsDrawRect = Rectangle.Empty;
         SubViewNeedsDraw = false;
-
 
         if (Margin is { } && Margin.Thickness != Thickness.Empty)
         {

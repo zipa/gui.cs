@@ -721,7 +721,7 @@ public class TreeViewTests
                                             );
         tv.MaxDepth = 3;
         tv.ExpandAll ();
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         // Normal drawing of the tree view
@@ -760,7 +760,7 @@ public class TreeViewTests
                                             );
         tv.MaxDepth = 5;
         tv.ExpandAll ();
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
 
         tv.Draw ();
 
@@ -788,7 +788,7 @@ public class TreeViewTests
 
         Assert.True (tv.CanExpand ("5"));
         Assert.False (tv.IsExpanded ("5"));
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
 
         tv.Draw ();
 
@@ -843,7 +843,7 @@ public class TreeViewTests
         Assert.Null (tv.GetObjectOnRow (4));
 
         tv.Collapse (n1);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
 
         tv.Draw ();
 
@@ -880,7 +880,7 @@ public class TreeViewTests
 
         tv.ColorScheme = new ColorScheme ();
         tv.LayoutSubviews ();
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsAre (
@@ -900,7 +900,7 @@ public class TreeViewTests
         tv.Collapse (n1);
 
         tv.LayoutSubviews ();
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsAre (
@@ -918,7 +918,7 @@ public class TreeViewTests
         tv.ScrollOffsetVertical = 1;
 
         tv.LayoutSubviews ();
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsAre (
@@ -955,7 +955,7 @@ public class TreeViewTests
 
         tv.ColorScheme = new ColorScheme ();
         tv.LayoutSubviews ();
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         // Normal drawing of the tree view
@@ -1144,7 +1144,7 @@ oot two
 
         // matches nothing
         filter.Text = "asdfjhasdf";
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         // Normal drawing of the tree view
@@ -1155,7 +1155,7 @@ oot two
 
         // Matches everything
         filter.Text = "root";
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsAre (
@@ -1170,7 +1170,7 @@ oot two
 
         // Matches 2 leaf nodes
         filter.Text = "leaf";
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsAre (
@@ -1184,7 +1184,7 @@ oot two
 
         // Matches 1 leaf nodes
         filter.Text = "leaf 1";
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsAre (
@@ -1256,7 +1256,7 @@ oot two
         // redraw now that the custom color
         // delegate is registered
         tv.SetNeedsDraw ();
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         // Same text

@@ -60,10 +60,10 @@ public class Margin : Adornment
             if (view.Margin is { CachedClip: { } })
             {
                 view.Margin.NeedsDraw = true;
-                Region? saved = Driver?.Clip;
-                Application.SetClip (view.Margin.CachedClip);
+                Region? saved = GetClip ();
+                View.SetClip (view.Margin.CachedClip);
                 view.Margin.Draw ();
-                Application.SetClip (saved);
+                View.SetClip (saved);
                 view.Margin.CachedClip = null;
             }
 

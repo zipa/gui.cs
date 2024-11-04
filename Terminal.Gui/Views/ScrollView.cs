@@ -381,9 +381,9 @@ public class ScrollView : View
 
         if (!string.IsNullOrEmpty (_contentView.Text) || _contentView.Subviews.Count > 0)
         {
-            Region? saved = SetClipToFrame();
+            Region? saved = ClipFrame();
             _contentView.Draw ();
-            Application.SetClip (saved);
+            View.SetClip (saved);
         }
 
         DrawScrollBars ();
@@ -584,24 +584,24 @@ public class ScrollView : View
         {
             if (ShowVerticalScrollIndicator)
             {
-                Region? saved = Application.ClipToScreen ();
+                Region? saved = View.SetClipToScreen ();
                 _vertical.Draw ();
-                Application.SetClip (saved);
+                View.SetClip (saved);
             }
 
             if (ShowHorizontalScrollIndicator)
             {
-                Region? saved = Application.ClipToScreen ();
+                Region? saved = View.SetClipToScreen ();
                 _horizontal.Draw ();
-                Application.SetClip (saved);
+                View.SetClip (saved);
             }
 
             if (ShowVerticalScrollIndicator && ShowHorizontalScrollIndicator)
             {
                 SetContentBottomRightCornerVisibility ();
-                Region? saved = Application.ClipToScreen ();
+                Region? saved = View.SetClipToScreen ();
                 _contentBottomRightCorner.Draw ();
-                Application.SetClip (saved);
+                View.SetClip (saved);
             }
         }
     }

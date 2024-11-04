@@ -54,7 +54,7 @@ public class TreeTableSourceTests : IDisposable
         // when pressing right we should expand the top route
         tv.NewKeyDownEvent (Key.CursorRight);
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -72,7 +72,7 @@ public class TreeTableSourceTests : IDisposable
         // when pressing left we should collapse the top route again
         tv.NewKeyDownEvent (Key.CursorLeft);
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -96,7 +96,7 @@ public class TreeTableSourceTests : IDisposable
 
         tv.Style.GetOrCreateColumnStyle (1).MinAcceptableWidth = 1;
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         var expected =
@@ -116,7 +116,7 @@ public class TreeTableSourceTests : IDisposable
 
         Assert.True (tv.NewMouseEvent (new MouseEventArgs { Position = new (2, 2), Flags = MouseFlags.Button1Clicked }));
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -141,7 +141,7 @@ public class TreeTableSourceTests : IDisposable
 
         // Clicking on the + again should collapse
         tv.NewMouseEvent (new MouseEventArgs { Position = new (2, 2), Flags = MouseFlags.Button1Clicked });
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -194,7 +194,7 @@ public class TreeTableSourceTests : IDisposable
 
         Application.RaiseKeyDownEvent (Key.CursorRight);
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -212,7 +212,7 @@ public class TreeTableSourceTests : IDisposable
 
         tv.NewKeyDownEvent (Key.CursorDown);
         tv.NewKeyDownEvent (Key.Space);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =

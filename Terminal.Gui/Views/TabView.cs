@@ -1296,7 +1296,7 @@ public class TabView : View
                 // BUGBUG: Layout should only be called from Mainloop iteration!
                 Layout ();
 
-                tab.DrawAdornments ();
+                tab.DrawBorderAndPadding ();
 
                 Attribute prevAttr = Driver?.GetAttribute () ?? Attribute.Default;
 
@@ -1321,7 +1321,7 @@ public class TabView : View
                                         ColorScheme.HotNormal
                                        );
 
-                tab.DrawAdornments ();
+                tab.DrawBorderAndPadding ();
 
 
                 SetAttribute (GetNormalColor ());

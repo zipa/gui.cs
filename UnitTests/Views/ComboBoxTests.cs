@@ -566,7 +566,7 @@ Three ",
         Assert.True (cb.IsShow);
         Assert.Equal (-1, cb.SelectedItem);
         Assert.Equal ("", cb.Text);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         cb.Draw ();
 
         TestHelpers.AssertDriverAttributesAre (
@@ -585,7 +585,7 @@ Three ",
         Assert.True (cb.IsShow);
         Assert.Equal (-1, cb.SelectedItem);
         Assert.Equal ("", cb.Text);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         cb.Draw ();
 
         TestHelpers.AssertDriverAttributesAre (
@@ -610,7 +610,7 @@ Three ",
         Assert.True (cb.IsShow);
         Assert.Equal (2, cb.SelectedItem);
         Assert.Equal ("Three", cb.Text);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         cb.Draw ();
 
         TestHelpers.AssertDriverAttributesAre (
@@ -629,7 +629,7 @@ Three ",
         Assert.True (cb.IsShow);
         Assert.Equal (2, cb.SelectedItem);
         Assert.Equal ("Three", cb.Text);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         cb.Draw ();
 
         TestHelpers.AssertDriverAttributesAre (
@@ -648,7 +648,7 @@ Three ",
         Assert.True (cb.IsShow);
         Assert.Equal (2, cb.SelectedItem);
         Assert.Equal ("Three", cb.Text);
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         cb.Draw ();
 
         TestHelpers.AssertDriverAttributesAre (
@@ -928,7 +928,7 @@ One
         Assert.Equal (1, cb.SelectedItem);
         Assert.Equal ("Two", cb.Text);
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         cb.Draw ();
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -943,7 +943,7 @@ Two
         Assert.Equal (2, cb.SelectedItem);
         Assert.Equal ("Three", cb.Text);
 
-        Application.ClipToScreen ();
+        View.SetClipToScreen ();
         cb.Draw ();
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"

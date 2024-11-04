@@ -10,9 +10,9 @@ Terminal.Gui apps draw using the @Terminal.Gui.View.Move and @Terminal.Gui.View.
 
 Outputting unformatted text involves:
 
-a) Moving the draw cursor using @Terminal.Gui.ViewMove.
-b) Setting the attributes using @Terminal.Gui.ViewSetAttribute`
-c) Outputting glyphs by calling @Terminal.Gui.View.AddRune or @Terminal.Gui.View.AddStr
+a) Moving the draw cursor using @Terminal.Gui.View.Move.
+b) Setting the attributes using @Terminal.Gui.View.SetAttribute.
+c) Outputting glyphs by calling @Terminal.Gui.View.AddRune or @Terminal.Gui.View.AddStr.
 
 Outputting formatted text involves:
 
@@ -25,17 +25,29 @@ Line drawing is accomplished using the @Terminal.Gui.LineCanvas API:
 a) Add the lines via @Terminal.Gui.LineCanvas.Add.
 b) Either render the line canvas via @Terminal.Gui.LineCanvas.GetMap() or let the @Terminal.Gui.View do so automatically (which enables automatic line joining across Views).
 
-The @Terminal.Gui.Application MainLoop will iterate over all Views in an application looking for views have their @Terminal.Gui.View.NeedsDraw property set. The @Terminal.Gui.View.Draw method will be called which, in turn.
+### Drawing occurs each MainLoop Iteration
 
-1) Draws the Adornments (e.g. @Terminal.Gui.View.Border).
-2) Sets the Normal color scheme.
-3) Clears the @Terminal.Gui.View.Viewport.
-4) Draws @Terminal.Gui.View.Text.
-5) Draws any non-text or Subview content.
-6) Draws @Terminal.Gui.View.Subviews.
-7) Draws @Terminal.Gui.View.LineCanvas (which may have been added to by any of the steps above).
+The @Terminal.Gui.Application MainLoop will iterate over all Views in the view hierarchy, starting with @Terminal.Gui.Application.Toplevels. The @Terminal.Gui.View.Draw method will be called which, in turn:
 
-Each of these steps can be overridden by developers using the standard [Terminal.Gui cancellable event pattern](events.md). For example, the base @Terminal.Gui.View always clears the viewport. To override this, a subclass can override @Terminal.Gui.View.OnClearingViewport to simply return `true`. Or, a user of `View` can subscribe to the @Terminal.Gui.View.ClearingViewport event and set the `Cancel` argument to `true`.
+0) Determines if @Terminal.Gui.View.NeedsDraw or @Terminal.Gui.View.SubviewsNeedsDraw are set. If neither is set, processing stops.
+1) Sets the clip to the view's Frame.
+2) Draws the @Terminal.Gui.View.Border and @Terminal.Gui.View.Padding (but NOT the Margin).
+3) Sets the clip to the view's Viewport.
+4) Sets the Normal color scheme.
+5) Calls Draw on any @Terminal.Gui.View.Subviews.
+6) Draws @Terminal.Gui.View.Text.
+7) Draws any non-text content (the base View does nothing.)
+8) Sets the clip back to the view's Frame.
+9) Draws @Terminal.Gui.View.LineCanvas (which may have been added to by any of the steps above).
+10) Draws the @Terminal.Gui.View.Border and @Terminal.Gui.View.Padding Subviews (just the subviews). (but NOT the Margin).
+11) The Clip at this point excludes all Subviews NOT INCLUDING their Margins. This clip is cached so @Terminal.Gui.View.Margin can be rendered later.
+12) DrawComplete is raised.
+13) The current View's Frame NOT INCLUDING the Margin is excluded from the current Clip region.
+
+Most of the steps above can be overridden by developers using the standard [Terminal.Gui cancellable event pattern](events.md). For example, the base @Terminal.Gui.View always clears the viewport. To override this, a subclass can override @Terminal.Gui.View.OnClearingViewport to simply return `true`. Or, a user of `View` can subscribe to the @Terminal.Gui.View.ClearingViewport event and set the `Cancel` argument to `true`.
+
+Then, after the above steps have completed, the Mainloop will iterate through all views in the view hierarchy again, this time calling Draw on any @Terminal.Gui.View.Margin objects, using the cached Clip region mentioned above. This enables Margin to be transparent.
+
 
 ### Declaring that drawing is needed
 
@@ -44,7 +56,6 @@ If a View need to redraw because something changed within it's Content Area it c
 ### Clipping
 
 Clipping enables better performance by ensuring on regions of the terminal that need to be drawn actually get drawn by the @Terminal.Gui.ConsoleDriver. Terminal.Gui supports non-rectangular clip regions with @Terminal.Gui.Region. @Terminal.Gui.ConsoleDriver.Clip is the application managed clip region and is managed by @Terminal.Gui.Application. Developers cannot change this directly, but can use @Terminal.Gui.Application.ClipToScreen, @Terminal.Gui.Application.SetClip(Region), @Terminal.Gui.View.ClipToFrame, and @Terminal.Gui.ClipToViewPort.
-
 
 ## Coordinate System for Drawing
 
@@ -107,7 +118,10 @@ Terminal.Gui supports drawing lines and shapes using box-drawing glyphs. The @Te
 
 ## Thickness
 
-Describes the thickness of a frame around a rectangle. The thickness is specified for each side of the rectangle using a @Terminal.Gui.Thickness object. The Thickness class contains properties for the left, top, right, and bottom thickness. The @Terminal.Gui.Adornment class uses @Terminal.Gui.Thickness to support drawing the frame around a view. The `View` class contains three Adornment-derived properties: 
+Describes the thickness of a frame around a rectangle. The thickness is specified for each side of the rectangle using a @Terminal.Gui.Thickness object. The Thickness class contains properties for the left, top, right, and bottom thickness. The @Terminal.Gui.Adornment class uses @Terminal.Gui.Thickness to support drawing the frame around a view. 
 
 See [View Deep Dive](View.md) for details.
 
+## Diagnostics
+
+The @Terminal.Gui.ViewDiagnostics.DisplayIndicator flag can be set on @Terminal.Gui.View.Diagnostics to cause an animated glyph to appear in the `Border` of each View. The glyph will animate each time that View's `Draw` method is called where either @Terminal.Gui.View.NeedsDraw or @Terminal.Gui.View.SubviewNeedsDraw is set. 
