@@ -13,7 +13,7 @@
 // the WindowsConsole.EventType.WindowBufferSize event. However, on Init the window size is
 // still incorrect so we still need this hack.
 
-#define HACK_CHECK_WINCHANGED
+//#define HACK_CHECK_WINCHANGED
 
 using System.Collections.Concurrent;
 using System.ComponentModel;
@@ -1708,15 +1708,17 @@ internal class WindowsDriver : ConsoleDriver
                 break;
 
 #if !HACK_CHECK_WINCHANGED
-		case WindowsConsole.EventType.WindowBufferSize:
-			
-			Cols = inputEvent.WindowBufferSizeEvent._size.X;
-			Rows = inputEvent.WindowBufferSizeEvent._size.Y;
+            case WindowsConsole.EventType.WindowBufferSize:
 
-			ResizeScreen ();
-			ClearContents ();
-			TerminalResized.Invoke ();
-			break;
+                Cols = inputEvent.WindowBufferSizeEvent._size.X;
+                Rows = inputEvent.WindowBufferSizeEvent._size.Y;
+
+                ResizeScreen ();
+                ClearContents ();
+                Application.Top?.SetNeedsLayout ();
+                Application.Refresh ();
+
+                break;
 #endif
         }
     }

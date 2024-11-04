@@ -493,6 +493,7 @@ public static partial class Application // Run (Begin, Run, End, Stop)
         {
             if (tl.LayoutNeeded)
             {
+                tl.SetRelativeLayout (new (Driver!.Cols, Driver.Rows));
                 tl.LayoutSubviews ();
             }
 
