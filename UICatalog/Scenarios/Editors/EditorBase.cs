@@ -28,7 +28,7 @@ public abstract class EditorBase : View
 
         void OnInitialized (object sender, EventArgs e)
         {
-            Border.Add (ExpanderButton!);
+            Border?.Add (ExpanderButton!);
 
             Application.MouseEvent += ApplicationOnMouseEvent;
             Application.Navigation!.FocusedChanged += NavigationOnFocusedChanged;

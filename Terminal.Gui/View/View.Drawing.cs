@@ -64,7 +64,6 @@ public partial class View // Drawing APIs
             if (SubViewNeedsDraw)
             {
                 DoSetAttribute ();
-
                 DoDrawSubviews ();
             }
 
@@ -84,22 +83,14 @@ public partial class View // Drawing APIs
 
             DoDrawBorderAndPaddingSubViews ();
 
-            if (Border is { Diagnostics: ViewDiagnosticFlags.DrawIndicator, DrawIndicator: { } })
-            {
-                Border.DrawIndicator.AdvanceAnimation (false);
-                Border.DrawIndicator.Render ();
-            }
+            Border?.AdvanceDrawIndicator ();
 
             ClearNeedsDraw ();
         }
 
         // This causes the Margin to be drawn in a second pass
         // PERFORMANCE: If there is a Margin, it will be redrawn each iteration of the main loop.
-        if (Margin is { } && Margin?.Thickness != Thickness.Empty)
-        {
-            // PERFORMANCE: How expensive are these clones?
-            Margin!.CachedClip = GetClip ()?.Clone ();
-        }
+        Margin?.CacheClip ();
 
         // We're done drawing
         DoDrawComplete ();
@@ -622,7 +613,7 @@ public partial class View // Drawing APIs
     public bool NeedsDraw
     {
         // TODO: Figure out if we can decouple NeedsDraw from NeedsLayout. This is a temporary fix.
-        get => _needsDrawRect != Rectangle.Empty || NeedsLayout;
+        get => Visible && (_needsDrawRect != Rectangle.Empty || NeedsLayout);
         set
         {
             if (value)
@@ -636,8 +627,22 @@ public partial class View // Drawing APIs
         }
     }
 
+    private bool _subViewNeedsDraw;
+
     /// <summary>Gets whether any Subviews need to be redrawn.</summary>
-    public bool SubViewNeedsDraw { get; private set; }
+    public bool SubViewNeedsDraw
+    {
+        get => _subViewNeedsDraw;
+        private set
+        {
+            //if (!Visible)
+            //{
+            //    _subViewNeedsDraw = false;
+            //    return;
+            //}
+            _subViewNeedsDraw = value;
+        }
+    }
 
     /// <summary>Sets that the <see cref="Viewport"/> of this View needs to be redrawn.</summary>
     /// <remarks>
@@ -648,7 +653,7 @@ public partial class View // Drawing APIs
     {
         Rectangle viewport = Viewport;
 
-        if (_needsDrawRect != Rectangle.Empty && viewport.IsEmpty)
+        if (/*!Visible || */(_needsDrawRect != Rectangle.Empty && viewport.IsEmpty))
         {
             // This handles the case where the view has not been initialized yet
             return;
@@ -670,6 +675,10 @@ public partial class View // Drawing APIs
     /// <param name="viewPortRelativeRegion">The <see cref="Viewport"/>relative region that needs to be redrawn.</param>
     public void SetNeedsDraw (Rectangle viewPortRelativeRegion)
     {
+        //if (!Visible)
+        //{
+        //    return;
+        //}
         if (_needsDrawRect.IsEmpty)
         {
             _needsDrawRect = viewPortRelativeRegion;
@@ -683,10 +692,10 @@ public partial class View // Drawing APIs
             _needsDrawRect = new (x, y, w, h);
         }
 
-        if (Margin is { } && Margin.Thickness != Thickness.Empty)
-        {
-            Margin?.SetNeedsDraw ();
-        }
+        //if (Margin is { } && Margin.Thickness != Thickness.Empty)
+        //{
+        //    Margin?.SetNeedsDraw ();
+        //}
 
         if (Border is { } && Border.Thickness != Thickness.Empty)
         {
@@ -700,7 +709,7 @@ public partial class View // Drawing APIs
 
         SuperView?.SetSubViewNeedsDraw ();
 
-        if (this is Adornment adornment)
+        if (this is Adornment adornment /*and (Gui.Padding or Gui.Border)*/)
         {
             adornment.Parent?.SetSubViewNeedsDraw ();
         }
@@ -720,9 +729,15 @@ public partial class View // Drawing APIs
     /// <summary>Sets <see cref="SubViewNeedsDraw"/> to <see langword="true"/> for this View and all Superviews.</summary>
     public void SetSubViewNeedsDraw ()
     {
+        //if (!Visible)
+        //{
+        //    SubViewNeedsDraw = false;
+        //    return;
+        //}
+
         SubViewNeedsDraw = true;
 
-        if (this is Adornment adornment)
+        if (this is Adornment adornment/* and (Gui.Padding or Gui.Border)*/)
         {
             adornment.Parent?.SetSubViewNeedsDraw ();
         }
@@ -757,6 +772,11 @@ public partial class View // Drawing APIs
         foreach (View subview in Subviews)
         {
             subview.ClearNeedsDraw ();
+        }
+
+        if (SuperView is { })
+        {
+            SuperView.SubViewNeedsDraw = false;
         }
     }
 

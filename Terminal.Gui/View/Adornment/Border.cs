@@ -72,7 +72,7 @@ public class Border : Adornment
     {
         if (IsInitialized)
         {
-            ShowHideDrawIndicator();
+            ShowHideDrawIndicator ();
         }
     }
 
@@ -87,6 +87,7 @@ public class Border : Adornment
                     X = 1,
                     Style = new SpinnerStyle.Dots2 (),
                     SpinDelay = 0,
+                    Visible = false
                 };
                 Add (DrawIndicator);
             }
@@ -96,6 +97,15 @@ public class Border : Adornment
             Remove (DrawIndicator);
             DrawIndicator!.Dispose ();
             DrawIndicator = null;
+        }
+    }
+
+    internal void AdvanceDrawIndicator ()
+    {
+        if (View.Diagnostics.HasFlag (ViewDiagnosticFlags.DrawIndicator) && DrawIndicator is { })
+        {
+            DrawIndicator.AdvanceAnimation (false);
+            DrawIndicator.Render ();
         }
     }
 
@@ -164,15 +174,7 @@ public class Border : Adornment
     /// </summary>
     public override ColorScheme? ColorScheme
     {
-        get
-        {
-            if (base.ColorScheme is { })
-            {
-                return base.ColorScheme;
-            }
-
-            return Parent?.ColorScheme;
-        }
+        get => base.ColorScheme ?? Parent?.ColorScheme;
         set
         {
             base.ColorScheme = value;

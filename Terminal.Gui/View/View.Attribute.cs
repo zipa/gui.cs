@@ -13,29 +13,23 @@ public partial class View
     /// <summary>The color scheme for this view, if it is not defined, it returns the <see cref="SuperView"/>'s color scheme.</summary>
     public virtual ColorScheme? ColorScheme
     {
-        get
-        {
-            if (_colorScheme is null)
-            {
-                return SuperView?.ColorScheme;
-            }
-
-            return _colorScheme;
-        }
+        get => _colorScheme ?? SuperView?.ColorScheme;
         set
         {
-            if (_colorScheme != value)
+            if (_colorScheme == value)
             {
-                _colorScheme = value;
-
-                // BUGBUG: This should be in Border.cs somehow
-                if (Border is { } && Border.LineStyle != LineStyle.None && Border.ColorScheme is { })
-                {
-                    Border.ColorScheme = _colorScheme;
-                }
-
-                SetNeedsDraw ();
+                return;
             }
+
+            _colorScheme = value;
+
+            // BUGBUG: This should be in Border.cs somehow
+            if (Border is { } && Border.LineStyle != LineStyle.None && Border.ColorScheme is { })
+            {
+                Border.ColorScheme = _colorScheme;
+            }
+
+            SetNeedsDraw ();
         }
     }
 
@@ -47,12 +41,7 @@ public partial class View
     /// </returns>
     public virtual Attribute GetFocusColor ()
     {
-        ColorScheme? cs = ColorScheme;
-
-        if (cs is null)
-        {
-            cs = new ();
-        }
+        ColorScheme? cs = ColorScheme ?? new ();
 
         return Enabled ? GetColor (cs.Focus) : cs.Disabled;
     }
@@ -78,12 +67,7 @@ public partial class View
     /// </returns>
     public virtual Attribute GetHotNormalColor ()
     {
-        ColorScheme? cs = ColorScheme;
-
-        if (cs is null)
-        {
-            cs = new ();
-        }
+        ColorScheme? cs = ColorScheme ?? new ();
 
         return Enabled ? GetColor (cs.HotNormal) : cs.Disabled;
     }
@@ -96,12 +80,7 @@ public partial class View
     /// </returns>
     public virtual Attribute GetNormalColor ()
     {
-        ColorScheme? cs = ColorScheme;
-
-        if (cs is null)
-        {
-            cs = new ();
-        }
+        ColorScheme? cs = ColorScheme ?? new ();
 
         Attribute disabled = new (cs.Disabled.Foreground, cs.Disabled.Background);
 

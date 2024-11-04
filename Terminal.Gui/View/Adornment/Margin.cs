@@ -40,7 +40,20 @@ public class Margin : Adornment
 
     // When the Parent is drawn, we cache the clip region so we can draw the Margin after all other Views
     // QUESTION: Why can't this just be the NeedsDisplay region?
-    internal Region? CachedClip { get; set; }
+    private Region? _cachedClip;
+
+    internal Region? GetCachedClip () { return _cachedClip; }
+
+    internal void ClearCachedClip () { _cachedClip = null; }
+
+    internal void CacheClip ()
+    {
+        if (Thickness != Thickness.Empty)
+        {
+            // PERFORMANCE: How expensive are these clones?
+            _cachedClip = GetClip ()?.Clone ();
+        }
+    }
 
     // PERFORMANCE: Margins are ALWAYS drawn. This may be an issue for apps that have a large number of views with shadows.
     /// <summary>
@@ -57,22 +70,22 @@ public class Margin : Adornment
         {
             var view = stack.Pop ();
 
-            if (view.Margin is { CachedClip: { } })
+            if (view.Margin?.GetCachedClip() != null)
             {
                 view.Margin.NeedsDraw = true;
                 Region? saved = GetClip ();
-                View.SetClip (view.Margin.CachedClip);
+                View.SetClip (view.Margin.GetCachedClip ());
                 view.Margin.Draw ();
                 View.SetClip (saved);
-                view.Margin.CachedClip = null;
+                view.Margin.ClearCachedClip ();
             }
+
+            view.NeedsDraw = false;
 
             foreach (var subview in view.Subviews)
             {
                 stack.Push (subview);
             }
-
-            view.NeedsDraw = false;
         }
 
         return true;
@@ -297,4 +310,5 @@ public class Margin : Adornment
     }
 
     #endregion Shadow
+
 }

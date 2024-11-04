@@ -727,12 +727,6 @@ public class Shortcut : View, IOrientation, IDesignable
     /// </summary>
     internal void SetColors (bool highlight = false)
     {
-        // Border should match superview.
-        if (Border is { })
-        {
-            // Border.ColorScheme = SuperView?.ColorScheme;
-        }
-
         if (HasFocus || highlight)
         {
             if (_nonFocusColorScheme is null)
@@ -778,6 +772,15 @@ public class Shortcut : View, IOrientation, IDesignable
         if (CommandView.Margin is { })
         {
             CommandView.Margin.ColorScheme = base.ColorScheme;
+        }
+        if (HelpView.Margin is { })
+        {
+            HelpView.Margin.ColorScheme = base.ColorScheme;
+        }
+
+        if (KeyView.Margin is { })
+        {
+            KeyView.Margin.ColorScheme = base.ColorScheme;
         }
     }
 

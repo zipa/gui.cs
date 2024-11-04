@@ -14,26 +14,27 @@ internal class ShadowView : View
     /// <inheritdoc/>
     public override Attribute GetNormalColor ()
     {
-        if (SuperView is Adornment adornment)
+        if (SuperView is not Adornment adornment)
         {
-            var attr = Attribute.Default;
-
-            if (adornment.Parent?.SuperView is { })
-            {
-                attr = adornment.Parent.SuperView.GetNormalColor ();
-            }
-            else if (Application.Top is { })
-            {
-                attr = Application.Top.GetNormalColor ();
-            }
-
-            return new (
-                        new Attribute (
-                                       ShadowStyle == ShadowStyle.Opaque ? Color.Black : attr.Foreground.GetDarkerColor (),
-                                       ShadowStyle == ShadowStyle.Opaque ? attr.Background : attr.Background.GetDarkerColor ()));
+            return base.GetNormalColor ();
         }
 
-        return base.GetNormalColor ();
+        var attr = Attribute.Default;
+
+        if (adornment.Parent?.SuperView is { })
+        {
+            attr = adornment.Parent.SuperView.GetNormalColor ();
+        }
+        else if (Application.Top is { })
+        {
+            attr = Application.Top.GetNormalColor ();
+        }
+
+        return new (
+                    new Attribute (
+                                   ShadowStyle == ShadowStyle.Opaque ? Color.Black : attr.Foreground.GetDarkerColor (),
+                                   ShadowStyle == ShadowStyle.Opaque ? attr.Background : attr.Background.GetDarkerColor ()));
+
     }
 
     /// <inheritdoc />
