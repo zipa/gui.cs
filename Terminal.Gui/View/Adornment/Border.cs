@@ -483,8 +483,8 @@ public class Border : Adornment
                 Point parentLoc = Parent.SuperView?.ScreenToViewport (new (mouseEvent.ScreenPosition.X, mouseEvent.ScreenPosition.Y))
                                   ?? mouseEvent.ScreenPosition;
 
-                int minHeight = Thickness.Vertical + Parent!.Margin.Thickness.Bottom;
-                int minWidth = Thickness.Horizontal + Parent!.Margin.Thickness.Right;
+                int minHeight = Thickness.Vertical + Parent!.Margin!.Thickness.Bottom;
+                int minWidth = Thickness.Horizontal + Parent!.Margin!.Thickness.Right;
 
                 // TODO: This code can be refactored to be more readable and maintainable.
                 switch (_arranging)
@@ -1072,7 +1072,7 @@ public class Border : Adornment
                 NoPadding = true,
                 ShadowStyle = ShadowStyle.None,
                 Text = $"{Glyphs.SizeVertical}",
-                X = Pos.Center () + Parent!.Margin.Thickness.Horizontal,
+                X = Pos.Center () + Parent!.Margin!.Thickness.Horizontal,
                 Y = 0,
                 Visible = false,
                 Data = ViewArrangement.TopResizable
@@ -1095,7 +1095,7 @@ public class Border : Adornment
                 ShadowStyle = ShadowStyle.None,
                 Text = $"{Glyphs.SizeHorizontal}",
                 X = Pos.AnchorEnd (),
-                Y = Pos.Center () + Parent!.Margin.Thickness.Vertical / 2,
+                Y = Pos.Center () + Parent!.Margin!.Thickness.Vertical / 2,
                 Visible = false,
                 Data = ViewArrangement.RightResizable
             };
@@ -1117,7 +1117,7 @@ public class Border : Adornment
                 ShadowStyle = ShadowStyle.None,
                 Text = $"{Glyphs.SizeHorizontal}",
                 X = 0,
-                Y = Pos.Center () + Parent!.Margin.Thickness.Vertical / 2,
+                Y = Pos.Center () + Parent!.Margin!.Thickness.Vertical / 2,
                 Visible = false,
                 Data = ViewArrangement.LeftResizable
             };
@@ -1138,7 +1138,7 @@ public class Border : Adornment
                 NoPadding = true,
                 ShadowStyle = ShadowStyle.None,
                 Text = $"{Glyphs.SizeVertical}",
-                X = Pos.Center () + Parent!.Margin.Thickness.Horizontal / 2,
+                X = Pos.Center () + Parent!.Margin!.Thickness.Horizontal / 2,
                 Y = Pos.AnchorEnd (),
                 Visible = false,
                 Data = ViewArrangement.BottomResizable

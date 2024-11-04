@@ -2,8 +2,6 @@
 
 public partial class View
 {
-    #region Drawing Primitives
-
     /// <summary>Moves the drawing cursor to the specified <see cref="Viewport"/>-relative location in the view.</summary>
     /// <remarks>
     ///     <para>
@@ -121,8 +119,6 @@ public partial class View
         Attribute prev = SetAttribute (new (color ?? GetNormalColor ().Background));
         Driver.FillRect (toClear);
         SetAttribute (prev);
-        View.SetClip (prevClip);
+        SetClip (prevClip);
     }
-
-    #endregion Drawing Primitives
 }

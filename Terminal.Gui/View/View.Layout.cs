@@ -1,7 +1,5 @@
 #nullable enable
 using System.Diagnostics;
-using Microsoft.CodeAnalysis;
-using static Unix.Terminal.Curses;
 
 namespace Terminal.Gui;
 
@@ -33,10 +31,12 @@ public partial class View // Layout APIs
     ///         .
     ///     </para>
     ///     <para>
-    ///         Setting Frame will set <see cref="X"/>, <see cref="Y"/>, <see cref="Width"/>, and <see cref="Height"/> to absoulte values.
+    ///         Setting Frame will set <see cref="X"/>, <see cref="Y"/>, <see cref="Width"/>, and <see cref="Height"/> to
+    ///         absoulte values.
     ///     </para>
     ///     <para>
-    ///         Changing this property will result in <see cref="NeedsLayout"/> and <see cref="NeedsDraw"/> to be set, resulting in the
+    ///         Changing this property will result in <see cref="NeedsLayout"/> and <see cref="NeedsDraw"/> to be set,
+    ///         resulting in the
     ///         view being laid out and redrawn as appropriate in the next iteration of the <see cref="MainLoop"/>.
     ///     </para>
     /// </remarks>
@@ -44,10 +44,11 @@ public partial class View // Layout APIs
     {
         get
         {
-            if (_needsLayout)
+            if (NeedsLayout)
             {
                 //Debug.WriteLine("Frame_get with _layoutNeeded");
             }
+
             return _frame ?? Rectangle.Empty;
         }
         set
@@ -193,7 +194,8 @@ public partial class View // Layout APIs
     ///         laid out (e.g. <see cref="Layout(System.Drawing.Size)"/> has been called).
     ///     </para>
     ///     <para>
-    ///         Changing this property will result in <see cref="NeedsLayout"/> and <see cref="NeedsDraw"/> to be set, resulting in the
+    ///         Changing this property will result in <see cref="NeedsLayout"/> and <see cref="NeedsDraw"/> to be set,
+    ///         resulting in the
     ///         view being laid out and redrawn as appropriate in the next iteration of the <see cref="MainLoop"/>.
     ///     </para>
     ///     <para>
@@ -219,7 +221,6 @@ public partial class View // Layout APIs
 
     private Pos _y = Pos.Absolute (0);
 
-
     /// <summary>Gets or sets the Y position for the view (the row).</summary>
     /// <value>The <see cref="Pos"/> object representing the Y position.</value>
     /// <remarks>
@@ -236,7 +237,8 @@ public partial class View // Layout APIs
     ///         laid out (e.g. <see cref="Layout(System.Drawing.Size)"/> has been called).
     ///     </para>
     ///     <para>
-    ///         Changing this property will result in <see cref="NeedsLayout"/> and <see cref="NeedsDraw"/> to be set, resulting in the
+    ///         Changing this property will result in <see cref="NeedsLayout"/> and <see cref="NeedsDraw"/> to be set,
+    ///         resulting in the
     ///         view being laid out and redrawn as appropriate in the next iteration of the <see cref="MainLoop"/>.
     ///     </para>
     ///     <para>
@@ -277,7 +279,8 @@ public partial class View // Layout APIs
     ///         laid out (e.g. <see cref="Layout(System.Drawing.Size)"/> has been called).
     ///     </para>
     ///     <para>
-    ///         Changing this property will result in <see cref="NeedsLayout"/> and <see cref="NeedsDraw"/> to be set, resulting in the
+    ///         Changing this property will result in <see cref="NeedsLayout"/> and <see cref="NeedsDraw"/> to be set,
+    ///         resulting in the
     ///         view being laid out and redrawn as appropriate in the next iteration of the <see cref="MainLoop"/>.
     ///     </para>
     ///     <para>
@@ -323,7 +326,8 @@ public partial class View // Layout APIs
     ///         laid out (e.g. <see cref="Layout(System.Drawing.Size)"/> has been called).
     ///     </para>
     ///     <para>
-    ///         Changing this property will result in <see cref="NeedsLayout"/> and <see cref="NeedsDraw"/> to be set, resulting in the
+    ///         Changing this property will result in <see cref="NeedsLayout"/> and <see cref="NeedsDraw"/> to be set,
+    ///         resulting in the
     ///         view being laid out and redrawn as appropriate in the next iteration of the <see cref="MainLoop"/>.
     ///     </para>
     ///     <para>
@@ -354,14 +358,15 @@ public partial class View // Layout APIs
     #region Core Layout API
 
     /// <summary>
-    ///     INTERNAL API - Performs layout of the specified views within the specified content size. Called by the Application main loop.
+    ///     INTERNAL API - Performs layout of the specified views within the specified content size. Called by the Application
+    ///     main loop.
     /// </summary>
     /// <param name="views">The views to layout.</param>
     /// <param name="contentSize">The size to bound the views by.</param>
     /// <returns><see langword="true"/>If any of the views needed to be laid out.</returns>
     internal static bool Layout (IEnumerable<View> views, Size contentSize)
     {
-        bool neededLayout = false;
+        var neededLayout = false;
 
         foreach (View v in views)
         {
@@ -404,7 +409,8 @@ public partial class View // Layout APIs
     }
 
     /// <summary>
-    ///     Performs layout of the view and its subviews using the content size of either the <see cref="SuperView"/> or <see cref="Application.Screen"/>.
+    ///     Performs layout of the view and its subviews using the content size of either the <see cref="SuperView"/> or
+    ///     <see cref="Application.Screen"/>.
     /// </summary>
     /// <remarks>
     ///     <para>
@@ -417,14 +423,12 @@ public partial class View // Layout APIs
     ///     </para>
     /// </remarks>
     /// <returns><see langword="false"/>If the view could not be laid out (typically because dependency was not ready). </returns>
-    public bool Layout ()
-    {
-        return Layout (GetContainerSize ());
-    }
+    public bool Layout () { return Layout (GetContainerSize ()); }
 
     /// <summary>
     ///     Sets the position and size of this view, relative to the SuperView's ContentSize (nominally the same as
-    ///     <c>this.SuperView.GetContentSize ()</c>) based on the values of <see cref="X"/>, <see cref="Y"/>, <see cref="Width"/>,
+    ///     <c>this.SuperView.GetContentSize ()</c>) based on the values of <see cref="X"/>, <see cref="Y"/>,
+    ///     <see cref="Width"/>,
     ///     and <see cref="Height"/>.
     /// </summary>
     /// <remarks>
@@ -467,6 +471,7 @@ public partial class View // Layout APIs
             {
                 newW = _width.Calculate (0, superviewContentSize.Width, this, Dimension.Width);
                 newX = _x.Calculate (superviewContentSize.Width, newW, this, Dimension.Width);
+
                 if (newW != Frame.Width)
                 {
                     // Pos.Calculate gave us a new position. We need to redo dimension
@@ -483,6 +488,7 @@ public partial class View // Layout APIs
             {
                 newH = _height.Calculate (0, superviewContentSize.Height, this, Dimension.Height);
                 newY = _y.Calculate (superviewContentSize.Height, newH, this, Dimension.Height);
+
                 if (newH != Frame.Height)
                 {
                     // Pos.Calculate gave us a new position. We need to redo dimension
@@ -494,7 +500,6 @@ public partial class View // Layout APIs
                 newY = _y.Calculate (superviewContentSize.Height, _height, this, Dimension.Height);
                 newH = _height.Calculate (newY, superviewContentSize.Height, this, Dimension.Height);
             }
-
         }
         catch (LayoutException le)
         {
@@ -552,7 +557,8 @@ public partial class View // Layout APIs
     }
 
     /// <summary>
-    ///    INTERNAL API - Causes the view's subviews and adornments to be laid out within the view's content areas. Assumes the view's relative layout has been set via <see cref="SetRelativeLayout"/>.
+    ///     INTERNAL API - Causes the view's subviews and adornments to be laid out within the view's content areas. Assumes
+    ///     the view's relative layout has been set via <see cref="SetRelativeLayout"/>.
     /// </summary>
     /// <remarks>
     ///     <para>
@@ -584,10 +590,12 @@ public partial class View // Layout APIs
         {
             Margin.LayoutSubviews ();
         }
+
         if (Border is { Subviews.Count: > 0 })
         {
             Border.LayoutSubviews ();
         }
+
         if (Padding is { Subviews.Count: > 0 })
         {
             Padding.LayoutSubviews ();
@@ -600,6 +608,7 @@ public partial class View // Layout APIs
         List<View> ordered = TopologicalSort (SuperView!, nodes, edges);
 
         List<View> redo = new ();
+
         foreach (View v in ordered)
         {
             if (!v.Layout (contentSize))
@@ -608,7 +617,7 @@ public partial class View // Layout APIs
             }
         }
 
-        bool layoutStillNeeded = false;
+        var layoutStillNeeded = false;
 
         if (redo.Count > 0)
         {
@@ -633,7 +642,7 @@ public partial class View // Layout APIs
             }
         }
 
-        _needsLayout = layoutStillNeeded;
+        NeedsLayout = layoutStillNeeded;
 
         OnSubviewsLaidOut (new (contentSize));
         SubviewsLaidOut?.Invoke (this, new (contentSize));
@@ -648,8 +657,10 @@ public partial class View // Layout APIs
     /// </remarks>
     protected virtual void OnSubviewLayout (LayoutEventArgs args) { }
 
-    /// <summary>Raised by <see cref="LayoutSubviews"/> before any subviews
-    ///     have been laid out.</summary>
+    /// <summary>
+    ///     Raised by <see cref="LayoutSubviews"/> before any subviews
+    ///     have been laid out.
+    /// </summary>
     /// <remarks>
     ///     Subscribe to this event to perform tasks when the layout is changing.
     /// </remarks>
@@ -677,65 +688,72 @@ public partial class View // Layout APIs
     #region NeedsLayout
 
     // We expose no setter for this to ensure that the ONLY place it's changed is in SetNeedsLayout
-    private bool _needsLayout = true;
 
     /// <summary>
     ///     Indicates the View's Frame or the layout of the View's subviews (including Adornments) have
-    ///     changed since the last time the View was laid out. 
+    ///     changed since the last time the View was laid out.
     /// </summary>
     /// <remarks>
-    /// <para>Used to prevent <see cref="Layout()"/> from needlessly computing
-    ///     layout.
-    /// </para>
+    ///     <para>
+    ///         Used to prevent <see cref="Layout()"/> from needlessly computing
+    ///         layout.
+    ///     </para>
     /// </remarks>
     /// <value>
     ///     <see langword="true"/> if layout is needed.
     /// </value>
-    public bool NeedsLayout => _needsLayout;
+    public bool NeedsLayout { get; private set; } = true;
 
     /// <summary>
-    ///     Sets <see cref="NeedsLayout"/> to return <see langword="true"/>, indicating this View and all of it's subviews (including adornments) need to be laid out in the next Application iteration.
+    ///     Sets <see cref="NeedsLayout"/> to return <see langword="true"/>, indicating this View and all of it's subviews
+    ///     (including adornments) need to be laid out in the next Application iteration.
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///         The <see cref="MainLoop"/> will cause <see cref="Layout()"/> to be called on the next <see cref="Application.Iteration"/> so there is normally no reason to call see <see cref="Layout()"/>.
+    ///         The <see cref="MainLoop"/> will cause <see cref="Layout()"/> to be called on the next
+    ///         <see cref="Application.Iteration"/> so there is normally no reason to call see <see cref="Layout()"/>.
     ///     </para>
     /// </remarks>
-
     public void SetNeedsLayout ()
     {
-        _needsLayout = true;
+        NeedsLayout = true;
 
         if (Margin is { Subviews.Count: > 0 })
         {
             Margin.SetNeedsLayout ();
         }
+
         if (Border is { Subviews.Count: > 0 })
         {
             Border.SetNeedsLayout ();
         }
+
         if (Padding is { Subviews.Count: > 0 })
         {
             Padding.SetNeedsLayout ();
         }
 
         // Use a stack to avoid recursion
-        Stack<View> stack = new Stack<View> (Subviews);
+        Stack<View> stack = new (Subviews);
 
         while (stack.Count > 0)
         {
             View current = stack.Pop ();
+
             if (!current.NeedsLayout)
             {
-                current._needsLayout = true;
+                current.NeedsLayout = true;
+
                 if (current.Margin is { Subviews.Count: > 0 })
                 {
                     current.Margin.SetNeedsLayout ();
                 }
+
                 if (current.Border is { Subviews.Count: > 0 })
                 {
                     current.Border.SetNeedsLayout ();
                 }
+
                 if (current.Padding is { Subviews.Count: > 0 })
                 {
                     current.Padding.SetNeedsLayout ();
@@ -757,7 +775,7 @@ public partial class View // Layout APIs
 
         if (SuperView is null)
         {
-            foreach (var tl in Application.TopLevels)
+            foreach (Toplevel tl in Application.TopLevels)
             {
                 tl.SetNeedsDraw ();
             }
@@ -777,7 +795,6 @@ public partial class View // Layout APIs
     #endregion NeedsLayout
 
     #region Topological Sort
-
 
     /// <summary>
     ///     INTERNAL API - Collects all views and their dependencies from a given starting view for layout purposes. Used by
@@ -802,7 +819,7 @@ public partial class View // Layout APIs
     }
 
     /// <summary>
-    ///      INTERNAL API - Collects dimension (where Width or Height is `DimView`) dependencies for a given view.
+    ///     INTERNAL API - Collects dimension (where Width or Height is `DimView`) dependencies for a given view.
     /// </summary>
     /// <param name="dim">The dimension (width or height) to collect dependencies for.</param>
     /// <param name="from">The view for which to collect dimension dependencies.</param>
@@ -813,7 +830,7 @@ public partial class View // Layout APIs
     /// </param>
     internal void CollectDim (Dim? dim, View from, ref HashSet<View> nNodes, ref HashSet<(View, View)> nEdges)
     {
-        if (dim!.Has<DimView> (out DimView dv))
+        if (dim!.Has (out DimView dv))
         {
             if (dv.Target != this)
             {
@@ -821,7 +838,7 @@ public partial class View // Layout APIs
             }
         }
 
-        if (dim!.Has<DimCombine> (out DimCombine dc))
+        if (dim!.Has (out DimCombine dc))
         {
             CollectDim (dc.Left, from, ref nNodes, ref nEdges);
             CollectDim (dc.Right, from, ref nNodes, ref nEdges);
@@ -845,6 +862,7 @@ public partial class View // Layout APIs
         {
             case PosView pv:
                 Debug.Assert (pv.Target is { });
+
                 if (pv.Target != this)
                 {
                     nEdges.Add ((pv.Target!, from));
@@ -960,21 +978,20 @@ public partial class View // Layout APIs
     #region Utilities
 
     /// <summary>
-    ///    INTERNAL API - Gets the size of the SuperView's content (nominally the same as
-    ///    the SuperView's <see cref="GetContentSize ()"/>) or the screen size if there's no SuperView.
+    ///     INTERNAL API - Gets the size of the SuperView's content (nominally the same as
+    ///     the SuperView's <see cref="GetContentSize ()"/>) or the screen size if there's no SuperView.
     /// </summary>
     /// <returns></returns>
     private Size GetContainerSize ()
     {
         // TODO: Get rid of refs to Top
-        Size superViewContentSize = SuperView?.GetContentSize () ??
-                                    (Application.Top is { } && Application.Top != this && Application.Top.IsInitialized
-                                         ? Application.Top.GetContentSize ()
-                                         : Application.Screen.Size);
+        Size superViewContentSize = SuperView?.GetContentSize ()
+                                    ?? (Application.Top is { } && Application.Top != this && Application.Top.IsInitialized
+                                            ? Application.Top.GetContentSize ()
+                                            : Application.Screen.Size);
 
         return superViewContentSize;
     }
-
 
     // BUGBUG: This method interferes with Dialog/MessageBox default min/max size.
     // TODO: Get rid of MenuBar coupling as part of https://github.com/gui-cs/Terminal.Gui/issues/2975
@@ -1107,10 +1124,7 @@ public partial class View // Layout APIs
 
     #endregion Utilities
 
-
     #region Diagnostics and Verification
-
-
 
     // Diagnostics to highlight when X or Y is read before the view has been initialized
     private Pos VerifyIsInitialized (Pos pos, string member)
@@ -1228,12 +1242,12 @@ public partial class View // Layout APIs
             if (bad != null)
             {
                 throw new LayoutException (
-                                                     $"{view.GetType ().Name}.{name} = {bad.GetType ().Name} "
-                                                     + $"which depends on the SuperView's dimensions and the SuperView uses Dim.Auto."
-                                                    );
+                                           $"{view.GetType ().Name}.{name} = {bad.GetType ().Name} "
+                                           + $"which depends on the SuperView's dimensions and the SuperView uses Dim.Auto."
+                                          );
             }
         }
     }
-    #endregion Diagnostics and Verification
 
+    #endregion Diagnostics and Verification
 }

@@ -1,4 +1,5 @@
-﻿namespace Terminal.Gui;
+﻿#nullable enable
+namespace Terminal.Gui;
 
 public partial class View // Adornments
 {
@@ -7,9 +8,10 @@ public partial class View // Adornments
     /// </summary>
     private void SetupAdornments ()
     {
-        //// TODO: Move this to Adornment as a static factory method
+        // TODO: Move this to Adornment as a static factory method
         if (this is not Adornment)
         {
+            // TODO: Make the Adornments Lazy and only create them when needed
             Margin = new (this);
             Border = new (this);
             Padding = new (this);
@@ -61,7 +63,7 @@ public partial class View // Adornments
     ///         <see cref="SuperView"/> and its <see cref="Subviews"/>.
     ///     </para>
     /// </remarks>
-    public Margin Margin { get; private set; }
+    public Margin? Margin { get; private set; }
 
     private ShadowStyle _shadowStyle;
 
@@ -117,7 +119,7 @@ public partial class View // Adornments
     ///         <see cref="SuperView"/> and its <see cref="Subviews"/>.
     ///     </para>
     /// </remarks>
-    public Border Border { get; private set; }
+    public Border? Border { get; private set; }
 
     /// <summary>Gets or sets whether the view has a one row/col thick border.</summary>
     /// <remarks>
@@ -129,6 +131,10 @@ public partial class View // Adornments
     ///     <para>
     ///         Setting this property to <see cref="LineStyle.None"/> is equivalent to setting <see cref="Border"/>'s
     ///         <see cref="Adornment.Thickness"/> to `0` and <see cref="BorderStyle"/> to <see cref="LineStyle.None"/>.
+    ///     </para>
+    ///     <para>
+    ///         Calls <see cref="OnBorderStyleChanging"/> and raises <see cref="BorderStyleChanging"/>, which allows change
+    ///         to be cancelled.
     ///     </para>
     ///     <para>For more advanced customization of the view's border, manipulate see <see cref="Border"/> directly.</para>
     /// </remarks>
@@ -150,32 +156,32 @@ public partial class View // Adornments
                 return;
             }
 
+            BorderStyleChanging?.Invoke (this, e);
+
+            if (e.Cancel)
+            {
+                return;
+            }
+
             SetBorderStyle (e.NewValue);
             SetAdornmentFrames ();
             SetNeedsLayout ();
-
         }
     }
 
     /// <summary>
-    ///     Called when the <see cref="BorderStyle"/> is changing. Invokes <see cref="BorderStyleChanging"/>, which allows the
-    ///     event to be cancelled.
+    ///     Called when the <see cref="BorderStyle"/> is changing.
     /// </summary>
     /// <remarks>
-    ///     Override <see cref="SetBorderStyle"/> to prevent the <see cref="BorderStyle"/> from changing.
+    ///     Set e.Cancel to true to prevent the <see cref="BorderStyle"/> from changing.
     /// </remarks>
     /// <param name="e"></param>
-    protected virtual bool OnBorderStyleChanging (CancelEventArgs<LineStyle> e)
-    {
-        if (Border is null)
-        {
-            return false;
-        }
+    protected virtual bool OnBorderStyleChanging (CancelEventArgs<LineStyle> e) { return false; }
 
-        BorderStyleChanging?.Invoke (this, e);
-
-        return e.Cancel;
-    }
+    /// <summary>
+    ///     Fired when the <see cref="BorderStyle"/> is changing. Allows the event to be cancelled.
+    /// </summary>
+    public event EventHandler<CancelEventArgs<LineStyle>>? BorderStyleChanging;
 
     /// <summary>
     ///     Sets the <see cref="BorderStyle"/> of the view to the specified value.
@@ -198,24 +204,18 @@ public partial class View // Adornments
     {
         if (value != LineStyle.None)
         {
-            if (Border.Thickness == Thickness.Empty)
+            if (Border!.Thickness == Thickness.Empty)
             {
                 Border.Thickness = new (1);
             }
         }
         else
         {
-            Border.Thickness = new (0);
+            Border!.Thickness = new (0);
         }
 
         Border.LineStyle = value;
     }
-
-    /// <summary>
-    ///     Fired when the <see cref="BorderStyle"/> is changing. Allows the event to be cancelled.
-    /// </summary>
-    [CanBeNull]
-    public event EventHandler<CancelEventArgs<LineStyle>> BorderStyleChanging;
 
     /// <summary>
     ///     The <see cref="Adornment"/> inside of the view that offsets the <see cref="Viewport"/>
@@ -232,7 +232,7 @@ public partial class View // Adornments
     ///         <see cref="SuperView"/> and its <see cref="Subviews"/>.
     ///     </para>
     /// </remarks>
-    public Padding Padding { get; private set; }
+    public Padding? Padding { get; private set; }
 
     /// <summary>
     ///     <para>Gets the thickness describing the sum of the Adornments' thicknesses.</para>
@@ -245,12 +245,24 @@ public partial class View // Adornments
     /// <returns>A thickness that describes the sum of the Adornments' thicknesses.</returns>
     public Thickness GetAdornmentsThickness ()
     {
-        if (Margin is null)
+        Thickness result = Thickness.Empty;
+
+        if (Margin is { })
         {
-            return Thickness.Empty;
+            result += Margin.Thickness;
         }
 
-        return Margin.Thickness + Border.Thickness + Padding.Thickness;
+        if (Border is { })
+        {
+            result += Border.Thickness;
+        }
+
+        if (Padding is { })
+        {
+            result += Padding.Thickness;
+        }
+
+        return result;
     }
 
     /// <summary>Sets the Frame's of the Margin, Border, and Padding.</summary>
@@ -262,13 +274,19 @@ public partial class View // Adornments
             return;
         }
 
-        if (Margin is null)
+        if (Margin is { })
         {
-            return; // CreateAdornments () has not been called yet
+            Margin!.Frame = Rectangle.Empty with { Size = Frame.Size };
         }
 
-        Margin.Frame = Rectangle.Empty with { Size = Frame.Size };
-        Border.Frame = Margin.Thickness.GetInside (Margin.Frame);
-        Padding.Frame = Border.Thickness.GetInside (Border.Frame);
+        if (Border is { } && Margin is { })
+        {
+            Border!.Frame = Margin!.Thickness.GetInside (Margin!.Frame);
+        }
+
+        if (Padding is { } && Border is { })
+        {
+            Padding!.Frame = Border!.Thickness.GetInside (Border!.Frame);
+        }
     }
 }

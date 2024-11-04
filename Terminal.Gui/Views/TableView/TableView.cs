@@ -583,7 +583,7 @@ public class TableView : View, IDesignable
     ///     not been set.
     /// </summary>
     /// <remarks>
-    ///     Changes will not be immediately visible in the display until you call <see cref="View.SetNeedsDraw"/>
+    ///     Changes will not be immediately visible in the display until you call <see cref="View.SetNeedsDraw()"/>
     /// </remarks>
     public void EnsureSelectedCellIsVisible ()
     {
@@ -644,7 +644,7 @@ public class TableView : View, IDesignable
     ///     (by adjusting them to the nearest existing cell).  Has no effect if <see cref="Table"/> has not been set.
     /// </summary>
     /// <remarks>
-    ///     Changes will not be immediately visible in the display until you call <see cref="View.SetNeedsDraw"/>
+    ///     Changes will not be immediately visible in the display until you call <see cref="View.SetNeedsDraw()"/>
     /// </remarks>
     public void EnsureValidScrollOffsets ()
     {
@@ -663,7 +663,7 @@ public class TableView : View, IDesignable
     ///     <see cref="Table"/> has not been set.
     /// </summary>
     /// <remarks>
-    ///     Changes will not be immediately visible in the display until you call <see cref="View.SetNeedsDraw"/>
+    ///     Changes will not be immediately visible in the display until you call <see cref="View.SetNeedsDraw()"/>
     /// </remarks>
     public void EnsureValidSelection ()
     {
@@ -1227,7 +1227,7 @@ public class TableView : View, IDesignable
     ///     Updates the view to reflect changes to <see cref="Table"/> and to (<see cref="ColumnOffset"/> /
     ///     <see cref="RowOffset"/>) etc
     /// </summary>
-    /// <remarks>This always calls <see cref="View.SetNeedsDraw"/></remarks>
+    /// <remarks>This always calls <see cref="View.SetNeedsDraw()"/></remarks>
     public void Update ()
     {
         if (!IsInitialized || TableIsNullOrInvisible ())

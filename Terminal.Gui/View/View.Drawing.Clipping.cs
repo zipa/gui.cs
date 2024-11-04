@@ -1,6 +1,4 @@
 ﻿#nullable enable
-using static Unix.Terminal.Curses;
-
 namespace Terminal.Gui;
 
 public partial class View
@@ -13,21 +11,20 @@ public partial class View
     ///         There is a single clip region for the entire application.
     ///     </para>
     ///     <para>
-    ///         This method returns the current clip region, not a clone. If there is a need to modify the clip region, it is recommended to clone it first.
+    ///         This method returns the current clip region, not a clone. If there is a need to modify the clip region, it is
+    ///         recommended to clone it first.
     ///     </para>
     /// </remarks>
     /// <returns>The current Clip.</returns>
-    public static Region? GetClip ()
-    {
-        return Application.Driver?.Clip;
-    }
+    public static Region? GetClip () { return Application.Driver?.Clip; }
 
     /// <summary>
     ///     Sets the Clip to the specified region.
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///         There is a single clip region for the entire application. This method sets the clip region to the specified region.
+    ///         There is a single clip region for the entire application. This method sets the clip region to the specified
+    ///         region.
     ///     </para>
     /// </remarks>
     /// <param name="region"></param>
@@ -47,7 +44,8 @@ public partial class View
     ///         There is a single clip region for the entire application. This method sets the clip region to the screen.
     ///     </para>
     ///     <para>
-    ///         This method returns the current clip region, not a clone. If there is a need to modify the clip region, it is recommended to clone it first.
+    ///         This method returns the current clip region, not a clone. If there is a need to modify the clip region, it is
+    ///         recommended to clone it first.
     ///     </para>
     /// </remarks>
     /// <returns>
@@ -56,6 +54,7 @@ public partial class View
     public static Region? SetClipToScreen ()
     {
         Region? previous = GetClip ();
+
         if (Driver is { })
         {
             Driver.Clip = new (Application.Screen);
@@ -65,7 +64,7 @@ public partial class View
     }
 
     /// <summary>
-    ///      Removes the specified rectangle from the Clip.
+    ///     Removes the specified rectangle from the Clip.
     /// </summary>
     /// <remarks>
     ///     <para>
@@ -73,17 +72,15 @@ public partial class View
     ///     </para>
     /// </remarks>
     /// <param name="rectangle"></param>
-    public static void ExcludeFromClip (Rectangle rectangle)
-    {
-        Driver?.Clip?.Exclude (rectangle);
-    }
+    public static void ExcludeFromClip (Rectangle rectangle) { Driver?.Clip?.Exclude (rectangle); }
 
     /// <summary>
     ///     Changes the Clip to the intersection of the current Clip and the <see cref="Frame"/> of this View.
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///         This method returns the current clip region, not a clone. If there is a need to modify the clip region, it is recommended to clone it first.
+    ///         This method returns the current clip region, not a clone. If there is a need to modify the clip region, it is
+    ///         recommended to clone it first.
     ///     </para>
     /// </remarks>
     /// <returns>
@@ -99,6 +96,7 @@ public partial class View
         Region previous = GetClip () ?? new (Application.Screen);
 
         Region frameRegion = previous.Clone ();
+
         // Translate viewportRegion to screen-relative coords
         Rectangle screenRect = FrameToScreen ();
         frameRegion.Intersect (screenRect);
@@ -109,7 +107,7 @@ public partial class View
             frameRegion.Exclude (adornment.Thickness.GetInside (Frame));
         }
 
-        View.SetClip (frameRegion);
+        SetClip (frameRegion);
 
         return previous;
     }
@@ -125,11 +123,12 @@ public partial class View
     ///         If <see cref="ViewportSettings"/> has <see cref="Gui.ViewportSettings.ClipContentOnly"/> set, clipping will be
     ///         applied to just the visible content area.
     ///     </para>
-    /// <remarks>
-    ///     <para>
-    ///         This method returns the current clip region, not a clone. If there is a need to modify the clip region, it is recommended to clone it first.
-    ///     </para>
-    /// </remarks>
+    ///     <remarks>
+    ///         <para>
+    ///             This method returns the current clip region, not a clone. If there is a need to modify the clip region, it
+    ///             is recommended to clone it first.
+    ///         </para>
+    ///     </remarks>
     /// </remarks>
     /// <returns>
     ///     The current Clip, which can be then re-applied <see cref="View.SetClip"/>
@@ -161,7 +160,7 @@ public partial class View
             viewportRegion?.Exclude (adornment.Thickness.GetInside (viewport));
         }
 
-        View.SetClip (viewportRegion);
+        SetClip (viewportRegion);
 
         return previous;
     }

@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿#nullable enable
+using System.Numerics;
 using System.Text.Json.Serialization;
 
 namespace Terminal.Gui;
@@ -15,10 +16,7 @@ namespace Terminal.Gui;
 ///         with the thickness widths subtracted.
 ///     </para>
 ///     <para>
-///         Use the helper API (<see cref="Draw(Rectangle, string)"/> to draw the frame with the specified thickness.
-///     </para>
-///     <para>
-///         Thickness uses <see langword="float"/> intenrally. As a result, there is a potential precision loss for very
+///         Thickness uses <see langword="float"/> internally. As a result, there is a potential precision loss for very
 ///         large numbers. This is typically not an issue for UI dimensions but could be relevant in other contexts.
 ///     </para>
 /// </remarks>
@@ -91,7 +89,7 @@ public record struct Thickness
     /// <param name="diagnosticFlags"></param>
     /// <param name="label">The diagnostics label to draw on the bottom of the <see cref="Bottom"/>.</param>
     /// <returns>The inner rectangle remaining to be drawn.</returns>
-    public Rectangle Draw (Rectangle rect, ViewDiagnosticFlags diagnosticFlags = ViewDiagnosticFlags.Off, string label = null)
+    public Rectangle Draw (Rectangle rect, ViewDiagnosticFlags diagnosticFlags = ViewDiagnosticFlags.Off, string? label = null)
     {
         if (rect.Size.Width < 1 || rect.Size.Height < 1)
         {
@@ -134,26 +132,26 @@ public record struct Thickness
         if (Right > 0)
         {
             Application.Driver?.FillRect (
-                                         rect with
-                                         {
-                                             X = Math.Max (0, rect.X + rect.Width - Right),
-                                             Width = Math.Min (rect.Width, Right)
-                                         },
-                                         rightChar
-                                        );
+                                          rect with
+                                          {
+                                              X = Math.Max (0, rect.X + rect.Width - Right),
+                                              Width = Math.Min (rect.Width, Right)
+                                          },
+                                          rightChar
+                                         );
         }
 
         // Draw the Bottom side
         if (Bottom > 0)
         {
             Application.Driver?.FillRect (
-                                         rect with
-                                         {
-                                             Y = rect.Y + Math.Max (0, rect.Height - Bottom),
-                                             Height = Bottom
-                                         },
-                                         bottomChar
-                                        );
+                                          rect with
+                                          {
+                                              Y = rect.Y + Math.Max (0, rect.Height - Bottom),
+                                              Height = Bottom
+                                          },
+                                          bottomChar
+                                         );
         }
 
         if (diagnosticFlags.HasFlag (ViewDiagnosticFlags.Ruler))
@@ -192,6 +190,7 @@ public record struct Thickness
         {
             // Draw the diagnostics label on the bottom
             string text = label is null ? string.Empty : $"{label} {this}";
+
             var tf = new TextFormatter
             {
                 Text = text,

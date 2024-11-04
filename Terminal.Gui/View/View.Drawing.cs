@@ -1,13 +1,10 @@
 ﻿#nullable enable
-//#define HACK_DRAW_OVERLAPPED
 using System.ComponentModel;
-using System.Diagnostics;
 
 namespace Terminal.Gui;
 
 public partial class View // Drawing APIs
 {
-
     internal static void Draw (IEnumerable<View> views, bool force)
     {
         IEnumerable<View> viewsArray = views as View [] ?? views.ToArray ();
@@ -24,7 +21,6 @@ public partial class View // Drawing APIs
 
         Margin.DrawMargins (viewsArray);
     }
-
 
     /// <summary>
     ///     Draws the view if it needs to be drawn.
@@ -47,11 +43,12 @@ public partial class View // Drawing APIs
         }
 
         Region? saved = GetClip ();
+
         if (NeedsDraw || SubViewNeedsDraw)
         {
             saved = ClipFrame ();
             DoDrawBorderAndPadding ();
-            View.SetClip (saved);
+            SetClip (saved);
 
             // By default, we clip to the viewport preventing drawing outside the viewport
             // We also clip to the content, but if a developer wants to draw outside the viewport, they can do
@@ -108,7 +105,7 @@ public partial class View // Drawing APIs
         DoDrawComplete ();
 
         // QUESTION: Should this go before DoDrawComplete? What is more correct?
-        View.SetClip (saved);
+        SetClip (saved);
 
         // Exclude this view (not including Margin) from the Clip
         if (this is not Adornment && GetClip () is { })
@@ -221,7 +218,6 @@ public partial class View // Drawing APIs
         SetNormalAttribute ();
     }
 
-
     /// <summary>
     ///     Called when the normal attribute for the View is to be set. This is called before the View is drawn.
     /// </summary>
@@ -245,13 +241,12 @@ public partial class View // Drawing APIs
         }
     }
 
-
     #endregion
+
     #region ClearViewport
 
     private void DoClearViewport ()
     {
-
         if (OnClearingViewport ())
         {
             return;
@@ -329,7 +324,6 @@ public partial class View // Drawing APIs
 
     private void DoDrawText ()
     {
-
         if (OnDrawingText ())
         {
             return;
@@ -513,14 +507,15 @@ public partial class View // Drawing APIs
     /// <summary>
     ///     Gets or sets whether this View will use it's SuperView's <see cref="LineCanvas"/> for rendering any
     ///     lines. If <see langword="true"/> the rendering of any borders drawn by this Frame will be done by its parent's
-    ///     SuperView. If <see langword="false"/> (the default) this View's <see cref="OnDrawingBorderAndPadding"/> method will be
+    ///     SuperView. If <see langword="false"/> (the default) this View's <see cref="OnDrawingBorderAndPadding"/> method will
+    ///     be
     ///     called to render the borders.
     /// </summary>
     public virtual bool SuperViewRendersLineCanvas { get; set; } = false;
 
     /// <summary>
-    ///     Causes the contents of <see cref="LineCanvas"/> to be drawn. 
-    ///      If <see cref="SuperViewRendersLineCanvas"/> is true, only the
+    ///     Causes the contents of <see cref="LineCanvas"/> to be drawn.
+    ///     If <see cref="SuperViewRendersLineCanvas"/> is true, only the
     ///     <see cref="LineCanvas"/> of this view's subviews will be rendered. If <see cref="SuperViewRendersLineCanvas"/> is
     ///     false (the default), this method will cause the <see cref="LineCanvas"/> to be rendered.
     /// </summary>
@@ -577,6 +572,7 @@ public partial class View // Drawing APIs
             LineCanvas.Clear ();
         }
     }
+
     #endregion DrawLineCanvas
 
     #region DrawComplete
@@ -757,6 +753,7 @@ public partial class View // Drawing APIs
         {
             Padding?.ClearNeedsDraw ();
         }
+
         foreach (View subview in Subviews)
         {
             subview.ClearNeedsDraw ();

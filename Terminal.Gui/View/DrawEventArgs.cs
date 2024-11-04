@@ -20,9 +20,6 @@ public class DrawEventArgs : CancelEventArgs
         OldViewport = oldViewport;
     }
 
-    /// <summary>If set to true, the draw operation will be canceled, if applicable.</summary>
-    public bool Cancel { get; set; }
-
     /// <summary>Gets the Content-relative rectangle describing the old visible viewport into the <see cref="View"/>.</summary>
     public Rectangle OldViewport { get; }
 

@@ -98,7 +98,11 @@ public class Shortcut : View, IOrientation, IDesignable
         CanFocus = true;
 
         SuperViewRendersLineCanvas = true;
-        Border.Settings &= ~BorderSettings.Title;
+
+        if (Border is { })
+        {
+            Border.Settings &= ~BorderSettings.Title;
+        }
 
         Width = GetWidthDimAuto ();
         Height = Dim.Auto (DimAutoStyle.Content, 1);
@@ -237,39 +241,39 @@ public class Shortcut : View, IOrientation, IDesignable
         ShowHide ();
         ForceCalculateNaturalWidth ();
 
-        if (Width is DimAuto widthAuto)
+        if (Width is DimAuto widthAuto || HelpView!.Margin is null)
         {
+            return;
+        }
 
-        } 
+        // Frame.Width is smaller than the natural width. Reduce width of HelpView.
+        _maxHelpWidth = int.Max (0, GetContentSize ().Width - CommandView.Frame.Width - KeyView.Frame.Width);
+
+        if (_maxHelpWidth < 3)
+        {
+            Thickness t = GetMarginThickness ();
+
+            switch (_maxHelpWidth)
+            {
+                case 0:
+                case 1:
+                    // Scrunch it by removing both margins
+                    HelpView.Margin.Thickness = new (t.Right - 1, t.Top, t.Left - 1, t.Bottom);
+
+                    break;
+
+                case 2:
+
+                    // Scrunch just the right margin
+                    HelpView.Margin.Thickness = new (t.Right, t.Top, t.Left - 1, t.Bottom);
+
+                    break;
+            }
+        }
         else
         {
-            // Frame.Width is smaller than the natural width. Reduce width of HelpView.
-            _maxHelpWidth = int.Max (0, GetContentSize ().Width - CommandView.Frame.Width - KeyView.Frame.Width);
-            if (_maxHelpWidth < 3)
-            {
-                Thickness t = GetMarginThickness ();
-                switch (_maxHelpWidth)
-                {
-                    case 0:
-                    case 1:
-                        // Scrunch it by removing both margins
-                        HelpView.Margin.Thickness = new (t.Right - 1, t.Top, t.Left - 1, t.Bottom);
-
-                        break;
-
-                    case 2:
-
-                        // Scrunch just the right margin
-                        HelpView.Margin.Thickness = new (t.Right, t.Top, t.Left - 1, t.Bottom);
-
-                        break;
-                }
-            }
-            else
-            {
-                // Reset to default
-                HelpView.Margin.Thickness = GetMarginThickness ();
-            }
+            // Reset to default
+            HelpView.Margin.Thickness = GetMarginThickness ();
         }
     }
 
@@ -522,7 +526,11 @@ public class Shortcut : View, IOrientation, IDesignable
 
     private void SetHelpViewDefaultLayout ()
     {
-        HelpView.Margin.Thickness = GetMarginThickness ();
+        if (HelpView.Margin is { })
+        {
+            HelpView.Margin.Thickness = GetMarginThickness ();
+        }
+
         HelpView.X = Pos.Align (Alignment.End, AlignmentModes);
         _maxHelpWidth = HelpView.Text.GetColumns ();
         HelpView.Width = Dim.Auto (DimAutoStyle.Text, maximumContentDim: Dim.Func ((() => _maxHelpWidth)));
@@ -654,7 +662,11 @@ public class Shortcut : View, IOrientation, IDesignable
 
     private void SetKeyViewDefaultLayout ()
     {
-        KeyView.Margin.Thickness = GetMarginThickness ();
+        if (KeyView.Margin is { })
+        {
+            KeyView.Margin.Thickness = GetMarginThickness ();
+        }
+
         KeyView.X = Pos.Align (Alignment.End, AlignmentModes);
         KeyView.Width = Dim.Auto (DimAutoStyle.Text, minimumContentDim: Dim.Func (() => MinimumKeyTextSize));
         KeyView.Height = Dim.Fill ();
@@ -763,7 +775,10 @@ public class Shortcut : View, IOrientation, IDesignable
             KeyView.ColorScheme = cs;
         }
 
-        CommandView.Margin.ColorScheme = base.ColorScheme;
+        if (CommandView.Margin is { })
+        {
+            CommandView.Margin.ColorScheme = base.ColorScheme;
+        }
     }
 
     /// <inheritdoc/>
