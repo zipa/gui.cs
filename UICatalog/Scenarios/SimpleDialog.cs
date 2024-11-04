@@ -21,7 +21,7 @@ public sealed class SimpleDialog : Scenario
 
         appWindow.DrawingText += (s, e) =>
                                  {
-                                     Application.Driver?.FillRect (appWindow.ViewportToScreen (appWindow.Viewport), '*');
+                                     appWindow!.FillRect (appWindow!.Viewport, CM.Glyphs.Dot);
                                      e.Cancel = true;
                                  };
 

@@ -180,7 +180,7 @@ internal class GradientsView : View
         int x = xOffset + (GRADIENT_WIDTH - width) / 2; // Center the text within the gradient area width
         SetAttribute (GetNormalColor ());
         Move (x, yOffset + 1);
-        Driver.AddStr (text);
+        AddStr (text);
     }
 
     private void DrawGradientArea (GradientDirection direction, int xOffset, int yOffset)

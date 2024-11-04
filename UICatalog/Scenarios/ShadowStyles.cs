@@ -45,7 +45,7 @@ public class ShadowStyles : Scenario
 
         app.DrawingContent += (s, e) =>
                            {
-                               Application.Driver?.FillRect (app.ViewportToScreen (app.Viewport), CM.Glyphs.Dot);
+                               app!.FillRect (app!.Viewport, CM.Glyphs.Dot);
                                e.Cancel = true;
                            };
 

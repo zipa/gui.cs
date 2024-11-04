@@ -30,7 +30,7 @@ public abstract class ConsoleDriver
     ///     to.
     /// </summary>
     /// <value>The rectangle describing the of <see cref="Clip"/> region.</value>
-    public Region? Clip
+    internal Region? Clip
     {
         get => _clip;
         set
@@ -312,7 +312,7 @@ public abstract class ConsoleDriver
     ///     <para>If <paramref name="str"/> requires more columns than are available, the output will be clipped.</para>
     /// </remarks>
     /// <param name="str">String.</param>
-    public void AddStr (string str)
+    internal void AddStr (string str)
     {
         List<Rune> runes = str.EnumerateRunes ().ToList ();
 
@@ -323,7 +323,7 @@ public abstract class ConsoleDriver
     }
 
     /// <summary>Clears the <see cref="Contents"/> of the driver.</summary>
-    public void ClearContents ()
+    internal void ClearContents ()
     {
         Contents = new Cell [Rows, Cols];
 
@@ -362,7 +362,7 @@ public abstract class ConsoleDriver
     /// Sets <see cref="Contents"/> as dirty for situations where views
     /// don't need layout and redrawing, but just refresh the screen.
     /// </summary>
-    public void SetContentsAsDirty ()
+    internal void SetContentsAsDirty ()
     {
         lock (Contents!)
         {
@@ -387,7 +387,7 @@ public abstract class ConsoleDriver
     /// </remarks>
     /// <param name="rect">The Screen-relative rectangle.</param>
     /// <param name="rune">The Rune used to fill the rectangle</param>
-    public void FillRect (Rectangle rect, Rune rune = default)
+    internal void FillRect (Rectangle rect, Rune rune = default)
     {
         // BUGBUG: This should be a method on Region
         rect = Rectangle.Intersect (rect, Clip?.GetBounds () ?? Screen);
@@ -418,7 +418,7 @@ public abstract class ConsoleDriver
     /// </summary>
     /// <param name="rect"></param>
     /// <param name="c"></param>
-    public void FillRect (Rectangle rect, char c) { FillRect (rect, new Rune (c)); }
+    internal void FillRect (Rectangle rect, char c) { FillRect (rect, new Rune (c)); }
 
     /// <summary>Gets the terminal cursor visibility.</summary>
     /// <param name="visibility">The current <see cref="CursorVisibility"/></param>
@@ -445,7 +445,7 @@ public abstract class ConsoleDriver
     ///     <see langword="false"/> if the coordinate is outside the screen bounds or outside of <see cref="Clip"/>.
     ///     <see langword="true"/> otherwise.
     /// </returns>
-    public bool IsValidLocation (Rune rune, int col, int row)
+    internal bool IsValidLocation (Rune rune, int col, int row)
     {
         if (rune.GetColumns () < 2)
         {
@@ -458,6 +458,7 @@ public abstract class ConsoleDriver
         }
     }
 
+    // TODO: Make internal once Menu is upgraded
     /// <summary>
     ///     Updates <see cref="Col"/> and <see cref="Row"/> to the specified column and row in <see cref="Contents"/>.
     ///     Used by <see cref="AddRune(Rune)"/> and <see cref="AddStr"/> to determine where to add content.
@@ -480,10 +481,10 @@ public abstract class ConsoleDriver
 
     /// <summary>Called when the terminal size changes. Fires the <see cref="SizeChanged"/> event.</summary>
     /// <param name="args"></param>
-    public void OnSizeChanged (SizeChangedEventArgs args) { SizeChanged?.Invoke (this, args); }
+    internal void OnSizeChanged (SizeChangedEventArgs args) { SizeChanged?.Invoke (this, args); }
 
     /// <summary>Updates the screen to reflect all the changes that have been done to the display buffer</summary>
-    public void Refresh ()
+    internal void Refresh ()
     {
         bool updated = UpdateScreen ();
         UpdateCursor ();

@@ -436,9 +436,7 @@ internal sealed class Menu : View
 
             if (item is null && BorderStyle != LineStyle.None)
             {
-                Point s = ViewportToScreen (new Point (-1, i));
-                Driver.Move (s.X, s.Y);
-                Driver.AddRune (Glyphs.LeftTee);
+                AddRune (-1, i, Glyphs.LeftTee);
             }
             else if (Frame.X < Driver.Cols)
             {
@@ -462,21 +460,21 @@ internal sealed class Menu : View
 
                 if (item is null)
                 {
-                    Driver.AddRune (Glyphs.HLine);
+                    AddRune (Glyphs.HLine);
                 }
                 else if (i == 0 && p == 0 && _host.UseSubMenusSingleFrame && item.Parent!.Parent is { })
                 {
-                    Driver.AddRune (Glyphs.LeftArrow);
+                    AddRune (Glyphs.LeftArrow);
                 }
 
                 // This `- 3` is left border + right border + one row in from right
                 else if (p == Frame.Width - 3 && _barItems?.SubMenu (_barItems.Children [i]!) is { })
                 {
-                    Driver.AddRune (Glyphs.RightArrow);
+                    AddRune (Glyphs.RightArrow);
                 }
                 else
                 {
-                    Driver.AddRune ((Rune)' ');
+                    AddRune ((Rune)' ');
                 }
             }
 
@@ -484,9 +482,7 @@ internal sealed class Menu : View
             {
                 if (BorderStyle != LineStyle.None && SuperView?.Frame.Right - Frame.X > Frame.Width)
                 {
-                    Point s = ViewportToScreen (new Point (Frame.Width - 2, i));
-                    Driver.Move (s.X, s.Y);
-                    Driver.AddRune (Glyphs.RightTee);
+                    AddRune (Frame.Width - 2, i, Glyphs.RightTee);
                 }
 
                 continue;
@@ -572,6 +568,7 @@ internal sealed class Menu : View
                     // The shortcut tag string
                     if (!string.IsNullOrEmpty (item.ShortcutTag))
                     {
+
                         Driver.Move (screen.X + l - item.ShortcutTag.GetColumns (), screen.Y);
                         Driver.AddStr (item.ShortcutTag);
                     }

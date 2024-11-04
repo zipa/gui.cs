@@ -32,7 +32,7 @@ public interface IListDataSource : IDisposable
 
     /// <summary>This method is invoked to render a specified item, the method should cover the entire provided width.</summary>
     /// <returns>The render.</returns>
-    /// <param name="container">The list view to render.</param>
+    /// <param name="listView">The list view to render.</param>
     /// <param name="selected">Describes whether the item being rendered is currently selected by the user.</param>
     /// <param name="item">The index of the item to render, zero for the first item and so on.</param>
     /// <param name="col">The column where the rendering will start</param>
@@ -44,7 +44,7 @@ public interface IListDataSource : IDisposable
     ///     or not.
     /// </remarks>
     void Render (
-        ListView container,
+        ListView listView,
         bool selected,
         int item,
         int col,

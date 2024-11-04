@@ -154,4 +154,20 @@ public partial class View
         SetClip (prevClip);
     }
 
+    /// <summary>Fills the specified <see cref="Viewport"/>-relative rectangle.</summary>
+    /// <param name="rect">The Viewport-relative rectangle to clear.</param>
+    /// <param name="rune">The Rune to fill with.</param>
+    public void FillRect (Rectangle rect, Rune rune)
+    {
+        if (Driver is null)
+        {
+            return;
+        }
+
+        Region prevClip = ClipViewport ();
+        Rectangle toClear = ViewportToScreen (rect);
+        Driver.FillRect (toClear, rune);
+        SetClip (prevClip);
+    }
+
 }

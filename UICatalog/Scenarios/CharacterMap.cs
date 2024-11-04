@@ -695,7 +695,7 @@ internal class CharMap : View, IDesignable
 
         SetAttribute (GetHotNormalColor ());
         Move (0, 0);
-        Driver.AddStr (new (' ', RowLabelWidth + 1));
+        AddStr (new (' ', RowLabelWidth + 1));
 
         int firstColumnX = RowLabelWidth - Viewport.X;
 
@@ -708,11 +708,11 @@ internal class CharMap : View, IDesignable
             {
                 Move (x, 0);
                 SetAttribute (GetHotNormalColor ());
-                Driver.AddStr (" ");
+                AddStr (" ");
                 SetAttribute (HasFocus && cursorCol + firstColumnX == x ? ColorScheme.HotFocus : GetHotNormalColor ());
-                Driver.AddStr ($"{hexDigit:x}");
+                AddStr ($"{hexDigit:x}");
                 SetAttribute (GetHotNormalColor ());
-                Driver.AddStr (" ");
+                AddStr (" ");
             }
         }
 
@@ -799,7 +799,7 @@ internal class CharMap : View, IDesignable
                 {
                     // Draw the width of the rune
                     SetAttribute (ColorScheme.HotNormal);
-                    Driver.AddStr ($"{width}");
+                    AddStr ($"{width}");
                 }
 
                 // If we're at the cursor position, and we don't have focus, revert the colors to normal
@@ -816,11 +816,11 @@ internal class CharMap : View, IDesignable
 
             if (!ShowGlyphWidths || (y + Viewport.Y) % _rowHeight > 0)
             {
-                Driver.AddStr ($"U+{val / 16:x5}_ ");
+                AddStr ($"U+{val / 16:x5}_ ");
             }
             else
             {
-                Driver.AddStr (new (' ', RowLabelWidth));
+                AddStr (new (' ', RowLabelWidth));
             }
         }
 
