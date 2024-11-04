@@ -32,7 +32,7 @@ public class AnimationScenario : Scenario
             Height = Dim.Fill (),
         };
 
-        _imageView = new ImageView { Width = Dim.Fill (), Height = Dim.Fill () - 2 };
+        _imageView = new ImageView { Width = Dim.Fill (), Height = Dim.Fill ()! - 2 };
 
         win.Add (_imageView);
 
@@ -63,7 +63,7 @@ public class AnimationScenario : Scenario
 
         if (!string.IsNullOrEmpty (assemblyLocation))
         {
-            dir = new DirectoryInfo (Path.GetDirectoryName (assemblyLocation));
+            dir = new DirectoryInfo (Path.GetDirectoryName (assemblyLocation) ?? string.Empty);
         }
         else
         {
@@ -105,7 +105,7 @@ public class AnimationScenario : Scenario
     // This is a C# port of https://github.com/andraaspar/bitmap-to-braille by Andraaspar
 
     /// <summary>Renders an image as unicode Braille.</summary>
-    public class BitmapToBraille
+    public class BitmapToBraille (int widthPixels, int heightPixels, Func<int, int, bool> pixelIsLit)
     {
         public const int CHAR_HEIGHT = 4;
         public const int CHAR_WIDTH = 2;
@@ -113,16 +113,9 @@ public class AnimationScenario : Scenario
         private const string CHARS =
             " ⠁⠂⠃⠄⠅⠆⠇⡀⡁⡂⡃⡄⡅⡆⡇⠈⠉⠊⠋⠌⠍⠎⠏⡈⡉⡊⡋⡌⡍⡎⡏⠐⠑⠒⠓⠔⠕⠖⠗⡐⡑⡒⡓⡔⡕⡖⡗⠘⠙⠚⠛⠜⠝⠞⠟⡘⡙⡚⡛⡜⡝⡞⡟⠠⠡⠢⠣⠤⠥⠦⠧⡠⡡⡢⡣⡤⡥⡦⡧⠨⠩⠪⠫⠬⠭⠮⠯⡨⡩⡪⡫⡬⡭⡮⡯⠰⠱⠲⠳⠴⠵⠶⠷⡰⡱⡲⡳⡴⡵⡶⡷⠸⠹⠺⠻⠼⠽⠾⠿⡸⡹⡺⡻⡼⡽⡾⡿⢀⢁⢂⢃⢄⢅⢆⢇⣀⣁⣂⣃⣄⣅⣆⣇⢈⢉⢊⢋⢌⢍⢎⢏⣈⣉⣊⣋⣌⣍⣎⣏⢐⢑⢒⢓⢔⢕⢖⢗⣐⣑⣒⣓⣔⣕⣖⣗⢘⢙⢚⢛⢜⢝⢞⢟⣘⣙⣚⣛⣜⣝⣞⣟⢠⢡⢢⢣⢤⢥⢦⢧⣠⣡⣢⣣⣤⣥⣦⣧⢨⢩⢪⢫⢬⢭⢮⢯⣨⣩⣪⣫⣬⣭⣮⣯⢰⢱⢲⢳⢴⢵⢶⢷⣰⣱⣲⣳⣴⣵⣶⣷⢸⢹⢺⢻⢼⢽⢾⢿⣸⣹⣺⣻⣼⣽⣾⣿";
 
-        public BitmapToBraille (int widthPixels, int heightPixels, Func<int, int, bool> pixelIsLit)
-        {
-            WidthPixels = widthPixels;
-            HeightPixels = heightPixels;
-            PixelIsLit = pixelIsLit;
-        }
-
-        public int HeightPixels { get; }
-        public Func<int, int, bool> PixelIsLit { get; }
-        public int WidthPixels { get; }
+        public int HeightPixels { get; } = heightPixels;
+        public Func<int, int, bool> PixelIsLit { get; } = pixelIsLit;
+        public int WidthPixels { get; } = widthPixels;
 
         public string GenerateImage ()
         {
@@ -171,55 +164,58 @@ public class AnimationScenario : Scenario
 
     private class ImageView : View
     {
-        private string [] brailleCache;
-        private int currentFrame;
-        private int frameCount;
-        private Image<Rgba32> [] fullResImages;
-        private Image<Rgba32> [] matchSizes;
-        private Rectangle oldSize = Rectangle.Empty;
-        public void NextFrame () { currentFrame = (currentFrame + 1) % frameCount; }
+        private string []? _brailleCache;
+        private int _currentFrame;
+        private int _frameCount;
+        private Image<Rgba32> []? _fullResImages;
+        private Image<Rgba32> []? _matchSizes;
+        private Rectangle _oldSize = Rectangle.Empty;
+        public void NextFrame () { _currentFrame = (_currentFrame + 1) % _frameCount; }
 
         protected override bool OnDrawingContent ()
         {
-            if (frameCount == 0)
+            if (_frameCount == 0)
             {
                 return false;
             }
-            if (oldSize != Viewport)
+            if (_oldSize != Viewport)
             {
                 // Invalidate cached images now size has changed
-                matchSizes = new Image<Rgba32> [frameCount];
-                brailleCache = new string [frameCount];
-                oldSize = Viewport;
+                _matchSizes = new Image<Rgba32> [_frameCount];
+                _brailleCache = new string [_frameCount];
+                _oldSize = Viewport;
             }
 
-            Image<Rgba32> imgScaled = matchSizes [currentFrame];
-            string braille = brailleCache [currentFrame];
+            Image<Rgba32>? imgScaled = _matchSizes? [_currentFrame];
+            string? braille = _brailleCache? [_currentFrame];
 
             if (imgScaled == null)
             {
-                Image<Rgba32> imgFull = fullResImages [currentFrame];
+                Image<Rgba32>? imgFull = _fullResImages? [_currentFrame];
 
                 // keep aspect ratio
                 int newSize = Math.Min (Viewport.Width, Viewport.Height);
 
                 // generate one
-                matchSizes [currentFrame] = imgScaled = imgFull.Clone (
-                                                                       x => x.Resize (
-                                                                                      newSize * BitmapToBraille.CHAR_HEIGHT,
-                                                                                      newSize * BitmapToBraille.CHAR_HEIGHT
-                                                                                     )
-                                                                      );
+                if (_matchSizes is { } && imgFull is { })
+                {
+                    _matchSizes [_currentFrame] = imgScaled = imgFull.Clone (
+                                                                             x => x.Resize (
+                                                                                            newSize * BitmapToBraille.CHAR_HEIGHT,
+                                                                                            newSize * BitmapToBraille.CHAR_HEIGHT
+                                                                                           )
+                                                                            );
+                }
             }
 
-            if (braille == null)
+            if (braille == null && _brailleCache is { })
             {
-                brailleCache [currentFrame] = braille = GetBraille (matchSizes [currentFrame]);
+                _brailleCache [_currentFrame] = braille = GetBraille (_matchSizes? [_currentFrame]!);
             }
 
-            string [] lines = braille.Split ('\n');
+            string []? lines = braille?.Split ('\n');
 
-            for (var y = 0; y < lines.Length; y++)
+            for (var y = 0; y < lines!.Length; y++)
             {
                 string line = lines [y];
 
@@ -234,18 +230,18 @@ public class AnimationScenario : Scenario
 
         internal void SetImage (Image<Rgba32> image)
         {
-            frameCount = image.Frames.Count;
+            _frameCount = image.Frames.Count;
 
-            fullResImages = new Image<Rgba32> [frameCount];
-            matchSizes = new Image<Rgba32> [frameCount];
-            brailleCache = new string [frameCount];
+            _fullResImages = new Image<Rgba32> [_frameCount];
+            _matchSizes = new Image<Rgba32> [_frameCount];
+            _brailleCache = new string [_frameCount];
 
-            for (var i = 0; i < frameCount - 1; i++)
+            for (var i = 0; i < _frameCount - 1; i++)
             {
-                fullResImages [i] = image.Frames.ExportFrame (0);
+                _fullResImages [i] = image.Frames.ExportFrame (0);
             }
 
-            fullResImages [frameCount - 1] = image;
+            _fullResImages [_frameCount - 1] = image;
 
             SetNeedsDraw ();
         }

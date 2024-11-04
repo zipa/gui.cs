@@ -222,8 +222,7 @@ public class ColorPicker16 : View
         {
             for (var zoomedX = 0; zoomedX < BoxWidth; zoomedX++)
             {
-                Move (x * BoxWidth + zoomedX, y * BoxHeight + zoomedY);
-                Driver?.AddRune ((Rune)' ');
+                AddRune (x * BoxWidth + zoomedX, y * BoxHeight + zoomedY, (Rune)' ');
                 index++;
             }
         }

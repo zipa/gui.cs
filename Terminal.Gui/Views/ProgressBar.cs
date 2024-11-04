@@ -141,7 +141,7 @@ public class ProgressBar : View, IDesignable
         {
             for (var i = 0; i < Viewport.Width; i++)
             {
-                if (Array.IndexOf (_activityPos, i) != -1)
+                if (Array.IndexOf (_activityPos!, i) != -1)
                 {
                     Driver?.AddRune (SegmentCharacter);
                 }

@@ -414,7 +414,7 @@ public class DynamicMenuBar : Scenario
                                 };
 
             var dialog = new Dialog
-                { Title = "Enter the menu details.", Buttons = [btnOk, btnCancel], Height = Dim.Auto (DimAutoStyle.Content, 22, Driver.Rows) };
+                { Title = "Enter the menu details.", Buttons = [btnOk, btnCancel], Height = Dim.Auto (DimAutoStyle.Content, 22, Application.Screen.Height) };
 
             Width = Dim.Fill ();
             Height = Dim.Fill () - 1;

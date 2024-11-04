@@ -57,13 +57,13 @@ public abstract class ConsoleDriver
     ///     Gets the column last set by <see cref="Move"/>. <see cref="Col"/> and <see cref="Row"/> are used by
     ///     <see cref="AddRune(Rune)"/> and <see cref="AddStr"/> to determine where to add content.
     /// </summary>
-    public int Col { get; internal set; }
+    internal int Col { get; private set; }
 
     /// <summary>The number of columns visible in the terminal.</summary>
-    public virtual int Cols
+    internal virtual int Cols
     {
         get => _cols;
-        internal set
+        set
         {
             _cols = value;
             ClearContents ();
@@ -75,22 +75,22 @@ public abstract class ConsoleDriver
     ///     <see cref="UpdateScreen"/> is called.
     ///     <remarks>The format of the array is rows, columns. The first index is the row, the second index is the column.</remarks>
     /// </summary>
-    public Cell [,]? Contents { get; internal set; }
+    internal Cell [,]? Contents { get; set; }
 
     /// <summary>The leftmost column in the terminal.</summary>
-    public virtual int Left { get; internal set; } = 0;
+    internal virtual int Left { get; set; } = 0;
 
     /// <summary>
     ///     Gets the row last set by <see cref="Move"/>. <see cref="Col"/> and <see cref="Row"/> are used by
     ///     <see cref="AddRune(Rune)"/> and <see cref="AddStr"/> to determine where to add content.
     /// </summary>
-    public int Row { get; internal set; }
+    internal int Row { get; private set; }
 
     /// <summary>The number of rows visible in the terminal.</summary>
-    public virtual int Rows
+    internal virtual int Rows
     {
         get => _rows;
-        internal set
+        set
         {
             _rows = value;
             ClearContents ();
@@ -98,7 +98,7 @@ public abstract class ConsoleDriver
     }
 
     /// <summary>The topmost row in the terminal.</summary>
-    public virtual int Top { get; internal set; } = 0;
+    internal virtual int Top { get; set; } = 0;
 
     /// <summary>
     ///     Set this to true in any unit tests that attempt to test drivers other than FakeDriver.
@@ -125,7 +125,7 @@ public abstract class ConsoleDriver
     ///     </para>
     /// </remarks>
     /// <param name="rune">Rune to add.</param>
-    public void AddRune (Rune rune)
+    internal void AddRune (Rune rune)
     {
         int runeWidth = -1;
         bool validLocation = IsValidLocation (rune, Col, Row);
@@ -300,7 +300,7 @@ public abstract class ConsoleDriver
     ///     convenience method that calls <see cref="AddRune(Rune)"/> with the <see cref="Rune"/> constructor.
     /// </summary>
     /// <param name="c">Character to add.</param>
-    public void AddRune (char c) { AddRune (new Rune (c)); }
+    internal void AddRune (char c) { AddRune (new Rune (c)); }
 
     /// <summary>Adds the <paramref name="str"/> to the display at the cursor position.</summary>
     /// <remarks>

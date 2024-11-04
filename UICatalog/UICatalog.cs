@@ -485,7 +485,11 @@ public class UICatalogApp
             {
                 Title = "Benchmark Results",
             };
-            benchmarkWindow.Border.Thickness = new (0, 0, 0, 0);
+
+            if (benchmarkWindow.Border is { })
+            {
+                benchmarkWindow.Border.Thickness = new (0, 0, 0, 0);
+            }
 
             TableView resultsTableView = new ()
             {
@@ -1362,8 +1366,6 @@ public class UICatalogApp
 
     private struct Options
     {
-        public bool Version;
-
         public string Driver;
 
         public string Scenario;

@@ -114,7 +114,7 @@ public class LineDrawing : Scenario
 
         var tools = new ToolsView { Title = "Tools", X = Pos.Right (canvas) - 20, Y = 2 };
 
-        tools.ColorChanged += (s, e) => canvas.SetAttribute (e);
+        tools.ColorChanged += (s, e) => canvas.SetCurrentAttribute (e);
         tools.SetStyle += b => canvas.CurrentTool = new DrawLineTool { LineStyle = b };
         tools.AddLayer += () => canvas.AddLayer ();
 
@@ -276,7 +276,7 @@ public class DrawingArea : View
             {
                 if (c.Value is { })
                 {
-                    SetAttribute (c.Value.Value.Attribute ?? ColorScheme.Normal);
+                    SetCurrentAttribute (c.Value.Value.Attribute ?? ColorScheme.Normal);
 
                     // TODO: #2616 - Support combining sequences that don't normalize
                     AddRune (c.Key.X, c.Key.Y, c.Value.Value.Rune);
@@ -336,7 +336,7 @@ public class DrawingArea : View
         Layers.Add (CurrentLayer);
     }
 
-    internal void SetAttribute (Attribute a) { CurrentAttribute = a; }
+    internal void SetCurrentAttribute (Attribute a) { CurrentAttribute = a; }
 
     public void ClearUndo () { _undoHistory.Clear (); }
 }

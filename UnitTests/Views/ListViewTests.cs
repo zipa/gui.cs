@@ -686,7 +686,6 @@ Item 6",
 
         public void Render (
             ListView container,
-            ConsoleDriver driver,
             bool selected,
             int item,
             int col,

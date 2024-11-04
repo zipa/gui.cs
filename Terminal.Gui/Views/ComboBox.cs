@@ -306,8 +306,7 @@ public class ComboBox : View, IDesignable
         {
             SetAttribute (ColorScheme.Focus);
         }
-        Move (Viewport.Right - 1, 0);
-        Driver?.AddRune (Glyphs.DownArrow);
+        AddRune (Viewport.Right - 1, 0, Glyphs.DownArrow);
 
         return true;
     }
@@ -932,7 +931,7 @@ public class ComboBox : View, IDesignable
                 {
                     for (var c = 0; c < f.Width; c++)
                     {
-                        Driver?.AddRune ((Rune)' ');
+                        AddRune (0, row, (Rune)' ');
                     }
                 }
                 else
@@ -948,14 +947,14 @@ public class ComboBox : View, IDesignable
 
                     if (AllowsMarking)
                     {
-                        Driver?.AddRune (
+                        AddRune (
                                         Source.IsMarked (item) ? AllowsMultipleSelection ? Glyphs.CheckStateChecked : Glyphs.Selected :
                                         AllowsMultipleSelection ? Glyphs.CheckStateUnChecked : Glyphs.UnSelected
                                        );
-                        Driver?.AddRune ((Rune)' ');
+                        AddRune ((Rune)' ');
                     }
 
-                    Source.Render (this, Driver, isSelected, item, col, row, f.Width - col, start);
+                    Source.Render (this, isSelected, item, col, row, f.Width - col, start);
                 }
             }
 

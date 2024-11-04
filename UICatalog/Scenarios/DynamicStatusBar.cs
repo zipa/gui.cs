@@ -201,7 +201,7 @@ public class DynamicStatusBar : Scenario
                                       TextTitle.Text = string.Empty;
                                       Application.RequestStop ();
                                   };
-            var dialog = new Dialog { Title = "Enter the menu details.", Buttons = [btnOk, btnCancel], Height = Dim.Auto (DimAutoStyle.Content, 17, Driver.Rows) };
+            var dialog = new Dialog { Title = "Enter the menu details.", Buttons = [btnOk, btnCancel], Height = Dim.Auto (DimAutoStyle.Content, 17, Application.Screen.Height) };
 
             Width = Dim.Fill ();
             Height = Dim.Fill () - 1;

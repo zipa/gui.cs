@@ -29,19 +29,12 @@ public class DimEditor : EditorBase
             return;
         }
 
-        Dim dim;
-        if (Dimension == Dimension.Width)
-        {
-            dim = ViewToEdit.Width;
-        }
-        else
-        {
-            dim = ViewToEdit.Height;
-        }
+        Dim? dim;
+        dim = Dimension == Dimension.Width ? ViewToEdit.Width : ViewToEdit.Height;
 
         try
         {
-            _dimRadioGroup!.SelectedItem = _dimNames.IndexOf (Enumerable.First<string> (_dimNames, s => dim!.ToString ().StartsWith (s)));
+            _dimRadioGroup!.SelectedItem = _dimNames.IndexOf (_dimNames.First (s => dim!.ToString ().StartsWith (s)));
         }
         catch (InvalidOperationException e)
         {

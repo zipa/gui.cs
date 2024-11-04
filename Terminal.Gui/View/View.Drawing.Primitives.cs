@@ -1,4 +1,6 @@
-﻿namespace Terminal.Gui;
+﻿using static Terminal.Gui.SpinnerStyle;
+
+namespace Terminal.Gui;
 
 public partial class View
 {
@@ -31,6 +33,21 @@ public partial class View
         return true;
     }
 
+    /// <summary>Draws the specified character at the current draw position.</summary>
+    /// <param name="rune">The Rune.</param>
+    public void AddRune (Rune rune)
+    {
+        Driver?.AddRune (rune);
+    }
+
+
+    /// <summary>
+    ///     Adds the specified <see langword="char"/> to the display at the current cursor position. This method is a
+    ///     convenience method that calls <see cref="AddRune(Rune)"/> with the <see cref="Rune"/> constructor.
+    /// </summary>
+    /// <param name="c">Character to add.</param>
+    public void AddRune (char c) { AddRune (new Rune (c)); }
+
     /// <summary>Draws the specified character in the specified viewport-relative column and row of the View.</summary>
     /// <para>
     ///     If the provided coordinates are outside the visible content area, this method does nothing.
@@ -49,6 +66,21 @@ public partial class View
         }
     }
 
+
+    /// <summary>Adds the <paramref name="str"/> to the display at the cursor position.</summary>
+    /// <remarks>
+    ///     <para>
+    ///         When the method returns, <see cref="Col"/> will be incremented by the number of columns
+    ///         <paramref name="str"/> required, unless the new column value is outside of the <see cref="Clip"/> or screen
+    ///         dimensions defined by <see cref="Cols"/>.
+    ///     </para>
+    ///     <para>If <paramref name="str"/> requires more columns than are available, the output will be clipped.</para>
+    /// </remarks>
+    /// <param name="str">String.</param>
+    public void AddStr (string str)
+    {
+        Driver?.AddStr (str);
+    }
     /// <summary>Utility function to draw strings that contain a hotkey.</summary>
     /// <param name="text">String to display, the hotkey specifier before a letter flags the next letter as the hotkey.</param>
     /// <param name="hotColor">Hot color.</param>
@@ -74,7 +106,7 @@ public partial class View
                 continue;
             }
 
-            Application.Driver?.AddRune (rune);
+            AddRune (rune);
             SetAttribute (normalColor);
         }
     }
@@ -121,4 +153,5 @@ public partial class View
         SetAttribute (prev);
         SetClip (prevClip);
     }
+
 }

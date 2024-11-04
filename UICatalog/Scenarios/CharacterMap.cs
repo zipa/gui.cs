@@ -765,7 +765,7 @@ internal class CharMap : View, IDesignable
                     // Draw the rune
                     if (width > 0)
                     {
-                        Driver.AddRune (rune);
+                        AddRune (rune);
                     }
                     else
                     {
@@ -786,11 +786,11 @@ internal class CharMap : View, IDesignable
 
                             if (normal.Length == 1)
                             {
-                                Driver.AddRune (normal [0]);
+                                AddRune ((Rune)normal [0]);
                             }
                             else
                             {
-                                Driver.AddRune (Rune.ReplacementChar);
+                                AddRune (Rune.ReplacementChar);
                             }
                         }
                     }

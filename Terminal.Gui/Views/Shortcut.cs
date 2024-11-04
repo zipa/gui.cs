@@ -495,7 +495,11 @@ public class Shortcut : View, IOrientation, IDesignable
 
     private void SetCommandViewDefaultLayout ()
     {
-        CommandView.Margin.Thickness = GetMarginThickness ();
+        if (CommandView.Margin is { })
+        {
+            CommandView.Margin.Thickness = GetMarginThickness ();
+        }
+
         CommandView.X = Pos.Align (Alignment.End, AlignmentModes);
 
         CommandView.VerticalTextAlignment = Alignment.Center;

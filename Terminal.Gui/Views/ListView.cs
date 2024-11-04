@@ -33,7 +33,6 @@ public interface IListDataSource : IDisposable
     /// <summary>This method is invoked to render a specified item, the method should cover the entire provided width.</summary>
     /// <returns>The render.</returns>
     /// <param name="container">The list view to render.</param>
-    /// <param name="driver">The console driver to render.</param>
     /// <param name="selected">Describes whether the item being rendered is currently selected by the user.</param>
     /// <param name="item">The index of the item to render, zero for the first item and so on.</param>
     /// <param name="col">The column where the rendering will start</param>
@@ -46,7 +45,6 @@ public interface IListDataSource : IDisposable
     /// </remarks>
     void Render (
         ListView container,
-        ConsoleDriver driver,
         bool selected,
         int item,
         int col,
@@ -88,7 +86,7 @@ public interface IListDataSource : IDisposable
 ///     </para>
 ///     <para>
 ///         To change the contents of the ListView, set the <see cref="Source"/> property (when providing custom
-///         rendering via <see cref="IListDataSource"/>) or call <see cref="SetSource"/> an <see cref="IList"/> is being
+///         rendering via <see cref="IListDataSource"/>) or call <see cref="SetSource{T}"/> an <see cref="IList"/> is being
 ///         used.
 ///     </para>
 ///     <para>
@@ -822,7 +820,7 @@ public class ListView : View, IDesignable
                     Driver?.AddRune ((Rune)' ');
                 }
 
-                Source.Render (this, Driver, isSelected, item, col, row, f.Width - col, start);
+                Source.Render (this, isSelected, item, col, row, f.Width - col, start);
             }
         }
         return true;
@@ -1116,7 +1114,6 @@ public class ListWrapper<T> : IListDataSource, IDisposable
     /// <inheritdoc/>
     public void Render (
         ListView container,
-        ConsoleDriver driver,
         bool marked,
         int item,
         int col,
@@ -1133,17 +1130,17 @@ public class ListWrapper<T> : IListDataSource, IDisposable
 
             if (t is null)
             {
-                RenderUstr (driver, "", col, line, width);
+                RenderUstr (container, "", col, line, width);
             }
             else
             {
                 if (t is string s)
                 {
-                    RenderUstr (driver, s, col, line, width, start);
+                    RenderUstr (container, s, col, line, width, start);
                 }
                 else
                 {
-                    RenderUstr (driver, t.ToString (), col, line, width, start);
+                    RenderUstr (container, t.ToString (), col, line, width, start);
                 }
             }
         }
@@ -1239,7 +1236,7 @@ public class ListWrapper<T> : IListDataSource, IDisposable
         return maxLength;
     }
 
-    private void RenderUstr (ConsoleDriver driver, string ustr, int col, int line, int width, int start = 0)
+    private void RenderUstr (View driver, string ustr, int col, int line, int width, int start = 0)
     {
         string str = start > ustr.GetColumns () ? string.Empty : ustr.Substring (Math.Min (start, ustr.ToRunes ().Length - 1));
         string u = TextFormatter.ClipAndJustify (str, width, Alignment.Start);

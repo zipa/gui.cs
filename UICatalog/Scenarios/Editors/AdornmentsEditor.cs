@@ -42,7 +42,10 @@ public class AdornmentsEditor : EditorBase
             PaddingEditor.AdornmentToEdit = ViewToEdit?.Padding ?? null;
         }
 
-        Padding.Text = $"View: {GetIdentifyingString (ViewToEdit)}";
+        if (Padding is { })
+        {
+            Padding.Text = $"View: {GetIdentifyingString (ViewToEdit)}";
+        }
     }
 
     private string GetIdentifyingString (View? view)
@@ -72,17 +75,15 @@ public class AdornmentsEditor : EditorBase
 
     public bool ShowViewIdentifier
     {
-        get => Padding.Thickness != Thickness.Empty;
+        get => Padding is { } && Padding.Thickness != Thickness.Empty;
         set
         {
-            if (value)
+            if (Padding is null)
             {
-                Padding.Thickness = new (0, 2, 0, 0);
+                return;
             }
-            else
-            {
-                Padding.Thickness = Thickness.Empty;
-            }
+
+            Padding.Thickness = value ? new (0, 2, 0, 0) : Thickness.Empty;
         }
     }
 

@@ -19,20 +19,20 @@ internal class CursesDriver : ConsoleDriver
     private UnixMainLoop _mainLoopDriver;
     private object _processInputToken;
 
-    public override int Cols
+    internal override int Cols
     {
         get => Curses.Cols;
-        internal set
+        set
         {
             Curses.Cols = value;
             ClearContents ();
         }
     }
 
-    public override int Rows
+    internal override int Rows
     {
         get => Curses.Lines;
-        internal set
+        set
         {
             Curses.Lines = value;
             ClearContents ();

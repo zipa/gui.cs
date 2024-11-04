@@ -210,7 +210,7 @@ public class MultiColouredTable : Scenario
                     }
                 }
 
-                Driver.AddRune ((Rune)render [i]);
+                AddRune ((Rune)render [i]);
                 SetAttribute (cellColor);
             }
         }

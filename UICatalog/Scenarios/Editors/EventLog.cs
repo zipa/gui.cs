@@ -93,7 +93,7 @@ public class EventLog : ListView
     private void EventLog_Initialized (object? _, EventArgs e)
     {
 
-        Border.Add (ExpandButton!);
+        Border?.Add (ExpandButton!);
         Source = new ListWrapper<string> (_eventSource);
 
     }
