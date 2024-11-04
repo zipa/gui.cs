@@ -338,6 +338,8 @@ public static class EscSeqUtils
 
                 if (!string.IsNullOrEmpty (terminator))
                 {
+                    System.Diagnostics.Debug.Assert (terminator.Length == 1);
+
                     key = GetConsoleKey (terminator [0], values [0], ref mod, ref keyChar);
 
                     if (key != 0 && values.Length > 1)
@@ -1417,7 +1419,9 @@ public static class EscSeqUtils
                 split = AddAndClearSplit ();
                 splitList.Add (c.ToString ());
             }
-            else if (previousChar != '\u001B' && c < Key.Space)// uint n when n is > 0 and <= KeyEsc
+            else if ((previousChar != '\u001B' && c <= Key.Space) || (previousChar != '\u001B' && c == 127)
+                     || (char.IsLetter (previousChar) && char.IsLower (c) && char.IsLetter (c))
+                     || (!string.IsNullOrEmpty (split) && split.Length > 2 && char.IsLetter (previousChar) && char.IsLetter (c)))
             {
                 isEscSeq = false;
                 split = AddAndClearSplit ();

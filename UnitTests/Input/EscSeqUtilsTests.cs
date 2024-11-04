@@ -1440,12 +1440,14 @@ public class EscSeqUtilsTests
         Assert.Equal (cki, expectedCkInfos [0]);
     }
 
-    [Fact]
-    public void SplitEscapeRawString_Multiple_Tests ()
+    [Theory]
+    [InlineData ("\r[<35;50;1m[<35;49;1m[<35;47;1m[<35;46;1m[<35;45;2m[<35;44;2m[<35;43;3m[<35;42;3m[<35;41;4m[<35;40;5m[<35;39;6m[<35;49;1m[<35;48;2m[<0;33;6M[<0;33;6mOC\r", "\r")]
+    [InlineData ("\r[<35;50;1m[<35;49;1m[<35;47;1m[<35;46;1m[<35;45;2m[<35;44;2m[<35;43;3m[<35;42;3m[<35;41;4m[<35;40;5m[<35;39;6m[<35;49;1m[<35;48;2m[<0;33;6M[<0;33;6mOCe", "e")]
+    [InlineData ("\r[<35;50;1m[<35;49;1m[<35;47;1m[<35;46;1m[<35;45;2m[<35;44;2m[<35;43;3m[<35;42;3m[<35;41;4m[<35;40;5m[<35;39;6m[<35;49;1m[<35;48;2m[<0;33;6M[<0;33;6mOCV", "V")]
+    [InlineData ("\r[<35;50;1m[<35;49;1m[<35;47;1m[<35;46;1m[<35;45;2m[<35;44;2m[<35;43;3m[<35;42;3m[<35;41;4m[<35;40;5m[<35;39;6m[<35;49;1m[<35;48;2m[<0;33;6M[<0;33;6mOC\u007f", "\u007f")]
+    [InlineData ("\r[<35;50;1m[<35;49;1m[<35;47;1m[<35;46;1m[<35;45;2m[<35;44;2m[<35;43;3m[<35;42;3m[<35;41;4m[<35;40;5m[<35;39;6m[<35;49;1m[<35;48;2m[<0;33;6M[<0;33;6mOC ", " ")]
+    public void SplitEscapeRawString_Multiple_Tests (string rawData, string expectedLast)
     {
-        string rawData =
-            "\r[<35;50;1m[<35;49;1m[<35;47;1m[<35;46;1m[<35;45;2m[<35;44;2m[<35;43;3m[<35;42;3m[<35;41;4m[<35;40;5m[<35;39;6m[<35;49;1m[<35;48;2m[<0;33;6M[<0;33;6mOC\r";
-
         List<string> splitList = EscSeqUtils.SplitEscapeRawString (rawData);
         Assert.Equal (18, splitList.Count);
         Assert.Equal ("\r", splitList [0]);
@@ -1465,7 +1467,7 @@ public class EscSeqUtilsTests
         Assert.Equal ("\u001b[<0;33;6M", splitList [14]);
         Assert.Equal ("\u001b[<0;33;6m", splitList [15]);
         Assert.Equal ("\u001bOC", splitList [16]);
-        Assert.Equal ("\r", splitList [^1]);
+        Assert.Equal (expectedLast, splitList [^1]);
     }
 
     [Theory]
