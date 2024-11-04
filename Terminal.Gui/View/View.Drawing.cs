@@ -101,7 +101,7 @@ public partial class View // Drawing APIs
         if (Margin is { } && Margin?.Thickness != Thickness.Empty)
         {
             // PERFORMANCE: How expensive are these clones?
-            Margin!.CachedClip = GetClip ()!.Clone ();
+            Margin!.CachedClip = GetClip ()?.Clone ();
         }
 
         // We're done drawing
