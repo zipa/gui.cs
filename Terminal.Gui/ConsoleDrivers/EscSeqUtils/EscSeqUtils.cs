@@ -364,7 +364,7 @@ public static class EscSeqUtils
                     else
                     {
                         // It's request response that wasn't handled by a valid request terminator
-                        System.Diagnostics.Debug.Assert (escSeqRequests is { Statuses.Count: > 0 });
+                        System.Diagnostics.Debug.Assert (escSeqRequests is null or { Statuses.Count: > 0 });
 
                         InvalidRequestTerminator = ToString (cki);
                     }
