@@ -1648,7 +1648,11 @@ internal class WindowsDriver : ConsoleDriver
         _mainLoopDriver.WinChanged = ChangeWin;
 #endif
 
-        WinConsole?.SetInitialCursorVisibility ();
+        if (!RunningUnitTests)
+        {
+            WinConsole?.SetInitialCursorVisibility ();
+        }
+
         return new MainLoop (_mainLoopDriver);
     }
 
