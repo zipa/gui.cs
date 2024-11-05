@@ -1311,8 +1311,6 @@ internal class WindowsDriver : ConsoleDriver
             return string.Empty;
         }
 
-        var response = string.Empty;
-
         try
         {
             lock (ansiRequest._responseLock)
@@ -1320,8 +1318,7 @@ internal class WindowsDriver : ConsoleDriver
                 ansiRequest.ResponseFromInput += (s, e) =>
                                                  {
                                                      Debug.Assert (s == ansiRequest);
-
-                                                     ansiRequest.Response = response = e;
+                                                     Debug.Assert (e == ansiRequest.Response);
 
                                                      _waitAnsiResponse.Set ();
                                                  };
@@ -1342,7 +1339,8 @@ internal class WindowsDriver : ConsoleDriver
         {
             return string.Empty;
         }
-        finally
+
+        lock (ansiRequest._responseLock)
         {
             _mainLoopDriver._forceRead = false;
 
@@ -1351,15 +1349,18 @@ internal class WindowsDriver : ConsoleDriver
                 if (_mainLoopDriver.EscSeqRequests.Statuses.Count > 0
                     && string.IsNullOrEmpty (request.AnsiRequest.Response))
                 {
-                    // Bad request or no response at all
-                    _mainLoopDriver.EscSeqRequests.Statuses.TryDequeue (out _);
+                    lock (request!.AnsiRequest._responseLock)
+                    {
+                        // Bad request or no response at all
+                        _mainLoopDriver.EscSeqRequests.Statuses.TryDequeue (out _);
+                    }
                 }
             }
 
             _waitAnsiResponse.Reset ();
-        }
 
-        return response;
+            return ansiRequest.Response;
+        }
     }
 
     public override void WriteRaw (string ansi)

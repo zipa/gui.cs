@@ -1502,8 +1502,6 @@ internal class NetDriver : ConsoleDriver
             return string.Empty;
         }
 
-        var response = string.Empty;
-
         try
         {
             lock (ansiRequest._responseLock)
@@ -1511,8 +1509,7 @@ internal class NetDriver : ConsoleDriver
                 ansiRequest.ResponseFromInput += (s, e) =>
                                                  {
                                                      Debug.Assert (s == ansiRequest);
-
-                                                     ansiRequest.Response = response = e;
+                                                     Debug.Assert (e == ansiRequest.Response);
 
                                                      _waitAnsiResponse.Set ();
                                                  };
@@ -1538,7 +1535,8 @@ internal class NetDriver : ConsoleDriver
         {
             return string.Empty;
         }
-        finally
+
+        lock (ansiRequest._responseLock)
         {
             _mainLoopDriver._netEvents._forceRead = false;
 
@@ -1547,15 +1545,18 @@ internal class NetDriver : ConsoleDriver
                 if (_mainLoopDriver._netEvents.EscSeqRequests.Statuses.Count > 0
                     && string.IsNullOrEmpty (request.AnsiRequest.Response))
                 {
-                    // Bad request or no response at all
-                    _mainLoopDriver._netEvents.EscSeqRequests.Statuses.TryDequeue (out _);
+                    lock (request!.AnsiRequest._responseLock)
+                    {
+                        // Bad request or no response at all
+                        _mainLoopDriver._netEvents.EscSeqRequests.Statuses.TryDequeue (out _);
+                    }
                 }
             }
 
             _waitAnsiResponse.Reset ();
-        }
 
-        return response;
+            return ansiRequest.Response;
+        }
     }
 
     /// <inheritdoc />
