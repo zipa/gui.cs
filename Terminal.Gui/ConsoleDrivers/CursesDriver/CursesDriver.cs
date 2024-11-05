@@ -209,7 +209,7 @@ internal class CursesDriver : ConsoleDriver
     private readonly ManualResetEventSlim _waitAnsiResponse = new (false);
     private readonly CancellationTokenSource _ansiResponseTokenSource = new ();
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public override string WriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest)
     {
         if (_mainLoopDriver is null)
