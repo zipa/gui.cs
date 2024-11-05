@@ -143,8 +143,7 @@ internal class WindowsConsole
 
             if (err != 0)
             {
-                //throw new Win32Exception (err);
-                // It's resizing
+                throw new Win32Exception (err);
             }
         }
 
@@ -359,23 +358,23 @@ internal class WindowsConsole
     //    return sz;
     //}
 
-    //internal Size GetConsoleOutputWindow (out Point position)
-    //{
-    //    var csbi = new CONSOLE_SCREEN_BUFFER_INFOEX ();
-    //    csbi.cbSize = (uint)Marshal.SizeOf (csbi);
+    internal Size GetConsoleOutputWindow (out Point position)
+    {
+        var csbi = new CONSOLE_SCREEN_BUFFER_INFOEX ();
+        csbi.cbSize = (uint)Marshal.SizeOf (csbi);
 
-    //    if (!GetConsoleScreenBufferInfoEx (_outputHandle, ref csbi))
-    //    {
-    //        throw new Win32Exception (Marshal.GetLastWin32Error ());
-    //    }
+        if (!GetConsoleScreenBufferInfoEx (_outputHandle, ref csbi))
+        {
+            throw new Win32Exception (Marshal.GetLastWin32Error ());
+        }
 
-    //    Size sz = new (
-    //                   csbi.srWindow.Right - csbi.srWindow.Left + 1,
-    //                   csbi.srWindow.Bottom - csbi.srWindow.Top + 1);
-    //    position = new (csbi.srWindow.Left, csbi.srWindow.Top);
+        Size sz = new (
+                       csbi.srWindow.Right - csbi.srWindow.Left + 1,
+                       csbi.srWindow.Bottom - csbi.srWindow.Top + 1);
+        position = new (csbi.srWindow.Left, csbi.srWindow.Top);
 
-    //    return sz;
-    //}
+        return sz;
+    }
 
     //internal Size SetConsoleWindow (short cols, short rows)
     //{
@@ -1223,9 +1222,12 @@ internal class WindowsDriver : ConsoleDriver
 
     public override void Refresh ()
     {
-        UpdateScreen ();
-        //WinConsole?.SetInitialCursorVisibility ();
-        UpdateCursor ();
+        if (!RunningUnitTests)
+        {
+            UpdateScreen ();
+            //WinConsole?.SetInitialCursorVisibility ();
+            UpdateCursor ();
+        }
     }
 
     public override void SendKeys (char keyChar, ConsoleKey key, bool shift, bool alt, bool control)
@@ -1488,12 +1490,12 @@ internal class WindowsDriver : ConsoleDriver
 
     public override void UpdateScreen ()
     {
-        //Size windowSize = WinConsole?.GetConsoleBufferWindow (out Point _) ?? new Size (Cols, Rows);
+        Size windowSize = WinConsole?.GetConsoleOutputWindow (out Point _) ?? new Size (Cols, Rows);
 
-        //if (!windowSize.IsEmpty && (windowSize.Width != Cols || windowSize.Height != Rows))
-        //{
-        //    return;
-        //}
+        if (!windowSize.IsEmpty && (windowSize.Width != Cols || windowSize.Height != Rows))
+        {
+            return;
+        }
 
         var bufferCoords = new WindowsConsole.Coord
         {
@@ -1562,8 +1564,7 @@ internal class WindowsDriver : ConsoleDriver
 
             if (err != 0)
             {
-                //throw new Win32Exception (err);
-                // It's resizing
+                throw new Win32Exception (err);
             }
         }
 
@@ -1600,17 +1601,14 @@ internal class WindowsDriver : ConsoleDriver
         {
             try
             {
-                //if (WinConsole is { })
-                //{
-                //    // BUGBUG: The results from GetConsoleOutputWindow are incorrect when called from Init.
-                //    // Our thread in WindowsMainLoop.CheckWin will get the correct results. See #if HACK_CHECK_WINCHANGED
-                //    Size winSize = WinConsole.GetConsoleOutputWindow (out Point pos);
-                //    Cols = winSize.Width;
-                //    Rows = winSize.Height;
-                //}
-
-                Cols = Console.WindowWidth;
-                Rows = Console.WindowHeight;
+                if (WinConsole is { })
+                {
+                    // BUGBUG: The results from GetConsoleOutputWindow are incorrect when called from Init.
+                    // Our thread in WindowsMainLoop.CheckWin will get the correct results. See #if HACK_CHECK_WINCHANGED
+                    Size winSize = WinConsole.GetConsoleOutputWindow (out Point pos);
+                    Cols = winSize.Width;
+                    Rows = winSize.Height;
+                }
 
                 WindowsConsole.SmallRect.MakeEmpty (ref _damageRegion);
 
