@@ -32,7 +32,7 @@ public partial class View // Layout APIs
     ///     </para>
     ///     <para>
     ///         Setting Frame will set <see cref="X"/>, <see cref="Y"/>, <see cref="Width"/>, and <see cref="Height"/> to
-    ///         absoulte values.
+    ///         absolute values.
     ///     </para>
     ///     <para>
     ///         Changing this property will result in <see cref="NeedsLayout"/> and <see cref="NeedsDraw"/> to be set,
