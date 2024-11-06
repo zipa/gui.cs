@@ -66,14 +66,14 @@ public class SingleBackgroundWorker : Scenario
 
             var workerLogTop = new Toplevel
             {
-                Title = "Worker Log Top",
-           };
+                Title = "Worker Log Top"
+            };
 
             workerLogTop.Add (
                               new Label { X = Pos.Center (), Y = 0, Text = "Worker Log" }
                              );
 
-            _listLog = new()
+            _listLog = new ()
             {
                 X = 0,
                 Y = 2,
@@ -92,26 +92,26 @@ public class SingleBackgroundWorker : Scenario
 
         private void RunWorker ()
         {
-            _worker = new() { WorkerSupportsCancellation = true };
+            _worker = new () { WorkerSupportsCancellation = true };
 
             var cancel = new Button { Text = "Cancel Worker" };
 
             cancel.Accepting += (s, e) =>
-                             {
-                                 if (_worker == null)
-                                 {
-                                     _log.Add ($"Worker is not running at {DateTime.Now}!");
-                                     _listLog.SetNeedsDraw ();
+                                {
+                                    if (_worker == null)
+                                    {
+                                        _log.Add ($"Worker is not running at {DateTime.Now}!");
+                                        _listLog.SetNeedsDraw ();
 
-                                     return;
-                                 }
+                                        return;
+                                    }
 
-                                 _log.Add (
-                                           $"Worker {_startStaging}.{_startStaging:fff} is canceling at {DateTime.Now}!"
-                                          );
-                                 _listLog.SetNeedsDraw ();
-                                 _worker.CancelAsync ();
-                             };
+                                    _log.Add (
+                                              $"Worker {_startStaging}.{_startStaging:fff} is canceling at {DateTime.Now}!"
+                                             );
+                                    _listLog.SetNeedsDraw ();
+                                    _worker.CancelAsync ();
+                                };
 
             _startStaging = DateTime.Now;
             _log.Add ($"Worker is started at {_startStaging}.{_startStaging:fff}");
@@ -202,7 +202,7 @@ public class SingleBackgroundWorker : Scenario
 
         public StagingUIController (DateTime? start, ObservableCollection<string> list)
         {
-            _top = new()
+            _top = new ()
             {
                 Title = "_top", Width = Dim.Fill (), Height = Dim.Fill (), Modal = true
             };
