@@ -248,7 +248,7 @@ internal class UnixMainLoop : IMainLoopDriver
                                 {
                                     EscSeqRequests.Statuses.TryDequeue (out _);
 
-                                    seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, string.Empty);
+                                    seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, null);
                                 }
                             }
 

@@ -94,7 +94,7 @@ internal class NetEvents : IDisposable
                         {
                             EscSeqRequests.Statuses.TryDequeue (out _);
 
-                            seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, string.Empty);
+                            seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, null);
                         }
                     }
 

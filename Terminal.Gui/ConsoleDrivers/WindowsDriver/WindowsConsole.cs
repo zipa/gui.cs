@@ -978,6 +978,8 @@ internal class WindowsConsole
                     {
                         seqReqStatus.AnsiRequest.Response = ansiSequence.ToString ();
                         seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, seqReqStatus.AnsiRequest.Response);
+                        // Clear the terminator for not be enqueued
+                        inputRecord = default (InputRecord);
                     }
 
                     _retries = 0;
@@ -992,7 +994,9 @@ internal class WindowsConsole
                             {
                                 _mainLoop.EscSeqRequests.Statuses.TryDequeue (out _);
 
-                                seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, string.Empty);
+                                seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, null);
+                                // Clear the terminator for not be enqueued
+                                inputRecord = default (InputRecord);
                             }
                         }
 

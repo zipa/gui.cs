@@ -126,8 +126,8 @@ public class AnsiEscapeSequenceRequest
     /// </summary>
     public string? ExpectedResponseValue { get; init; }
 
-    internal void RaiseResponseFromInput (AnsiEscapeSequenceRequest ansiRequest, string response) { ResponseFromInput?.Invoke (ansiRequest, response); }
+    internal void RaiseResponseFromInput (AnsiEscapeSequenceRequest ansiRequest, string? response) { ResponseFromInput?.Invoke (ansiRequest, response); }
 
     // QUESTION: What is this for? Please provide a descriptive comment.
-    internal event EventHandler<string>? ResponseFromInput;
+    internal event EventHandler<string?>? ResponseFromInput;
 }
