@@ -51,7 +51,7 @@ public class SingleBackgroundWorker : Scenario
                                   () => Application.RequestStop (),
                                   null,
                                   null,
-                                  KeyCode.CtrlMask | KeyCode.Q
+                                  Application.QuitKey
                                  )
                          }
                         )
@@ -130,7 +130,7 @@ public class SingleBackgroundWorker : Scenario
                               {
                                   List<string> stageResult = new ();
 
-                                  for (var i = 0; i < 500; i++)
+                                  for (var i = 0; i < 200; i++)
                                   {
                                       stageResult.Add ($"Worker {i} started at {DateTime.Now}");
                                       e.Result = stageResult;
@@ -204,7 +204,7 @@ public class SingleBackgroundWorker : Scenario
         {
             _top = new()
             {
-                Title = "_top", Width = Dim.Fill (), Height = Dim.Fill ()
+                Title = "_top", Width = Dim.Fill (), Height = Dim.Fill (), Modal = true
             };
 
             _top.KeyDown += (s, e) =>
@@ -275,6 +275,8 @@ public class SingleBackgroundWorker : Scenario
                                            ]);
             _top.Add (statusBar);
 
+            Y = 1;
+            Height = Dim.Fill (1);
             Title = $"Worker started at {start}.{start:fff}";
             ColorScheme = Colors.ColorSchemes ["Base"];
 
