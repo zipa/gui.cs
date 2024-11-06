@@ -817,9 +817,19 @@ internal class WindowsDriver : ConsoleDriver
                 // If (ShiftMask is on and CapsLock is off) or (ShiftMask is off and CapsLock is on) add the ShiftMask
                 if (char.IsUpper (keyInfo.KeyChar))
                 {
+                    if (keyInfo.KeyChar <= 'Z')
+                    {
+                        return (KeyCode)keyInfo.Key | KeyCode.ShiftMask;
+                    }
+
                     // Always return the KeyChar because it may be an Á, À with Oem1, etc
-                    return (KeyCode)keyInfo.KeyChar | KeyCode.ShiftMask;
+                    return (KeyCode)keyInfo.KeyChar;
                 }
+            }
+
+            if (keyInfo.KeyChar <= 'z')
+            {
+                return (KeyCode)keyInfo.Key;
             }
 
             // Always return the KeyChar because it may be an á, à with Oem1, etc
