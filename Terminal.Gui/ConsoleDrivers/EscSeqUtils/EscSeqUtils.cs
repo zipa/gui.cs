@@ -1448,7 +1448,9 @@ public static class EscSeqUtils
             }
             else if ((previousChar != '\u001B' && c <= Key.Space) || (previousChar != '\u001B' && c == 127)
                      || (char.IsLetter (previousChar) && char.IsLower (c) && char.IsLetter (c))
-                     || (!string.IsNullOrEmpty (split) && split.Length > 2 && char.IsLetter (previousChar) && char.IsLetter (c)))
+                     || (!string.IsNullOrEmpty (split) && split.Length > 2 && char.IsLetter (previousChar) && char.IsLetterOrDigit (c))
+                     || (!string.IsNullOrEmpty (split) && split.Length > 2 && char.IsLetter (previousChar) && char.IsPunctuation (c))
+                     || (!string.IsNullOrEmpty (split) && split.Length > 2 && char.IsLetter (previousChar) && char.IsSymbol (c)))
             {
                 isEscSeq = false;
                 split = AddAndClearSplit ();
