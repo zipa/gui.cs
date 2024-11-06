@@ -144,7 +144,7 @@ public class AdvancedClipping : Scenario
             CanFocus = true, // Can't drag without this? BUGBUG
             TabStop = TabBehavior.TabStop,
             Arrangement = ViewArrangement.Movable | ViewArrangement.Resizable,
-            ShadowStyle = ShadowStyle.Transparent
+            ShadowStyle = ShadowStyle.Transparent,
         };
         //tiled.Padding.Thickness = new (1);
         //tiled.Padding.Diagnostics =  ViewDiagnosticFlags.Thickness;

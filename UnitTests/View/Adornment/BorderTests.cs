@@ -821,4 +821,59 @@ public class BorderTests (ITestOutputHelper output)
         Assert.Equal (Thickness.Empty, view.Border.Thickness);
         view.Dispose ();
     }
+
+    [Theory]
+    [InlineData (false, @"
+┌───┐
+│ ║ │
+│═┌┄│
+│ ┊ │
+└───┘")]
+    [InlineData (true, @"
+╔═╗─┐
+║ ║ │
+╚═╬┄┐
+│ ┊ ┊
+└─└┄┘")]
+    [SetupFakeDriver]
+    public void SuperViewRendersLineCanvas_AutoJoinsLines (bool superViewRendersLineCanvas, string expected)
+    {
+        View superView = new View ()
+        {
+            Id = "superView",
+            Width = 5,
+            Height = 5,
+            BorderStyle = LineStyle.Single
+        };
+
+        View view1 = new View ()
+        {
+            Id = "view1",
+            Width = 3,
+            Height = 3,
+            X = -1,
+            Y = -1,
+            BorderStyle = LineStyle.Double,
+            SuperViewRendersLineCanvas = superViewRendersLineCanvas
+        };
+
+        View view2 = new View ()
+        {
+            Id = "view2",
+            Width = 3,
+            Height = 3,
+            X = 1,
+            Y = 1,
+            BorderStyle = LineStyle.Dotted,
+            SuperViewRendersLineCanvas = superViewRendersLineCanvas
+        };
+
+        superView.Add (view1, view2);
+
+        superView.BeginInit ();
+        superView.EndInit ();
+        superView.Draw ();
+
+        TestHelpers.AssertDriverContentsAre (expected, output);
+    }
 }
