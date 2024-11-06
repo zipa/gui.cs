@@ -4,35 +4,38 @@ namespace Terminal.Gui;
 /// <summary>
 ///     Describes an ongoing ANSI request sent to the console.
 ///     Use <see cref="ResponseReceived"/> to handle the response
-///     when console answers the request.
+///     when the console answers the request.
 /// </summary>
 public class AnsiEscapeSequenceRequest
 {
     internal readonly object _responseLock = new (); // Per-instance lock
 
     /// <summary>
-    ///     Request to send e.g. see
+    ///     Gets the request string to send e.g. see
     ///     <see>
     ///         <cref>EscSeqUtils.CSI_SendDeviceAttributes.Request</cref>
     ///     </see>
     /// </summary>
     public required string Request { get; init; }
 
+    // QUESTION: Could the type of this propperty be AnsiEscapeSequenceResponse? This would remove the
+    // QUESTION: removal of the redundant Rresponse, Terminator, and ExpectedRespnseValue properties from this class?
+    // QUESTION: Does string.Empty indicate no response recevied? If not, perhaps make this property nullable?
     /// <summary>
-    ///     Response received from the request.
+    ///     Gets the response received from the request.
     /// </summary>
     public string Response { get; internal set; } = string.Empty;
 
     /// <summary>
-    ///     Invoked when the console responds with an ANSI response code that matches the
+    ///     Raised when the console responds with an ANSI response code that matches the
     ///     <see cref="Terminator"/>
     /// </summary>
     public event EventHandler<AnsiEscapeSequenceResponse>? ResponseReceived;
 
     /// <summary>
     ///     <para>
-    ///         The terminator that uniquely identifies the type of response as responded
-    ///         by the console. e.g. for
+    ///         Gets the terminator that uniquely identifies the response received from
+    ///         the console. e.g. for
     ///         <see>
     ///             <cref>EscSeqUtils.CSI_SendDeviceAttributes.Request</cref>
     ///         </see>
@@ -50,15 +53,15 @@ public class AnsiEscapeSequenceRequest
     public required string Terminator { get; init; }
 
     /// <summary>
-    ///     Execute an ANSI escape sequence escape which may return a response or error.
+    ///     Attempt an ANSI escape sequence request which may return a response or error.
     /// </summary>
     /// <param name="ansiRequest">The ANSI escape sequence to request.</param>
     /// <param name="result">
-    ///     When this method returns <see langword="true"/>, an object containing the response with an empty
-    ///     error.
+    ///     When this method returns <see langword="true"/>, the response. <see cref="AnsiEscapeSequenceResponse.Error"/> will
+    ///     be <see cref="string.Empty"/>.
     /// </param>
-    /// <returns>A <see cref="AnsiEscapeSequenceResponse"/> with the response, error, terminator and value.</returns>
-    public static bool TryExecuteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest, out AnsiEscapeSequenceResponse result)
+    /// <returns>A <see cref="AnsiEscapeSequenceResponse"/> with the response, error, terminator, and value.</returns>
+    public static bool TryRequest (AnsiEscapeSequenceRequest ansiRequest, out AnsiEscapeSequenceResponse result)
     {
         var error = new StringBuilder ();
         var values = new string? [] { null };
@@ -72,7 +75,7 @@ public class AnsiEscapeSequenceRequest
 
             if (!string.IsNullOrEmpty (ansiRequest.Response) && !ansiRequest.Response.StartsWith (EscSeqUtils.KeyEsc))
             {
-                throw new InvalidOperationException ("Invalid escape character!");
+                throw new InvalidOperationException ($"Invalid Response: {ansiRequest.Response}");
             }
 
             if (string.IsNullOrEmpty (ansiRequest.Terminator))
@@ -102,7 +105,7 @@ public class AnsiEscapeSequenceRequest
         AnsiEscapeSequenceResponse ansiResponse = new ()
         {
             Response = ansiRequest.Response, Error = error.ToString (),
-            Terminator = string.IsNullOrEmpty (ansiRequest.Response) ? "" : ansiRequest.Response [^1].ToString (), Value = values [0]
+            Terminator = string.IsNullOrEmpty (ansiRequest.Response) ? "" : ansiRequest.Response [^1].ToString (), ExpectedResponseValue = values [0]
         };
 
         // Invoke the event if it's subscribed
@@ -114,16 +117,17 @@ public class AnsiEscapeSequenceRequest
     }
 
     /// <summary>
-    ///     The value expected in the response e.g.
+    ///     The value expected in the response after the CSI e.g.
     ///     <see>
     ///         <cref>EscSeqUtils.CSI_ReportTerminalSizeInChars.Value</cref>
     ///     </see>
-    ///     which will have a 't' as terminator but also other different request may return the same terminator with a
-    ///     different value.
+    ///     should result in a response of the form <c>ESC [ 8 ; height ; width t</c>. In this case, <see cref="ExpectedResponseValue"/>
+    ///     will be <c>"8"</c>.
     /// </summary>
-    public string? Value { get; init; }
+    public string? ExpectedResponseValue { get; init; }
 
     internal void RaiseResponseFromInput (AnsiEscapeSequenceRequest ansiRequest, string response) { ResponseFromInput?.Invoke (ansiRequest, response); }
 
+    // QUESTION: What is this for? Please provide a descriptive comment.
     internal event EventHandler<string>? ResponseFromInput;
 }

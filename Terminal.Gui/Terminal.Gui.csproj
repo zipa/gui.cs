@@ -164,8 +164,7 @@
 	  <Message Text="Found packages: @(NuGetPackages)" Importance="high" />
 
 	  <!-- Copy files only if found -->
-	  <Copy SourceFiles="@(NuGetPackages)" DestinationFolder="$(LocalPackagesPath)" SkipUnchangedFiles="false"
-	        Condition="@(NuGetPackages) != ''" />
+	  <Copy SourceFiles="@(NuGetPackages)" DestinationFolder="$(LocalPackagesPath)" SkipUnchangedFiles="false" Condition="@(NuGetPackages) != ''" />
 
 	  <!-- Log success -->
 	  <Message Text="Copy completed successfully." Importance="high" />

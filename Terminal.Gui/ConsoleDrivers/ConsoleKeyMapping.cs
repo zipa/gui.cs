@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 
 namespace Terminal.Gui.ConsoleDrivers;
 
+// QUESTION: This class combines Windows specific code with cross-platform code. Should this be split into two classes?
 /// <summary>Helper class to handle the scan code and virtual key from a <see cref="ConsoleKey"/>.</summary>
 public static class ConsoleKeyMapping
 {

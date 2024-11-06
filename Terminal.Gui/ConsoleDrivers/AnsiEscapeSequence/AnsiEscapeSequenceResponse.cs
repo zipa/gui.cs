@@ -2,20 +2,23 @@
 namespace Terminal.Gui;
 
 /// <summary>
-///     Describes a finished ANSI received from the console.
+///     Describes a response received from the console as a result of a request being sent via <see cref="AnsiEscapeSequenceRequest"/>.
 /// </summary>
 public class AnsiEscapeSequenceResponse
 {
+    // QUESTION: Should this be nullable to indicate there was no error, or is string.Empty sufficient?
     /// <summary>
-    ///     Error received from e.g. see
+    ///     Gets the error string received from e.g. see
     ///     <see>
     ///         <cref>EscSeqUtils.CSI_SendDeviceAttributes.Request</cref>
     ///     </see>
+    ///     .
     /// </summary>
     public required string Error { get; init; }
 
+    // QUESTION: Does string.Empty indicate no response recevied? If not, perhaps make this property nullable?
     /// <summary>
-    ///     Response received from e.g. see
+    ///     Gets the Response string received from e.g. see
     ///     <see>
     ///         <cref>EscSeqUtils.CSI_SendDeviceAttributes.Request</cref>
     ///     </see>
@@ -23,10 +26,11 @@ public class AnsiEscapeSequenceResponse
     /// </summary>
     public required string Response { get; init; }
 
+    // QUESTION: Does string.Empty indicate no terminator expected? If not, perhaps make this property nullable?
     /// <summary>
     ///     <para>
-    ///         The terminator that uniquely identifies the type of response as responded
-    ///         by the console. e.g. for
+    ///         Gets the terminator that uniquely identifies the response received from
+    ///         the console. e.g. for
     ///         <see>
     ///             <cref>EscSeqUtils.CSI_SendDeviceAttributes.Request</cref>
     ///         </see>
@@ -34,20 +38,23 @@ public class AnsiEscapeSequenceResponse
     ///         <see>
     ///             <cref>EscSeqUtils.CSI_SendDeviceAttributes.Terminator</cref>
     ///         </see>
+    ///         .
     ///     </para>
     ///     <para>
-    ///         The received terminator must match to the terminator sent by the request.
+    ///         After sending a request, the first response with matching terminator will be matched
+    ///         to the oldest outstanding request.
     ///     </para>
     /// </summary>
     public required string Terminator { get; init; }
 
     /// <summary>
-    ///     The value expected in the response e.g.
+    ///     The value expected in the response after the CSI e.g.
     ///     <see>
     ///         <cref>EscSeqUtils.CSI_ReportTerminalSizeInChars.Value</cref>
     ///     </see>
-    ///     which will have a 't' as terminator but also other different request may return the same terminator with a
-    ///     different value.
+    ///     should result in a response of the form <c>ESC [ 8 ; height ; width t</c>. In this case, <see cref="ExpectedResponseValue"/>
+    ///     will be <c>"8"</c>.
     /// </summary>
-    public string? Value { get; init; }
+
+    public string? ExpectedResponseValue { get; init; }
 }

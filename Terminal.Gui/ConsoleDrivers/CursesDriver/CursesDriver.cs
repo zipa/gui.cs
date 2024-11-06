@@ -1,4 +1,5 @@
-﻿//
+﻿// TODO: #nullable enable
+//
 // Driver.cs: Curses-based Driver
 //
 
@@ -9,14 +10,36 @@ using Unix.Terminal;
 
 namespace Terminal.Gui;
 
-/// <summary>This is the Curses driver for the gui.cs/Terminal framework.</summary>
+/// <summary>A Linux/Mac driver based on the Curses libary.</summary>
 internal class CursesDriver : ConsoleDriver
 {
-    public Curses.Window _window;
-    private CursorVisibility? _currentCursorVisibility;
-    private CursorVisibility? _initialCursorVisibility;
-    private MouseFlags _lastMouseFlags;
-    private UnixMainLoop _mainLoopDriver;
+    public override string GetVersionInfo () { return $"{Curses.curses_version ()}"; }
+
+    public override void Refresh ()
+    {
+        UpdateScreen ();
+        UpdateCursor ();
+    }
+
+    public override void Suspend ()
+    {
+        StopReportingMouseMoves ();
+
+        if (!RunningUnitTests)
+        {
+            Platform.Suspend ();
+
+            if (Force16Colors)
+            {
+                Curses.Window.Standard.redrawwin ();
+                Curses.refresh ();
+            }
+        }
+
+        StartReportingMouseMoves ();
+    }
+
+    #region Screen and Contents
 
     public override int Cols
     {
@@ -36,59 +59,6 @@ internal class CursesDriver : ConsoleDriver
             Curses.Lines = value;
             ClearContents ();
         }
-    }
-
-    public override bool SupportsTrueColor => true;
-
-    /// <inheritdoc/>
-    public override bool EnsureCursorVisibility ()
-    {
-        if (!(Col >= 0 && Row >= 0 && Col < Cols && Row < Rows))
-        {
-            GetCursorVisibility (out CursorVisibility cursorVisibility);
-            _currentCursorVisibility = cursorVisibility;
-            SetCursorVisibility (CursorVisibility.Invisible);
-
-            return false;
-        }
-
-        SetCursorVisibility (_currentCursorVisibility ?? CursorVisibility.Default);
-
-        return _currentCursorVisibility == CursorVisibility.Default;
-    }
-
-    /// <inheritdoc/>
-    public override bool GetCursorVisibility (out CursorVisibility visibility)
-    {
-        visibility = CursorVisibility.Invisible;
-
-        if (!_currentCursorVisibility.HasValue)
-        {
-            return false;
-        }
-
-        visibility = _currentCursorVisibility.Value;
-
-        return true;
-    }
-
-    public override string GetVersionInfo () { return $"{Curses.curses_version ()}"; }
-
-    public static bool Is_WSL_Platform ()
-    {
-        // xclip does not work on WSL, so we need to use the Windows clipboard vis Powershell
-        //if (new CursesClipboard ().IsSupported) {
-        //	// If xclip is installed on Linux under WSL, this will return true.
-        //	return false;
-        //}
-        (int exitCode, string result) = ClipboardProcessRunner.Bash ("uname -a", waitForOutput: true);
-
-        if (exitCode == 0 && result.Contains ("microsoft") && result.Contains ("WSL"))
-        {
-            return true;
-        }
-
-        return false;
     }
 
     public override bool IsRuneSupported (Rune rune)
@@ -115,202 +85,6 @@ internal class CursesDriver : ConsoleDriver
             // Not a valid location (outside screen or clip region)
             // Move within the clip region, then AddRune will actually move to Col, Row
             Curses.move (Clip.Y, Clip.X);
-        }
-    }
-
-    public override void Refresh ()
-    {
-        UpdateScreen ();
-        UpdateCursor ();
-    }
-
-    public override void SendKeys (char keyChar, ConsoleKey consoleKey, bool shift, bool alt, bool control)
-    {
-        KeyCode key;
-
-        if (consoleKey == ConsoleKey.Packet)
-        {
-            var mod = new ConsoleModifiers ();
-
-            if (shift)
-            {
-                mod |= ConsoleModifiers.Shift;
-            }
-
-            if (alt)
-            {
-                mod |= ConsoleModifiers.Alt;
-            }
-
-            if (control)
-            {
-                mod |= ConsoleModifiers.Control;
-            }
-
-            var cKeyInfo = new ConsoleKeyInfo (keyChar, consoleKey, shift, alt, control);
-            cKeyInfo = ConsoleKeyMapping.DecodeVKPacketToKConsoleKeyInfo (cKeyInfo);
-            key = ConsoleKeyMapping.MapConsoleKeyInfoToKeyCode (cKeyInfo);
-        }
-        else
-        {
-            key = (KeyCode)keyChar;
-        }
-
-        OnKeyDown (new Key (key));
-        OnKeyUp (new Key (key));
-
-        //OnKeyPressed (new KeyEventArgsEventArgs (key));
-    }
-
-    /// <inheritdoc/>
-    public override bool SetCursorVisibility (CursorVisibility visibility)
-    {
-        if (_initialCursorVisibility.HasValue == false)
-        {
-            return false;
-        }
-
-        if (!RunningUnitTests)
-        {
-            Curses.curs_set (((int)visibility >> 16) & 0x000000FF);
-        }
-
-        if (visibility != CursorVisibility.Invisible)
-        {
-            Console.Out.Write (
-                               EscSeqUtils.CSI_SetCursorStyle (
-                                                               (EscSeqUtils.DECSCUSR_Style)(((int)visibility >> 24)
-                                                                                            & 0xFF)
-                                                              )
-                              );
-        }
-
-        _currentCursorVisibility = visibility;
-
-        return true;
-    }
-
-    public void StartReportingMouseMoves ()
-    {
-        if (!RunningUnitTests)
-        {
-            Console.Out.Write (EscSeqUtils.CSI_EnableMouseEvents);
-        }
-    }
-
-    public void StopReportingMouseMoves ()
-    {
-        if (!RunningUnitTests)
-        {
-            Console.Out.Write (EscSeqUtils.CSI_DisableMouseEvents);
-        }
-    }
-
-    private readonly ManualResetEventSlim _waitAnsiResponse = new (false);
-    private readonly CancellationTokenSource _ansiResponseTokenSource = new ();
-
-    /// <inheritdoc/>
-    public override string WriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest)
-    {
-        if (_mainLoopDriver is null)
-        {
-            return string.Empty;
-        }
-
-        try
-        {
-            lock (ansiRequest._responseLock)
-            {
-                ansiRequest.ResponseFromInput += (s, e) =>
-                                                 {
-                                                     Debug.Assert (s == ansiRequest);
-                                                     Debug.Assert (e == ansiRequest.Response);
-
-                                                     _waitAnsiResponse.Set ();
-                                                 };
-
-                _mainLoopDriver.EscSeqRequests.Add (ansiRequest, this);
-
-                _mainLoopDriver._forceRead = true;
-            }
-
-            if (!_ansiResponseTokenSource.IsCancellationRequested)
-            {
-                _mainLoopDriver._waitForInput.Set ();
-
-                _waitAnsiResponse.Wait (_ansiResponseTokenSource.Token);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            return string.Empty;
-        }
-
-        lock (ansiRequest._responseLock)
-        {
-            _mainLoopDriver._forceRead = false;
-
-            if (_mainLoopDriver.EscSeqRequests.Statuses.TryPeek (out EscSeqReqStatus request))
-            {
-                if (_mainLoopDriver.EscSeqRequests.Statuses.Count > 0
-                    && string.IsNullOrEmpty (request.AnsiRequest.Response))
-                {
-                    lock (request!.AnsiRequest._responseLock)
-                    {
-                        // Bad request or no response at all
-                        _mainLoopDriver.EscSeqRequests.Statuses.TryDequeue (out _);
-                    }
-                }
-            }
-
-            _waitAnsiResponse.Reset ();
-
-            return ansiRequest.Response;
-        }
-    }
-
-    /// <inheritdoc />
-    public override void WriteRaw (string ansi)
-    {
-        _mainLoopDriver.WriteRaw (ansi);
-    }
-
-    public override void Suspend ()
-    {
-        StopReportingMouseMoves ();
-
-        if (!RunningUnitTests)
-        {
-            Platform.Suspend ();
-
-            if (Force16Colors)
-            {
-                Curses.Window.Standard.redrawwin ();
-                Curses.refresh ();
-            }
-        }
-
-        StartReportingMouseMoves ();
-    }
-
-    public override void UpdateCursor ()
-    {
-        EnsureCursorVisibility ();
-
-        if (!RunningUnitTests && Col >= 0 && Col < Cols && Row >= 0 && Row < Rows)
-        {
-            if (Force16Colors)
-            {
-                Curses.move (Row, Col);
-
-                Curses.raw ();
-                Curses.noecho ();
-                Curses.refresh ();
-            }
-            else
-            {
-                _mainLoopDriver.WriteRaw (EscSeqUtils.CSI_SetCursorPosition (Row + 1, Col + 1));
-            }
         }
     }
 
@@ -507,10 +281,10 @@ internal class CursesDriver : ConsoleDriver
             }
 
             // SIXELS
-            foreach (var s in Application.Sixel)
+            foreach (SixelToRender s in Application.Sixel)
             {
                 SetCursorPosition (s.ScreenPosition.X, s.ScreenPosition.Y);
-                Console.Write(s.SixelData);
+                Console.Write (s.SixelData);
             }
 
             SetCursorPosition (0, 0);
@@ -528,257 +302,11 @@ internal class CursesDriver : ConsoleDriver
         }
     }
 
-    private bool SetCursorPosition (int col, int row)
-    {
-        // + 1 is needed because non-Windows is based on 1 instead of 0 and
-        // Console.CursorTop/CursorLeft isn't reliable.
-        Console.Out.Write (EscSeqUtils.CSI_SetCursorPosition (row + 1, col + 1));
-
-        return true;
-    }
-
-    internal override void End ()
-    {
-        _ansiResponseTokenSource?.Cancel ();
-        _ansiResponseTokenSource?.Dispose ();
-        _waitAnsiResponse?.Dispose ();
-
-        StopReportingMouseMoves ();
-        SetCursorVisibility (CursorVisibility.Default);
-
-        if (RunningUnitTests)
-        {
-            return;
-        }
-
-        // throws away any typeahead that has been typed by
-        // the user and has not yet been read by the program.
-        Curses.flushinp ();
-
-        Curses.endwin ();
-    }
-
-    internal override MainLoop Init ()
-    {
-        _mainLoopDriver = new UnixMainLoop (this);
-
-        if (!RunningUnitTests)
-        {
-            _window = Curses.initscr ();
-            Curses.set_escdelay (10);
-
-            // Ensures that all procedures are performed at some previous closing.
-            Curses.doupdate ();
-
-            // 
-            // We are setting Invisible as default, so we could ignore XTerm DECSUSR setting
-            //
-            switch (Curses.curs_set (0))
-            {
-                case 0:
-                    _currentCursorVisibility = _initialCursorVisibility = CursorVisibility.Invisible;
-
-                    break;
-
-                case 1:
-                    _currentCursorVisibility = _initialCursorVisibility = CursorVisibility.Underline;
-                    Curses.curs_set (1);
-
-                    break;
-
-                case 2:
-                    _currentCursorVisibility = _initialCursorVisibility = CursorVisibility.Box;
-                    Curses.curs_set (2);
-
-                    break;
-
-                default:
-                    _currentCursorVisibility = _initialCursorVisibility = null;
-
-                    break;
-            }
-
-            if (!Curses.HasColors)
-            {
-                throw new InvalidOperationException ("V2 - This should never happen. File an Issue if it does.");
-            }
-
-            Curses.raw ();
-            Curses.noecho ();
-
-            Curses.Window.Standard.keypad (true);
-
-            Curses.StartColor ();
-            Curses.UseDefaultColors ();
-
-            if (!RunningUnitTests)
-            {
-                Curses.timeout (0);
-            }
-        }
-
-        CurrentAttribute = new Attribute (ColorName16.White, ColorName16.Black);
-
-        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
-        {
-            Clipboard = new FakeDriver.FakeClipboard ();
-        }
-        else
-        {
-            if (RuntimeInformation.IsOSPlatform (OSPlatform.OSX))
-            {
-                Clipboard = new MacOSXClipboard ();
-            }
-            else
-            {
-                if (Is_WSL_Platform ())
-                {
-                    Clipboard = new WSLClipboard ();
-                }
-                else
-                {
-                    Clipboard = new CursesClipboard ();
-                }
-            }
-        }
-
-        ClearContents ();
-        StartReportingMouseMoves ();
-
-        if (!RunningUnitTests)
-        {
-            Curses.CheckWinChange ();
-            ClearContents ();
-
-            if (Force16Colors)
-            {
-                Curses.refresh ();
-            }
-        }
-
-        return new MainLoop (_mainLoopDriver);
-    }
-
-    internal void ProcessInput (UnixMainLoop.PollData inputEvent)
-    {
-        switch (inputEvent.EventType)
-        {
-            case UnixMainLoop.EventType.Key:
-                ConsoleKeyInfo consoleKeyInfo = inputEvent.KeyEvent;
-
-                KeyCode map = ConsoleKeyMapping.MapConsoleKeyInfoToKeyCode (consoleKeyInfo);
-
-                if (map == KeyCode.Null)
-                {
-                    break;
-                }
-
-                OnKeyDown (new Key (map));
-                OnKeyUp (new Key (map));
-
-                break;
-            case UnixMainLoop.EventType.Mouse:
-                MouseEventArgs me = new MouseEventArgs { Position = inputEvent.MouseEvent.Position, Flags = inputEvent.MouseEvent.MouseFlags };
-                OnMouseEvent (me);
-
-                break;
-            case UnixMainLoop.EventType.WindowSize:
-                Size size = new (inputEvent.WindowSizeEvent.Size.Width, inputEvent.WindowSizeEvent.Size.Height);
-                ProcessWinChange (inputEvent.WindowSizeEvent.Size);
-
-                break;
-            default:
-                throw new ArgumentOutOfRangeException ();
-        }
-    }
-
-    private void ProcessWinChange (Size size)
-    {
-        if (!RunningUnitTests && Curses.ChangeWindowSize (size.Height, size.Width))
-        {
-            ClearContents ();
-            OnSizeChanged (new SizeChangedEventArgs (new (Cols, Rows)));
-        }
-    }
-
-    private static KeyCode MapCursesKey (int cursesKey)
-    {
-        switch (cursesKey)
-        {
-            case Curses.KeyF1: return KeyCode.F1;
-            case Curses.KeyF2: return KeyCode.F2;
-            case Curses.KeyF3: return KeyCode.F3;
-            case Curses.KeyF4: return KeyCode.F4;
-            case Curses.KeyF5: return KeyCode.F5;
-            case Curses.KeyF6: return KeyCode.F6;
-            case Curses.KeyF7: return KeyCode.F7;
-            case Curses.KeyF8: return KeyCode.F8;
-            case Curses.KeyF9: return KeyCode.F9;
-            case Curses.KeyF10: return KeyCode.F10;
-            case Curses.KeyF11: return KeyCode.F11;
-            case Curses.KeyF12: return KeyCode.F12;
-            case Curses.KeyUp: return KeyCode.CursorUp;
-            case Curses.KeyDown: return KeyCode.CursorDown;
-            case Curses.KeyLeft: return KeyCode.CursorLeft;
-            case Curses.KeyRight: return KeyCode.CursorRight;
-            case Curses.KeyHome: return KeyCode.Home;
-            case Curses.KeyEnd: return KeyCode.End;
-            case Curses.KeyNPage: return KeyCode.PageDown;
-            case Curses.KeyPPage: return KeyCode.PageUp;
-            case Curses.KeyDeleteChar: return KeyCode.Delete;
-            case Curses.KeyInsertChar: return KeyCode.Insert;
-            case Curses.KeyTab: return KeyCode.Tab;
-            case Curses.KeyBackTab: return KeyCode.Tab | KeyCode.ShiftMask;
-            case Curses.KeyBackspace: return KeyCode.Backspace;
-            case Curses.ShiftKeyUp: return KeyCode.CursorUp | KeyCode.ShiftMask;
-            case Curses.ShiftKeyDown: return KeyCode.CursorDown | KeyCode.ShiftMask;
-            case Curses.ShiftKeyLeft: return KeyCode.CursorLeft | KeyCode.ShiftMask;
-            case Curses.ShiftKeyRight: return KeyCode.CursorRight | KeyCode.ShiftMask;
-            case Curses.ShiftKeyHome: return KeyCode.Home | KeyCode.ShiftMask;
-            case Curses.ShiftKeyEnd: return KeyCode.End | KeyCode.ShiftMask;
-            case Curses.ShiftKeyNPage: return KeyCode.PageDown | KeyCode.ShiftMask;
-            case Curses.ShiftKeyPPage: return KeyCode.PageUp | KeyCode.ShiftMask;
-            case Curses.AltKeyUp: return KeyCode.CursorUp | KeyCode.AltMask;
-            case Curses.AltKeyDown: return KeyCode.CursorDown | KeyCode.AltMask;
-            case Curses.AltKeyLeft: return KeyCode.CursorLeft | KeyCode.AltMask;
-            case Curses.AltKeyRight: return KeyCode.CursorRight | KeyCode.AltMask;
-            case Curses.AltKeyHome: return KeyCode.Home | KeyCode.AltMask;
-            case Curses.AltKeyEnd: return KeyCode.End | KeyCode.AltMask;
-            case Curses.AltKeyNPage: return KeyCode.PageDown | KeyCode.AltMask;
-            case Curses.AltKeyPPage: return KeyCode.PageUp | KeyCode.AltMask;
-            case Curses.CtrlKeyUp: return KeyCode.CursorUp | KeyCode.CtrlMask;
-            case Curses.CtrlKeyDown: return KeyCode.CursorDown | KeyCode.CtrlMask;
-            case Curses.CtrlKeyLeft: return KeyCode.CursorLeft | KeyCode.CtrlMask;
-            case Curses.CtrlKeyRight: return KeyCode.CursorRight | KeyCode.CtrlMask;
-            case Curses.CtrlKeyHome: return KeyCode.Home | KeyCode.CtrlMask;
-            case Curses.CtrlKeyEnd: return KeyCode.End | KeyCode.CtrlMask;
-            case Curses.CtrlKeyNPage: return KeyCode.PageDown | KeyCode.CtrlMask;
-            case Curses.CtrlKeyPPage: return KeyCode.PageUp | KeyCode.CtrlMask;
-            case Curses.ShiftCtrlKeyUp: return KeyCode.CursorUp | KeyCode.ShiftMask | KeyCode.CtrlMask;
-            case Curses.ShiftCtrlKeyDown: return KeyCode.CursorDown | KeyCode.ShiftMask | KeyCode.CtrlMask;
-            case Curses.ShiftCtrlKeyLeft: return KeyCode.CursorLeft | KeyCode.ShiftMask | KeyCode.CtrlMask;
-            case Curses.ShiftCtrlKeyRight: return KeyCode.CursorRight | KeyCode.ShiftMask | KeyCode.CtrlMask;
-            case Curses.ShiftCtrlKeyHome: return KeyCode.Home | KeyCode.ShiftMask | KeyCode.CtrlMask;
-            case Curses.ShiftCtrlKeyEnd: return KeyCode.End | KeyCode.ShiftMask | KeyCode.CtrlMask;
-            case Curses.ShiftCtrlKeyNPage: return KeyCode.PageDown | KeyCode.ShiftMask | KeyCode.CtrlMask;
-            case Curses.ShiftCtrlKeyPPage: return KeyCode.PageUp | KeyCode.ShiftMask | KeyCode.CtrlMask;
-            case Curses.ShiftAltKeyUp: return KeyCode.CursorUp | KeyCode.ShiftMask | KeyCode.AltMask;
-            case Curses.ShiftAltKeyDown: return KeyCode.CursorDown | KeyCode.ShiftMask | KeyCode.AltMask;
-            case Curses.ShiftAltKeyLeft: return KeyCode.CursorLeft | KeyCode.ShiftMask | KeyCode.AltMask;
-            case Curses.ShiftAltKeyRight: return KeyCode.CursorRight | KeyCode.ShiftMask | KeyCode.AltMask;
-            case Curses.ShiftAltKeyNPage: return KeyCode.PageDown | KeyCode.ShiftMask | KeyCode.AltMask;
-            case Curses.ShiftAltKeyPPage: return KeyCode.PageUp | KeyCode.ShiftMask | KeyCode.AltMask;
-            case Curses.ShiftAltKeyHome: return KeyCode.Home | KeyCode.ShiftMask | KeyCode.AltMask;
-            case Curses.ShiftAltKeyEnd: return KeyCode.End | KeyCode.ShiftMask | KeyCode.AltMask;
-            case Curses.AltCtrlKeyNPage: return KeyCode.PageDown | KeyCode.AltMask | KeyCode.CtrlMask;
-            case Curses.AltCtrlKeyPPage: return KeyCode.PageUp | KeyCode.AltMask | KeyCode.CtrlMask;
-            case Curses.AltCtrlKeyHome: return KeyCode.Home | KeyCode.AltMask | KeyCode.CtrlMask;
-            case Curses.AltCtrlKeyEnd: return KeyCode.End | KeyCode.AltMask | KeyCode.CtrlMask;
-            default: return KeyCode.Null;
-        }
-    }
+    #endregion Screen and Contents
 
     #region Color Handling
+
+    public override bool SupportsTrueColor => true;
 
     /// <summary>Creates an Attribute from the provided curses-based foreground and background color numbers</summary>
     /// <param name="foreground">Contains the curses color number for the foreground (color, plus any attributes)</param>
@@ -792,11 +320,11 @@ internal class CursesDriver : ConsoleDriver
         // TODO: for TrueColor - Use InitExtendedPair
         Curses.InitColorPair (v, foreground, background);
 
-        return new Attribute (
-                              Curses.ColorPair (v),
-                              CursesColorNumberToColorName16 (foreground),
-                              CursesColorNumberToColorName16 (background)
-                             );
+        return new (
+                    Curses.ColorPair (v),
+                    CursesColorNumberToColorName16 (foreground),
+                    CursesColorNumberToColorName16 (background)
+                   );
     }
 
     /// <inheritdoc/>
@@ -815,11 +343,11 @@ internal class CursesDriver : ConsoleDriver
                              );
         }
 
-        return new Attribute (
-                              0,
-                              foreground,
-                              background
-                             );
+        return new (
+                    0,
+                    foreground,
+                    background
+                   );
     }
 
     private static short ColorNameToCursesColorNumber (ColorName16 color)
@@ -905,8 +433,501 @@ internal class CursesDriver : ConsoleDriver
     }
 
     #endregion
+
+    #region Cursor Support
+
+    private CursorVisibility? _currentCursorVisibility;
+    private CursorVisibility? _initialCursorVisibility;
+
+    /// <inheritdoc/>
+    public override bool EnsureCursorVisibility ()
+    {
+        if (!(Col >= 0 && Row >= 0 && Col < Cols && Row < Rows))
+        {
+            GetCursorVisibility (out CursorVisibility cursorVisibility);
+            _currentCursorVisibility = cursorVisibility;
+            SetCursorVisibility (CursorVisibility.Invisible);
+
+            return false;
+        }
+
+        SetCursorVisibility (_currentCursorVisibility ?? CursorVisibility.Default);
+
+        return _currentCursorVisibility == CursorVisibility.Default;
+    }
+
+    /// <inheritdoc/>
+    public override bool GetCursorVisibility (out CursorVisibility visibility)
+    {
+        visibility = CursorVisibility.Invisible;
+
+        if (!_currentCursorVisibility.HasValue)
+        {
+            return false;
+        }
+
+        visibility = _currentCursorVisibility.Value;
+
+        return true;
+    }
+
+    /// <inheritdoc/>
+    public override bool SetCursorVisibility (CursorVisibility visibility)
+    {
+        if (_initialCursorVisibility.HasValue == false)
+        {
+            return false;
+        }
+
+        if (!RunningUnitTests)
+        {
+            Curses.curs_set (((int)visibility >> 16) & 0x000000FF);
+        }
+
+        if (visibility != CursorVisibility.Invisible)
+        {
+            Console.Out.Write (
+                               EscSeqUtils.CSI_SetCursorStyle (
+                                                               (EscSeqUtils.DECSCUSR_Style)(((int)visibility >> 24)
+                                                                                            & 0xFF)
+                                                              )
+                              );
+        }
+
+        _currentCursorVisibility = visibility;
+
+        return true;
+    }
+
+    public override void UpdateCursor ()
+    {
+        EnsureCursorVisibility ();
+
+        if (!RunningUnitTests && Col >= 0 && Col < Cols && Row >= 0 && Row < Rows)
+        {
+            if (Force16Colors)
+            {
+                Curses.move (Row, Col);
+
+                Curses.raw ();
+                Curses.noecho ();
+                Curses.refresh ();
+            }
+            else
+            {
+                _mainLoopDriver.WriteRaw (EscSeqUtils.CSI_SetCursorPosition (Row + 1, Col + 1));
+            }
+        }
+    }
+
+    #endregion Cursor Support
+
+    #region Keyboard Support
+
+    public override void SendKeys (char keyChar, ConsoleKey consoleKey, bool shift, bool alt, bool control)
+    {
+        KeyCode key;
+
+        if (consoleKey == ConsoleKey.Packet)
+        {
+            var mod = new ConsoleModifiers ();
+
+            if (shift)
+            {
+                mod |= ConsoleModifiers.Shift;
+            }
+
+            if (alt)
+            {
+                mod |= ConsoleModifiers.Alt;
+            }
+
+            if (control)
+            {
+                mod |= ConsoleModifiers.Control;
+            }
+
+            var cKeyInfo = new ConsoleKeyInfo (keyChar, consoleKey, shift, alt, control);
+            cKeyInfo = ConsoleKeyMapping.DecodeVKPacketToKConsoleKeyInfo (cKeyInfo);
+            key = ConsoleKeyMapping.MapConsoleKeyInfoToKeyCode (cKeyInfo);
+        }
+        else
+        {
+            key = (KeyCode)keyChar;
+        }
+
+        OnKeyDown (new (key));
+        OnKeyUp (new (key));
+
+        //OnKeyPressed (new KeyEventArgsEventArgs (key));
+    }
+
+    // TODO: Unused- Remove
+    private static KeyCode MapCursesKey (int cursesKey)
+    {
+        switch (cursesKey)
+        {
+            case Curses.KeyF1: return KeyCode.F1;
+            case Curses.KeyF2: return KeyCode.F2;
+            case Curses.KeyF3: return KeyCode.F3;
+            case Curses.KeyF4: return KeyCode.F4;
+            case Curses.KeyF5: return KeyCode.F5;
+            case Curses.KeyF6: return KeyCode.F6;
+            case Curses.KeyF7: return KeyCode.F7;
+            case Curses.KeyF8: return KeyCode.F8;
+            case Curses.KeyF9: return KeyCode.F9;
+            case Curses.KeyF10: return KeyCode.F10;
+            case Curses.KeyF11: return KeyCode.F11;
+            case Curses.KeyF12: return KeyCode.F12;
+            case Curses.KeyUp: return KeyCode.CursorUp;
+            case Curses.KeyDown: return KeyCode.CursorDown;
+            case Curses.KeyLeft: return KeyCode.CursorLeft;
+            case Curses.KeyRight: return KeyCode.CursorRight;
+            case Curses.KeyHome: return KeyCode.Home;
+            case Curses.KeyEnd: return KeyCode.End;
+            case Curses.KeyNPage: return KeyCode.PageDown;
+            case Curses.KeyPPage: return KeyCode.PageUp;
+            case Curses.KeyDeleteChar: return KeyCode.Delete;
+            case Curses.KeyInsertChar: return KeyCode.Insert;
+            case Curses.KeyTab: return KeyCode.Tab;
+            case Curses.KeyBackTab: return KeyCode.Tab | KeyCode.ShiftMask;
+            case Curses.KeyBackspace: return KeyCode.Backspace;
+            case Curses.ShiftKeyUp: return KeyCode.CursorUp | KeyCode.ShiftMask;
+            case Curses.ShiftKeyDown: return KeyCode.CursorDown | KeyCode.ShiftMask;
+            case Curses.ShiftKeyLeft: return KeyCode.CursorLeft | KeyCode.ShiftMask;
+            case Curses.ShiftKeyRight: return KeyCode.CursorRight | KeyCode.ShiftMask;
+            case Curses.ShiftKeyHome: return KeyCode.Home | KeyCode.ShiftMask;
+            case Curses.ShiftKeyEnd: return KeyCode.End | KeyCode.ShiftMask;
+            case Curses.ShiftKeyNPage: return KeyCode.PageDown | KeyCode.ShiftMask;
+            case Curses.ShiftKeyPPage: return KeyCode.PageUp | KeyCode.ShiftMask;
+            case Curses.AltKeyUp: return KeyCode.CursorUp | KeyCode.AltMask;
+            case Curses.AltKeyDown: return KeyCode.CursorDown | KeyCode.AltMask;
+            case Curses.AltKeyLeft: return KeyCode.CursorLeft | KeyCode.AltMask;
+            case Curses.AltKeyRight: return KeyCode.CursorRight | KeyCode.AltMask;
+            case Curses.AltKeyHome: return KeyCode.Home | KeyCode.AltMask;
+            case Curses.AltKeyEnd: return KeyCode.End | KeyCode.AltMask;
+            case Curses.AltKeyNPage: return KeyCode.PageDown | KeyCode.AltMask;
+            case Curses.AltKeyPPage: return KeyCode.PageUp | KeyCode.AltMask;
+            case Curses.CtrlKeyUp: return KeyCode.CursorUp | KeyCode.CtrlMask;
+            case Curses.CtrlKeyDown: return KeyCode.CursorDown | KeyCode.CtrlMask;
+            case Curses.CtrlKeyLeft: return KeyCode.CursorLeft | KeyCode.CtrlMask;
+            case Curses.CtrlKeyRight: return KeyCode.CursorRight | KeyCode.CtrlMask;
+            case Curses.CtrlKeyHome: return KeyCode.Home | KeyCode.CtrlMask;
+            case Curses.CtrlKeyEnd: return KeyCode.End | KeyCode.CtrlMask;
+            case Curses.CtrlKeyNPage: return KeyCode.PageDown | KeyCode.CtrlMask;
+            case Curses.CtrlKeyPPage: return KeyCode.PageUp | KeyCode.CtrlMask;
+            case Curses.ShiftCtrlKeyUp: return KeyCode.CursorUp | KeyCode.ShiftMask | KeyCode.CtrlMask;
+            case Curses.ShiftCtrlKeyDown: return KeyCode.CursorDown | KeyCode.ShiftMask | KeyCode.CtrlMask;
+            case Curses.ShiftCtrlKeyLeft: return KeyCode.CursorLeft | KeyCode.ShiftMask | KeyCode.CtrlMask;
+            case Curses.ShiftCtrlKeyRight: return KeyCode.CursorRight | KeyCode.ShiftMask | KeyCode.CtrlMask;
+            case Curses.ShiftCtrlKeyHome: return KeyCode.Home | KeyCode.ShiftMask | KeyCode.CtrlMask;
+            case Curses.ShiftCtrlKeyEnd: return KeyCode.End | KeyCode.ShiftMask | KeyCode.CtrlMask;
+            case Curses.ShiftCtrlKeyNPage: return KeyCode.PageDown | KeyCode.ShiftMask | KeyCode.CtrlMask;
+            case Curses.ShiftCtrlKeyPPage: return KeyCode.PageUp | KeyCode.ShiftMask | KeyCode.CtrlMask;
+            case Curses.ShiftAltKeyUp: return KeyCode.CursorUp | KeyCode.ShiftMask | KeyCode.AltMask;
+            case Curses.ShiftAltKeyDown: return KeyCode.CursorDown | KeyCode.ShiftMask | KeyCode.AltMask;
+            case Curses.ShiftAltKeyLeft: return KeyCode.CursorLeft | KeyCode.ShiftMask | KeyCode.AltMask;
+            case Curses.ShiftAltKeyRight: return KeyCode.CursorRight | KeyCode.ShiftMask | KeyCode.AltMask;
+            case Curses.ShiftAltKeyNPage: return KeyCode.PageDown | KeyCode.ShiftMask | KeyCode.AltMask;
+            case Curses.ShiftAltKeyPPage: return KeyCode.PageUp | KeyCode.ShiftMask | KeyCode.AltMask;
+            case Curses.ShiftAltKeyHome: return KeyCode.Home | KeyCode.ShiftMask | KeyCode.AltMask;
+            case Curses.ShiftAltKeyEnd: return KeyCode.End | KeyCode.ShiftMask | KeyCode.AltMask;
+            case Curses.AltCtrlKeyNPage: return KeyCode.PageDown | KeyCode.AltMask | KeyCode.CtrlMask;
+            case Curses.AltCtrlKeyPPage: return KeyCode.PageUp | KeyCode.AltMask | KeyCode.CtrlMask;
+            case Curses.AltCtrlKeyHome: return KeyCode.Home | KeyCode.AltMask | KeyCode.CtrlMask;
+            case Curses.AltCtrlKeyEnd: return KeyCode.End | KeyCode.AltMask | KeyCode.CtrlMask;
+            default: return KeyCode.Null;
+        }
+    }
+
+    #endregion Keyboard Support
+
+    #region Mouse Support
+    public void StartReportingMouseMoves ()
+    {
+        if (!RunningUnitTests)
+        {
+            Console.Out.Write (EscSeqUtils.CSI_EnableMouseEvents);
+        }
+    }
+
+    public void StopReportingMouseMoves ()
+    {
+        if (!RunningUnitTests)
+        {
+            Console.Out.Write (EscSeqUtils.CSI_DisableMouseEvents);
+        }
+    }
+
+    #endregion Mouse Support
+
+    private bool SetCursorPosition (int col, int row)
+    {
+        // + 1 is needed because non-Windows is based on 1 instead of 0 and
+        // Console.CursorTop/CursorLeft isn't reliable.
+        Console.Out.Write (EscSeqUtils.CSI_SetCursorPosition (row + 1, col + 1));
+
+        return true;
+    }
+
+    #region Init/End/MainLoop
+
+    public Curses.Window _window;
+    private UnixMainLoop _mainLoopDriver;
+
+    internal override MainLoop Init ()
+    {
+        _mainLoopDriver = new (this);
+
+        if (!RunningUnitTests)
+        {
+            _window = Curses.initscr ();
+            Curses.set_escdelay (10);
+
+            // Ensures that all procedures are performed at some previous closing.
+            Curses.doupdate ();
+
+            // 
+            // We are setting Invisible as default, so we could ignore XTerm DECSUSR setting
+            //
+            switch (Curses.curs_set (0))
+            {
+                case 0:
+                    _currentCursorVisibility = _initialCursorVisibility = CursorVisibility.Invisible;
+
+                    break;
+
+                case 1:
+                    _currentCursorVisibility = _initialCursorVisibility = CursorVisibility.Underline;
+                    Curses.curs_set (1);
+
+                    break;
+
+                case 2:
+                    _currentCursorVisibility = _initialCursorVisibility = CursorVisibility.Box;
+                    Curses.curs_set (2);
+
+                    break;
+
+                default:
+                    _currentCursorVisibility = _initialCursorVisibility = null;
+
+                    break;
+            }
+
+            if (!Curses.HasColors)
+            {
+                throw new InvalidOperationException ("V2 - This should never happen. File an Issue if it does.");
+            }
+
+            Curses.raw ();
+            Curses.noecho ();
+
+            Curses.Window.Standard.keypad (true);
+
+            Curses.StartColor ();
+            Curses.UseDefaultColors ();
+
+            if (!RunningUnitTests)
+            {
+                Curses.timeout (0);
+            }
+        }
+
+        CurrentAttribute = new (ColorName16.White, ColorName16.Black);
+
+        if (Environment.OSVersion.Platform == PlatformID.Win32NT)
+        {
+            Clipboard = new FakeDriver.FakeClipboard ();
+        }
+        else
+        {
+            if (RuntimeInformation.IsOSPlatform (OSPlatform.OSX))
+            {
+                Clipboard = new MacOSXClipboard ();
+            }
+            else
+            {
+                if (Is_WSL_Platform ())
+                {
+                    Clipboard = new WSLClipboard ();
+                }
+                else
+                {
+                    Clipboard = new CursesClipboard ();
+                }
+            }
+        }
+
+        ClearContents ();
+        StartReportingMouseMoves ();
+
+        if (!RunningUnitTests)
+        {
+            Curses.CheckWinChange ();
+            ClearContents ();
+
+            if (Force16Colors)
+            {
+                Curses.refresh ();
+            }
+        }
+
+        return new (_mainLoopDriver);
+    }
+
+    internal void ProcessInput (UnixMainLoop.PollData inputEvent)
+    {
+        switch (inputEvent.EventType)
+        {
+            case UnixMainLoop.EventType.Key:
+                ConsoleKeyInfo consoleKeyInfo = inputEvent.KeyEvent;
+
+                KeyCode map = ConsoleKeyMapping.MapConsoleKeyInfoToKeyCode (consoleKeyInfo);
+
+                if (map == KeyCode.Null)
+                {
+                    break;
+                }
+
+                OnKeyDown (new (map));
+                OnKeyUp (new (map));
+
+                break;
+            case UnixMainLoop.EventType.Mouse:
+                var me = new MouseEventArgs { Position = inputEvent.MouseEvent.Position, Flags = inputEvent.MouseEvent.MouseFlags };
+                OnMouseEvent (me);
+
+                break;
+            case UnixMainLoop.EventType.WindowSize:
+                Size size = new (inputEvent.WindowSizeEvent.Size.Width, inputEvent.WindowSizeEvent.Size.Height);
+                ProcessWinChange (inputEvent.WindowSizeEvent.Size);
+
+                break;
+            default:
+                throw new ArgumentOutOfRangeException ();
+        }
+    }
+    private void ProcessWinChange (Size size)
+    {
+        if (!RunningUnitTests && Curses.ChangeWindowSize (size.Height, size.Width))
+        {
+            ClearContents ();
+            OnSizeChanged (new (new (Cols, Rows)));
+        }
+    }
+
+    internal override void End ()
+    {
+        _ansiResponseTokenSource?.Cancel ();
+        _ansiResponseTokenSource?.Dispose ();
+        _waitAnsiResponse?.Dispose ();
+
+        StopReportingMouseMoves ();
+        SetCursorVisibility (CursorVisibility.Default);
+
+        if (RunningUnitTests)
+        {
+            return;
+        }
+
+        // throws away any typeahead that has been typed by
+        // the user and has not yet been read by the program.
+        Curses.flushinp ();
+
+        Curses.endwin ();
+    }
+
+    #endregion Init/End/MainLoop
+
+    public static bool Is_WSL_Platform ()
+    {
+        // xclip does not work on WSL, so we need to use the Windows clipboard vis Powershell
+        //if (new CursesClipboard ().IsSupported) {
+        //	// If xclip is installed on Linux under WSL, this will return true.
+        //	return false;
+        //}
+        (int exitCode, string result) = ClipboardProcessRunner.Bash ("uname -a", waitForOutput: true);
+
+        if (exitCode == 0 && result.Contains ("microsoft") && result.Contains ("WSL"))
+        {
+            return true;
+        }
+
+        return false;
+    }
+    #region Low-Level Unix Stuff
+
+
+    private readonly ManualResetEventSlim _waitAnsiResponse = new (false);
+    private readonly CancellationTokenSource _ansiResponseTokenSource = new ();
+
+    /// <inheritdoc/>
+    public override string WriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest)
+    {
+        if (_mainLoopDriver is null)
+        {
+            return string.Empty;
+        }
+
+        try
+        {
+            lock (ansiRequest._responseLock)
+            {
+                ansiRequest.ResponseFromInput += (s, e) =>
+                {
+                    Debug.Assert (s == ansiRequest);
+                    Debug.Assert (e == ansiRequest.Response);
+
+                    _waitAnsiResponse.Set ();
+                };
+
+                _mainLoopDriver.EscSeqRequests.Add (ansiRequest, this);
+
+                _mainLoopDriver._forceRead = true;
+            }
+
+            if (!_ansiResponseTokenSource.IsCancellationRequested)
+            {
+                _mainLoopDriver._waitForInput.Set ();
+
+                _waitAnsiResponse.Wait (_ansiResponseTokenSource.Token);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return string.Empty;
+        }
+
+        lock (ansiRequest._responseLock)
+        {
+            _mainLoopDriver._forceRead = false;
+
+            if (_mainLoopDriver.EscSeqRequests.Statuses.TryPeek (out EscSeqReqStatus request))
+            {
+                if (_mainLoopDriver.EscSeqRequests.Statuses.Count > 0
+                    && string.IsNullOrEmpty (request.AnsiRequest.Response))
+                {
+                    lock (request!.AnsiRequest._responseLock)
+                    {
+                        // Bad request or no response at all
+                        _mainLoopDriver.EscSeqRequests.Statuses.TryDequeue (out _);
+                    }
+                }
+            }
+
+            _waitAnsiResponse.Reset ();
+
+            return ansiRequest.Response;
+        }
+    }
+
+    /// <inheritdoc/>
+    public override void WriteRaw (string ansi) { _mainLoopDriver.WriteRaw (ansi); }
+
 }
 
+// TODO: One type per file - move to another file
 internal static class Platform
 {
     private static int _suspendSignal;
@@ -986,3 +1007,5 @@ internal static class Platform
     [DllImport ("libc")]
     private static extern int uname (nint buf);
 }
+
+#endregion Low-Level Unix Stuff
