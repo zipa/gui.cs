@@ -3,6 +3,13 @@ using Terminal.Gui.ConsoleDrivers;
 
 namespace Terminal.Gui;
 
+// QUESTION: Should this class be refactored into separate classes for:
+// QUESTION:   CSI definitions
+// QUESTION:   Primitives like DecodeEsqReq
+// QUESTION:   Screen/Color/Cursor handling
+// QUESTION:   Mouse handling
+// QUESTION:   Keyboard handling
+
 /// <summary>
 ///     Provides a platform-independent API for managing ANSI escape sequences.
 /// </summary>
@@ -14,6 +21,7 @@ namespace Terminal.Gui;
 /// </remarks>
 public static class EscSeqUtils
 {
+    // TODO: One type per file - Move this enum to a separate file.
     /// <summary>
     ///     Options for ANSI ESC "[xJ" - Clears part of the screen.
     /// </summary>
@@ -40,6 +48,9 @@ public static class EscSeqUtils
         EntireScreenAndScrollbackBuffer = 3
     }
 
+    // QUESTION: I wonder if EscSeqUtils.CSI_... should be more strongly typed such that this (and Terminator could be
+    // QUESTION: public required CSIRequests Request { get; init; }
+    // QUESTION: public required CSITerminators Terminator { get; init; }
     /// <summary>
     ///     Escape key code (ASCII 27/0x1B).
     /// </summary>
@@ -418,6 +429,7 @@ public static class EscSeqUtils
                    _ => string.Empty
                };
     }
+
 
     /// <summary>
     ///     Gets the <see cref="ConsoleKey"/> depending on terminating and value.
@@ -1721,7 +1733,7 @@ public static class EscSeqUtils
     ///     https://terminalguide.namepad.de/seq/csi_st-18/
     ///     The terminator indicating a reply to <see cref="CSI_ReportTerminalSizeInChars"/> : ESC [ 8 ; height ; width t
     /// </summary>
-    public static readonly AnsiEscapeSequenceRequest CSI_ReportTerminalSizeInChars = new () { Request = CSI + "18t", Terminator = "t", Value = "8" };
+    public static readonly AnsiEscapeSequenceRequest CSI_ReportTerminalSizeInChars = new () { Request = CSI + "18t", Terminator = "t", ExpectedResponseValue = "8" };
 
     #endregion
 }

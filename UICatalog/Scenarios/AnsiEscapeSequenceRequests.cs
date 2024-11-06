@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
@@ -12,14 +11,13 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
 {
     private GraphView _graphView;
 
-    private DateTime start = DateTime.Now;
     private ScatterSeries _sentSeries;
     private ScatterSeries _answeredSeries;
 
-    private List<DateTime> sends = new ();
+    private readonly List<DateTime> _sends = new ();
 
-    private object lockAnswers = new object ();
-    private Dictionary<DateTime, string> answers = new ();
+    private readonly object _lockAnswers = new ();
+    private readonly Dictionary<DateTime, string> _answers = new ();
     private Label _lblSummary;
 
     public override void Main ()
@@ -27,18 +25,18 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         // Init
         Application.Init ();
 
-        TabView tv = new TabView
+        var tv = new TabView
         {
             Width = Dim.Fill (),
             Height = Dim.Fill ()
         };
 
-        Tab single = new Tab ();
-        single.DisplayText = "Single";
+        var single = new Tab ();
+        single.DisplayText = "_Single";
         single.View = BuildSingleTab ();
 
         Tab bulk = new ();
-        bulk.DisplayText = "Multi";
+        bulk.DisplayText = "_Multi";
         bulk.View = BuildBulkTab ();
 
         tv.AddTab (single, true);
@@ -47,7 +45,7 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         // Setup - Create a top-level application window and configure it.
         Window appWindow = new ()
         {
-            Title = GetQuitKeyAndName (),
+            Title = GetQuitKeyAndName ()
         };
 
         appWindow.Add (tv);
@@ -61,18 +59,20 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         // Shutdown - Calling Application.Shutdown is required.
         Application.Shutdown ();
     }
+
     private View BuildSingleTab ()
     {
-        View w = new View ()
+        var w = new View
         {
-            Width = Dim.Fill(),
+            Width = Dim.Fill (),
             Height = Dim.Fill (),
             CanFocus = true
         };
 
         w.Padding.Thickness = new (1);
 
-        var scrRequests = new List<string>
+        // TODO: This hackery is why I think the EscSeqUtils class should be refactored and the CSI's made type safe.
+        List<string> scrRequests = new ()
         {
             "CSI_SendDeviceAttributes",
             "CSI_ReportTerminalSizeInChars",
@@ -80,18 +80,19 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
             "CSI_SendDeviceAttributes2"
         };
 
-        var cbRequests = new ComboBox () { Width = 40, Height = 5, ReadOnly = true, Source = new ListWrapper<string> (new (scrRequests)) };
+        var cbRequests = new ComboBox { Width = 40, Height = 5, ReadOnly = true, Source = new ListWrapper<string> (new (scrRequests)) };
         w.Add (cbRequests);
 
-        var label = new Label { Y = Pos.Bottom (cbRequests) + 1, Text = "Request:" };
+        // TODO: Use Pos.Align and Dim.Func so these hardcoded widths aren't needed.
+        var label = new Label { Y = Pos.Bottom (cbRequests) + 1, Text = "_Request:" };
         var tfRequest = new TextField { X = Pos.Left (label), Y = Pos.Bottom (label), Width = 20 };
         w.Add (label, tfRequest);
 
-        label = new Label { X = Pos.Right (tfRequest) + 1, Y = Pos.Top (tfRequest) - 1, Text = "Value:" };
+        label = new () { X = Pos.Right (tfRequest) + 1, Y = Pos.Top (tfRequest) - 1, Text = "E_xpectedResponseValue:" };
         var tfValue = new TextField { X = Pos.Left (label), Y = Pos.Bottom (label), Width = 6 };
         w.Add (label, tfValue);
 
-        label = new Label { X = Pos.Right (tfValue) + 1, Y = Pos.Top (tfValue) - 1, Text = "Terminator:" };
+        label = new () { X = Pos.Right (tfValue) + 1, Y = Pos.Top (tfValue) - 1, Text = "_Terminator:" };
         var tfTerminator = new TextField { X = Pos.Left (label), Y = Pos.Bottom (label), Width = 4 };
         w.Add (label, tfTerminator);
 
@@ -102,101 +103,111 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
                                                   return;
                                               }
 
-                                              var selAnsiEscapeSequenceRequestName = scrRequests [cbRequests.SelectedItem];
+                                              string selAnsiEscapeSequenceRequestName = scrRequests [cbRequests.SelectedItem];
                                               AnsiEscapeSequenceRequest selAnsiEscapeSequenceRequest = null;
+
                                               switch (selAnsiEscapeSequenceRequestName)
                                               {
                                                   case "CSI_SendDeviceAttributes":
                                                       selAnsiEscapeSequenceRequest = EscSeqUtils.CSI_SendDeviceAttributes;
+
                                                       break;
                                                   case "CSI_ReportTerminalSizeInChars":
                                                       selAnsiEscapeSequenceRequest = EscSeqUtils.CSI_ReportTerminalSizeInChars;
+
                                                       break;
                                                   case "CSI_RequestCursorPositionReport":
                                                       selAnsiEscapeSequenceRequest = EscSeqUtils.CSI_RequestCursorPositionReport;
+
                                                       break;
                                                   case "CSI_SendDeviceAttributes2":
                                                       selAnsiEscapeSequenceRequest = EscSeqUtils.CSI_SendDeviceAttributes2;
+
                                                       break;
                                               }
 
                                               tfRequest.Text = selAnsiEscapeSequenceRequest is { } ? selAnsiEscapeSequenceRequest.Request : "";
-                                              tfValue.Text = selAnsiEscapeSequenceRequest is { } ? selAnsiEscapeSequenceRequest.Value ?? "" : "";
+
+                                              tfValue.Text = selAnsiEscapeSequenceRequest is { }
+                                                                 ? selAnsiEscapeSequenceRequest.ExpectedResponseValue ?? ""
+                                                                 : "";
                                               tfTerminator.Text = selAnsiEscapeSequenceRequest is { } ? selAnsiEscapeSequenceRequest.Terminator : "";
                                           };
+
         // Forces raise cbRequests.SelectedItemChanged to update TextFields
         cbRequests.SelectedItem = 0;
 
-        label = new Label { Y = Pos.Bottom (tfRequest) + 2, Text = "Response:" };
+        label = new () { Y = Pos.Bottom (tfRequest) + 2, Text = "_Response:" };
         var tvResponse = new TextView { X = Pos.Left (label), Y = Pos.Bottom (label), Width = 40, Height = 4, ReadOnly = true };
         w.Add (label, tvResponse);
 
-        label = new Label { X = Pos.Right (tvResponse) + 1, Y = Pos.Top (tvResponse) - 1, Text = "Error:" };
+        label = new () { X = Pos.Right (tvResponse) + 1, Y = Pos.Top (tvResponse) - 1, Text = "_Error:" };
         var tvError = new TextView { X = Pos.Left (label), Y = Pos.Bottom (label), Width = 40, Height = 4, ReadOnly = true };
         w.Add (label, tvError);
 
-        label = new Label { X = Pos.Right (tvError) + 1, Y = Pos.Top (tvError) - 1, Text = "Value:" };
+        label = new () { X = Pos.Right (tvError) + 1, Y = Pos.Top (tvError) - 1, Text = "E_xpectedResponseValue:" };
         var tvValue = new TextView { X = Pos.Left (label), Y = Pos.Bottom (label), Width = 6, Height = 4, ReadOnly = true };
         w.Add (label, tvValue);
 
-        label = new Label { X = Pos.Right (tvValue) + 1, Y = Pos.Top (tvValue) - 1, Text = "Terminator:" };
+        label = new () { X = Pos.Right (tvValue) + 1, Y = Pos.Top (tvValue) - 1, Text = "_Terminator:" };
         var tvTerminator = new TextView { X = Pos.Left (label), Y = Pos.Bottom (label), Width = 4, Height = 4, ReadOnly = true };
         w.Add (label, tvTerminator);
 
-        var btnResponse = new Button { X = Pos.Center (), Y = Pos.Bottom (tvResponse) + 2, Text = "Send Request", IsDefault = true };
+        var btnResponse = new Button { X = Pos.Center (), Y = Pos.Bottom (tvResponse) + 2, Text = "_Send Request", IsDefault = true };
 
         var lblSuccess = new Label { X = Pos.Center (), Y = Pos.Bottom (btnResponse) + 1 };
         w.Add (lblSuccess);
 
         btnResponse.Accepting += (s, e) =>
-                              {
-                                  var ansiEscapeSequenceRequest = new AnsiEscapeSequenceRequest
-                                  {
-                                      Request = tfRequest.Text,
-                                      Terminator = tfTerminator.Text,
-                                      Value = string.IsNullOrEmpty (tfValue.Text) ? null : tfValue.Text
-                                  };
+                                 {
+                                     var ansiEscapeSequenceRequest = new AnsiEscapeSequenceRequest
+                                     {
+                                         Request = tfRequest.Text,
+                                         Terminator = tfTerminator.Text,
+                                         ExpectedResponseValue = string.IsNullOrEmpty (tfValue.Text) ? null : tfValue.Text
+                                     };
 
-                                  var success = AnsiEscapeSequenceRequest.TryExecuteAnsiRequest (
-                                       ansiEscapeSequenceRequest,
-                                       out AnsiEscapeSequenceResponse ansiEscapeSequenceResponse
-                                      );
+                                     bool success = AnsiEscapeSequenceRequest.TryRequest (
+                                                                                          ansiEscapeSequenceRequest,
+                                                                                          out AnsiEscapeSequenceResponse ansiEscapeSequenceResponse
+                                                                                         );
 
-                                  tvResponse.Text = ansiEscapeSequenceResponse.Response;
-                                  tvError.Text = ansiEscapeSequenceResponse.Error;
-                                  tvValue.Text = ansiEscapeSequenceResponse.Value ?? "";
-                                  tvTerminator.Text = ansiEscapeSequenceResponse.Terminator;
+                                     tvResponse.Text = ansiEscapeSequenceResponse.Response;
+                                     tvError.Text = ansiEscapeSequenceResponse.Error;
+                                     tvValue.Text = ansiEscapeSequenceResponse.ExpectedResponseValue ?? "";
+                                     tvTerminator.Text = ansiEscapeSequenceResponse.Terminator;
 
-                                  if (success)
-                                  {
-                                      lblSuccess.ColorScheme = Colors.ColorSchemes ["Base"];
-                                      lblSuccess.Text = "Successful";
-                                  }
-                                  else
-                                  {
-                                      lblSuccess.ColorScheme = Colors.ColorSchemes ["Error"];
-                                      lblSuccess.Text = "Error";
-                                  }
-                              };
+                                     if (success)
+                                     {
+                                         lblSuccess.ColorScheme = Colors.ColorSchemes ["Base"];
+                                         lblSuccess.Text = "Success";
+                                     }
+                                     else
+                                     {
+                                         lblSuccess.ColorScheme = Colors.ColorSchemes ["Error"];
+                                         lblSuccess.Text = "Error";
+                                     }
+                                 };
         w.Add (btnResponse);
 
-        w.Add (new Label { Y = Pos.Bottom (lblSuccess) + 2, Text = "You can send other requests by editing the TextFields." });
+        w.Add (new Label { Y = Pos.Bottom (lblSuccess) + 2, Text = "Send other requests by editing the TextFields." });
 
         return w;
     }
 
     private View BuildBulkTab ()
     {
-        View w = new View ()
+        var w = new View
         {
             Width = Dim.Fill (),
             Height = Dim.Fill (),
             CanFocus = true
         };
 
-        var lbl = new Label ()
+        var lbl = new Label
         {
-            Text = "This scenario tests Ansi request/response processing. Use the TextView to ensure regular user interaction continues as normal during sends. Responses are in red, queued messages are in green.",
+            Text =
+                "_This scenario tests Ansi request/response processing. Use the TextView to ensure regular user interaction continues as normal during sends. Responses are in red, queued messages are in green.",
             Height = 2,
             Width = Dim.Fill ()
         };
@@ -205,50 +216,49 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
                                 TimeSpan.FromMilliseconds (1000),
                                 () =>
                                 {
-                                    lock (lockAnswers)
+                                    lock (_lockAnswers)
                                     {
                                         UpdateGraph ();
 
                                         UpdateResponses ();
                                     }
 
-
-
                                     return true;
                                 });
 
-        var tv = new TextView ()
+        var tv = new TextView
         {
             Y = Pos.Bottom (lbl),
             Width = Dim.Percent (50),
             Height = Dim.Fill ()
         };
 
-
-        var lblDar = new Label ()
+        var lblDar = new Label
         {
             Y = Pos.Bottom (lbl),
             X = Pos.Right (tv) + 1,
-            Text = "DAR per second",
+            Text = "_DAR per second: "
         };
-        var cbDar = new NumericUpDown ()
+
+        var cbDar = new NumericUpDown
         {
             X = Pos.Right (lblDar),
             Y = Pos.Bottom (lbl),
-            Value = 0,
+            Value = 0
         };
 
         cbDar.ValueChanging += (s, e) =>
-        {
-            if (e.NewValue < 0 || e.NewValue > 20)
-            {
-                e.Cancel = true;
-            }
-        };
+                               {
+                                   if (e.NewValue < 0 || e.NewValue > 20)
+                                   {
+                                       e.Cancel = true;
+                                   }
+                               };
         w.Add (cbDar);
 
         int lastSendTime = Environment.TickCount;
-        object lockObj = new object ();
+        var lockObj = new object ();
+
         Application.AddTimeout (
                                 TimeSpan.FromMilliseconds (50),
                                 () =>
@@ -272,8 +282,7 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
                                     return true;
                                 });
 
-
-        _graphView = new GraphView ()
+        _graphView = new ()
         {
             Y = Pos.Bottom (cbDar),
             X = Pos.Right (tv),
@@ -281,7 +290,7 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
             Height = Dim.Fill (1)
         };
 
-        _lblSummary = new Label ()
+        _lblSummary = new ()
         {
             Y = Pos.Bottom (_graphView),
             X = Pos.Right (tv),
@@ -299,6 +308,7 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
 
         return w;
     }
+
     private void UpdateResponses ()
     {
         _lblSummary.Text = GetSummary ();
@@ -307,32 +317,31 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
 
     private string GetSummary ()
     {
-        if (answers.Count == 0)
+        if (_answers.Count == 0)
         {
             return "No requests sent yet";
         }
 
-        var last = answers.Last ().Value;
+        string last = _answers.Last ().Value;
 
-        var unique = answers.Values.Distinct ().Count ();
-        var total = answers.Count;
+        int unique = _answers.Values.Distinct ().Count ();
+        int total = _answers.Count;
 
         return $"Last:{last} U:{unique} T:{total}";
     }
 
     private void SetupGraph ()
     {
+        _graphView.Series.Add (_sentSeries = new ());
+        _graphView.Series.Add (_answeredSeries = new ());
 
-        _graphView.Series.Add (_sentSeries = new ScatterSeries ());
-        _graphView.Series.Add (_answeredSeries = new ScatterSeries ());
-
-        _sentSeries.Fill = new GraphCellToRender (new Rune ('.'), new Attribute (ColorName16.BrightGreen, ColorName16.Black));
-        _answeredSeries.Fill = new GraphCellToRender (new Rune ('.'), new Attribute (ColorName16.BrightRed, ColorName16.Black));
+        _sentSeries.Fill = new (new ('.'), new (ColorName16.BrightGreen, ColorName16.Black));
+        _answeredSeries.Fill = new (new ('.'), new (ColorName16.BrightRed, ColorName16.Black));
 
         // Todo:
         // _graphView.Annotations.Add (_sentSeries new PathAnnotation {});
 
-        _graphView.CellSize = new PointF (1, 1);
+        _graphView.CellSize = new (1, 1);
         _graphView.MarginBottom = 2;
         _graphView.AxisX.Increment = 1;
         _graphView.AxisX.Text = "Seconds";
@@ -341,40 +350,37 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
 
     private void UpdateGraph ()
     {
-        _sentSeries.Points = sends
+        _sentSeries.Points = _sends
                              .GroupBy (ToSeconds)
                              .Select (g => new PointF (g.Key, g.Count ()))
                              .ToList ();
 
-        _answeredSeries.Points = answers.Keys
+        _answeredSeries.Points = _answers.Keys
                                         .GroupBy (ToSeconds)
                                         .Select (g => new PointF (g.Key, g.Count ()))
                                         .ToList ();
+
         //  _graphView.ScrollOffset  = new PointF(,0);
         if (_sentSeries.Points.Count > 0 || _answeredSeries.Points.Count > 0)
         {
             _graphView.SetNeedsDisplay ();
         }
-
     }
 
-    private int ToSeconds (DateTime t)
-    {
-        return (int)(DateTime.Now - t).TotalSeconds;
-    }
+    private int ToSeconds (DateTime t) { return (int)(DateTime.Now - t).TotalSeconds; }
 
     private void SendDar ()
     {
-        sends.Add (DateTime.Now);
-        var result = Application.Driver.WriteAnsiRequest (EscSeqUtils.CSI_SendDeviceAttributes);
+        _sends.Add (DateTime.Now);
+        string result = Application.Driver.WriteAnsiRequest (EscSeqUtils.CSI_SendDeviceAttributes);
         HandleResponse (result);
     }
 
     private void HandleResponse (string response)
     {
-        lock (lockAnswers)
+        lock (_lockAnswers)
         {
-            answers.Add (DateTime.Now, response);
+            _answers.Add (DateTime.Now, response);
         }
     }
 }
