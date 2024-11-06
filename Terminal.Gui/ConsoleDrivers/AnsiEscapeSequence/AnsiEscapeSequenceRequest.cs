@@ -24,7 +24,7 @@ public class AnsiEscapeSequenceRequest
     /// <summary>
     ///     Gets the response received from the request.
     /// </summary>
-    public string Response { get; internal set; } = string.Empty;
+    public string? Response { get; internal set; }
 
     /// <summary>
     ///     Raised when the console responds with an ANSI response code that matches the
