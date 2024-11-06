@@ -35,7 +35,7 @@ public class TabViewExample : Scenario
                          new (
                               "_Clear SelectedTab",
                               "",
-                              () => _tabView.SelectedTabIndex = null
+                              () => _tabView.SelectedTab = null
                              ),
                          new ("_Quit", "", Quit)
                      }
@@ -129,7 +129,7 @@ public class TabViewExample : Scenario
                             );
         }
 
-        _tabView.SelectedTabIndex = 0;
+        _tabView.SelectedTab = _tabView.Tabs.First ();
 
         appWindow.Add (_tabView);
 

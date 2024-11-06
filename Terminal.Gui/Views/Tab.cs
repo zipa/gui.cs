@@ -1,6 +1,4 @@
 ﻿#nullable enable
-using System.Net.Security;
-
 namespace Terminal.Gui;
 
 /// <summary>A single tab in a <see cref="TabView"/>.</summary>
@@ -13,9 +11,7 @@ public class Tab : View
     {
         BorderStyle = LineStyle.Rounded;
         CanFocus = true;
-        TabStop = TabBehavior.TabStop;
-        Width = Dim.Auto (DimAutoStyle.Text);
-        SuperViewRendersLineCanvas = true;
+        TabStop = TabBehavior.NoStop;
     }
 
     /// <summary>The text to display in a <see cref="TabView"/>.</summary>
@@ -30,7 +26,7 @@ public class Tab : View
         }
     }
 
-    /// <summary>The View that will be made visible in the <see cref="TabView"/> content area when the tab is selected.</summary>
+    /// <summary>The control to display when the tab is selected.</summary>
     /// <value></value>
     public View? View { get; set; }
 }

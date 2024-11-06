@@ -98,7 +98,7 @@ public class Notepad : Scenario
         Application.Shutdown ();
     }
 
-    public void Save () { Save (_focusedTabView, _focusedTabView.Tabs.ToArray () [_focusedTabView.SelectedTabIndex!.Value]); }
+    public void Save () { Save (_focusedTabView, _focusedTabView.SelectedTab); }
 
     public void Save (TabView tabViewToSave, Tab tabToSave)
     {
@@ -120,7 +120,7 @@ public class Notepad : Scenario
 
     public bool SaveAs ()
     {
-        var tab = _focusedTabView.Tabs.ToArray () [_focusedTabView.SelectedTabIndex!.Value] as OpenedFile;
+        var tab = _focusedTabView.SelectedTab as OpenedFile;
 
         if (tab == null)
         {
@@ -153,7 +153,7 @@ public class Notepad : Scenario
         return true;
     }
 
-    private void Close () { Close (_focusedTabView, _focusedTabView.Tabs.ToArray()[_focusedTabView.SelectedTabIndex!.Value]); }
+    private void Close () { Close (_focusedTabView, _focusedTabView.SelectedTab); }
 
     private void Close (TabView tv, Tab tabToClose)
     {
@@ -239,7 +239,7 @@ public class Notepad : Scenario
     {
         var tv = new TabView { X = 0, Y = 0, Width = Dim.Fill (), Height = Dim.Fill () };
 
-       // tv.TabClicked += TabView_TabClicked;
+        tv.TabClicked += TabView_TabClicked;
         tv.SelectedTabChanged += TabView_SelectedTabChanged;
         tv.HasFocusChanging += (s, e) => _focusedTabView = tv;
 
@@ -320,10 +320,9 @@ public class Notepad : Scenario
 
     private void TabView_SelectedTabChanged (object sender, TabChangedEventArgs e)
     {
-        Tab tab = _focusedTabView.Tabs.ToArray () [e.NewTabIndex!.Value];
-        LenShortcut.Title = $"Len:{tab?.View?.Text?.Length ?? 0}";
+        LenShortcut.Title = $"Len:{e.NewTab?.View?.Text?.Length ?? 0}";
 
-        tab?.View?.SetFocus ();
+        e.NewTab?.View?.SetFocus ();
     }
 
     private void TabView_TabClicked (object sender, TabMouseEventArgs e)

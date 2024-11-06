@@ -1,35 +1,41 @@
 #nullable enable
-using System.Linq;
-using static Terminal.Gui.SpinnerStyle;
-using static Unix.Terminal.Delegates;
-
 namespace Terminal.Gui;
 
 /// <summary>Control that hosts multiple sub views, presenting a single one at once.</summary>
-public class TabView : View, IDesignable
+public class TabView : View
 {
     /// <summary>The default <see cref="MaxTabTextWidth"/> to set on new <see cref="TabView"/> controls.</summary>
     public const uint DefaultMaxTabTextWidth = 30;
 
-    /// <summary>This SubView is the 2 or 3 line control that represents the actual tabs themselves.</summary>
-    private readonly TabRowView _tabRowView;
+    /// <summary>
+    ///     This sub view is the main client area of the current tab.  It hosts the <see cref="Tab.View"/> of the tab, the
+    ///     <see cref="SelectedTab"/>.
+    /// </summary>
+    private readonly View _contentView;
 
-    // private TabToRender []? _tabLocations;
+    private readonly List<Tab> _tabs = new ();
+
+    /// <summary>This sub view is the 2 or 3 line control that represents the actual tabs themselves.</summary>
+    private readonly TabRowView _tabsBar;
+
+    private Tab? _selectedTab;
+    private TabToRender []? _tabLocations;
+    private int _tabScrollOffset;
 
     /// <summary>Initializes a <see cref="TabView"/> class.</summary>
     public TabView ()
     {
         CanFocus = true;
         TabStop = TabBehavior.TabStop; // Because TabView has focusable subviews, it must be a TabGroup
-
-        Width = Dim.Fill ();
-        Height = Dim.Auto (minimumContentDim: GetTabHeight (!Style.TabsOnBottom));
-
-        _tabRowView = new TabRowView ();
-        _tabRowView.Selecting += _tabRowView_Selecting;
-        base.Add (_tabRowView);
-
+        _tabsBar = new TabRowView (this);
+        _contentView = new View ()
+        {
+            //Id = "TabView._contentView",
+        };
         ApplyStyleChanges ();
+
+        base.Add (_tabsBar);
+        base.Add (_contentView);
 
         // Things this view knows how to do
         AddCommand (Command.Left, () => SwitchTabBy (-1));
@@ -40,8 +46,8 @@ public class TabView : View, IDesignable
                     Command.LeftStart,
                     () =>
                     {
-                        FirstVisibleTabIndex = 0;
-                        SelectedTabIndex = 0;
+                        TabScrollOffset = 0;
+                        SelectedTab = Tabs.FirstOrDefault ()!;
 
                         return true;
                     }
@@ -51,8 +57,8 @@ public class TabView : View, IDesignable
                     Command.RightEnd,
                     () =>
                     {
-                        FirstVisibleTabIndex = Tabs.Count - 1;
-                        SelectedTabIndex = Tabs.Count - 1;
+                        TabScrollOffset = Tabs.Count - 1;
+                        SelectedTab = Tabs.LastOrDefault ()!;
 
                         return true;
                     }
@@ -62,8 +68,8 @@ public class TabView : View, IDesignable
                     Command.PageDown,
                     () =>
                     {
-                        // FirstVisibleTabIndex += _tabLocations!.Length;
-                        SelectedTabIndex = FirstVisibleTabIndex;
+                        TabScrollOffset += _tabLocations!.Length;
+                        SelectedTab = Tabs.ElementAt (TabScrollOffset);
 
                         return true;
                     }
@@ -73,66 +79,12 @@ public class TabView : View, IDesignable
                     Command.PageUp,
                     () =>
                     {
-                        //  FirstVisibleTabIndex -= _tabLocations!.Length;
-                        SelectedTabIndex = FirstVisibleTabIndex;
+                        TabScrollOffset -= _tabLocations!.Length;
+                        SelectedTab = Tabs.ElementAt (TabScrollOffset);
 
                         return true;
                     }
                    );
-
-        AddCommand (Command.ScrollLeft, () =>
-                                        {
-                                            var visibleTabs = GetTabsThatCanBeVisible (Viewport).ToArray ();
-                                            int? first = visibleTabs.FirstOrDefault ();
-
-                                            if (first > 0)
-                                            {
-                                                int scroll = -_tabRowView.Tabs.ToArray () [first.Value].Frame.Width;
-                                                _tabRowView.Viewport = _tabRowView.Viewport with { X = _tabRowView.Viewport.X + scroll };
-                                                SetNeedsLayout ();
-                                                FirstVisibleTabIndex--;
-                                                return true;
-                                            }
-
-                                            return false;
-                                        });
-
-        AddCommand (Command.ScrollRight, () =>
-                                         {
-                                             var visibleTabs = GetTabsThatCanBeVisible (Viewport).ToArray ();
-                                             int? last = visibleTabs.LastOrDefault ();
-
-                                             if (last is { })
-                                             {
-                                                 _tabRowView.ScrollHorizontal (_tabRowView.Tabs.ToArray () [last.Value + 1].Frame.Width);
-                                                 SetNeedsLayout ();
-                                                 FirstVisibleTabIndex++;
-                                                 return true;
-                                             }
-
-                                             return false;
-                                         });
-
-        //// Space or single-click - Raise Selecting
-        //AddCommand (Command.Select, (ctx) =>
-        //                            {
-        //                                //if (RaiseSelecting (ctx) is true)
-        //                                //{
-        //                                //    return true;
-        //                                //}
-
-        //                                if (ctx.Data is Tab tab)
-        //                                {
-        //                                    int? current = SelectedTabIndex;
-        //                                    SelectedTabIndex = _tabRowView.Tabs.ToArray ().IndexOf (tab);
-        //                                    SetNeedsDraw ();
-
-        //                                    // e.Cancel = HasFocus;
-        //                                    return true;
-        //                                }
-
-        //                                return false;
-        //                            });
 
         // Default keybindings for this view
         KeyBindings.Add (Key.CursorLeft, Command.Left);
@@ -143,106 +95,63 @@ public class TabView : View, IDesignable
         KeyBindings.Add (Key.PageUp, Command.PageUp);
     }
 
-    private void _tabRowView_Selecting (object? sender, CommandEventArgs e)
-    {
-        if (e.Context.Data is int tabIndex)
-        {
-            int? current = SelectedTabIndex;
-            SelectedTabIndex = tabIndex;
-            Layout ();
-            e.Cancel = true;
-        }
-    }
-
-    /// <inheritdoc />
-    protected override void OnSubviewLayout (LayoutEventArgs args)
-    {
-        _tabRowView.CalcContentSize ();
-    }
-
-    /// <inheritdoc />
-    protected override void OnSubviewsLaidOut (LayoutEventArgs args)
-    {
-        // hide all that can't fit
-        var visibleTabs = GetTabsThatCanBeVisible (Viewport).ToArray ();
-
-        for (var index = 0; index < _tabRowView.Tabs.ToArray ().Length; index++)
-        {
-            Tab tab = _tabRowView.Tabs.ToArray () [index];
-            tab.Visible = visibleTabs.Contains (index);
-        }
-    }
-
-    /// <inheritdoc />
-    public bool EnableForDesign ()
-    {
-        AddTab (new () { Text = "Tab_1", Id = "tab1", View = new Label { Text = "Label in Tab1" } }, false);
-        AddTab (new () { Text = "Tab _2", Id = "tab2", View = new TextField { Text = "TextField in Tab2", Width = 10 } }, false);
-        AddTab (new () { Text = "Tab _Three", Id = "tab3", View = new Label { Text = "Label in Tab3" } }, false);
-        AddTab (new () { Text = "Tab _Quattro", Id = "tab4", View = new TextField { Text = "TextField in Tab4", Width = 10 } }, false);
-
-        return true;
-    }
-
     /// <summary>
     ///     The maximum number of characters to render in a Tab header.  This prevents one long tab from pushing out all
     ///     the others.
     /// </summary>
     public uint MaxTabTextWidth { get; set; } = DefaultMaxTabTextWidth;
 
-    private int? _selectedTabIndex;
-
     /// <summary>The currently selected member of <see cref="Tabs"/> chosen by the user.</summary>
     /// <value></value>
-    public int? SelectedTabIndex
+    public Tab? SelectedTab
     {
-        get => _selectedTabIndex;
+        get => _selectedTab;
         set
         {
-            // If value is outside the range of Tabs, throw an exception
-            if (value < 0 || value >= Tabs.Count)
+            UnSetCurrentTabs ();
+
+            Tab? old = _selectedTab;
+
+            if (_selectedTab is { })
             {
-                throw new ArgumentOutOfRangeException (nameof (value), value, @"SelectedTab the range of Tabs.");
-            }
-
-            if (value == _selectedTabIndex)
-            {
-                return;
-            }
-
-            int? old = _selectedTabIndex;
-
-            // Get once to avoid multiple enumerations
-            Tab [] tabs = _tabRowView.Tabs.ToArray ();
-
-            if (_selectedTabIndex is { } && tabs [_selectedTabIndex.Value].View is { })
-            {
-                Remove (tabs [_selectedTabIndex.Value].View);
-            }
-
-            _selectedTabIndex = value;
-
-            if (_selectedTabIndex is { } && tabs [_selectedTabIndex.Value].View is { })
-            {
-                Add (tabs [_selectedTabIndex.Value].View);
-            }
-
-            EnsureSelectedTabIsVisible ();
-
-            if (_selectedTabIndex is { })
-            {
-                ApplyStyleChanges ();
-
-                if (HasFocus)
+                if (_selectedTab.View is { })
                 {
-                    tabs [_selectedTabIndex.Value].View.SetFocus ();
+                    _selectedTab.View.CanFocusChanged -= ContentViewCanFocus!;
+                    // remove old content
+                    _contentView.Remove (_selectedTab.View);
                 }
             }
 
-            OnSelectedTabIndexChanged (old, _selectedTabIndex!);
-            SelectedTabChanged?.Invoke (this, new TabChangedEventArgs (old, _selectedTabIndex));
+            _selectedTab = value;
+
+            // add new content
+            if (_selectedTab?.View != null)
+            {
+                _selectedTab.View.CanFocusChanged += ContentViewCanFocus!;
+                _contentView.Add (_selectedTab.View);
+                // _contentView.Id = $"_contentView for {_selectedTab.DisplayText}";
+            }
+
+            ContentViewCanFocus (null!, null!);
+
+            EnsureSelectedTabIsVisible ();
+
+            if (old != _selectedTab)
+            {
+                if (old?.HasFocus == true)
+                {
+                    SelectedTab?.SetFocus ();
+                }
+
+                OnSelectedTabChanged (old!, _selectedTab!);
+            }
             SetNeedsLayout ();
         }
+    }
+
+    private void ContentViewCanFocus (object sender, EventArgs eventArgs)
+    {
+        _contentView.CanFocus = _contentView.Subviews.Count (v => v.CanFocus) > 0;
     }
 
     private TabStyle _style = new ();
@@ -258,7 +167,6 @@ public class TabView : View, IDesignable
             {
                 return;
             }
-
             _style = value;
             SetNeedsLayout ();
         }
@@ -266,58 +174,155 @@ public class TabView : View, IDesignable
 
     /// <summary>All tabs currently hosted by the control.</summary>
     /// <value></value>
-    public IReadOnlyCollection<Tab> Tabs => _tabRowView.Tabs.ToArray ().AsReadOnly ();
+    public IReadOnlyCollection<Tab> Tabs => _tabs.AsReadOnly ();
 
-    private int _firstVisibleTabIndex;
-
-    /// <summary>Gets or sets the index of first visible tab. This enables horizontal scrolling of the tabs.</summary>
-    /// <remarks>
-    ///     <para>
-    ///         On set, if the value is less than 0, it will be set to 0.  If the value is greater than the number of tabs
-    ///         it will be set to the last tab index.
-    ///     </para>
-    /// </remarks>
-    public int FirstVisibleTabIndex
+    /// <summary>When there are too many tabs to render, this indicates the first tab to render on the screen.</summary>
+    /// <value></value>
+    public int TabScrollOffset
     {
-        get => _firstVisibleTabIndex;
+        get => _tabScrollOffset;
         set
         {
-            _firstVisibleTabIndex = Math.Max (Math.Min (value, Tabs.Count - 1), 0);
-            ;
+            _tabScrollOffset = EnsureValidScrollOffsets (value);
             SetNeedsLayout ();
         }
     }
 
     /// <summary>Adds the given <paramref name="tab"/> to <see cref="Tabs"/>.</summary>
     /// <param name="tab"></param>
-    /// <param name="andSelect">True to make the newly added Tab the <see cref="SelectedTabIndex"/>.</param>
+    /// <param name="andSelect">True to make the newly added Tab the <see cref="SelectedTab"/>.</param>
     public void AddTab (Tab tab, bool andSelect)
     {
-        // Ok to use Subviews here instead of Tabs
-        if (_tabRowView.Subviews.Contains (tab))
+        if (_tabs.Contains (tab))
         {
             return;
         }
 
-        // Add to the TabRowView as a subview
-        _tabRowView.Add (tab);
+        _tabs.Add (tab);
+        _tabsBar.Add (tab);
 
-        if (_tabRowView.Tabs.Count () == 1 || andSelect)
+        if (SelectedTab is null || andSelect)
         {
-            SelectedTabIndex = _tabRowView.Tabs.Count () - 1;
+            SelectedTab = tab;
 
             EnsureSelectedTabIsVisible ();
 
-            if (HasFocus)
-            {
-                tab.View?.SetFocus ();
-            }
+            tab.View?.SetFocus ();
         }
 
-        ApplyStyleChanges ();
         SetNeedsLayout ();
     }
 
+    /// <summary>
+    ///     Updates the control to use the latest state settings in <see cref="Style"/>. This can change the size of the
+    ///     client area of the tab (for rendering the selected tab's content).  This method includes a call to
+    ///     <see cref="View.SetNeedsDraw()"/>.
+    /// </summary>
+    public void ApplyStyleChanges ()
+    {
+        _contentView.BorderStyle = Style.ShowBorder ? LineStyle.Single : LineStyle.None;
+        _contentView.Width = Dim.Fill ();
+
+        if (Style.TabsOnBottom)
+        {
+            // Tabs are along the bottom so just dodge the border
+            if (Style.ShowBorder)
+            {
+                _contentView.Border.Thickness = new Thickness (1, 1, 1, 0);
+            }
+
+            _contentView.Y = 0;
+
+            int tabHeight = GetTabHeight (false);
+
+            // Fill client area leaving space at bottom for tabs
+            _contentView.Height = Dim.Fill (tabHeight);
+
+            _tabsBar.Height = tabHeight;
+
+            _tabsBar.Y = Pos.Bottom (_contentView);
+        }
+        else
+        {
+            // Tabs are along the top
+            if (Style.ShowBorder)
+            {
+                _contentView.Border.Thickness = new Thickness (1, 0, 1, 1);
+            }
+
+            _tabsBar.Y = 0;
+
+            int tabHeight = GetTabHeight (true);
+
+            //move content down to make space for tabs
+            _contentView.Y = Pos.Bottom (_tabsBar);
+
+            // Fill client area leaving space at bottom for border
+            _contentView.Height = Dim.Fill ();
+
+            // The top tab should be 2 or 3 rows high and on the top
+
+            _tabsBar.Height = tabHeight;
+
+            // Should be able to just use 0 but switching between top/bottom tabs repeatedly breaks in ValidatePosDim if just using the absolute value 0
+        }
+
+        SetNeedsLayout ();
+    }
+
+    /// <summary>Updates <see cref="TabScrollOffset"/> to ensure that <see cref="SelectedTab"/> is visible.</summary>
+    public void EnsureSelectedTabIsVisible ()
+    {
+        if (!IsInitialized || SelectedTab is null)
+        {
+            return;
+        }
+
+        // if current viewport does not include the selected tab
+        if (!CalculateViewport (Viewport).Any (r => Equals (SelectedTab, r.Tab)))
+        {
+            // Set scroll offset so the first tab rendered is the
+            TabScrollOffset = Math.Max (0, Tabs.IndexOf (SelectedTab));
+        }
+    }
+
+    /// <summary>Updates <see cref="TabScrollOffset"/> to be a valid index of <see cref="Tabs"/>.</summary>
+    /// <param name="value">The value to validate.</param>
+    /// <remarks>Changes will not be immediately visible in the display until you call <see cref="View.SetNeedsDraw()"/>.</remarks>
+    /// <returns>The valid <see cref="TabScrollOffset"/> for the given value.</returns>
+    public int EnsureValidScrollOffsets (int value) { return Math.Max (Math.Min (value, Tabs.Count - 1), 0); }
+
+    /// <inheritdoc />
+    protected override void OnHasFocusChanged (bool newHasFocus, View? previousFocusedView, View? focusedView)
+    {
+        if (SelectedTab is { } && !_contentView.CanFocus && focusedView == this)
+        {
+            SelectedTab?.SetFocus ();
+
+            return;
+        }
+
+        base.OnHasFocusChanged (newHasFocus, previousFocusedView, focusedView);
+    }
+
+    /// <inheritdoc/>
+    protected override bool OnDrawingContent ()
+    {
+        if (Tabs.Any ())
+        {
+            // Region savedClip = SetClip ();
+            _tabsBar.Draw ();
+            _contentView.SetNeedsDraw ();
+            _contentView.Draw ();
+
+            //if (Driver is { })
+            //{
+            //    Driver.Clip = savedClip;
+            //}
+        }
+
+        return true;
+    }
 
     /// <summary>
     ///     Removes the given <paramref name="tab"/> from <see cref="Tabs"/>. Caller is responsible for disposing the
@@ -326,219 +331,185 @@ public class TabView : View, IDesignable
     /// <param name="tab"></param>
     public void RemoveTab (Tab? tab)
     {
-        if (tab is null || !_tabRowView.Subviews.Contains (tab))
+        if (tab is null || !_tabs.Contains (tab))
         {
             return;
         }
 
-        int idx = _tabRowView.Tabs.ToArray ().IndexOf (tab);
-        if (idx == SelectedTabIndex)
+        // what tab was selected before closing
+        int idx = _tabs.IndexOf (tab);
+
+        _tabs.Remove (tab);
+
+        // if the currently selected tab is no longer a member of Tabs
+        if (SelectedTab is null || !Tabs.Contains (SelectedTab))
         {
-            SelectedTabIndex = null;
-        }
-
-        _tabRowView.Remove (tab);
-
-        // Get once to avoid multiple enumerations
-        Tab [] tabs = _tabRowView.Tabs.ToArray ();
-
-        if (SelectedTabIndex is null)
-        {
-            // Either no tab was previously selected or the selected tab was removed
-
             // select the tab closest to the one that disappeared
             int toSelect = Math.Max (idx - 1, 0);
 
-            if (toSelect < tabs.Length)
+            if (toSelect < Tabs.Count)
             {
-                SelectedTabIndex = toSelect;
+                SelectedTab = Tabs.ElementAt (toSelect);
             }
             else
             {
-                SelectedTabIndex = tabs.Length - 1;
+                SelectedTab = Tabs.LastOrDefault ();
             }
-        }
-
-        if (SelectedTabIndex > tabs.Length - 1)
-        {
-            // Removing the tab, caused the selected tab to be out of range
-            SelectedTabIndex = tabs.Length - 1;
         }
 
         EnsureSelectedTabIsVisible ();
         SetNeedsLayout ();
     }
 
-    /// <summary>
-    ///     Applies the settings in <see cref="Style"/>. This can change the dimensions of
-    ///     <see cref="Tab.View"/> (for rendering the selected tab's content). This method includes a call to
-    ///     <see cref="View.SetNeedsDraw()"/>.
-    /// </summary>
-    public void ApplyStyleChanges ()
-    {
-        // Get once to avoid multiple enumerations
-        Tab [] tabs = _tabRowView.Tabs.ToArray ();
-
-        View? selectedView = null;
-
-        if (SelectedTabIndex is { })
-        {
-            selectedView = tabs [SelectedTabIndex.Value].View;
-        }
-
-        if (selectedView is { })
-        {
-            selectedView.BorderStyle = Style.ShowBorder ? LineStyle.Single : LineStyle.None;
-            selectedView.Width = Dim.Fill ();
-        }
-
-        int tabHeight = GetTabHeight (!Style.TabsOnBottom);
-
-        if (Style.TabsOnBottom)
-        {
-            _tabRowView.Height = tabHeight;
-            _tabRowView.Y = Pos.AnchorEnd ();
-
-            if (selectedView is { })
-            {
-                // Tabs are along the bottom so just dodge the border
-                if (Style.ShowBorder && selectedView?.Border is { })
-                {
-                    selectedView.Border.Thickness = new Thickness (1, 1, 1, 0);
-                }
-
-                // Fill client area leaving space at bottom for tabs
-                selectedView!.Y = 0;
-                selectedView.Height = Dim.Fill (tabHeight);
-            }
-        }
-        else
-        {
-            // Tabs are along the top
-            _tabRowView.Height = tabHeight;
-            _tabRowView.Y = 0;
-
-            if (selectedView is { })
-            {
-                if (Style.ShowBorder && selectedView.Border is { })
-                {
-                    selectedView.Border.Thickness = new Thickness (1, 0, 1, 1);
-                }
-
-
-                //move content down to make space for tabs
-                selectedView.Y = Pos.Bottom (_tabRowView);
-
-                // Fill client area leaving space at bottom for border
-                selectedView.Height = Dim.Fill ();
-            }
-        }
-
-        SetNeedsLayout ();
-    }
-
-    /// <summary>Updates <see cref="FirstVisibleTabIndex"/> to ensure that <see cref="SelectedTabIndex"/> is visible.</summary>
-    public void EnsureSelectedTabIsVisible ()
-    {
-        if (SelectedTabIndex is null)
-        {
-            return;
-        }
-
-        // Get once to avoid multiple enumerations
-        Tab [] tabs = _tabRowView.Tabs.ToArray ();
-        View? selectedView = tabs [SelectedTabIndex.Value].View;
-
-        if (selectedView is null)
-        {
-            return;
-        }
-
-        // if current viewport does not include the selected tab
-        if (!GetTabsThatCanBeVisible (Viewport).Any (r => Equals (SelectedTabIndex.Value, r)))
-        {
-            // Set scroll offset so the first tab rendered is the
-            FirstVisibleTabIndex = Math.Max (0, SelectedTabIndex.Value);
-        }
-    }
-
-    /// <summary>Event for when <see cref="SelectedTabIndex"/> changes.</summary>
+    /// <summary>Event for when <see cref="SelectedTab"/> changes.</summary>
     public event EventHandler<TabChangedEventArgs>? SelectedTabChanged;
 
     /// <summary>
-    ///     Changes the <see cref="SelectedTabIndex"/> by the given <paramref name="amount"/>. Positive for right, negative for
-    ///     left. If no tab is currently selected then the first tab will become selected.
+    ///     Changes the <see cref="SelectedTab"/> by the given <paramref name="amount"/>. Positive for right, negative for
+    ///     left.  If no tab is currently selected then the first tab will become selected.
     /// </summary>
     /// <param name="amount"></param>
-    /// <returns><see langword="true"/> if a change was made.</returns>
     public bool SwitchTabBy (int amount)
     {
-
-        // Get once to avoid multiple enumerations
-        Tab [] tabs = _tabRowView.Tabs.ToArray ();
-
-        if (tabs.Length == 0)
+        if (Tabs.Count == 0)
         {
             return false;
         }
 
-        int? currentIdx = SelectedTabIndex;
-
         // if there is only one tab anyway or nothing is selected
-        if (tabs.Length == 1)
+        if (Tabs.Count == 1 || SelectedTab is null)
         {
-            SelectedTabIndex = 0;
+            SelectedTab = Tabs.ElementAt (0);
 
-            return SelectedTabIndex != currentIdx;
+            return SelectedTab is { };
         }
 
-        // Currently selected tab has vanished!
-        if (currentIdx is null)
-        {
-            SelectedTabIndex = 0;
+        int currentIdx = Tabs.IndexOf (SelectedTab);
 
+        // Currently selected tab has vanished!
+        if (currentIdx == -1)
+        {
+            SelectedTab = Tabs.ElementAt (0);
             return true;
         }
 
-        int newIdx = Math.Max (0, Math.Min (currentIdx.Value + amount, tabs.Length - 1));
+        int newIdx = Math.Max (0, Math.Min (currentIdx + amount, Tabs.Count - 1));
 
         if (newIdx == currentIdx)
         {
             return false;
         }
 
-        SelectedTabIndex = newIdx;
+        SelectedTab = _tabs [newIdx];
+
+        EnsureSelectedTabIsVisible ();
 
         return true;
     }
 
-    /// <summary>Called when the <see cref="SelectedTabIndex"/> has changed.</summary>
-    protected virtual void OnSelectedTabIndexChanged (int? oldTabIndex, int? newTabIndex) { }
+    /// <summary>
+    ///     Event fired when a <see cref="Tab"/> is clicked.  Can be used to cancel navigation, show context menu (e.g. on
+    ///     right click) etc.
+    /// </summary>
+    public event EventHandler<TabMouseEventArgs>? TabClicked;
 
-    /// <summary>Returns which tabs will be visible given the dimensions of the TabView, which tab is selected, and how the tabs have been scrolled.</summary>
-    /// <paramref name="bounds">Same as this.Frame.</paramref>
-    /// <returns></returns>
-    private IEnumerable<int> GetTabsThatCanBeVisible (Rectangle bounds)
+    /// <summary>Disposes the control and all <see cref="Tabs"/>.</summary>
+    /// <param name="disposing"></param>
+    protected override void Dispose (bool disposing)
     {
-        var curWidth = 1;
+        base.Dispose (disposing);
+
+        // The selected tab will automatically be disposed but
+        // any tabs not visible will need to be manually disposed
+
+        foreach (Tab tab in Tabs)
+        {
+            if (!Equals (SelectedTab, tab))
+            {
+                tab.View?.Dispose ();
+            }
+        }
+    }
+
+    /// <summary>Raises the <see cref="SelectedTabChanged"/> event.</summary>
+    protected virtual void OnSelectedTabChanged (Tab oldTab, Tab newTab)
+    {
+        SelectedTabChanged?.Invoke (this, new TabChangedEventArgs (oldTab, newTab));
+    }
+
+    /// <summary>Returns which tabs to render at each x location.</summary>
+    /// <returns></returns>
+    private IEnumerable<TabToRender> CalculateViewport (Rectangle bounds)
+    {
+        UnSetCurrentTabs ();
+
+        var i = 1;
         View? prevTab = null;
 
-        // Get once to avoid multiple enumerations
-        Tab [] tabs = _tabRowView.Tabs.ToArray ();
-
         // Starting at the first or scrolled to tab
-        for (int i = FirstVisibleTabIndex; i < tabs.Length; i++)
+        foreach (Tab tab in Tabs.Skip (TabScrollOffset))
         {
-            if (curWidth >= bounds.Width)
+            if (prevTab is { })
             {
+                tab.X = Pos.Right (prevTab);
+            }
+            else
+            {
+                tab.X = 0;
+            }
+
+            tab.Y = 0;
+
+            // while there is space for the tab
+            int tabTextWidth = tab.DisplayText.EnumerateRunes ().Sum (c => c.GetColumns ());
+
+            string text = tab.DisplayText;
+
+            // The maximum number of characters to use for the tab name as specified
+            // by the user (MaxTabTextWidth).  But not more than the width of the view
+            // or we won't even be able to render a single tab!
+            long maxWidth = Math.Max (0, Math.Min (bounds.Width - 3, MaxTabTextWidth));
+
+            prevTab = tab;
+
+            tab.Width = 2;
+            tab.Height = Style.ShowTopLine ? 3 : 2;
+
+            // if tab view is width <= 3 don't render any tabs
+            if (maxWidth == 0)
+            {
+                tab.Visible = true;
+                tab.MouseClick += Tab_MouseClick!;
+
+                yield return new TabToRender (tab, string.Empty, Equals (SelectedTab, tab));
+
                 break;
             }
 
-            if (curWidth + tabs [i].Frame.Width < bounds.Width)
+            if (tabTextWidth > maxWidth)
             {
-                yield return i;
+                text = tab.DisplayText.Substring (0, (int)maxWidth);
+                tabTextWidth = (int)maxWidth;
             }
-            curWidth += tabs [i].Frame.Width;
+
+            tab.Width = Math.Max (tabTextWidth + 2, 1);
+            tab.Height = Style.ShowTopLine ? 3 : 2;
+
+            // if there is not enough space for this tab
+            if (i + tabTextWidth >= bounds.Width)
+            {
+                tab.Visible = false;
+
+                break;
+            }
+
+            // there is enough space!
+            tab.Visible = true;
+            tab.MouseClick += Tab_MouseClick!;
+
+            yield return new TabToRender (tab, text, Equals (SelectedTab, tab));
+
+            i += tabTextWidth + 1;
         }
     }
 
@@ -564,214 +535,867 @@ public class TabView : View, IDesignable
         return Style.ShowTopLine ? 3 : 2;
     }
 
-    /// <inheritdoc />
-    protected override void Dispose (bool disposing)
+    private void Tab_MouseClick (object sender, MouseEventArgs e)
     {
-        if (disposing)
-        {
-            // Get once to avoid multiple enumerations
-            Tab [] tabs = _tabRowView.Tabs.ToArray ();
-            if (SelectedTabIndex is { })
-            {
-                Remove (tabs [SelectedTabIndex.Value].View);
-            }
-            foreach (Tab tab in tabs)
-            {
-                tab.View?.Dispose ();
-                tab.View = null;
-            }
-        };
-        base.Dispose (disposing);
+        e.Handled = _tabsBar.NewMouseEvent (e) == true;
     }
+
+    private void UnSetCurrentTabs ()
+    {
+        if (_tabLocations is { })
+        {
+            foreach (TabToRender tabToRender in _tabLocations)
+            {
+                tabToRender.Tab.MouseClick -= Tab_MouseClick!;
+                tabToRender.Tab.Visible = false;
+            }
+
+            _tabLocations = null;
+        }
+    }
+
+    /// <summary>Raises the <see cref="TabClicked"/> event.</summary>
+    /// <param name="tabMouseEventArgs"></param>
+    private protected virtual void OnTabClicked (TabMouseEventArgs tabMouseEventArgs) { TabClicked?.Invoke (this, tabMouseEventArgs); }
 
     private class TabRowView : View
     {
+        private readonly TabView _host;
         private readonly View _leftScrollIndicator;
         private readonly View _rightScrollIndicator;
 
-        public TabRowView ()
+        public TabRowView (TabView host)
         {
+            _host = host;
             Id = "tabRowView";
 
             CanFocus = true;
-            Height = Dim.Auto ();
+            Height = 1; // BUGBUG: Views should avoid setting Height as doing so implies Frame.Size == GetContentSize ().
             Width = Dim.Fill ();
-            SuperViewRendersLineCanvas = true;
 
             _rightScrollIndicator = new View
             {
                 Id = "rightScrollIndicator",
-                X = Pos.Func (() => Viewport.X + Viewport.Width - 1),
-                Y = Pos.AnchorEnd (),
                 Width = 1,
                 Height = 1,
-                Visible = true,
+                Visible = false,
                 Text = Glyphs.RightArrow.ToString ()
             };
+            _rightScrollIndicator.MouseClick += _host.Tab_MouseClick!;
 
             _leftScrollIndicator = new View
             {
                 Id = "leftScrollIndicator",
-                X = Pos.Func (() => Viewport.X),
-                Y = Pos.AnchorEnd (),
                 Width = 1,
                 Height = 1,
-                Visible = true,
+                Visible = false,
                 Text = Glyphs.LeftArrow.ToString ()
             };
+            _leftScrollIndicator.MouseClick += _host.Tab_MouseClick!;
 
             Add (_rightScrollIndicator, _leftScrollIndicator);
-
-            Initialized += OnInitialized;
         }
 
-        private void OnInitialized (object? sender, EventArgs e)
+        protected override bool OnMouseEvent (MouseEventArgs me)
         {
-            if (SuperView is TabView tabView)
+            Tab? hit = me.View as Tab;
+
+            if (me.IsSingleClicked)
             {
-                _leftScrollIndicator.MouseClick += (o, args) =>
-                                                   {
-                                                       tabView.InvokeCommand (Command.ScrollLeft);
-                                                   };
-                _rightScrollIndicator.MouseClick += (o, args) =>
-                                                    {
-                                                        tabView.InvokeCommand (Command.ScrollRight);
-                                                    };
-                tabView.SelectedTabChanged += TabView_SelectedTabChanged;
+                _host.OnTabClicked (new TabMouseEventArgs (hit, me));
+
+                // user canceled click
+                if (me.Handled)
+                {
+                    return true;
+                }
             }
 
-            CalcContentSize ();
-        }
+            if (!me.IsSingleDoubleOrTripleClicked)
+            {
+                return false;
+            }
 
-        private void TabView_SelectedTabChanged (object? sender, TabChangedEventArgs e)
-        {
-            _selectedTabIndex = e.NewTabIndex;
-            CalcContentSize ();
+            if (!HasFocus && CanFocus)
+            {
+                SetFocus ();
+            }
+
+            if (me.IsSingleDoubleOrTripleClicked)
+            {
+                var scrollIndicatorHit = 0;
+
+                if (me.View is { } && me.View.Id == "rightScrollIndicator")
+                {
+                    scrollIndicatorHit = 1;
+                }
+                else if (me.View is { } && me.View.Id == "leftScrollIndicator")
+                {
+                    scrollIndicatorHit = -1;
+                }
+
+                if (scrollIndicatorHit != 0)
+                {
+                    _host.SwitchTabBy (scrollIndicatorHit);
+
+                    SetNeedsLayout ();
+
+                    return true;
+                }
+
+                if (hit is { })
+                {
+                    _host.SelectedTab = hit;
+                    SetNeedsLayout ();
+
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         /// <inheritdoc />
-        public override void OnAdded (SuperViewChangedEventArgs e)
+        protected override bool OnClearingViewport ()
         {
-            if (e.SubView is Tab tab)
-            {
-                MoveSubviewToEnd (_leftScrollIndicator);
-                MoveSubviewToEnd (_rightScrollIndicator);
+            // clear any old text
+            ClearViewport ();
 
-                tab.HasFocusChanged += TabOnHasFocusChanged;
-                tab.Selecting += Tab_Selecting;
-            }
-            CalcContentSize ();
+            return true;
         }
 
-        private void Tab_Selecting (object? sender, CommandEventArgs e)
+        protected override bool OnDrawingContent ()
         {
-            e.Cancel = RaiseSelecting (new CommandContext (Command.Select, null, data: Tabs.ToArray ().IndexOf (sender))) is true;
+            _host._tabLocations = _host.CalculateViewport (Viewport).ToArray ();
+
+
+            SetAttribute (HasFocus ? GetFocusColor () : GetNormalColor ());
+
+            return true;
         }
 
-        private void TabOnHasFocusChanged (object? sender, HasFocusEventArgs e)
+        /// <inheritdoc />
+        protected override bool OnDrawingSubviews ()
         {
-            TabView? host = SuperView as TabView;
+            RenderTabLine ();
 
-            if (host is null)
+            return true;
+        }
+
+        protected override void OnDrawComplete ()
+        {
+            if (_host._tabLocations is null)
             {
                 return;
             }
 
+            TabToRender [] tabLocations = _host._tabLocations;
+            int selectedTab = -1;
 
-            //if (e is { NewFocused: Tab tab, NewValue: true })
-            //{
-            //    e.Cancel = RaiseSInvokeCommand (Command.Select, new CommandContext () { Data = tab }) is true;
-            //}
-        }
-
-        public void CalcContentSize ()
-        {
-            TabView? host = SuperView as TabView;
-
-            if (host is null)
+            for (var i = 0; i < tabLocations.Length; i++)
             {
-                return;
-            }
+                View tab = tabLocations [i].Tab;
+                Rectangle vts = tab.ViewportToScreen (tab.Viewport);
+                var lc = new LineCanvas ();
+                int selectedOffset = _host.Style.ShowTopLine && tabLocations [i].IsSelected ? 0 : 1;
 
-            Tab? selected = null;
-            int topLine = host!.Style.ShowTopLine ? 1 : 0;
-
-            Tab [] tabs = Tabs.ToArray ();
-
-            for (int i = 0; i < tabs.Length; i++)
-            {
-                tabs [i].Height = Dim.Fill ();
-                if (i == 0)
+                if (tabLocations [i].IsSelected)
                 {
-                    tabs [i].X = 0;
-                }
-                else
-                {
-                    tabs [i].X = Pos.Right (tabs [i - 1]);
-                }
+                    selectedTab = i;
 
-                if (i == _selectedTabIndex)
-                {
-                    selected = tabs [i];
-
-                    if (host.Style.TabsOnBottom)
+                    if (i == 0 && _host.TabScrollOffset == 0)
                     {
-                        tabs [i].Border.Thickness = new Thickness (1, 0, 1, topLine);
-                        tabs [i].Margin.Thickness = new Thickness (0, 1, 0, 0);
+                        if (_host.Style.TabsOnBottom)
+                        {
+                            // Upper left vertical line
+                            lc.AddLine (
+                                        new Point (vts.X - 1, vts.Y - 1),
+                                        -1,
+                                        Orientation.Vertical,
+                                        tab.BorderStyle
+                                       );
+                        }
+                        else
+                        {
+                            // Lower left vertical line
+                            lc.AddLine (
+                                        new Point (vts.X - 1, vts.Bottom - selectedOffset),
+                                        -1,
+                                        Orientation.Vertical,
+                                        tab.BorderStyle
+                                       );
+                        }
+                    }
+                    else if (i > 0 && i <= tabLocations.Length - 1)
+                    {
+                        if (_host.Style.TabsOnBottom)
+                        {
+                            // URCorner
+                            lc.AddLine (
+                                        new Point (vts.X - 1, vts.Y - 1),
+                                        1,
+                                        Orientation.Vertical,
+                                        tab.BorderStyle
+                                       );
+
+                            lc.AddLine (
+                                        new Point (vts.X - 1, vts.Y - 1),
+                                        -1,
+                                        Orientation.Horizontal,
+                                        tab.BorderStyle
+                                       );
+                        }
+                        else
+                        {
+                            // LRCorner
+                            lc.AddLine (
+                                        new Point (vts.X - 1, vts.Bottom - selectedOffset),
+                                        -1,
+                                        Orientation.Vertical,
+                                        tab.BorderStyle
+                                       );
+
+                            lc.AddLine (
+                                        new Point (vts.X - 1, vts.Bottom - selectedOffset),
+                                        -1,
+                                        Orientation.Horizontal,
+                                        tab.BorderStyle
+                                       );
+                        }
+
+                        if (_host.Style.ShowTopLine)
+                        {
+                            if (_host.Style.TabsOnBottom)
+                            {
+                                // Lower left tee
+                                lc.AddLine (
+                                            new Point (vts.X - 1, vts.Bottom),
+                                            -1,
+                                            Orientation.Vertical,
+                                            tab.BorderStyle
+                                           );
+
+                                lc.AddLine (
+                                            new Point (vts.X - 1, vts.Bottom),
+                                            0,
+                                            Orientation.Horizontal,
+                                            tab.BorderStyle
+                                           );
+                            }
+                            else
+                            {
+                                // Upper left tee
+                                lc.AddLine (
+                                            new Point (vts.X - 1, vts.Y - 1),
+                                            1,
+                                            Orientation.Vertical,
+                                            tab.BorderStyle
+                                           );
+
+                                lc.AddLine (
+                                            new Point (vts.X - 1, vts.Y - 1),
+                                            0,
+                                            Orientation.Horizontal,
+                                            tab.BorderStyle
+                                           );
+                            }
+                        }
+                    }
+
+                    if (i < tabLocations.Length - 1)
+                    {
+                        if (_host.Style.ShowTopLine)
+                        {
+                            if (_host.Style.TabsOnBottom)
+                            {
+                                // Lower right tee
+                                lc.AddLine (
+                                            new Point (vts.Right, vts.Bottom),
+                                            -1,
+                                            Orientation.Vertical,
+                                            tab.BorderStyle
+                                           );
+
+                                lc.AddLine (
+                                            new Point (vts.Right, vts.Bottom),
+                                            0,
+                                            Orientation.Horizontal,
+                                            tab.BorderStyle
+                                           );
+                            }
+                            else
+                            {
+                                // Upper right tee
+                                lc.AddLine (
+                                            new Point (vts.Right, vts.Y - 1),
+                                            1,
+                                            Orientation.Vertical,
+                                            tab.BorderStyle
+                                           );
+
+                                lc.AddLine (
+                                            new Point (vts.Right, vts.Y - 1),
+                                            0,
+                                            Orientation.Horizontal,
+                                            tab.BorderStyle
+                                           );
+                            }
+                        }
+                    }
+
+                    if (_host.Style.TabsOnBottom)
+                    {
+                        //URCorner
+                        lc.AddLine (
+                                    new Point (vts.Right, vts.Y - 1),
+                                    1,
+                                    Orientation.Vertical,
+                                    tab.BorderStyle
+                                   );
+
+                        lc.AddLine (
+                                    new Point (vts.Right, vts.Y - 1),
+                                    1,
+                                    Orientation.Horizontal,
+                                    tab.BorderStyle
+                                   );
                     }
                     else
                     {
-                        tabs [i].Border.Thickness = new Thickness (1, topLine, 1, 0);
-                        tabs [i].Margin.Thickness = new Thickness (0, 0, 0, topLine);
+                        //LLCorner
+                        lc.AddLine (
+                                    new Point (vts.Right, vts.Bottom - selectedOffset),
+                                    -1,
+                                    Orientation.Vertical,
+                                    tab.BorderStyle
+                                   );
+
+                        lc.AddLine (
+                                    new Point (vts.Right, vts.Bottom - selectedOffset),
+                                    1,
+                                    Orientation.Horizontal,
+                                    tab.BorderStyle
+                                   );
+                    }
+                }
+                else if (selectedTab == -1)
+                {
+                    if (i == 0 && string.IsNullOrEmpty (tab.Text))
+                    {
+                        if (_host.Style.TabsOnBottom)
+                        {
+                            if (_host.Style.ShowTopLine)
+                            {
+                                // LLCorner
+                                lc.AddLine (
+                                            new Point (vts.X - 1, vts.Bottom),
+                                            -1,
+                                            Orientation.Vertical,
+                                            tab.BorderStyle
+                                           );
+
+                                lc.AddLine (
+                                            new Point (vts.X - 1, vts.Bottom),
+                                            1,
+                                            Orientation.Horizontal,
+                                            tab.BorderStyle
+                                           );
+                            }
+
+                            // ULCorner
+                            lc.AddLine (
+                                        new Point (vts.X - 1, vts.Y - 1),
+                                        1,
+                                        Orientation.Vertical,
+                                        tab.BorderStyle
+                                       );
+
+                            lc.AddLine (
+                                        new Point (vts.X - 1, vts.Y - 1),
+                                        1,
+                                        Orientation.Horizontal,
+                                        tab.BorderStyle
+                                       );
+                        }
+                        else
+                        {
+                            if (_host.Style.ShowTopLine)
+                            {
+                                // ULCorner
+                                lc.AddLine (
+                                            new Point (vts.X - 1, vts.Y - 1),
+                                            1,
+                                            Orientation.Vertical,
+                                            tab.BorderStyle
+                                           );
+
+                                lc.AddLine (
+                                            new Point (vts.X - 1, vts.Y - 1),
+                                            1,
+                                            Orientation.Horizontal,
+                                            tab.BorderStyle
+                                           );
+                            }
+
+                            // LLCorner
+                            lc.AddLine (
+                                        new Point (vts.X - 1, vts.Bottom),
+                                        -1,
+                                        Orientation.Vertical,
+                                        tab.BorderStyle
+                                       );
+
+                            lc.AddLine (
+                                        new Point (vts.X - 1, vts.Bottom),
+                                        1,
+                                        Orientation.Horizontal,
+                                        tab.BorderStyle
+                                       );
+                        }
+                    }
+                    else if (i > 0)
+                    {
+                        if (_host.Style.ShowTopLine || _host.Style.TabsOnBottom)
+                        {
+                            // Upper left tee
+                            lc.AddLine (
+                                        new Point (vts.X - 1, vts.Y - 1),
+                                        1,
+                                        Orientation.Vertical,
+                                        tab.BorderStyle
+                                       );
+
+                            lc.AddLine (
+                                        new Point (vts.X - 1, vts.Y - 1),
+                                        0,
+                                        Orientation.Horizontal,
+                                        tab.BorderStyle
+                                       );
+                        }
+
+                        // Lower left tee
+                        lc.AddLine (
+                                    new Point (vts.X - 1, vts.Bottom),
+                                    -1,
+                                    Orientation.Vertical,
+                                    tab.BorderStyle
+                                   );
+
+                        lc.AddLine (
+                                    new Point (vts.X - 1, vts.Bottom),
+                                    0,
+                                    Orientation.Horizontal,
+                                    tab.BorderStyle
+                                   );
+                    }
+                }
+                else if (i < tabLocations.Length - 1)
+                {
+                    if (_host.Style.ShowTopLine)
+                    {
+                        // Upper right tee
+                        lc.AddLine (
+                                    new Point (vts.Right, vts.Y - 1),
+                                    1,
+                                    Orientation.Vertical,
+                                    tab.BorderStyle
+                                   );
+
+                        lc.AddLine (
+                                    new Point (vts.Right, vts.Y - 1),
+                                    0,
+                                    Orientation.Horizontal,
+                                    tab.BorderStyle
+                                   );
+                    }
+
+                    if (_host.Style.ShowTopLine || !_host.Style.TabsOnBottom)
+                    {
+                        // Lower right tee
+                        lc.AddLine (
+                                    new Point (vts.Right, vts.Bottom),
+                                    -1,
+                                    Orientation.Vertical,
+                                    tab.BorderStyle
+                                   );
+
+                        lc.AddLine (
+                                    new Point (vts.Right, vts.Bottom),
+                                    0,
+                                    Orientation.Horizontal,
+                                    tab.BorderStyle
+                                   );
+                    }
+                    else
+                    {
+                        // Upper right tee
+                        lc.AddLine (
+                                    new Point (vts.Right, vts.Y - 1),
+                                    1,
+                                    Orientation.Vertical,
+                                    tab.BorderStyle
+                                   );
+
+                        lc.AddLine (
+                                    new Point (vts.Right, vts.Y - 1),
+                                    0,
+                                    Orientation.Horizontal,
+                                    tab.BorderStyle
+                                   );
+                    }
+                }
+
+                if (i == 0 && i != selectedTab && _host.TabScrollOffset == 0 && _host.Style.ShowBorder)
+                {
+                    if (_host.Style.TabsOnBottom)
+                    {
+                        // Upper left vertical line
+                        lc.AddLine (
+                                    new Point (vts.X - 1, vts.Y - 1),
+                                    0,
+                                    Orientation.Vertical,
+                                    tab.BorderStyle
+                                   );
+
+                        lc.AddLine (
+                                    new Point (vts.X - 1, vts.Y - 1),
+                                    1,
+                                    Orientation.Horizontal,
+                                    tab.BorderStyle
+                                   );
+                    }
+                    else
+                    {
+                        // Lower left vertical line
+                        lc.AddLine (
+                                    new Point (vts.X - 1, vts.Bottom),
+                                    0,
+                                    Orientation.Vertical,
+                                    tab.BorderStyle
+                                   );
+
+                        lc.AddLine (
+                                    new Point (vts.X - 1, vts.Bottom),
+                                    1,
+                                    Orientation.Horizontal,
+                                    tab.BorderStyle
+                                   );
+                    }
+                }
+
+                if (i == tabLocations.Length - 1 && i != selectedTab)
+                {
+                    if (_host.Style.TabsOnBottom)
+                    {
+                        // Upper right tee
+                        lc.AddLine (
+                                    new Point (vts.Right, vts.Y - 1),
+                                    1,
+                                    Orientation.Vertical,
+                                    tab.BorderStyle
+                                   );
+
+                        lc.AddLine (
+                                    new Point (vts.Right, vts.Y - 1),
+                                    0,
+                                    Orientation.Horizontal,
+                                    tab.BorderStyle
+                                   );
+                    }
+                    else
+                    {
+                        // Lower right tee
+                        lc.AddLine (
+                                    new Point (vts.Right, vts.Bottom),
+                                    -1,
+                                    Orientation.Vertical,
+                                    tab.BorderStyle
+                                   );
+
+                        lc.AddLine (
+                                    new Point (vts.Right, vts.Bottom),
+                                    0,
+                                    Orientation.Horizontal,
+                                    tab.BorderStyle
+                                   );
+                    }
+                }
+
+                if (i == tabLocations.Length - 1)
+                {
+                    var arrowOffset = 1;
+
+                    int lastSelectedTab = !_host.Style.ShowTopLine && i == selectedTab ? 1 :
+                                          _host.Style.TabsOnBottom ? 1 : 0;
+                    Rectangle tabsBarVts = ViewportToScreen (Viewport);
+                    int lineLength = tabsBarVts.Right - vts.Right;
+
+                    // Right horizontal line
+                    if (ShouldDrawRightScrollIndicator ())
+                    {
+                        if (lineLength - arrowOffset > 0)
+                        {
+                            if (_host.Style.TabsOnBottom)
+                            {
+                                lc.AddLine (
+                                            new Point (vts.Right, vts.Y - lastSelectedTab),
+                                            lineLength - arrowOffset,
+                                            Orientation.Horizontal,
+                                            tab.BorderStyle
+                                           );
+                            }
+                            else
+                            {
+                                lc.AddLine (
+                                            new Point (
+                                                       vts.Right,
+                                                       vts.Bottom - lastSelectedTab
+                                                      ),
+                                            lineLength - arrowOffset,
+                                            Orientation.Horizontal,
+                                            tab.BorderStyle
+                                           );
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (_host.Style.TabsOnBottom)
+                        {
+                            lc.AddLine (
+                                        new Point (vts.Right, vts.Y - lastSelectedTab),
+                                        lineLength,
+                                        Orientation.Horizontal,
+                                        tab.BorderStyle
+                                       );
+                        }
+                        else
+                        {
+                            lc.AddLine (
+                                        new Point (vts.Right, vts.Bottom - lastSelectedTab),
+                                        lineLength,
+                                        Orientation.Horizontal,
+                                        tab.BorderStyle
+                                       );
+                        }
+
+                        if (_host.Style.ShowBorder)
+                        {
+                            if (_host.Style.TabsOnBottom)
+                            {
+                                // More LRCorner
+                                lc.AddLine (
+                                            new Point (
+                                                       tabsBarVts.Right - 1,
+                                                       vts.Y - lastSelectedTab
+                                                      ),
+                                            -1,
+                                            Orientation.Vertical,
+                                            tab.BorderStyle
+                                           );
+                            }
+                            else
+                            {
+                                // More URCorner
+                                lc.AddLine (
+                                            new Point (
+                                                       tabsBarVts.Right - 1,
+                                                       vts.Bottom - lastSelectedTab
+                                                      ),
+                                            1,
+                                            Orientation.Vertical,
+                                            tab.BorderStyle
+                                           );
+                            }
+                        }
+                    }
+                }
+
+                tab.LineCanvas.Merge (lc);
+                tab.RenderLineCanvas ();
+
+                RenderUnderline ();
+            }
+        }
+
+        private int GetUnderlineYPosition ()
+        {
+            if (_host.Style.TabsOnBottom)
+            {
+                return 0;
+            }
+
+            return _host.Style.ShowTopLine ? 2 : 1;
+        }
+
+        /// <summary>Renders the line with the tab names in it.</summary>
+        private void RenderTabLine ()
+        {
+            TabToRender []? tabLocations = _host._tabLocations;
+
+            if (tabLocations is null)
+            {
+                return;
+            }
+
+            View? selected = null;
+            int topLine = _host.Style.ShowTopLine ? 1 : 0;
+
+            foreach (TabToRender toRender in tabLocations)
+            {
+                Tab tab = toRender.Tab;
+
+                if (toRender.IsSelected)
+                {
+                    selected = tab;
+
+                    if (_host.Style.TabsOnBottom)
+                    {
+                        tab.Border.Thickness = new Thickness (1, 0, 1, topLine);
+                        tab.Margin.Thickness = new Thickness (0, 1, 0, 0);
+                    }
+                    else
+                    {
+                        tab.Border.Thickness = new Thickness (1, topLine, 1, 0);
+                        tab.Margin.Thickness = new Thickness (0, 0, 0, topLine);
                     }
                 }
                 else if (selected is null)
                 {
-                    if (host.Style.TabsOnBottom)
+                    if (_host.Style.TabsOnBottom)
                     {
-                        tabs [i].Border.Thickness = new Thickness (1, 1, 0, topLine);
-                        tabs [i].Margin.Thickness = new Thickness (0, 0, 0, 0);
+                        tab.Border.Thickness = new Thickness (1, 1, 0, topLine);
+                        tab.Margin.Thickness = new Thickness (0, 0, 0, 0);
                     }
                     else
                     {
-                        tabs [i].Border.Thickness = new Thickness (1, topLine, 0, 1);
-                        tabs [i].Margin.Thickness = new Thickness (0, 0, 0, 0);
+                        tab.Border.Thickness = new Thickness (1, topLine, 0, 1);
+                        tab.Margin.Thickness = new Thickness (0, 0, 0, 0);
                     }
 
-                    //tabs [i].Width = Math.Max (tabs [i].Width!.GetAnchor (0) - 1, 1);
+                    tab.Width = Math.Max (tab.Width!.GetAnchor (0) - 1, 1);
                 }
                 else
                 {
-                    if (host.Style.TabsOnBottom)
+                    if (_host.Style.TabsOnBottom)
                     {
-                        tabs [i].Border.Thickness = new Thickness (0, 1, 1, topLine);
-                        tabs [i].Margin.Thickness = new Thickness (0, 0, 0, 0);
+                        tab.Border.Thickness = new Thickness (0, 1, 1, topLine);
+                        tab.Margin.Thickness = new Thickness (0, 0, 0, 0);
                     }
                     else
                     {
-                        tabs [i].Border.Thickness = new Thickness (0, topLine, 1, 1);
-                        tabs [i].Margin.Thickness = new Thickness (0, 0, 0, 0);
+                        tab.Border.Thickness = new Thickness (0, topLine, 1, 1);
+                        tab.Margin.Thickness = new Thickness (0, 0, 0, 0);
                     }
 
-                    //tabs [i].Width = Math.Max (tabs [i].Width!.GetAnchor (0) - 1, 1);
+                    tab.Width = Math.Max (tab.Width!.GetAnchor (0) - 1, 1);
                 }
 
-                //tabs [i].Text = toRender.TextToRender;
-            }
+                tab.Text = toRender.TextToRender;
 
-            SetContentSize (null);
-            Layout (Application.Screen.Size);
+                // BUGBUG: Layout should only be called from Mainloop iteration!
+                Layout ();
 
-            var width = 0;
-            foreach (Tab t in tabs)
-            {
-                width += t.Frame.Width;
+                tab.DrawBorderAndPadding ();
+
+                Attribute prevAttr = Driver?.GetAttribute () ?? Attribute.Default;
+
+                // if tab is the selected one and focus is inside this control
+                if (toRender.IsSelected && _host.HasFocus)
+                {
+                    if (_host.Focused == this)
+                    {
+                        // if focus is the tab bar itself then show that they can switch tabs
+                        prevAttr = ColorScheme.HotFocus;
+                    }
+                    else
+                    {
+                        // Focus is inside the tab
+                        prevAttr = ColorScheme.HotNormal;
+                    }
+                }
+
+                tab.TextFormatter.Draw (
+                                        tab.ViewportToScreen (tab.Viewport),
+                                        prevAttr,
+                                        ColorScheme.HotNormal
+                                       );
+
+                tab.DrawBorderAndPadding ();
+
+
+                SetAttribute (GetNormalColor ());
             }
-            SetContentSize (new (width, Viewport.Height));
         }
 
-        internal IEnumerable<Tab> Tabs => Subviews.Where (v => v is Tab).Cast<Tab> ();
+        /// <summary>Renders the line of the tab that adjoins the content of the tab.</summary>
+        private void RenderUnderline ()
+        {
+            int y = GetUnderlineYPosition ();
 
-        private int? _selectedTabIndex = null;
+            TabToRender? selected = _host._tabLocations?.FirstOrDefault (t => t.IsSelected);
+
+            if (selected is null)
+            {
+                return;
+            }
+
+            // draw scroll indicators
+
+            // if there are more tabs to the left not visible
+            if (_host.TabScrollOffset > 0)
+            {
+                _leftScrollIndicator.X = 0;
+                _leftScrollIndicator.Y = y;
+
+                // indicate that
+                _leftScrollIndicator.Visible = true;
+
+                // Ensures this is clicked instead of the first tab
+                MoveSubviewToEnd (_leftScrollIndicator);
+                _leftScrollIndicator.Draw ();
+            }
+            else
+            {
+                _leftScrollIndicator.Visible = false;
+            }
+
+            // if there are more tabs to the right not visible
+            if (ShouldDrawRightScrollIndicator ())
+            {
+                _rightScrollIndicator.X = Viewport.Width - 1;
+                _rightScrollIndicator.Y = y;
+
+                // indicate that
+                _rightScrollIndicator.Visible = true;
+
+                // Ensures this is clicked instead of the last tab if under this
+                MoveSubviewToStart (_rightScrollIndicator);
+                _rightScrollIndicator.Draw ();
+            }
+            else
+            {
+                _rightScrollIndicator.Visible = false;
+            }
+        }
+
+        private bool ShouldDrawRightScrollIndicator () { return _host._tabLocations!.LastOrDefault ()?.Tab != _host.Tabs.LastOrDefault (); }
+    }
+
+    private class TabToRender
+    {
+        public TabToRender (Tab tab, string textToRender, bool isSelected)
+        {
+            Tab = tab;
+            IsSelected = isSelected;
+            TextToRender = textToRender;
+        }
+
+        /// <summary>True if the tab that is being rendered is the selected one.</summary>
+        /// <value></value>
+        public bool IsSelected { get; }
+
+        public Tab Tab { get; }
+        public string TextToRender { get; }
     }
 }
