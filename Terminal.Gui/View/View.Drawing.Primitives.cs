@@ -67,12 +67,11 @@ public partial class View
     }
 
 
-    /// <summary>Adds the <paramref name="str"/> to the display at the cursor position.</summary>
+    /// <summary>Adds the <paramref name="str"/> to the display at the current draw position.</summary>
     /// <remarks>
     ///     <para>
-    ///         When the method returns, <see cref="Col"/> will be incremented by the number of columns
-    ///         <paramref name="str"/> required, unless the new column value is outside of the <see cref="Clip"/> or screen
-    ///         dimensions defined by <see cref="Cols"/>.
+    ///         When the method returns, the draw position will be incremented by the number of columns
+    ///         <paramref name="str"/> required, unless the new column value is outside the <see cref="GetClip()"/> or <see cref="Application.Screen"/>.
     ///     </para>
     ///     <para>If <paramref name="str"/> requires more columns than are available, the output will be clipped.</para>
     /// </remarks>
