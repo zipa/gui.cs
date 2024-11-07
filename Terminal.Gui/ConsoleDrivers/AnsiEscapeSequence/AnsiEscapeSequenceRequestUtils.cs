@@ -1078,7 +1078,18 @@ public static class AnsiEscapeSequenceRequestUtils
 
                 break;
             case uint n when n is > 0 and <= KeyEsc:
-                if (consoleKeyInfo is { Key: 0, KeyChar: '\t' })
+                if (consoleKeyInfo is { Key: 0, KeyChar: '\u001B' })
+                {
+                    key = ConsoleKey.Escape;
+
+                    newConsoleKeyInfo = new (
+                                             consoleKeyInfo.KeyChar,
+                                             key,
+                                             (consoleKeyInfo.Modifiers & ConsoleModifiers.Shift) != 0,
+                                             (consoleKeyInfo.Modifiers & ConsoleModifiers.Alt) != 0,
+                                             (consoleKeyInfo.Modifiers & ConsoleModifiers.Control) != 0);
+                }
+                else if (consoleKeyInfo is { Key: 0, KeyChar: '\t' })
                 {
                     key = ConsoleKey.Tab;
 
