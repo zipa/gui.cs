@@ -60,7 +60,7 @@ public class AllViewsTester : Scenario
             SelectedItem = 0,
             Source = new ListWrapper<string> (new (_viewClasses.Keys.ToList ())),
             BorderStyle = LineStyle.Rounded,
-            SuperViewRendersLineCanvas = true
+            //SuperViewRendersLineCanvas = true
         };
 
         _classListView.SelectedItemChanged += (s, args) =>
@@ -88,7 +88,7 @@ public class AllViewsTester : Scenario
         _adornmentsEditor = new ()
         {
             Title = "Adornments [_2]",
-            X = Pos.Right (_classListView) - 1,
+            X = Pos.Right (_classListView),
             Y = 0,
             Width = Dim.Auto (),
             Height = Dim.Auto (),
@@ -96,22 +96,22 @@ public class AllViewsTester : Scenario
             BorderStyle = LineStyle.Rounded,
             AutoSelectViewToEdit = false,
             AutoSelectAdornments = false,
-            SuperViewRendersLineCanvas = true
+            //SuperViewRendersLineCanvas = true
         };
         _adornmentsEditor.ExpanderButton.Orientation = Orientation.Vertical;
 
         _arrangementEditor = new ()
         {
             Title = "Arrangement [_3]",
-            X = Pos.Right (_classListView) - 1,
-            Y = Pos.Bottom (_adornmentsEditor) -1,
+            X = Pos.Right (_classListView),
+            Y = Pos.Bottom (_adornmentsEditor),
             Width = Dim.Width (_adornmentsEditor),
             Height = Dim.Fill (),
             ColorScheme = Colors.ColorSchemes ["TopLevel"],
             BorderStyle = LineStyle.Rounded,
             AutoSelectViewToEdit = false,
             AutoSelectAdornments = false,
-            SuperViewRendersLineCanvas = true
+            //SuperViewRendersLineCanvas = true
         };
         _arrangementEditor.ExpanderButton.Orientation = Orientation.Vertical;
 

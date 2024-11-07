@@ -106,7 +106,6 @@ public class Border : Adornment
         {
             DrawIndicator.AdvanceAnimation (false);
             DrawIndicator.Render ();
-            Parent?.LineCanvas.Exclusions.Add (DrawIndicator.ViewportToScreen (new Point (0,0)));
         }
     }
 

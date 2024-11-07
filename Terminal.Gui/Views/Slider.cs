@@ -850,8 +850,8 @@ public class Slider<T> : View, IOrientation
 
         if (IsInitialized)
         {
-            normalAttr = ColorScheme?.Normal ?? Application.Top.ColorScheme.Normal;
-            setAttr = Style.SetChar.Attribute ?? ColorScheme!.HotNormal;
+            normalAttr = GetNormalColor();
+            setAttr = Style.SetChar.Attribute ?? GetHotNormalColor ();
         }
 
         bool isVertical = _config._sliderOrientation == Orientation.Vertical;
@@ -1058,8 +1058,8 @@ public class Slider<T> : View, IOrientation
 
         if (IsInitialized)
         {
-            normalAttr = Style.LegendAttributes.NormalAttribute ?? ColorScheme?.Normal ?? ColorScheme.Disabled;
-            setAttr = Style.LegendAttributes.SetAttribute ?? ColorScheme?.HotNormal ?? ColorScheme.Normal;
+            normalAttr = Style.LegendAttributes.NormalAttribute ?? GetNormalColor ();
+            setAttr = Style.LegendAttributes.SetAttribute ?? GetHotNormalColor ();
             spaceAttr = Style.LegendAttributes.EmptyAttribute ?? normalAttr;
         }
 

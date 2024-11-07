@@ -29,6 +29,7 @@ public class LayoutEditor : EditorBase
 
     protected override void OnViewToEditChanged ()
     {
+        Enabled = ViewToEdit is not Adornment;
 
         if (_xEditor is { })
         {

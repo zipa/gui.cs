@@ -27,6 +27,8 @@ public class AdornmentsEditor : EditorBase
     /// <inheritdoc/>
     protected override void OnViewToEditChanged ()
     {
+        Enabled = ViewToEdit is Adornment;
+
         if (MarginEditor is { })
         {
             MarginEditor.AdornmentToEdit = ViewToEdit?.Margin ?? null;

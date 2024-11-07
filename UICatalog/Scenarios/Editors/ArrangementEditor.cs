@@ -69,6 +69,8 @@ public sealed class ArrangementEditor : EditorBase
 
     protected override void OnViewToEditChanged ()
     {
+        Enabled = ViewToEdit is not Adornment;
+
         _arrangementSlider.OptionsChanged -= ArrangementSliderOnOptionsChanged;
 
         // Set the appropriate options in the slider based on _viewToEdit.Arrangement

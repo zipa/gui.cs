@@ -133,6 +133,7 @@ public partial class View // Drawing APIs
             foreach (View subview in Border.Subviews)
             {
                 subview.SetNeedsDraw ();
+                LineCanvas.Exclude (new (subview.FrameToScreen()));
             }
 
             Region? saved = Border?.ClipFrame ();
