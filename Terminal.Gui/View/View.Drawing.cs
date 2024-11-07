@@ -92,7 +92,7 @@ public partial class View // Drawing APIs
 
             // Re-draw the border and padding subviews
             // HACK: This is a hack to ensure that the border and padding subviews are drawn after the line canvas.
-            //DoDrawBorderAndPaddingSubViews ();
+            DoDrawBorderAndPaddingSubViews ();
 
             // Advance the diagnostics draw indicator
             Border?.AdvanceDrawIndicator ();

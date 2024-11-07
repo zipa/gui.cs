@@ -918,20 +918,20 @@ public class ListView : View, IDesignable
     /// <summary>This event is raised when the user Double Clicks on an item or presses ENTER to open the selected item.</summary>
     public event EventHandler<ListViewItemEventArgs> OpenSelectedItem;
 
-    /// <inheritdoc/>
-    public override Point? PositionCursor ()
-    {
-        int x = 0;
-        int y = _selected - Viewport.Y;
-        if (!_allowsMarking)
-        {
-            x = Viewport.Width - 1;
-        }
+    ///// <inheritdoc/>
+    //public override Point? PositionCursor ()
+    //{
+    //    int x = 0;
+    //    int y = _selected - Viewport.Y;
+    //    if (!_allowsMarking)
+    //    {
+    //        x = Viewport.Width - 1;
+    //    }
 
-        Move (x, y);
+    //    Move (x, y);
 
-        return null; // Don't show the cursor
-    }
+    //    return null; // Don't show the cursor
+    //}
 
     /// <summary>This event is invoked when this <see cref="ListView"/> is being drawn before rendering.</summary>
     public event EventHandler<ListViewRowEventArgs> RowRender;

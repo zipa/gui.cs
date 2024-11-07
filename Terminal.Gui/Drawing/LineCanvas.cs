@@ -158,7 +158,13 @@ public class LineCanvas : IDisposable
     {
         _cachedViewport = Rectangle.Empty;
         _lines.Clear ();
+        Exclusions.Clear ();
     }
+
+    /// <summary>
+    ///     Gets the list of locations that will be excluded from <see cref="GetCellMap"/> and <see cref="GetMap()"/>.
+    /// </summary>
+    public List<Point> Exclusions { get; } = new List<Point> ();
 
     /// <summary>
     ///     Clears any cached states from the canvas Call this method if you make changes to lines that have already been
@@ -188,9 +194,10 @@ public class LineCanvas : IDisposable
 
                 Cell? cell = GetCellForIntersects (Application.Driver, intersects);
 
-                if (cell is { })
+                Point location = new (x, y);
+                if (cell is { } && !Exclusions.Contains (location))
                 {
-                    map.Add (new (x, y), cell);
+                    map.Add (location, cell);
                 }
             }
         }
@@ -223,7 +230,8 @@ public class LineCanvas : IDisposable
 
                 Rune? rune = GetRuneForIntersects (Application.Driver, intersects);
 
-                if (rune is { })
+                Point location = new (x, y);
+                if (rune is { } && !Exclusions.Contains (location))
                 {
                     map.Add (new (x, y), rune.Value);
                 }
@@ -249,6 +257,7 @@ public class LineCanvas : IDisposable
         {
             AddLine (line);
         }
+        Exclusions.AddRange (lineCanvas.Exclusions);
     }
 
     /// <summary>Removes the last line added to the canvas</summary>

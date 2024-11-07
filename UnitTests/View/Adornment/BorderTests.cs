@@ -904,7 +904,8 @@ public class BorderTests (ITestOutputHelper output)
             Title = "A",
             Width = 11,
             Height = 7,
-            BorderStyle = LineStyle.Single
+            CanFocus = true,
+            BorderStyle = LineStyle.Single,
         };
 
         View view1 = new View ()
@@ -915,6 +916,7 @@ public class BorderTests (ITestOutputHelper output)
             Height = 4,
             X = -1,
             Y = -1,
+            CanFocus = true,
             BorderStyle = LineStyle.Double,
             SuperViewRendersLineCanvas = superViewRendersLineCanvas
         };
@@ -927,6 +929,7 @@ public class BorderTests (ITestOutputHelper output)
             Height = 4,
             X = 4,
             Y = 2,
+            CanFocus = true,
             BorderStyle = LineStyle.Dotted,
             SuperViewRendersLineCanvas = superViewRendersLineCanvas
         };
