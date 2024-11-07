@@ -59,7 +59,8 @@ public class AllViewsTester : Scenario
             ColorScheme = Colors.ColorSchemes ["TopLevel"],
             SelectedItem = 0,
             Source = new ListWrapper<string> (new (_viewClasses.Keys.ToList ())),
-            BorderStyle = LineStyle.Rounded
+            BorderStyle = LineStyle.Rounded,
+            SuperViewRendersLineCanvas = true
         };
 
         _classListView.SelectedItemChanged += (s, args) =>
@@ -87,28 +88,30 @@ public class AllViewsTester : Scenario
         _adornmentsEditor = new ()
         {
             Title = "Adornments [_2]",
-            X = Pos.Right (_classListView),
+            X = Pos.Right (_classListView) - 1,
             Y = 0,
             Width = Dim.Auto (),
             Height = Dim.Auto (),
             ColorScheme = Colors.ColorSchemes ["TopLevel"],
             BorderStyle = LineStyle.Rounded,
             AutoSelectViewToEdit = false,
-            AutoSelectAdornments = false
+            AutoSelectAdornments = false,
+            SuperViewRendersLineCanvas = true
         };
         _adornmentsEditor.ExpanderButton.Orientation = Orientation.Vertical;
 
         _arrangementEditor = new ()
         {
             Title = "Arrangement [_3]",
-            X = Pos.Right (_classListView),
-            Y = Pos.Bottom (_adornmentsEditor),
+            X = Pos.Right (_classListView) - 1,
+            Y = Pos.Bottom (_adornmentsEditor) -1,
             Width = Dim.Width (_adornmentsEditor),
             Height = Dim.Fill (),
             ColorScheme = Colors.ColorSchemes ["TopLevel"],
             BorderStyle = LineStyle.Rounded,
             AutoSelectViewToEdit = false,
-            AutoSelectAdornments = false
+            AutoSelectAdornments = false,
+            SuperViewRendersLineCanvas = true
         };
         _arrangementEditor.ExpanderButton.Orientation = Orientation.Vertical;
 
@@ -124,7 +127,8 @@ public class AllViewsTester : Scenario
             ColorScheme = Colors.ColorSchemes ["TopLevel"],
             BorderStyle = LineStyle.Rounded,
             AutoSelectViewToEdit = false,
-            AutoSelectAdornments = false
+            AutoSelectAdornments = false,
+            SuperViewRendersLineCanvas = true
         };
 
         _settingsPane = new ()
@@ -136,7 +140,8 @@ public class AllViewsTester : Scenario
             Height = Dim.Auto (),
             CanFocus = true,
             ColorScheme = Colors.ColorSchemes ["TopLevel"],
-            BorderStyle = LineStyle.Rounded
+            BorderStyle = LineStyle.Rounded,
+            SuperViewRendersLineCanvas = true
         };
 
         Label label = new () { X = 0, Y = 0, Text = "_Orientation:" };

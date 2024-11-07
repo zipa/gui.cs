@@ -836,7 +836,7 @@ public class BorderTests (ITestOutputHelper output)
 │ ┊ ┊
 └─└┄┘")]
     [SetupFakeDriver]
-    public void SuperViewRendersLineCanvas_AutoJoinsLines (bool superViewRendersLineCanvas, string expected)
+    public void SuperViewRendersLineCanvas_No_Subviews_AutoJoinsLines (bool superViewRendersLineCanvas, string expected)
     {
         View superView = new View ()
         {
@@ -864,6 +864,69 @@ public class BorderTests (ITestOutputHelper output)
             Height = 3,
             X = 1,
             Y = 1,
+            BorderStyle = LineStyle.Dotted,
+            SuperViewRendersLineCanvas = superViewRendersLineCanvas
+        };
+
+        superView.Add (view1, view2);
+
+        superView.BeginInit ();
+        superView.EndInit ();
+        superView.Draw ();
+
+        TestHelpers.AssertDriverContentsAre (expected, output);
+    }
+
+
+    [Theory]
+    [InlineData (false, @"
+┌┤A├──────┐
+│    ║    │
+│    ║    │
+│════┌┤C├┄│
+│    ┊    │
+│    ┊    │
+└─────────┘")]
+    [InlineData (true, @"
+╔╡A╞═╗────┐
+║    ║    │
+║    ║    │
+╚════╬┤C├┄┐
+│    ┊    ┊
+│    ┊    ┊
+└────└┄┄┄┄┘")]
+    [SetupFakeDriver]
+    public void SuperViewRendersLineCanvas_Title_AutoJoinsLines (bool superViewRendersLineCanvas, string expected)
+    {
+        View superView = new View ()
+        {
+            Id = "superView",
+            Title = "A",
+            Width = 11,
+            Height = 7,
+            BorderStyle = LineStyle.Single
+        };
+
+        View view1 = new View ()
+        {
+            Id = "view1",
+            Title = "B",
+            Width = 6,
+            Height = 4,
+            X = -1,
+            Y = -1,
+            BorderStyle = LineStyle.Double,
+            SuperViewRendersLineCanvas = superViewRendersLineCanvas
+        };
+
+        View view2 = new View ()
+        {
+            Id = "view2",
+            Title = "C",
+            Width = 6,
+            Height = 4,
+            X = 4,
+            Y = 2,
             BorderStyle = LineStyle.Dotted,
             SuperViewRendersLineCanvas = superViewRendersLineCanvas
         };

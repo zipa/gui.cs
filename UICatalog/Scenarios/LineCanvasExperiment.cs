@@ -131,7 +131,7 @@ public class LineCanvasExperiment : Scenario
             //ColorScheme = Colors.ColorSchemes ["Error"],
             SuperViewRendersLineCanvas = true
         };
-        marginWindow.Margin.ColorScheme = Colors.ColorSchemes ["Dialog"];
+        marginWindow.Margin.ColorScheme = Colors.ColorSchemes ["Error"];
         marginWindow.Margin.Thickness = new (1);
         marginWindow.Border.Thickness = new (1, 2, 1, 1);
 
