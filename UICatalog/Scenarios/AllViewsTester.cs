@@ -60,7 +60,7 @@ public class AllViewsTester : Scenario
             SelectedItem = 0,
             Source = new ListWrapper<string> (new (_viewClasses.Keys.ToList ())),
             BorderStyle = LineStyle.Rounded,
-            //SuperViewRendersLineCanvas = true
+            SuperViewRendersLineCanvas = true
         };
 
         _classListView.SelectedItemChanged += (s, args) =>
@@ -88,7 +88,7 @@ public class AllViewsTester : Scenario
         _adornmentsEditor = new ()
         {
             Title = "Adornments [_2]",
-            X = Pos.Right (_classListView),
+            X = Pos.Right (_classListView) - 1,
             Y = 0,
             Width = Dim.Auto (),
             Height = Dim.Auto (),
@@ -96,29 +96,29 @@ public class AllViewsTester : Scenario
             BorderStyle = LineStyle.Rounded,
             AutoSelectViewToEdit = false,
             AutoSelectAdornments = false,
-            //SuperViewRendersLineCanvas = true
+            SuperViewRendersLineCanvas = true
         };
         _adornmentsEditor.ExpanderButton.Orientation = Orientation.Vertical;
 
         _arrangementEditor = new ()
         {
             Title = "Arrangement [_3]",
-            X = Pos.Right (_classListView),
-            Y = Pos.Bottom (_adornmentsEditor),
+            X = Pos.Right (_classListView) - 1,
+            Y = Pos.Bottom (_adornmentsEditor) -1,
             Width = Dim.Width (_adornmentsEditor),
             Height = Dim.Fill (),
             ColorScheme = Colors.ColorSchemes ["TopLevel"],
             BorderStyle = LineStyle.Rounded,
             AutoSelectViewToEdit = false,
             AutoSelectAdornments = false,
-            //SuperViewRendersLineCanvas = true
+            SuperViewRendersLineCanvas = true
         };
         _arrangementEditor.ExpanderButton.Orientation = Orientation.Vertical;
 
         _layoutEditor = new ()
         {
             Title = "Layout [_4]",
-            X = Pos.Right (_adornmentsEditor),
+            X = Pos.Right (_adornmentsEditor) - 1,
             Y = 0,
 
             //Width = Dim.Fill (), // set below
@@ -134,8 +134,8 @@ public class AllViewsTester : Scenario
         _settingsPane = new ()
         {
             Title = "Settings [_5]",
-            X = Pos.Right (_adornmentsEditor),
-            Y = Pos.Bottom (_layoutEditor),
+            X = Pos.Right (_adornmentsEditor) - 1,
+            Y = Pos.Bottom (_layoutEditor) - 1,
             Width = Dim.Width (_layoutEditor),
             Height = Dim.Auto (),
             CanFocus = true,
@@ -188,9 +188,10 @@ public class AllViewsTester : Scenario
 
         _eventLog = new ()
         {
-            // X = Pos.Right(_layoutEditor)
+            // X = Pos.Right(_layoutEditor),
+            SuperViewRendersLineCanvas = true
         };
-        _eventLog.X = Pos.AnchorEnd ();
+        _eventLog.X = Pos.AnchorEnd () - 1;
         _eventLog.Y = 0;
 
         _eventLog.Height = Dim.Height (_classListView);
@@ -216,15 +217,16 @@ public class AllViewsTester : Scenario
         _hostPane = new ()
         {
             Id = "_hostPane",
-            X = Pos.Right (_adornmentsEditor),
-            Y = Pos.Bottom (_settingsPane),
+            X = Pos.Right (_adornmentsEditor) - 1,
+            Y = Pos.Bottom (_settingsPane) - 1,
             Width = Dim.Width (_layoutEditor),
             Height = Dim.Fill (),
             CanFocus = true,
             TabStop = TabBehavior.TabStop,
             ColorScheme = Colors.ColorSchemes ["Base"],
             Arrangement = ViewArrangement.Resizable,
-            BorderStyle = LineStyle.RoundedDotted
+            BorderStyle = LineStyle.RoundedDotted,
+            SuperViewRendersLineCanvas = true
         };
         _hostPane.Border!.ColorScheme = app.ColorScheme;
         _hostPane.Padding!.Thickness = new (1);

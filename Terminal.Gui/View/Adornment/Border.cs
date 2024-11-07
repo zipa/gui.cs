@@ -720,10 +720,12 @@ public class Border : Adornment
                 focus = GetFocusColor ();
             }
 
-            Parent.TitleTextFormatter.Draw (
-                                            new (borderBounds.X + 2, titleY, maxTitleWidth, 1),
+            Rectangle titleRect = new (borderBounds.X + 2, titleY, maxTitleWidth, 1);
+            Parent.TitleTextFormatter.Draw (titleRect
+                                           ,
                                             Parent.HasFocus ? focus : GetNormalColor (),
                                             Parent.HasFocus ? focus : GetHotNormalColor ());
+            Parent?.LineCanvas.Exclude(new(titleRect));
         }
 
         if (canDrawBorder && LineStyle != LineStyle.None)

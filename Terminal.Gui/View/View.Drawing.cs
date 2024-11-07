@@ -130,7 +130,7 @@ public partial class View // Drawing APIs
     {
         if (Border?.Subviews is { } && Border.Thickness != Thickness.Empty)
         {
-            foreach (View subview in Border.Subviews)
+            foreach (View subview in Border.Subviews.Where (v => v.Visible))
             {
                 subview.SetNeedsDraw ();
                 LineCanvas.Exclude (new (subview.FrameToScreen()));
@@ -479,6 +479,11 @@ public partial class View // Drawing APIs
         // Draw the subviews in reverse order to leverage clipping.
         foreach (View view in _subviews.Where (view => view.Visible).Reverse ())
         {
+            // TODO: HACK - This enables auto line join to work, but is brute force.
+            if (view.SuperViewRendersLineCanvas)
+            {
+                view.SetNeedsDraw ();
+            }
             view.Draw ();
         }
     }
@@ -774,6 +779,12 @@ public partial class View // Drawing APIs
         {
             SuperView.SubViewNeedsDraw = false;
         }
+
+        if (!SuperViewRendersLineCanvas)
+        {
+            LineCanvas.Clear ();
+        }
+
     }
 
     #endregion NeedsDraw

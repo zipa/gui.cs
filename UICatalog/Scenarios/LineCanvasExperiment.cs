@@ -19,7 +19,7 @@ public class LineCanvasExperiment : Scenario
 
         var frame1 = new FrameView
         {
-            Title = "LineCanvas Experiments",
+            Title = "_SuperView",
             X = 0,
             Y = 0,
             Width = Dim.Fill (),
