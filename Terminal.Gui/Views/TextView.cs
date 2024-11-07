@@ -3646,7 +3646,7 @@ public class TextView : View
 
         _isDrawing = false;
 
-        return true;
+        return false;
     }
 
     /// <inheritdoc/>
