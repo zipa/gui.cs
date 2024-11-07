@@ -783,7 +783,7 @@ internal class CursesDriver : ConsoleDriver
             case UnixMainLoop.EventType.Key:
                 ConsoleKeyInfo consoleKeyInfo = inputEvent.KeyEvent;
 
-                KeyCode map = ConsoleKeyMapping.MapConsoleKeyInfoToKeyCode (consoleKeyInfo);
+                KeyCode map = AnsiEscapeSequenceRequestUtils.MapKey (consoleKeyInfo);
 
                 if (map == KeyCode.Null)
                 {
