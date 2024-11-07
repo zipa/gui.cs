@@ -1140,10 +1140,11 @@ public static class AnsiEscapeSequenceRequestUtils
                 if (isConsoleKey)
                 {
                     key = (ConsoleKey)ck;
+                    keyChar = (char)ck;
                 }
 
                 newConsoleKeyInfo = new (
-                                         consoleKeyInfo.KeyChar,
+                                         keyChar,
                                          key,
                                          GetShiftMod (consoleKeyInfo.Modifiers),
                                          (consoleKeyInfo.Modifiers & ConsoleModifiers.Alt) != 0,
