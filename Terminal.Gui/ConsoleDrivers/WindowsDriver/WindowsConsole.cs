@@ -68,8 +68,8 @@ internal class WindowsConsole
         {
             _stringBuilder.Clear ();
 
-            _stringBuilder.Append (EscSeqUtils.CSI_SaveCursorPosition);
-            _stringBuilder.Append (EscSeqUtils.CSI_SetCursorPosition (0, 0));
+            _stringBuilder.Append (AnsiEscapeSequenceRequestUtils.CSI_SaveCursorPosition);
+            _stringBuilder.Append (AnsiEscapeSequenceRequestUtils.CSI_SetCursorPosition (0, 0));
 
             Attribute? prev = null;
 
@@ -80,8 +80,8 @@ internal class WindowsConsole
                 if (attr != prev)
                 {
                     prev = attr;
-                    _stringBuilder.Append (EscSeqUtils.CSI_SetForegroundColorRGB (attr.Foreground.R, attr.Foreground.G, attr.Foreground.B));
-                    _stringBuilder.Append (EscSeqUtils.CSI_SetBackgroundColorRGB (attr.Background.R, attr.Background.G, attr.Background.B));
+                    _stringBuilder.Append (AnsiEscapeSequenceRequestUtils.CSI_SetForegroundColorRGB (attr.Foreground.R, attr.Foreground.G, attr.Foreground.B));
+                    _stringBuilder.Append (AnsiEscapeSequenceRequestUtils.CSI_SetBackgroundColorRGB (attr.Background.R, attr.Background.G, attr.Background.B));
                 }
 
                 if (info.Char != '\x1b')
@@ -97,8 +97,8 @@ internal class WindowsConsole
                 }
             }
 
-            _stringBuilder.Append (EscSeqUtils.CSI_RestoreCursorPosition);
-            _stringBuilder.Append (EscSeqUtils.CSI_HideCursor);
+            _stringBuilder.Append (AnsiEscapeSequenceRequestUtils.CSI_RestoreCursorPosition);
+            _stringBuilder.Append (AnsiEscapeSequenceRequestUtils.CSI_HideCursor);
 
             var s = _stringBuilder.ToString ();
 
@@ -949,7 +949,7 @@ internal class WindowsConsole
                                 ansiSequence.Append (inputChar);
 
                                 // Check if the sequence has ended with an expected command terminator
-                                if (_mainLoop.EscSeqRequests is { } && _mainLoop.EscSeqRequests.HasResponse (inputChar.ToString (), out EscSeqReqStatus seqReqStatus))
+                                if (_mainLoop.EscSeqRequests is { } && _mainLoop.EscSeqRequests.HasResponse (inputChar.ToString (), out AnsiEscapeSequenceRequestStatus seqReqStatus))
                                 {
                                     // Finished reading the sequence and remove the enqueued request
                                     _mainLoop.EscSeqRequests.Remove (seqReqStatus);
@@ -970,9 +970,9 @@ internal class WindowsConsole
                     }
                 }
 
-                if (readingSequence && !raisedResponse && EscSeqUtils.IncompleteCkInfos is null && _mainLoop.EscSeqRequests is { Statuses.Count: > 0 })
+                if (readingSequence && !raisedResponse && AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && _mainLoop.EscSeqRequests is { Statuses.Count: > 0 })
                 {
-                    _mainLoop.EscSeqRequests.Statuses.TryDequeue (out EscSeqReqStatus seqReqStatus);
+                    _mainLoop.EscSeqRequests.Statuses.TryDequeue (out AnsiEscapeSequenceRequestStatus seqReqStatus);
 
                     lock (seqReqStatus!.AnsiRequest._responseLock)
                     {
@@ -984,11 +984,11 @@ internal class WindowsConsole
 
                     _retries = 0;
                 }
-                else if (EscSeqUtils.IncompleteCkInfos is null && _mainLoop.EscSeqRequests is { Statuses.Count: > 0 })
+                else if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && _mainLoop.EscSeqRequests is { Statuses.Count: > 0 })
                 {
                     if (_retries > 1)
                     {
-                        if (_mainLoop.EscSeqRequests.Statuses.TryPeek (out EscSeqReqStatus seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.Response))
+                        if (_mainLoop.EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.Response))
                         {
                             lock (seqReqStatus!.AnsiRequest._responseLock)
                             {

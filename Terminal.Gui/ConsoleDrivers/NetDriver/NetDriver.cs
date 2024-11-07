@@ -37,15 +37,15 @@ internal class NetDriver : ConsoleDriver
             Console.Clear ();
 
             //Disable alternative screen buffer.
-            Console.Out.Write (EscSeqUtils.CSI_RestoreCursorAndRestoreAltBufferWithBackscroll);
+            Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_RestoreCursorAndRestoreAltBufferWithBackscroll);
 
             //Set cursor key to cursor.
-            Console.Out.Write (EscSeqUtils.CSI_ShowCursor);
+            Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_ShowCursor);
 
             Platform.Suspend ();
 
             //Enable alternative screen buffer.
-            Console.Out.Write (EscSeqUtils.CSI_SaveCursorAndActivateAltBufferNoBackscroll);
+            Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_SaveCursorAndActivateAltBufferNoBackscroll);
 
             SetContentsAsDirty ();
             Refresh ();
@@ -139,7 +139,7 @@ internal class NetDriver : ConsoleDriver
                         if (Force16Colors)
                         {
                             output.Append (
-                                           EscSeqUtils.CSI_SetGraphicsRendition (
+                                           AnsiEscapeSequenceRequestUtils.CSI_SetGraphicsRendition (
                                                                                  MapColors (
                                                                                             (ConsoleColor)attr.Background.GetClosestNamedColor16 (),
                                                                                             false
@@ -151,7 +151,7 @@ internal class NetDriver : ConsoleDriver
                         else
                         {
                             output.Append (
-                                           EscSeqUtils.CSI_SetForegroundColorRGB (
+                                           AnsiEscapeSequenceRequestUtils.CSI_SetForegroundColorRGB (
                                                                                   attr.Foreground.R,
                                                                                   attr.Foreground.G,
                                                                                   attr.Foreground.B
@@ -159,7 +159,7 @@ internal class NetDriver : ConsoleDriver
                                           );
 
                             output.Append (
-                                           EscSeqUtils.CSI_SetBackgroundColorRGB (
+                                           AnsiEscapeSequenceRequestUtils.CSI_SetBackgroundColorRGB (
                                                                                   attr.Background.R,
                                                                                   attr.Background.G,
                                                                                   attr.Background.B
@@ -277,10 +277,10 @@ internal class NetDriver : ConsoleDriver
             Rows = Console.WindowHeight;
 
             //Enable alternative screen buffer.
-            Console.Out.Write (EscSeqUtils.CSI_SaveCursorAndActivateAltBufferNoBackscroll);
+            Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_SaveCursorAndActivateAltBufferNoBackscroll);
 
             //Set cursor key to application.
-            Console.Out.Write (EscSeqUtils.CSI_HideCursor);
+            Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_HideCursor);
         }
         else
         {
@@ -374,10 +374,10 @@ internal class NetDriver : ConsoleDriver
             Console.ResetColor ();
 
             //Disable alternative screen buffer.
-            Console.Out.Write (EscSeqUtils.CSI_RestoreCursorAndRestoreAltBufferWithBackscroll);
+            Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_RestoreCursorAndRestoreAltBufferWithBackscroll);
 
             //Set cursor key to cursor.
-            Console.Out.Write (EscSeqUtils.CSI_ShowCursor);
+            Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_ShowCursor);
             Console.Out.Close ();
         }
     }
@@ -467,7 +467,7 @@ internal class NetDriver : ConsoleDriver
 
         // + 1 is needed because non-Windows is based on 1 instead of 0 and
         // Console.CursorTop/CursorLeft isn't reliable.
-        Console.Out.Write (EscSeqUtils.CSI_SetCursorPosition (row + 1, col + 1));
+        Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_SetCursorPosition (row + 1, col + 1));
 
         return true;
     }
@@ -496,7 +496,7 @@ internal class NetDriver : ConsoleDriver
     {
         _cachedCursorVisibility = visibility;
 
-        Console.Out.Write (visibility == CursorVisibility.Default ? EscSeqUtils.CSI_ShowCursor : EscSeqUtils.CSI_HideCursor);
+        Console.Out.Write (visibility == CursorVisibility.Default ? AnsiEscapeSequenceRequestUtils.CSI_ShowCursor : AnsiEscapeSequenceRequestUtils.CSI_HideCursor);
 
         return visibility == CursorVisibility.Default;
     }
@@ -525,7 +525,7 @@ internal class NetDriver : ConsoleDriver
     {
         if (!RunningUnitTests)
         {
-            Console.Out.Write (EscSeqUtils.CSI_EnableMouseEvents);
+            Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_EnableMouseEvents);
         }
     }
 
@@ -533,7 +533,7 @@ internal class NetDriver : ConsoleDriver
     {
         if (!RunningUnitTests)
         {
-            Console.Out.Write (EscSeqUtils.CSI_DisableMouseEvents);
+            Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_DisableMouseEvents);
         }
     }
 
@@ -875,7 +875,7 @@ internal class NetDriver : ConsoleDriver
         {
             _mainLoopDriver._netEvents._forceRead = false;
 
-            if (_mainLoopDriver._netEvents.EscSeqRequests.Statuses.TryPeek (out EscSeqReqStatus request))
+            if (_mainLoopDriver._netEvents.EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus request))
             {
                 if (_mainLoopDriver._netEvents.EscSeqRequests.Statuses.Count > 0
                     && string.IsNullOrEmpty (request.AnsiRequest.Response))
@@ -954,7 +954,7 @@ internal class NetDriver : ConsoleDriver
         }
         else
         {
-            Console.Out.Write (EscSeqUtils.CSI_SetTerminalWindowSize (Rows, Cols));
+            Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_SetTerminalWindowSize (Rows, Cols));
         }
 
         // CONCURRENCY: Unsynchronized access to Clip is not safe.

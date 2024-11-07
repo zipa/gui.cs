@@ -73,7 +73,7 @@ public class AnsiEscapeSequenceRequest
             // Send the ANSI escape sequence
             ansiRequest.Response = driver?.WriteAnsiRequest (ansiRequest)!;
 
-            if (!string.IsNullOrEmpty (ansiRequest.Response) && !ansiRequest.Response.StartsWith (EscSeqUtils.KeyEsc))
+            if (!string.IsNullOrEmpty (ansiRequest.Response) && !ansiRequest.Response.StartsWith (AnsiEscapeSequenceRequestUtils.KeyEsc))
             {
                 throw new InvalidOperationException ($"Invalid Response: {ansiRequest.Response}");
             }
@@ -103,7 +103,7 @@ public class AnsiEscapeSequenceRequest
         {
             if (string.IsNullOrEmpty (error.ToString ()))
             {
-                (string? _, string? _, values, string? _) = EscSeqUtils.GetEscapeResult (ansiRequest.Response.ToCharArray ());
+                (string? _, string? _, values, string? _) = AnsiEscapeSequenceRequestUtils.GetEscapeResult (ansiRequest.Response.ToCharArray ());
             }
         }
 

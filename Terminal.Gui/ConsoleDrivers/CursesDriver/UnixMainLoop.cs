@@ -52,7 +52,7 @@ internal class UnixMainLoop : IMainLoopDriver
         _cursesDriver = (CursesDriver)consoleDriver ?? throw new ArgumentNullException (nameof (consoleDriver));
     }
 
-    public EscSeqRequests EscSeqRequests { get; } = new ();
+    public AnsiEscapeSequenceRequests EscSeqRequests { get; } = new ();
 
     void IMainLoopDriver.Wakeup () { _eventReady.Set (); }
 
@@ -77,7 +77,7 @@ internal class UnixMainLoop : IMainLoopDriver
             throw new NotSupportedException ("libc not found", e);
         }
 
-        EscSeqUtils.ContinuousButtonPressed += EscSeqUtils_ContinuousButtonPressed;
+        AnsiEscapeSequenceRequestUtils.ContinuousButtonPressed += EscSeqUtils_ContinuousButtonPressed;
 
         Task.Run (CursesInputHandler, _inputHandlerTokenSource.Token);
         Task.Run (WindowSizeHandler, _inputHandlerTokenSource.Token);
@@ -213,10 +213,10 @@ internal class UnixMainLoop : IMainLoopDriver
                                     // Convert the byte array to a string (assuming UTF-8 encoding)
                                     string data = Encoding.UTF8.GetString (buffer);
 
-                                    if (EscSeqUtils.IncompleteCkInfos is { })
+                                    if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is { })
                                     {
-                                        data = data.Insert (0, EscSeqUtils.ToString (EscSeqUtils.IncompleteCkInfos));
-                                        EscSeqUtils.IncompleteCkInfos = null;
+                                        data = data.Insert (0, AnsiEscapeSequenceRequestUtils.ToString (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos));
+                                        AnsiEscapeSequenceRequestUtils.IncompleteCkInfos = null;
                                     }
 
                                     // Enqueue the data
@@ -238,11 +238,11 @@ internal class UnixMainLoop : IMainLoopDriver
                         break;
                     }
 
-                    if (EscSeqUtils.IncompleteCkInfos is null && EscSeqRequests is { Statuses.Count: > 0 })
+                    if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && EscSeqRequests is { Statuses.Count: > 0 })
                     {
                         if (_retries > 1)
                         {
-                            if (EscSeqRequests.Statuses.TryPeek (out EscSeqReqStatus seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.Response))
+                            if (EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.Response))
                             {
                                 lock (seqReqStatus!.AnsiRequest._responseLock)
                                 {
@@ -284,7 +284,7 @@ internal class UnixMainLoop : IMainLoopDriver
 
     private void ProcessEnqueuePollData (string pollData)
     {
-        foreach (string split in EscSeqUtils.SplitEscapeRawString (pollData))
+        foreach (string split in AnsiEscapeSequenceRequestUtils.SplitEscapeRawString (pollData))
         {
             EnqueuePollData (split);
         }
@@ -292,13 +292,13 @@ internal class UnixMainLoop : IMainLoopDriver
 
     private void EnqueuePollData (string pollDataPart)
     {
-        ConsoleKeyInfo [] cki = EscSeqUtils.ToConsoleKeyInfoArray (pollDataPart);
+        ConsoleKeyInfo [] cki = AnsiEscapeSequenceRequestUtils.ToConsoleKeyInfoArray (pollDataPart);
 
         ConsoleKey key = 0;
         ConsoleModifiers mod = 0;
         ConsoleKeyInfo newConsoleKeyInfo = default;
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   EscSeqRequests,
                                   ref newConsoleKeyInfo,
                                   ref key,
@@ -311,8 +311,8 @@ internal class UnixMainLoop : IMainLoopDriver
                                   out bool isMouse,
                                   out List<MouseFlags> mouseFlags,
                                   out Point pos,
-                                  out EscSeqReqStatus seqReqStatus,
-                                  EscSeqUtils.ProcessMouseEvent
+                                  out AnsiEscapeSequenceRequestStatus seqReqStatus,
+                                  AnsiEscapeSequenceRequestUtils.ProcessMouseEvent
                                  );
 
         if (isMouse)
@@ -327,7 +327,7 @@ internal class UnixMainLoop : IMainLoopDriver
 
         if (seqReqStatus is { })
         {
-            var ckiString = EscSeqUtils.ToString (cki);
+            var ckiString = AnsiEscapeSequenceRequestUtils.ToString (cki);
 
             lock (seqReqStatus.AnsiRequest._responseLock)
             {
@@ -338,16 +338,16 @@ internal class UnixMainLoop : IMainLoopDriver
             return;
         }
 
-        if (!string.IsNullOrEmpty (EscSeqUtils.InvalidRequestTerminator))
+        if (!string.IsNullOrEmpty (AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator))
         {
-            if (EscSeqRequests.Statuses.TryDequeue (out EscSeqReqStatus result))
+            if (EscSeqRequests.Statuses.TryDequeue (out AnsiEscapeSequenceRequestStatus result))
             {
                 lock (result.AnsiRequest._responseLock)
                 {
-                    result.AnsiRequest.Response = EscSeqUtils.InvalidRequestTerminator;
-                    result.AnsiRequest.RaiseResponseFromInput (result.AnsiRequest, EscSeqUtils.InvalidRequestTerminator);
+                    result.AnsiRequest.Response = AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator;
+                    result.AnsiRequest.RaiseResponseFromInput (result.AnsiRequest, AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator);
 
-                    EscSeqUtils.InvalidRequestTerminator = null;
+                    AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator = null;
                 }
             }
 
@@ -425,7 +425,7 @@ internal class UnixMainLoop : IMainLoopDriver
 
     void IMainLoopDriver.TearDown ()
     {
-        EscSeqUtils.ContinuousButtonPressed -= EscSeqUtils_ContinuousButtonPressed;
+        AnsiEscapeSequenceRequestUtils.ContinuousButtonPressed -= EscSeqUtils_ContinuousButtonPressed;
 
         _inputHandlerTokenSource?.Cancel ();
         _inputHandlerTokenSource?.Dispose ();

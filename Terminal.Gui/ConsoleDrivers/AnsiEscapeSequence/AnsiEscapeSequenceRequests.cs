@@ -8,14 +8,14 @@ namespace Terminal.Gui;
 
 // TODO: This class is a singleton. It should use the singleton pattern.
 /// <summary>
-///     Manages ANSI Escape Sequence requests and responses. The list of <see cref="EscSeqReqStatus"/> contains the
+///     Manages ANSI Escape Sequence requests and responses. The list of <see cref="AnsiEscapeSequenceRequestStatus"/> contains the
 ///     status of the request. Each request is identified by the terminator (e.g. ESC[8t ... t is the terminator).
 /// </summary>
-public class EscSeqRequests
+public class AnsiEscapeSequenceRequests
 {
     /// <summary>
     ///     Adds a new request for the ANSI Escape Sequence defined by <paramref name="ansiRequest"/>. Adds a
-    ///     <see cref="EscSeqReqStatus"/> instance to <see cref="Statuses"/> list.
+    ///     <see cref="AnsiEscapeSequenceRequestStatus"/> instance to <see cref="Statuses"/> list.
     /// </summary>
     /// <param name="ansiRequest">The <see cref="AnsiEscapeSequenceRequest"/> object.</param>
     /// <param name="driver">The driver in use.</param>
@@ -38,13 +38,13 @@ public class EscSeqRequests
     }
 
     /// <summary>
-    ///     Indicates if a <see cref="EscSeqReqStatus"/> with the <paramref name="terminator"/> exists in the
+    ///     Indicates if a <see cref="AnsiEscapeSequenceRequestStatus"/> with the <paramref name="terminator"/> exists in the
     ///     <see cref="Statuses"/> list.
     /// </summary>
     /// <param name="terminator"></param>
     /// <param name="seqReqStatus"></param>
     /// <returns><see langword="true"/> if exist, <see langword="false"/> otherwise.</returns>
-    public bool HasResponse (string terminator, out EscSeqReqStatus? seqReqStatus)
+    public bool HasResponse (string terminator, out AnsiEscapeSequenceRequestStatus? seqReqStatus)
     {
         lock (Statuses)
         {
@@ -64,13 +64,13 @@ public class EscSeqRequests
     }
 
     /// <summary>
-    ///     Removes a request defined by <paramref name="seqReqStatus"/>. If a matching <see cref="EscSeqReqStatus"/> is
+    ///     Removes a request defined by <paramref name="seqReqStatus"/>. If a matching <see cref="AnsiEscapeSequenceRequestStatus"/> is
     ///     found and the number of outstanding requests is greater than 0, the number of outstanding requests is decremented.
-    ///     If the number of outstanding requests is 0, the <see cref="EscSeqReqStatus"/> is removed from
+    ///     If the number of outstanding requests is 0, the <see cref="AnsiEscapeSequenceRequestStatus"/> is removed from
     ///     <see cref="Statuses"/>.
     /// </summary>
-    /// <param name="seqReqStatus">The <see cref="EscSeqReqStatus"/> object.</param>
-    public void Remove (EscSeqReqStatus? seqReqStatus)
+    /// <param name="seqReqStatus">The <see cref="AnsiEscapeSequenceRequestStatus"/> object.</param>
+    public void Remove (AnsiEscapeSequenceRequestStatus? seqReqStatus)
     {
         lock (Statuses)
         {
@@ -83,6 +83,6 @@ public class EscSeqRequests
         }
     }
 
-    /// <summary>Gets the <see cref="EscSeqReqStatus"/> list.</summary>
-    public ConcurrentQueue<EscSeqReqStatus> Statuses { get; } = new ();
+    /// <summary>Gets the <see cref="AnsiEscapeSequenceRequestStatus"/> list.</summary>
+    public ConcurrentQueue<AnsiEscapeSequenceRequestStatus> Statuses { get; } = new ();
 }

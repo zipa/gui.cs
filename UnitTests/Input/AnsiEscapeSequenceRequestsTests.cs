@@ -1,11 +1,11 @@
 ﻿namespace Terminal.Gui.InputTests;
 
-public class EscSeqReqTests
+public class AnsiEscapeSequenceRequestsTests
 {
     [Fact]
     public void Add_Tests ()
     {
-        var escSeqReq = new EscSeqRequests ();
+        var escSeqReq = new AnsiEscapeSequenceRequests ();
         escSeqReq.Add (new () { Request = "", Terminator = "t" });
         Assert.Single (escSeqReq.Statuses);
         Assert.Equal ("t", escSeqReq.Statuses.ToArray () [^1].AnsiRequest.Terminator);
@@ -28,7 +28,7 @@ public class EscSeqReqTests
     [Fact]
     public void Constructor_Defaults ()
     {
-        var escSeqReq = new EscSeqRequests ();
+        var escSeqReq = new AnsiEscapeSequenceRequests ();
         Assert.NotNull (escSeqReq.Statuses);
         Assert.Empty (escSeqReq.Statuses);
     }
@@ -36,9 +36,9 @@ public class EscSeqReqTests
     [Fact]
     public void Remove_Tests ()
     {
-        var escSeqReq = new EscSeqRequests ();
+        var escSeqReq = new AnsiEscapeSequenceRequests ();
         escSeqReq.Add (new () { Request = "", Terminator = "t" });
-        escSeqReq.HasResponse ("t", out EscSeqReqStatus seqReqStatus);
+        escSeqReq.HasResponse ("t", out AnsiEscapeSequenceRequestStatus seqReqStatus);
         escSeqReq.Remove (seqReqStatus);
         Assert.Empty (escSeqReq.Statuses);
 
@@ -57,8 +57,8 @@ public class EscSeqReqTests
     [Fact]
     public void Requested_Tests ()
     {
-        var escSeqReq = new EscSeqRequests ();
-        Assert.False (escSeqReq.HasResponse ("t", out EscSeqReqStatus seqReqStatus));
+        var escSeqReq = new AnsiEscapeSequenceRequests ();
+        Assert.False (escSeqReq.HasResponse ("t", out AnsiEscapeSequenceRequestStatus seqReqStatus));
         Assert.Null (seqReqStatus);
 
         escSeqReq.Add (new () { Request = "", Terminator = "t" });

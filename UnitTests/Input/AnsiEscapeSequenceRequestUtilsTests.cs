@@ -3,17 +3,17 @@
 
 namespace Terminal.Gui.InputTests;
 
-public class EscSeqUtilsTests
+public class AnsiEscapeSequenceRequestUtilsTests
 {
     private bool _actionStarted;
     private MouseFlags _arg1;
     private Point _arg2;
     private string _c1Control, _code, _terminating;
     private ConsoleKeyInfo [] _cki;
-    private EscSeqRequests _escSeqReqProc;
+    private AnsiEscapeSequenceRequests _escSeqReqProc;
     private bool _isKeyMouse;
     [CanBeNull]
-    private EscSeqReqStatus _seqReqStatus;
+    private AnsiEscapeSequenceRequestStatus _seqReqStatus;
     private ConsoleKey _key;
     private ConsoleModifiers _mod;
     private List<MouseFlags> _mouseFlags;
@@ -29,7 +29,7 @@ public class EscSeqUtilsTests
         _cki = new ConsoleKeyInfo [] { new ('\u001b', 0, false, false, false) };
         var expectedCki = new ConsoleKeyInfo ('\u001b', ConsoleKey.Escape, false, false, false);
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -64,7 +64,7 @@ public class EscSeqUtilsTests
         _cki = new ConsoleKeyInfo [] { new ('\u001b', 0, false, false, false), new ('\u0012', 0, false, false, false) };
         expectedCki = new ('\u0012', ConsoleKey.R, false, true, true);
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -99,7 +99,7 @@ public class EscSeqUtilsTests
         _cki = new ConsoleKeyInfo [] { new ('\u001b', 0, false, false, false), new ('r', 0, false, false, false) };
         expectedCki = new ('r', ConsoleKey.R, false, true, false);
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -139,7 +139,7 @@ public class EscSeqUtilsTests
         };
         expectedCki = new ('\0', ConsoleKey.F3, false, false, false);
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -185,7 +185,7 @@ public class EscSeqUtilsTests
         };
         expectedCki = new ('\0', ConsoleKey.F3, true, false, false);
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -231,7 +231,7 @@ public class EscSeqUtilsTests
         };
         expectedCki = new ('\0', ConsoleKey.F3, false, true, false);
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -277,7 +277,7 @@ public class EscSeqUtilsTests
         };
         expectedCki = new ('\0', ConsoleKey.F3, true, true, false);
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -323,7 +323,7 @@ public class EscSeqUtilsTests
         };
         expectedCki = new ('\0', ConsoleKey.F3, false, false, true);
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -369,7 +369,7 @@ public class EscSeqUtilsTests
         };
         expectedCki = new ('\0', ConsoleKey.F3, true, false, true);
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -415,7 +415,7 @@ public class EscSeqUtilsTests
         };
         expectedCki = new ('\0', ConsoleKey.F3, false, true, true);
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -461,7 +461,7 @@ public class EscSeqUtilsTests
         };
         expectedCki = new ('\0', ConsoleKey.F3, true, true, true);
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -510,7 +510,7 @@ public class EscSeqUtilsTests
         };
         expectedCki = default (ConsoleKeyInfo);
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -560,7 +560,7 @@ public class EscSeqUtilsTests
         };
         expectedCki = default (ConsoleKeyInfo);
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -615,7 +615,7 @@ public class EscSeqUtilsTests
         };
         expectedCki = default (ConsoleKeyInfo);
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -663,7 +663,7 @@ public class EscSeqUtilsTests
         };
         expectedCki = default (ConsoleKeyInfo);
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -718,7 +718,7 @@ public class EscSeqUtilsTests
         };
         expectedCki = default (ConsoleKeyInfo);
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -787,7 +787,7 @@ public class EscSeqUtilsTests
         };
         expectedCki = default (ConsoleKeyInfo);
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -844,7 +844,7 @@ public class EscSeqUtilsTests
         Assert.Single (_escSeqReqProc.Statuses);
         Assert.Equal ("t", _escSeqReqProc.Statuses.ToArray () [^1].AnsiRequest.Terminator);
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -908,7 +908,7 @@ public class EscSeqUtilsTests
 
         var expectedCki = new ConsoleKeyInfo (keyChar, consoleKey, shift, alt, control);
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -975,7 +975,7 @@ public class EscSeqUtilsTests
 
         ConsoleKeyInfo expectedCki = default;
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -1005,10 +1005,10 @@ public class EscSeqUtilsTests
         Assert.Null (_seqReqStatus);
         Assert.Equal (0, (int)_arg1);
         Assert.Equal (Point.Empty, _arg2);
-        Assert.Equal (_cki, EscSeqUtils.IncompleteCkInfos);
+        Assert.Equal (_cki, AnsiEscapeSequenceRequestUtils.IncompleteCkInfos);
 
-        _cki = EscSeqUtils.InsertArray (
-                                        EscSeqUtils.IncompleteCkInfos,
+        _cki = AnsiEscapeSequenceRequestUtils.InsertArray (
+                                        AnsiEscapeSequenceRequestUtils.IncompleteCkInfos,
                                         [
                                             new ('0', 0, false, false, false),
                                             new (';', 0, false, false, false),
@@ -1019,7 +1019,7 @@ public class EscSeqUtilsTests
 
         expectedCki = default;
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -1050,8 +1050,8 @@ public class EscSeqUtilsTests
         Assert.Null (_seqReqStatus);
         Assert.Equal (0, (int)_arg1);
         Assert.Equal (Point.Empty, _arg2);
-        Assert.NotEqual (_cki, EscSeqUtils.IncompleteCkInfos);
-        Assert.Contains (EscSeqUtils.ToString (EscSeqUtils.IncompleteCkInfos), EscSeqUtils.ToString (_cki));
+        Assert.NotEqual (_cki, AnsiEscapeSequenceRequestUtils.IncompleteCkInfos);
+        Assert.Contains (AnsiEscapeSequenceRequestUtils.ToString (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos), AnsiEscapeSequenceRequestUtils.ToString (_cki));
 
         ClearAll ();
     }
@@ -1072,7 +1072,7 @@ public class EscSeqUtilsTests
         _cki = [new (keyChar, 0, false, false, false)];
         var expectedCki = new ConsoleKeyInfo (keyChar, consoleKey, shift, alt, control);
 
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   _escSeqReqProc,
                                   ref _newConsoleKeyInfo,
                                   ref _key,
@@ -1136,38 +1136,38 @@ public class EscSeqUtilsTests
     [Fact]
     public void Defaults_Values ()
     {
-        Assert.Equal ('\x1b', EscSeqUtils.KeyEsc);
-        Assert.Equal ("\x1b[", EscSeqUtils.CSI);
-        Assert.Equal ("\x1b[?1003h", EscSeqUtils.CSI_EnableAnyEventMouse);
-        Assert.Equal ("\x1b[?1006h", EscSeqUtils.CSI_EnableSgrExtModeMouse);
-        Assert.Equal ("\x1b[?1015h", EscSeqUtils.CSI_EnableUrxvtExtModeMouse);
-        Assert.Equal ("\x1b[?1003l", EscSeqUtils.CSI_DisableAnyEventMouse);
-        Assert.Equal ("\x1b[?1006l", EscSeqUtils.CSI_DisableSgrExtModeMouse);
-        Assert.Equal ("\x1b[?1015l", EscSeqUtils.CSI_DisableUrxvtExtModeMouse);
-        Assert.Equal ("\x1b[?1003h\x1b[?1015h\u001b[?1006h", EscSeqUtils.CSI_EnableMouseEvents);
-        Assert.Equal ("\x1b[?1003l\x1b[?1015l\u001b[?1006l", EscSeqUtils.CSI_DisableMouseEvents);
+        Assert.Equal ('\x1b', AnsiEscapeSequenceRequestUtils.KeyEsc);
+        Assert.Equal ("\x1b[", AnsiEscapeSequenceRequestUtils.CSI);
+        Assert.Equal ("\x1b[?1003h", AnsiEscapeSequenceRequestUtils.CSI_EnableAnyEventMouse);
+        Assert.Equal ("\x1b[?1006h", AnsiEscapeSequenceRequestUtils.CSI_EnableSgrExtModeMouse);
+        Assert.Equal ("\x1b[?1015h", AnsiEscapeSequenceRequestUtils.CSI_EnableUrxvtExtModeMouse);
+        Assert.Equal ("\x1b[?1003l", AnsiEscapeSequenceRequestUtils.CSI_DisableAnyEventMouse);
+        Assert.Equal ("\x1b[?1006l", AnsiEscapeSequenceRequestUtils.CSI_DisableSgrExtModeMouse);
+        Assert.Equal ("\x1b[?1015l", AnsiEscapeSequenceRequestUtils.CSI_DisableUrxvtExtModeMouse);
+        Assert.Equal ("\x1b[?1003h\x1b[?1015h\u001b[?1006h", AnsiEscapeSequenceRequestUtils.CSI_EnableMouseEvents);
+        Assert.Equal ("\x1b[?1003l\x1b[?1015l\u001b[?1006l", AnsiEscapeSequenceRequestUtils.CSI_DisableMouseEvents);
     }
 
     [Fact]
     public void GetC1ControlChar_Tests ()
     {
-        Assert.Equal ("IND", EscSeqUtils.GetC1ControlChar ('D'));
-        Assert.Equal ("NEL", EscSeqUtils.GetC1ControlChar ('E'));
-        Assert.Equal ("HTS", EscSeqUtils.GetC1ControlChar ('H'));
-        Assert.Equal ("RI", EscSeqUtils.GetC1ControlChar ('M'));
-        Assert.Equal ("SS2", EscSeqUtils.GetC1ControlChar ('N'));
-        Assert.Equal ("SS3", EscSeqUtils.GetC1ControlChar ('O'));
-        Assert.Equal ("DCS", EscSeqUtils.GetC1ControlChar ('P'));
-        Assert.Equal ("SPA", EscSeqUtils.GetC1ControlChar ('V'));
-        Assert.Equal ("EPA", EscSeqUtils.GetC1ControlChar ('W'));
-        Assert.Equal ("SOS", EscSeqUtils.GetC1ControlChar ('X'));
-        Assert.Equal ("DECID", EscSeqUtils.GetC1ControlChar ('Z'));
-        Assert.Equal ("CSI", EscSeqUtils.GetC1ControlChar ('['));
-        Assert.Equal ("ST", EscSeqUtils.GetC1ControlChar ('\\'));
-        Assert.Equal ("OSC", EscSeqUtils.GetC1ControlChar (']'));
-        Assert.Equal ("PM", EscSeqUtils.GetC1ControlChar ('^'));
-        Assert.Equal ("APC", EscSeqUtils.GetC1ControlChar ('_'));
-        Assert.Equal ("", EscSeqUtils.GetC1ControlChar ('\0'));
+        Assert.Equal ("IND", AnsiEscapeSequenceRequestUtils.GetC1ControlChar ('D'));
+        Assert.Equal ("NEL", AnsiEscapeSequenceRequestUtils.GetC1ControlChar ('E'));
+        Assert.Equal ("HTS", AnsiEscapeSequenceRequestUtils.GetC1ControlChar ('H'));
+        Assert.Equal ("RI", AnsiEscapeSequenceRequestUtils.GetC1ControlChar ('M'));
+        Assert.Equal ("SS2", AnsiEscapeSequenceRequestUtils.GetC1ControlChar ('N'));
+        Assert.Equal ("SS3", AnsiEscapeSequenceRequestUtils.GetC1ControlChar ('O'));
+        Assert.Equal ("DCS", AnsiEscapeSequenceRequestUtils.GetC1ControlChar ('P'));
+        Assert.Equal ("SPA", AnsiEscapeSequenceRequestUtils.GetC1ControlChar ('V'));
+        Assert.Equal ("EPA", AnsiEscapeSequenceRequestUtils.GetC1ControlChar ('W'));
+        Assert.Equal ("SOS", AnsiEscapeSequenceRequestUtils.GetC1ControlChar ('X'));
+        Assert.Equal ("DECID", AnsiEscapeSequenceRequestUtils.GetC1ControlChar ('Z'));
+        Assert.Equal ("CSI", AnsiEscapeSequenceRequestUtils.GetC1ControlChar ('['));
+        Assert.Equal ("ST", AnsiEscapeSequenceRequestUtils.GetC1ControlChar ('\\'));
+        Assert.Equal ("OSC", AnsiEscapeSequenceRequestUtils.GetC1ControlChar (']'));
+        Assert.Equal ("PM", AnsiEscapeSequenceRequestUtils.GetC1ControlChar ('^'));
+        Assert.Equal ("APC", AnsiEscapeSequenceRequestUtils.GetC1ControlChar ('_'));
+        Assert.Equal ("", AnsiEscapeSequenceRequestUtils.GetC1ControlChar ('\0'));
     }
 
     [Fact]
@@ -1175,51 +1175,51 @@ public class EscSeqUtilsTests
     {
         var cki = new ConsoleKeyInfo ('r', 0, false, false, false);
         var expectedCki = new ConsoleKeyInfo ('r', ConsoleKey.R, false, false, false);
-        Assert.Equal (expectedCki, EscSeqUtils.MapConsoleKeyInfo (cki));
+        Assert.Equal (expectedCki, AnsiEscapeSequenceRequestUtils.MapConsoleKeyInfo (cki));
 
         cki = new ('r', 0, true, false, false);
         expectedCki = new ('r', ConsoleKey.R, true, false, false);
-        Assert.Equal (expectedCki, EscSeqUtils.MapConsoleKeyInfo (cki));
+        Assert.Equal (expectedCki, AnsiEscapeSequenceRequestUtils.MapConsoleKeyInfo (cki));
 
         cki = new ('r', 0, false, true, false);
         expectedCki = new ('r', ConsoleKey.R, false, true, false);
-        Assert.Equal (expectedCki, EscSeqUtils.MapConsoleKeyInfo (cki));
+        Assert.Equal (expectedCki, AnsiEscapeSequenceRequestUtils.MapConsoleKeyInfo (cki));
 
         cki = new ('r', 0, false, false, true);
         expectedCki = new ('r', ConsoleKey.R, false, false, true);
-        Assert.Equal (expectedCki, EscSeqUtils.MapConsoleKeyInfo (cki));
+        Assert.Equal (expectedCki, AnsiEscapeSequenceRequestUtils.MapConsoleKeyInfo (cki));
 
         cki = new ('r', 0, true, true, false);
         expectedCki = new ('r', ConsoleKey.R, true, true, false);
-        Assert.Equal (expectedCki, EscSeqUtils.MapConsoleKeyInfo (cki));
+        Assert.Equal (expectedCki, AnsiEscapeSequenceRequestUtils.MapConsoleKeyInfo (cki));
 
         cki = new ('r', 0, false, true, true);
         expectedCki = new ('r', ConsoleKey.R, false, true, true);
-        Assert.Equal (expectedCki, EscSeqUtils.MapConsoleKeyInfo (cki));
+        Assert.Equal (expectedCki, AnsiEscapeSequenceRequestUtils.MapConsoleKeyInfo (cki));
 
         cki = new ('r', 0, true, true, true);
         expectedCki = new ('r', ConsoleKey.R, true, true, true);
-        Assert.Equal (expectedCki, EscSeqUtils.MapConsoleKeyInfo (cki));
+        Assert.Equal (expectedCki, AnsiEscapeSequenceRequestUtils.MapConsoleKeyInfo (cki));
 
         cki = new ('\u0012', 0, false, false, false);
         expectedCki = new ('\u0012', ConsoleKey.R, false, false, true);
-        Assert.Equal (expectedCki, EscSeqUtils.MapConsoleKeyInfo (cki));
+        Assert.Equal (expectedCki, AnsiEscapeSequenceRequestUtils.MapConsoleKeyInfo (cki));
 
         cki = new ('\0', (ConsoleKey)64, false, false, true);
         expectedCki = new ('\0', ConsoleKey.Spacebar, false, false, true);
-        Assert.Equal (expectedCki, EscSeqUtils.MapConsoleKeyInfo (cki));
+        Assert.Equal (expectedCki, AnsiEscapeSequenceRequestUtils.MapConsoleKeyInfo (cki));
 
         cki = new ('\r', 0, false, false, false);
         expectedCki = new ('\r', ConsoleKey.Enter, false, false, false);
-        Assert.Equal (expectedCki, EscSeqUtils.MapConsoleKeyInfo (cki));
+        Assert.Equal (expectedCki, AnsiEscapeSequenceRequestUtils.MapConsoleKeyInfo (cki));
 
         cki = new ('\u007f', 0, false, false, false);
         expectedCki = new ('\u007f', ConsoleKey.Backspace, false, false, false);
-        Assert.Equal (expectedCki, EscSeqUtils.MapConsoleKeyInfo (cki));
+        Assert.Equal (expectedCki, AnsiEscapeSequenceRequestUtils.MapConsoleKeyInfo (cki));
 
         cki = new ('R', 0, false, false, false);
         expectedCki = new ('R', ConsoleKey.R, true, false, false);
-        Assert.Equal (expectedCki, EscSeqUtils.MapConsoleKeyInfo (cki));
+        Assert.Equal (expectedCki, AnsiEscapeSequenceRequestUtils.MapConsoleKeyInfo (cki));
     }
 
     [Fact]
@@ -1227,69 +1227,69 @@ public class EscSeqUtilsTests
     {
         ConsoleModifiers mod = 0;
         char keyChar = '\0';
-        Assert.Equal (ConsoleKey.UpArrow, EscSeqUtils.GetConsoleKey ('A', "", ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.DownArrow, EscSeqUtils.GetConsoleKey ('B', "", ref mod, ref keyChar));
-        Assert.Equal (_key = ConsoleKey.RightArrow, EscSeqUtils.GetConsoleKey ('C', "", ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.LeftArrow, EscSeqUtils.GetConsoleKey ('D', "", ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.End, EscSeqUtils.GetConsoleKey ('F', "", ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.Home, EscSeqUtils.GetConsoleKey ('H', "", ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.F1, EscSeqUtils.GetConsoleKey ('P', "", ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.F2, EscSeqUtils.GetConsoleKey ('Q', "", ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.F3, EscSeqUtils.GetConsoleKey ('R', "", ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.F4, EscSeqUtils.GetConsoleKey ('S', "", ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.Tab, EscSeqUtils.GetConsoleKey ('Z', "", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.UpArrow, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('A', "", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.DownArrow, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('B', "", ref mod, ref keyChar));
+        Assert.Equal (_key = ConsoleKey.RightArrow, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('C', "", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.LeftArrow, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('D', "", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.End, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('F', "", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.Home, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('H', "", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.F1, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('P', "", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.F2, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('Q', "", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.F3, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('R', "", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.F4, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('S', "", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.Tab, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('Z', "", ref mod, ref keyChar));
         Assert.Equal (ConsoleModifiers.Shift, mod);
-        Assert.Equal (0, (int)EscSeqUtils.GetConsoleKey ('\0', "", ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.Insert, EscSeqUtils.GetConsoleKey ('~', "2", ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.Delete, EscSeqUtils.GetConsoleKey ('~', "3", ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.PageUp, EscSeqUtils.GetConsoleKey ('~', "5", ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.PageDown, EscSeqUtils.GetConsoleKey ('~', "6", ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.F5, EscSeqUtils.GetConsoleKey ('~', "15", ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.F6, EscSeqUtils.GetConsoleKey ('~', "17", ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.F7, EscSeqUtils.GetConsoleKey ('~', "18", ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.F8, EscSeqUtils.GetConsoleKey ('~', "19", ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.F9, EscSeqUtils.GetConsoleKey ('~', "20", ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.F10, EscSeqUtils.GetConsoleKey ('~', "21", ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.F11, EscSeqUtils.GetConsoleKey ('~', "23", ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.F12, EscSeqUtils.GetConsoleKey ('~', "24", ref mod, ref keyChar));
-        Assert.Equal (0, (int)EscSeqUtils.GetConsoleKey ('~', "", ref mod, ref keyChar));
+        Assert.Equal (0, (int)AnsiEscapeSequenceRequestUtils.GetConsoleKey ('\0', "", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.Insert, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('~', "2", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.Delete, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('~', "3", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.PageUp, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('~', "5", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.PageDown, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('~', "6", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.F5, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('~', "15", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.F6, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('~', "17", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.F7, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('~', "18", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.F8, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('~', "19", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.F9, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('~', "20", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.F10, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('~', "21", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.F11, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('~', "23", ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.F12, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('~', "24", ref mod, ref keyChar));
+        Assert.Equal (0, (int)AnsiEscapeSequenceRequestUtils.GetConsoleKey ('~', "", ref mod, ref keyChar));
         // These terminators are used by macOS on a numeric keypad without keys modifiers
-        Assert.Equal (ConsoleKey.Add, EscSeqUtils.GetConsoleKey ('l', null, ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.Subtract, EscSeqUtils.GetConsoleKey ('m', null, ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.Insert, EscSeqUtils.GetConsoleKey ('p', null, ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.End, EscSeqUtils.GetConsoleKey ('q', null, ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.DownArrow, EscSeqUtils.GetConsoleKey ('r', null, ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.PageDown, EscSeqUtils.GetConsoleKey ('s', null, ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.LeftArrow, EscSeqUtils.GetConsoleKey ('t', null, ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.Clear, EscSeqUtils.GetConsoleKey ('u', null, ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.RightArrow, EscSeqUtils.GetConsoleKey ('v', null, ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.Home, EscSeqUtils.GetConsoleKey ('w', null, ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.UpArrow, EscSeqUtils.GetConsoleKey ('x', null, ref mod, ref keyChar));
-        Assert.Equal (ConsoleKey.PageUp, EscSeqUtils.GetConsoleKey ('y', null, ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.Add, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('l', null, ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.Subtract, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('m', null, ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.Insert, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('p', null, ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.End, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('q', null, ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.DownArrow, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('r', null, ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.PageDown, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('s', null, ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.LeftArrow, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('t', null, ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.Clear, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('u', null, ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.RightArrow, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('v', null, ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.Home, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('w', null, ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.UpArrow, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('x', null, ref mod, ref keyChar));
+        Assert.Equal (ConsoleKey.PageUp, AnsiEscapeSequenceRequestUtils.GetConsoleKey ('y', null, ref mod, ref keyChar));
     }
 
     [Fact]
     public void GetConsoleModifiers_Tests ()
     {
-        Assert.Equal (ConsoleModifiers.Shift, EscSeqUtils.GetConsoleModifiers ("2"));
-        Assert.Equal (ConsoleModifiers.Alt, EscSeqUtils.GetConsoleModifiers ("3"));
-        Assert.Equal (ConsoleModifiers.Shift | ConsoleModifiers.Alt, EscSeqUtils.GetConsoleModifiers ("4"));
-        Assert.Equal (ConsoleModifiers.Control, EscSeqUtils.GetConsoleModifiers ("5"));
-        Assert.Equal (ConsoleModifiers.Shift | ConsoleModifiers.Control, EscSeqUtils.GetConsoleModifiers ("6"));
-        Assert.Equal (ConsoleModifiers.Alt | ConsoleModifiers.Control, EscSeqUtils.GetConsoleModifiers ("7"));
+        Assert.Equal (ConsoleModifiers.Shift, AnsiEscapeSequenceRequestUtils.GetConsoleModifiers ("2"));
+        Assert.Equal (ConsoleModifiers.Alt, AnsiEscapeSequenceRequestUtils.GetConsoleModifiers ("3"));
+        Assert.Equal (ConsoleModifiers.Shift | ConsoleModifiers.Alt, AnsiEscapeSequenceRequestUtils.GetConsoleModifiers ("4"));
+        Assert.Equal (ConsoleModifiers.Control, AnsiEscapeSequenceRequestUtils.GetConsoleModifiers ("5"));
+        Assert.Equal (ConsoleModifiers.Shift | ConsoleModifiers.Control, AnsiEscapeSequenceRequestUtils.GetConsoleModifiers ("6"));
+        Assert.Equal (ConsoleModifiers.Alt | ConsoleModifiers.Control, AnsiEscapeSequenceRequestUtils.GetConsoleModifiers ("7"));
 
         Assert.Equal (
                       ConsoleModifiers.Shift | ConsoleModifiers.Alt | ConsoleModifiers.Control,
-                      EscSeqUtils.GetConsoleModifiers ("8")
+                      AnsiEscapeSequenceRequestUtils.GetConsoleModifiers ("8")
                      );
-        Assert.Equal (0, (int)EscSeqUtils.GetConsoleModifiers (""));
+        Assert.Equal (0, (int)AnsiEscapeSequenceRequestUtils.GetConsoleModifiers (""));
     }
 
     [Fact]
     public void GetEscapeResult_Multiple_Tests ()
     {
         char [] kChars = ['\u001b', '[', '5', ';', '1', '0', 'r'];
-        (_c1Control, _code, _values, _terminating) = EscSeqUtils.GetEscapeResult (kChars);
+        (_c1Control, _code, _values, _terminating) = AnsiEscapeSequenceRequestUtils.GetEscapeResult (kChars);
         Assert.Equal ("CSI", _c1Control);
         Assert.Null (_code);
         Assert.Equal (2, _values.Length);
@@ -1307,7 +1307,7 @@ public class EscSeqUtilsTests
     [InlineData (['A'])]
     public void GetEscapeResult_Single_Tests (params char [] kChars)
     {
-        (_c1Control, _code, _values, _terminating) = EscSeqUtils.GetEscapeResult (kChars);
+        (_c1Control, _code, _values, _terminating) = AnsiEscapeSequenceRequestUtils.GetEscapeResult (kChars);
 
         if (kChars [0] == '\u001B')
         {
@@ -1337,7 +1337,7 @@ public class EscSeqUtilsTests
             new ('r', 0, false, false, false)
         };
 
-        Assert.Equal (new [] { '\u001b', '[', '5', ';', '1', '0', 'r' }, EscSeqUtils.GetKeyCharArray (cki));
+        Assert.Equal (new [] { '\u001b', '[', '5', ';', '1', '0', 'r' }, AnsiEscapeSequenceRequestUtils.GetKeyCharArray (cki));
     }
 
     [Fact]
@@ -1356,7 +1356,7 @@ public class EscSeqUtilsTests
             new ('3', 0, false, false, false),
             new ('M', 0, false, false, false)
         };
-        EscSeqUtils.GetMouse (cki, out List<MouseFlags> mouseFlags, out Point pos, ProcessContinuousButtonPressed);
+        AnsiEscapeSequenceRequestUtils.GetMouse (cki, out List<MouseFlags> mouseFlags, out Point pos, ProcessContinuousButtonPressed);
         Assert.Equal (new () { MouseFlags.Button1Pressed }, mouseFlags);
         Assert.Equal (new (1, 2), pos);
 
@@ -1372,7 +1372,7 @@ public class EscSeqUtilsTests
             new ('3', 0, false, false, false),
             new ('m', 0, false, false, false)
         };
-        EscSeqUtils.GetMouse (cki, out mouseFlags, out pos, ProcessContinuousButtonPressed);
+        AnsiEscapeSequenceRequestUtils.GetMouse (cki, out mouseFlags, out pos, ProcessContinuousButtonPressed);
         Assert.Equal (2, mouseFlags.Count);
 
         Assert.Equal (
@@ -1393,7 +1393,7 @@ public class EscSeqUtilsTests
             new ('3', 0, false, false, false),
             new ('M', 0, false, false, false)
         };
-        EscSeqUtils.GetMouse (cki, out mouseFlags, out pos, ProcessContinuousButtonPressed);
+        AnsiEscapeSequenceRequestUtils.GetMouse (cki, out mouseFlags, out pos, ProcessContinuousButtonPressed);
         Assert.Equal (new () { MouseFlags.Button1DoubleClicked }, mouseFlags);
         Assert.Equal (new (1, 2), pos);
 
@@ -1409,7 +1409,7 @@ public class EscSeqUtilsTests
             new ('3', 0, false, false, false),
             new ('M', 0, false, false, false)
         };
-        EscSeqUtils.GetMouse (cki, out mouseFlags, out pos, ProcessContinuousButtonPressed);
+        AnsiEscapeSequenceRequestUtils.GetMouse (cki, out mouseFlags, out pos, ProcessContinuousButtonPressed);
         Assert.Equal (new () { MouseFlags.Button1TripleClicked }, mouseFlags);
         Assert.Equal (new (1, 2), pos);
 
@@ -1425,7 +1425,7 @@ public class EscSeqUtilsTests
             new ('3', 0, false, false, false),
             new ('m', 0, false, false, false)
         };
-        EscSeqUtils.GetMouse (cki, out mouseFlags, out pos, ProcessContinuousButtonPressed);
+        AnsiEscapeSequenceRequestUtils.GetMouse (cki, out mouseFlags, out pos, ProcessContinuousButtonPressed);
         Assert.Equal (new () { MouseFlags.Button1Released }, mouseFlags);
         Assert.Equal (new (1, 2), pos);
     }
@@ -1435,7 +1435,7 @@ public class EscSeqUtilsTests
     {
         ConsoleKeyInfo [] expectedCkInfos = null;
         var cki = new ConsoleKeyInfo ('\u001b', ConsoleKey.Escape, false, false, false);
-        expectedCkInfos = EscSeqUtils.ResizeArray (cki, expectedCkInfos);
+        expectedCkInfos = AnsiEscapeSequenceRequestUtils.ResizeArray (cki, expectedCkInfos);
         Assert.Single (expectedCkInfos);
         Assert.Equal (cki, expectedCkInfos [0]);
     }
@@ -1494,7 +1494,7 @@ public class EscSeqUtilsTests
     [InlineData ("\r[<35;50;1m[<35;49;1m[<35;47;1m[<35;46;1m[<35;45;2m[<35;44;2m[<35;43;3m[<35;42;3m[<35;41;4m[<35;40;5m[<35;39;6m[<35;49;1m[<35;48;2m[<0;33;6M[<0;33;6mOC_", "_")]
     public void SplitEscapeRawString_Multiple_Tests (string rawData, string expectedLast)
     {
-        List<string> splitList = EscSeqUtils.SplitEscapeRawString (rawData);
+        List<string> splitList = AnsiEscapeSequenceRequestUtils.SplitEscapeRawString (rawData);
         Assert.Equal (18, splitList.Count);
         Assert.Equal ("\r", splitList [0]);
         Assert.Equal ("\u001b[<35;50;1m", splitList [1]);
@@ -1525,7 +1525,7 @@ public class EscSeqUtilsTests
     [InlineData ("A")]
     public void SplitEscapeRawString_Single_Tests (string rawData)
     {
-        List<string> splitList = EscSeqUtils.SplitEscapeRawString (rawData);
+        List<string> splitList = AnsiEscapeSequenceRequestUtils.SplitEscapeRawString (rawData);
         Assert.Single (splitList);
         Assert.Equal (rawData, splitList [0]);
     }
@@ -1541,23 +1541,23 @@ public class EscSeqUtilsTests
     [InlineData ("0;20t", "\u001b[8;1", 3, "\u001b[80;20t;1")]
     public void InsertArray_Tests (string toInsert, string current, int? index, string expected)
     {
-        ConsoleKeyInfo [] toIns = EscSeqUtils.ToConsoleKeyInfoArray (toInsert);
-        ConsoleKeyInfo [] cki = EscSeqUtils.ToConsoleKeyInfoArray (current);
-        ConsoleKeyInfo [] result = EscSeqUtils.ToConsoleKeyInfoArray (expected);
+        ConsoleKeyInfo [] toIns = AnsiEscapeSequenceRequestUtils.ToConsoleKeyInfoArray (toInsert);
+        ConsoleKeyInfo [] cki = AnsiEscapeSequenceRequestUtils.ToConsoleKeyInfoArray (current);
+        ConsoleKeyInfo [] result = AnsiEscapeSequenceRequestUtils.ToConsoleKeyInfoArray (expected);
 
         if (index is null)
         {
-            Assert.Equal (result, EscSeqUtils.InsertArray (toIns, cki));
+            Assert.Equal (result, AnsiEscapeSequenceRequestUtils.InsertArray (toIns, cki));
         }
         else
         {
-            Assert.Equal (result, EscSeqUtils.InsertArray (toIns, cki, (int)index));
+            Assert.Equal (result, AnsiEscapeSequenceRequestUtils.InsertArray (toIns, cki, (int)index));
         }
     }
 
     private void ClearAll ()
     {
-        _escSeqReqProc = default (EscSeqRequests);
+        _escSeqReqProc = default (AnsiEscapeSequenceRequests);
         _newConsoleKeyInfo = default (ConsoleKeyInfo);
         _key = default (ConsoleKey);
         _cki = default (ConsoleKeyInfo []);

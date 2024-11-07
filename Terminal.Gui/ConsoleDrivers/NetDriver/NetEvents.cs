@@ -19,7 +19,7 @@ internal class NetEvents : IDisposable
 #if PROCESS_REQUEST
     bool _neededProcessRequest;
 #endif
-    public EscSeqRequests EscSeqRequests { get; } = new ();
+    public AnsiEscapeSequenceRequests EscSeqRequests { get; } = new ();
 
     public NetEvents (ConsoleDriver consoleDriver)
     {
@@ -84,11 +84,11 @@ internal class NetEvents : IDisposable
                 return Console.ReadKey (intercept);
             }
 
-            if (EscSeqUtils.IncompleteCkInfos is null && EscSeqRequests is { Statuses.Count: > 0 })
+            if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && EscSeqRequests is { Statuses.Count: > 0 })
             {
                 if (_retries > 1)
                 {
-                    if (EscSeqRequests.Statuses.TryPeek (out EscSeqReqStatus seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.Response))
+                    if (EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.Response))
                     {
                         lock (seqReqStatus!.AnsiRequest._responseLock)
                         {
@@ -161,9 +161,9 @@ internal class NetEvents : IDisposable
                         return;
                     }
 
-                    if (EscSeqUtils.IncompleteCkInfos is { })
+                    if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is { })
                     {
-                        EscSeqUtils.InsertArray (EscSeqUtils.IncompleteCkInfos, _cki);
+                        AnsiEscapeSequenceRequestUtils.InsertArray (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos, _cki);
                     }
 
                     if ((consoleKeyInfo.KeyChar == (char)KeyCode.Esc && !_isEscSeq)
@@ -171,7 +171,7 @@ internal class NetEvents : IDisposable
                     {
                         if (_cki is null && consoleKeyInfo.KeyChar != (char)KeyCode.Esc && _isEscSeq)
                         {
-                            _cki = EscSeqUtils.ResizeArray (
+                            _cki = AnsiEscapeSequenceRequestUtils.ResizeArray (
                                                             new ConsoleKeyInfo (
                                                                                 (char)KeyCode.Esc,
                                                                                 0,
@@ -199,7 +199,7 @@ internal class NetEvents : IDisposable
                         else
                         {
                             newConsoleKeyInfo = consoleKeyInfo;
-                            _cki = EscSeqUtils.ResizeArray (consoleKeyInfo, _cki);
+                            _cki = AnsiEscapeSequenceRequestUtils.ResizeArray (consoleKeyInfo, _cki);
 
                             if (Console.KeyAvailable)
                             {
@@ -221,7 +221,7 @@ internal class NetEvents : IDisposable
 
                         if (Console.KeyAvailable)
                         {
-                            _cki = EscSeqUtils.ResizeArray (consoleKeyInfo, _cki);
+                            _cki = AnsiEscapeSequenceRequestUtils.ResizeArray (consoleKeyInfo, _cki);
                         }
                         else
                         {
@@ -250,7 +250,7 @@ internal class NetEvents : IDisposable
             _inputQueue.Enqueue (
                                  new InputResult
                                  {
-                                     EventType = EventType.Key, ConsoleKeyInfo = EscSeqUtils.MapConsoleKeyInfo (consoleKeyInfo)
+                                     EventType = EventType.Key, ConsoleKeyInfo = AnsiEscapeSequenceRequestUtils.MapConsoleKeyInfo (consoleKeyInfo)
                                  }
                                 );
             _isEscSeq = false;
@@ -346,7 +346,7 @@ internal class NetEvents : IDisposable
     )
     {
         // isMouse is true if it's CSI<, false otherwise
-        EscSeqUtils.DecodeEscSeq (
+        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
                                   EscSeqRequests,
                                   ref newConsoleKeyInfo,
                                   ref key,
@@ -359,7 +359,7 @@ internal class NetEvents : IDisposable
                                   out bool isMouse,
                                   out List<MouseFlags> mouseFlags,
                                   out Point pos,
-                                  out EscSeqReqStatus seqReqStatus,
+                                  out AnsiEscapeSequenceRequestStatus seqReqStatus,
                                   (f, p) => HandleMouseEvent (MapMouseFlags (f), p)
                                  );
 
@@ -377,7 +377,7 @@ internal class NetEvents : IDisposable
         {
             //HandleRequestResponseEvent (c1Control, code, values, terminating);
 
-            var ckiString = EscSeqUtils.ToString (cki);
+            var ckiString = AnsiEscapeSequenceRequestUtils.ToString (cki);
 
             lock (seqReqStatus.AnsiRequest._responseLock)
             {
@@ -388,16 +388,16 @@ internal class NetEvents : IDisposable
             return;
         }
 
-        if (!string.IsNullOrEmpty (EscSeqUtils.InvalidRequestTerminator))
+        if (!string.IsNullOrEmpty (AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator))
         {
-            if (EscSeqRequests.Statuses.TryDequeue (out EscSeqReqStatus result))
+            if (EscSeqRequests.Statuses.TryDequeue (out AnsiEscapeSequenceRequestStatus result))
             {
                 lock (result.AnsiRequest._responseLock)
                 {
-                    result.AnsiRequest.Response = EscSeqUtils.InvalidRequestTerminator;
-                    result.AnsiRequest.RaiseResponseFromInput (result.AnsiRequest, EscSeqUtils.InvalidRequestTerminator);
+                    result.AnsiRequest.Response = AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator;
+                    result.AnsiRequest.RaiseResponseFromInput (result.AnsiRequest, AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator);
 
-                    EscSeqUtils.InvalidRequestTerminator = null;
+                    AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator = null;
                 }
             }
 

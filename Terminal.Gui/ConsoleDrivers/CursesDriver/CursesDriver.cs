@@ -230,7 +230,7 @@ internal class CursesDriver : ConsoleDriver
                             redrawAttr = attr;
 
                             output.Append (
-                                           EscSeqUtils.CSI_SetForegroundColorRGB (
+                                           AnsiEscapeSequenceRequestUtils.CSI_SetForegroundColorRGB (
                                                                                   attr.Foreground.R,
                                                                                   attr.Foreground.G,
                                                                                   attr.Foreground.B
@@ -238,7 +238,7 @@ internal class CursesDriver : ConsoleDriver
                                           );
 
                             output.Append (
-                                           EscSeqUtils.CSI_SetBackgroundColorRGB (
+                                           AnsiEscapeSequenceRequestUtils.CSI_SetBackgroundColorRGB (
                                                                                   attr.Background.R,
                                                                                   attr.Background.G,
                                                                                   attr.Background.B
@@ -487,8 +487,8 @@ internal class CursesDriver : ConsoleDriver
         if (visibility != CursorVisibility.Invisible)
         {
             Console.Out.Write (
-                               EscSeqUtils.CSI_SetCursorStyle (
-                                                               (EscSeqUtils.DECSCUSR_Style)(((int)visibility >> 24)
+                               AnsiEscapeSequenceRequestUtils.CSI_SetCursorStyle (
+                                                               (AnsiEscapeSequenceRequestUtils.DECSCUSR_Style)(((int)visibility >> 24)
                                                                                             & 0xFF)
                                                               )
                               );
@@ -515,7 +515,7 @@ internal class CursesDriver : ConsoleDriver
             }
             else
             {
-                _mainLoopDriver.WriteRaw (EscSeqUtils.CSI_SetCursorPosition (Row + 1, Col + 1));
+                _mainLoopDriver.WriteRaw (AnsiEscapeSequenceRequestUtils.CSI_SetCursorPosition (Row + 1, Col + 1));
             }
         }
     }
@@ -647,7 +647,7 @@ internal class CursesDriver : ConsoleDriver
     {
         if (!RunningUnitTests)
         {
-            Console.Out.Write (EscSeqUtils.CSI_EnableMouseEvents);
+            Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_EnableMouseEvents);
         }
     }
 
@@ -655,7 +655,7 @@ internal class CursesDriver : ConsoleDriver
     {
         if (!RunningUnitTests)
         {
-            Console.Out.Write (EscSeqUtils.CSI_DisableMouseEvents);
+            Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_DisableMouseEvents);
         }
     }
 
@@ -665,7 +665,7 @@ internal class CursesDriver : ConsoleDriver
     {
         // + 1 is needed because non-Windows is based on 1 instead of 0 and
         // Console.CursorTop/CursorLeft isn't reliable.
-        Console.Out.Write (EscSeqUtils.CSI_SetCursorPosition (row + 1, col + 1));
+        Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_SetCursorPosition (row + 1, col + 1));
 
         return true;
     }
@@ -903,7 +903,7 @@ internal class CursesDriver : ConsoleDriver
         {
             _mainLoopDriver._forceRead = false;
 
-            if (_mainLoopDriver.EscSeqRequests.Statuses.TryPeek (out EscSeqReqStatus request))
+            if (_mainLoopDriver.EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus request))
             {
                 if (_mainLoopDriver.EscSeqRequests.Statuses.Count > 0
                     && string.IsNullOrEmpty (request.AnsiRequest.Response))

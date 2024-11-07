@@ -19,7 +19,7 @@ namespace Terminal.Gui;
 ///     * https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
 ///     * https://vt100.net/
 /// </remarks>
-public static class EscSeqUtils
+public static class AnsiEscapeSequenceRequestUtils
 {
     // TODO: One type per file - Move this enum to a separate file.
     /// <summary>
@@ -197,7 +197,7 @@ public static class EscSeqUtils
     /// <param name="seqReqStatus">The <see cref="EscSeqReqStatus"/> object.</param>
     /// <param name="continuousButtonPressedHandler">The handler that will process the event.</param>
     public static void DecodeEscSeq (
-        EscSeqRequests? escSeqRequests,
+        AnsiEscapeSequenceRequests? escSeqRequests,
         ref ConsoleKeyInfo newConsoleKeyInfo,
         ref ConsoleKey key,
         ConsoleKeyInfo [] cki,
@@ -209,7 +209,7 @@ public static class EscSeqUtils
         out bool isMouse,
         out List<MouseFlags> buttonState,
         out Point pos,
-        out EscSeqReqStatus? seqReqStatus,
+        out AnsiEscapeSequenceRequestStatus? seqReqStatus,
         Action<MouseFlags, Point> continuousButtonPressedHandler
     )
     {

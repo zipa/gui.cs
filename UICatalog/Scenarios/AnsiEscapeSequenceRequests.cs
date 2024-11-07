@@ -109,19 +109,19 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
                                               switch (selAnsiEscapeSequenceRequestName)
                                               {
                                                   case "CSI_SendDeviceAttributes":
-                                                      selAnsiEscapeSequenceRequest = EscSeqUtils.CSI_SendDeviceAttributes;
+                                                      selAnsiEscapeSequenceRequest = AnsiEscapeSequenceRequestUtils.CSI_SendDeviceAttributes;
 
                                                       break;
                                                   case "CSI_ReportTerminalSizeInChars":
-                                                      selAnsiEscapeSequenceRequest = EscSeqUtils.CSI_ReportTerminalSizeInChars;
+                                                      selAnsiEscapeSequenceRequest = AnsiEscapeSequenceRequestUtils.CSI_ReportTerminalSizeInChars;
 
                                                       break;
                                                   case "CSI_RequestCursorPositionReport":
-                                                      selAnsiEscapeSequenceRequest = EscSeqUtils.CSI_RequestCursorPositionReport;
+                                                      selAnsiEscapeSequenceRequest = AnsiEscapeSequenceRequestUtils.CSI_RequestCursorPositionReport;
 
                                                       break;
                                                   case "CSI_SendDeviceAttributes2":
-                                                      selAnsiEscapeSequenceRequest = EscSeqUtils.CSI_SendDeviceAttributes2;
+                                                      selAnsiEscapeSequenceRequest = AnsiEscapeSequenceRequestUtils.CSI_SendDeviceAttributes2;
 
                                                       break;
                                               }
@@ -372,7 +372,7 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
     private void SendDar ()
     {
         _sends.Add (DateTime.Now);
-        string result = Application.Driver.WriteAnsiRequest (EscSeqUtils.CSI_SendDeviceAttributes);
+        string result = Application.Driver.WriteAnsiRequest (AnsiEscapeSequenceRequestUtils.CSI_SendDeviceAttributes);
         HandleResponse (result);
     }
 
