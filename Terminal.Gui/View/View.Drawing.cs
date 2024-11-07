@@ -543,7 +543,7 @@ public partial class View // Drawing APIs
             return;
         }
 
-        if (!SuperViewRendersLineCanvas && LineCanvas.Viewport != Rectangle.Empty)
+        if (!SuperViewRendersLineCanvas && LineCanvas.Bounds != Rectangle.Empty)
         {
             foreach (KeyValuePair<Point, Cell?> p in LineCanvas.GetCellMap ())
             {
