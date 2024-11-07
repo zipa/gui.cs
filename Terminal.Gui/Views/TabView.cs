@@ -668,6 +668,9 @@ public class TabView : View
         {
             _host._tabLocations = _host.CalculateViewport (Viewport).ToArray ();
 
+            RenderTabLine ();
+
+            RenderUnderline ();
 
             SetAttribute (HasFocus ? GetFocusColor () : GetNormalColor ());
 
@@ -677,9 +680,9 @@ public class TabView : View
         /// <inheritdoc />
         protected override bool OnDrawingSubviews ()
         {
-            RenderTabLine ();
+           // RenderTabLine ();
 
-            return true;
+            return false;
         }
 
         protected override void OnDrawComplete ()
@@ -1214,7 +1217,7 @@ public class TabView : View
                 tab.LineCanvas.Merge (lc);
                 tab.RenderLineCanvas ();
 
-                RenderUnderline ();
+               // RenderUnderline ();
             }
         }
 
