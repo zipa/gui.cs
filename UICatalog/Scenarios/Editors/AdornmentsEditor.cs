@@ -15,7 +15,7 @@ public class AdornmentsEditor : EditorBase
 
         TabStop = TabBehavior.TabGroup;
 
-        ExpanderButton.Orientation = Orientation.Horizontal;
+        ExpanderButton!.Orientation = Orientation.Horizontal;
 
         Initialized += AdornmentsEditor_Initialized;
     }
@@ -27,7 +27,7 @@ public class AdornmentsEditor : EditorBase
     /// <inheritdoc/>
     protected override void OnViewToEditChanged ()
     {
-        Enabled = ViewToEdit is not Adornment;
+        //Enabled = ViewToEdit is not Adornment;
 
         if (MarginEditor is { })
         {
@@ -93,31 +93,39 @@ public class AdornmentsEditor : EditorBase
     {
         MarginEditor = new ()
         {
-            X = 0,
+            X = -1,
             Y = 0,
-            SuperViewRendersLineCanvas = true
+            SuperViewRendersLineCanvas = true,
+            BorderStyle = LineStyle.Single
         };
+        MarginEditor.Border!.Thickness = MarginEditor.Border.Thickness with { Bottom = 0 };
         Add (MarginEditor);
 
         BorderEditor = new ()
         {
             X = Pos.Left (MarginEditor),
             Y = Pos.Bottom (MarginEditor),
-            SuperViewRendersLineCanvas = true
+            SuperViewRendersLineCanvas = true,
+            BorderStyle = LineStyle.Single
         };
+        BorderEditor.Border!.Thickness = BorderEditor.Border.Thickness with { Bottom = 0 };
         Add (BorderEditor);
 
         PaddingEditor = new ()
         {
             X = Pos.Left (BorderEditor),
             Y = Pos.Bottom (BorderEditor),
-            SuperViewRendersLineCanvas = true
+            SuperViewRendersLineCanvas = true,
+            BorderStyle = LineStyle.Single
         };
+        PaddingEditor.Border!.Thickness = PaddingEditor.Border.Thickness with { Bottom = 0 };
         Add (PaddingEditor);
 
-        MarginEditor.ExpanderButton.Collapsed = true;
-        BorderEditor.ExpanderButton.Collapsed = true;
-        PaddingEditor.ExpanderButton.Collapsed = true;
+        Width = Dim.Auto (maximumContentDim: Dim.Func (() => MarginEditor.Frame.Width - 2));
+
+        MarginEditor.ExpanderButton!.Collapsed = true;
+        BorderEditor.ExpanderButton!.Collapsed = true;
+        PaddingEditor.ExpanderButton!.Collapsed = true;
 
         MarginEditor.AdornmentToEdit = ViewToEdit?.Margin ?? null;
         BorderEditor.AdornmentToEdit = ViewToEdit?.Border ?? null;

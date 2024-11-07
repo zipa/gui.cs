@@ -830,11 +830,11 @@ public class BorderTests (ITestOutputHelper output)
 │ ┊ │
 └───┘")]
     [InlineData (true, @"
-╔═╗─┐
+╔═╦─┐
 ║ ║ │
-╚═╬┄┐
+╠═╬┄┤
 │ ┊ ┊
-└─└┄┘")]
+└─┴┄┘")]
     [SetupFakeDriver]
     public void SuperViewRendersLineCanvas_No_Subviews_AutoJoinsLines (bool superViewRendersLineCanvas, string expected)
     {
@@ -888,13 +888,13 @@ public class BorderTests (ITestOutputHelper output)
 │    ┊    │
 └─────────┘")]
     [InlineData (true, @"
-╔╡A╞═╗────┐
+╔╡A╞═╦────┐
 ║    ║    │
 ║    ║    │
-╚════╬┤C├┄┐
+╠════╬┤C├┄┤
 │    ┊    ┊
 │    ┊    ┊
-└────└┄┄┄┄┘")]
+└────┴┄┄┄┄┘")]
     [SetupFakeDriver]
     public void SuperViewRendersLineCanvas_Title_AutoJoinsLines (bool superViewRendersLineCanvas, string expected)
     {

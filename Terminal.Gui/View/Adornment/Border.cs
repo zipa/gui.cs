@@ -84,6 +84,7 @@ public class Border : Adornment
             {
                 DrawIndicator = new SpinnerView ()
                 {
+                    Id = "DrawIndicator",
                     X = 1,
                     Style = new SpinnerStyle.Dots2 (),
                     SpinDelay = 0,

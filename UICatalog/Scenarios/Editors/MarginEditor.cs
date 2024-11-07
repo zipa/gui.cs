@@ -32,7 +32,7 @@ public class MarginEditor : AdornmentEditor
 
             SuperViewRendersLineCanvas = true,
             Title = "_Shadow",
-            BorderStyle = LineStyle.Dashed,
+            BorderStyle = LineStyle.Single,
             RadioLabels = Enum.GetNames (typeof (ShadowStyle)),
         };
 

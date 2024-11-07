@@ -31,8 +31,6 @@ public class EventLog : ListView
         };
 
         Initialized += EventLog_Initialized;
-
-        BorderStyle = LineStyle.Dotted;
     }
     public ExpanderButton? ExpandButton { get; }
 

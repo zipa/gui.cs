@@ -24,6 +24,8 @@ public class DimEditor : EditorBase
 
     protected override void OnUpdateSettings ()
     {
+        Enabled = ViewToEdit is not Adornment;
+
         if (ViewToEdit is null)
         {
             return;

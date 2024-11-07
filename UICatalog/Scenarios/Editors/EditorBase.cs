@@ -1,4 +1,5 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Diagnostics;
 using System.Linq;
 using Terminal.Gui;
@@ -9,8 +10,6 @@ public abstract class EditorBase : View
 {
     protected EditorBase ()
     {
-        BorderStyle = LineStyle.Rounded;
-
         Width = Dim.Auto (DimAutoStyle.Content);
         Height = Dim.Auto (DimAutoStyle.Content);
 
@@ -26,9 +25,21 @@ public abstract class EditorBase : View
 
         Initialized += OnInitialized;
 
-        void OnInitialized (object sender, EventArgs e)
+        void OnInitialized (object? sender, EventArgs e)
         {
-            Border?.Add (ExpanderButton!);
+            if (Border is { })
+            {
+                Border.Add (ExpanderButton);
+
+                if (ExpanderButton.Orientation == Orientation.Vertical)
+                {
+                    ExpanderButton.X = Pos.AnchorEnd () - 1;
+                }
+                else
+                {
+                    ExpanderButton.Y = Pos.AnchorEnd () - 1;
+                }
+            }
 
             Application.MouseEvent += ApplicationOnMouseEvent;
             Application.Navigation!.FocusedChanged += NavigationOnFocusedChanged;
@@ -39,11 +50,24 @@ public abstract class EditorBase : View
 
     }
 
-    public ExpanderButton ExpanderButton {get; set; }
+    private readonly ExpanderButton? _expanderButton;
+
+    public ExpanderButton? ExpanderButton
+    {
+        get => _expanderButton;
+        init
+        {
+            if (_expanderButton == value)
+            {
+                return;
+            }
+            _expanderButton = value;
+        }
+    }
 
     public bool UpdatingSettings { get; private set; } = false;
 
-    private void View_LayoutComplete (object sender, LayoutEventArgs e)
+    private void View_LayoutComplete (object? sender, LayoutEventArgs e)
     {
         UpdatingSettings = true;
 
@@ -53,9 +77,9 @@ public abstract class EditorBase : View
     }
 
 
-    private View _viewToEdit;
+    private View? _viewToEdit;
 
-    public View ViewToEdit
+    public View? ViewToEdit
     {
         get => _viewToEdit;
         set
@@ -95,7 +119,7 @@ public abstract class EditorBase : View
     /// <summary>
     ///     Gets or sets the View that will scope the behavior of <see cref="AutoSelectViewToEdit"/>.
     /// </summary>
-    public View AutoSelectSuperView { get; set; }
+    public View? AutoSelectSuperView { get; set; }
 
     /// <summary>
     ///     Gets or sets whether auto select with the mouse will select Adornments or just Views.
@@ -103,7 +127,7 @@ public abstract class EditorBase : View
     public bool AutoSelectAdornments { get; set; }
 
 
-    private void NavigationOnFocusedChanged (object sender, EventArgs e)
+    private void NavigationOnFocusedChanged (object? sender, EventArgs e)
     {
         if (AutoSelectSuperView is null)
         {
@@ -123,7 +147,7 @@ public abstract class EditorBase : View
         ViewToEdit = Application.Navigation!.GetFocused ();
     }
 
-    private void ApplicationOnMouseEvent (object sender, MouseEventArgs e)
+    private void ApplicationOnMouseEvent (object? sender, MouseEventArgs e)
     {
         if (e.Flags != MouseFlags.Button1Clicked || !AutoSelectViewToEdit)
         {
@@ -136,7 +160,7 @@ public abstract class EditorBase : View
             return;
         }
 
-        View view = e.View;
+        View? view = e.View;
 
         if (view is null)
         {

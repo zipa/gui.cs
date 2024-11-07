@@ -130,7 +130,7 @@ public partial class View // Drawing APIs
     {
         if (Border?.Subviews is { } && Border.Thickness != Thickness.Empty)
         {
-            foreach (View subview in Border.Subviews.Where (v => v.Visible))
+            foreach (View subview in Border.Subviews.Where (v => v.Visible || v.Id == "DrawIndicator"))
             {
                 subview.SetNeedsDraw ();
                 LineCanvas.Exclude (new (subview.FrameToScreen()));
@@ -178,7 +178,7 @@ public partial class View // Drawing APIs
     {
         // We do not attempt to draw Margin. It is drawn in a separate pass.
 
-        // Each of these renders lines to either this View's LineCanvas 
+        // Each of these renders lines to this View's LineCanvas 
         // Those lines will be finally rendered in OnRenderLineCanvas
         if (Border is { } && Border.Thickness != Thickness.Empty)
         {
@@ -189,6 +189,7 @@ public partial class View // Drawing APIs
         {
             Padding?.Draw ();
         }
+
     }
 
     /// <summary>
@@ -485,6 +486,12 @@ public partial class View // Drawing APIs
                 view.SetNeedsDraw ();
             }
             view.Draw ();
+
+            if (view.SuperViewRendersLineCanvas)
+            {
+                LineCanvas.Merge (view.LineCanvas);
+                view.LineCanvas.Clear ();
+            }
         }
     }
 
@@ -531,41 +538,13 @@ public partial class View // Drawing APIs
     /// </summary>
     public void RenderLineCanvas ()
     {
-        // TODO: This is super confusing and needs to be refactored.
-
         if (Driver is null)
         {
             return;
         }
 
-        // If we have a SuperView, it'll render our frames.
         if (!SuperViewRendersLineCanvas && LineCanvas.Viewport != Rectangle.Empty)
         {
-            foreach (KeyValuePair<Point, Cell?> p in LineCanvas.GetCellMap ())
-            {
-                // Get the entire map
-                if (p.Value is { })
-                {
-                    SetAttribute (p.Value.Value.Attribute ?? ColorScheme!.Normal);
-                    Driver.Move (p.Key.X, p.Key.Y);
-
-                    // TODO: #2616 - Support combining sequences that don't normalize
-                    Driver.AddRune (p.Value.Value.Rune);
-                }
-            }
-
-            LineCanvas.Clear ();
-        }
-
-        if (Subviews.Any (s => s.SuperViewRendersLineCanvas))
-        {
-            foreach (View subview in Subviews.Where (s => s.SuperViewRendersLineCanvas))
-            {
-                // Combine the LineCanvas'
-                LineCanvas.Merge (subview.LineCanvas);
-                subview.LineCanvas.Clear ();
-            }
-
             foreach (KeyValuePair<Point, Cell?> p in LineCanvas.GetCellMap ())
             {
                 // Get the entire map

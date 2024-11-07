@@ -47,6 +47,35 @@ public class ExpanderButton : Button
         HighlightStyle = HighlightStyle.None;
 
         Initialized += ExpanderButton_Initialized;
+
+        EnabledChanged += (sender, args) =>
+                          {
+                              ShowHide ();
+                          };
+    }
+
+    private void ShowHide ()
+    {
+        if (!Enabled)
+        {
+            Visible = false;
+        }
+
+        if (SuperView is Border { } border)
+        {
+            switch (Orientation)
+            {
+                case Orientation.Vertical:
+                    Visible = border.Thickness.Top > 0;
+
+                    break;
+
+                case Orientation.Horizontal:
+                    Visible = border.Border?.Thickness.Left > 0;
+
+                    break;
+            }
+        }
     }
 
     private void ExpanderButton_Initialized (object? sender, EventArgs e)
@@ -54,6 +83,11 @@ public class ExpanderButton : Button
         ShadowStyle = ShadowStyle.None;
 
         ExpandOrCollapse (Collapsed);
+
+        if (SuperView is Border { } border)
+        {
+            border.ThicknessChanged += (o, args) => ShowHide ();
+        }
     }
 
     private Orientation _orientation = Orientation.Horizontal;
@@ -219,7 +253,6 @@ public class ExpanderButton : Button
         foreach (View subview in superView.Subviews)
         {
             subview.Visible = !Collapsed;
-            subview.Enabled = !Collapsed;
         }
     }
 }

@@ -23,16 +23,17 @@ public class PosEditor : EditorBase
     private RadioGroup? _posRadioGroup;
     private TextField? _valueEdit;
 
-
-
     protected override void OnUpdateSettings ()
     {
+        Enabled = ViewToEdit is not Adornment;
+
         if (ViewToEdit is null)
         {
             return;
         }
 
         Pos? pos;
+
         if (Dimension == Dimension.Width)
         {
             pos = ViewToEdit.X;
@@ -53,25 +54,30 @@ public class PosEditor : EditorBase
         }
 
         _valueEdit!.Enabled = false;
+
         switch (pos)
         {
             case PosPercent percent:
                 _valueEdit.Enabled = true;
                 _value = percent.Percent;
                 _valueEdit!.Text = _value.ToString ();
+
                 break;
             case PosAbsolute absolute:
                 _valueEdit.Enabled = true;
                 _value = absolute.Position;
                 _valueEdit!.Text = _value.ToString ();
+
                 break;
             case PosFunc func:
                 _valueEdit.Enabled = true;
                 _value = func.Fn ();
                 _valueEdit!.Text = _value.ToString ();
+
                 break;
             default:
                 _valueEdit!.Text = pos.ToString ();
+
                 break;
         }
     }
@@ -88,6 +94,7 @@ public class PosEditor : EditorBase
         Add (label);
         _posRadioGroup = new () { X = 0, Y = Pos.Bottom (label), RadioLabels = _radioItems };
         _posRadioGroup.SelectedItemChanged += OnRadioGroupOnSelectedItemChanged;
+
         _valueEdit = new ()
         {
             X = Pos.Right (label) + 1,
@@ -97,29 +104,29 @@ public class PosEditor : EditorBase
         };
 
         _valueEdit.Accepting += (s, args) =>
-        {
-            try
-            {
-                _value = int.Parse (_valueEdit.Text);
-                PosChanged ();
-            }
-            catch
-            {
-                // ignored
-            }
-            args.Cancel = true;
-        };
+                                {
+                                    try
+                                    {
+                                        _value = int.Parse (_valueEdit.Text);
+                                        PosChanged ();
+                                    }
+                                    catch
+                                    {
+                                        // ignored
+                                    }
+
+                                    args.Cancel = true;
+                                };
         Add (_valueEdit);
 
         Add (_posRadioGroup);
-
     }
 
     private void OnRadioGroupOnSelectedItemChanged (object? s, SelectedItemChangedArgs selected) { PosChanged (); }
 
     // These need to have same order 
-    private readonly List<string> _posNames = ["Absolute", "Align", "AnchorEnd", "Center", "Func", "Percent",];
-    private readonly string [] _radioItems = ["Absolute(n)", "Align", "AnchorEnd", "Center", "Func(()=>n)", "Percent(n)",];
+    private readonly List<string> _posNames = ["Absolute", "Align", "AnchorEnd", "Center", "Func", "Percent"];
+    private readonly string [] _radioItems = ["Absolute(n)", "Align", "AnchorEnd", "Center", "Func(()=>n)", "Percent(n)"];
 
     private void PosChanged ()
     {
@@ -131,15 +138,15 @@ public class PosEditor : EditorBase
         try
         {
             Pos? pos = _posRadioGroup!.SelectedItem switch
-            {
-                0 => Pos.Absolute (_value),
-                1 => Pos.Align (Alignment.Start),
-                2 => new PosAnchorEnd (),
-                3 => Pos.Center (),
-                4 => Pos.Func (() => _value),
-                5 => Pos.Percent (_value),
-                _ => Dimension == Dimension.Width ? ViewToEdit.X : ViewToEdit.Y
-            };
+                       {
+                           0 => Pos.Absolute (_value),
+                           1 => Pos.Align (Alignment.Start),
+                           2 => new PosAnchorEnd (),
+                           3 => Pos.Center (),
+                           4 => Pos.Func (() => _value),
+                           5 => Pos.Percent (_value),
+                           _ => Dimension == Dimension.Width ? ViewToEdit.X : ViewToEdit.Y
+                       };
 
             if (Dimension == Dimension.Width)
             {
@@ -149,8 +156,8 @@ public class PosEditor : EditorBase
             {
                 ViewToEdit.Y = pos;
             }
-            SetNeedsLayout ();
 
+            SetNeedsLayout ();
         }
         catch (Exception e)
         {

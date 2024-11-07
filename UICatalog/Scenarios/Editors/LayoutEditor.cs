@@ -16,8 +16,6 @@ public class LayoutEditor : EditorBase
         Title = "_LayoutEditor";
         CanFocus = true;
 
-        BorderStyle = LineStyle.Rounded;
-
         Initialized += LayoutEditor_Initialized;
     }
 
@@ -29,8 +27,6 @@ public class LayoutEditor : EditorBase
 
     protected override void OnViewToEditChanged ()
     {
-        Enabled = ViewToEdit is not Adornment;
-
         if (_xEditor is { })
         {
             _xEditor.ViewToEdit = ViewToEdit;
