@@ -5,8 +5,11 @@ using System.ComponentModel;
 namespace Terminal.Gui;
 
 /// <summary>
-///     Indicates the position and size of scrollable content. The indicator can be dragged with the mouse. Can be
-///     oriented either vertically or horizontally. Used within a <see cref="ScrollBar"/>.
+///     Indicates the size of scrollable content and provides a visible element, referred to as the "ScrollSlider" that
+///     that is sized to
+///     show the proportion of the scrollable content to the size of the <see cref="View.Viewport"/>. The ScrollSlider
+///     can be dragged with the mouse. A Scroll can be oriented either vertically or horizontally and is used within a
+///     <see cref="ScrollBar"/>.
 /// </summary>
 /// <remarks>
 ///     <para>
@@ -33,7 +36,7 @@ public class Scroll : View
     private Orientation _orientation;
     private int _position;
     private int _size;
-    private bool _keepContentInAllViewport = true;
+    private bool _keepContentInAllViewport;
 
     /// <inheritdoc/>
     public override void EndInit ()
@@ -253,9 +256,9 @@ public class Scroll : View
     {
         int barSize = BarSize;
 
-        if (position + barSize > Size)
+        if (position + barSize > Size + (KeepContentInAllViewport ? 0 : barSize) - (SuperViewAsScrollBar is { } ? 2 : 0))
         {
-            return KeepContentInAllViewport ? Math.Max (Size - barSize, 0) : Math.Max (Size - 1, 0);
+            return KeepContentInAllViewport ? Math.Max (Size - barSize - (SuperViewAsScrollBar is { } ? 2 : 0), 0) : Math.Max (Size - 1, 0);
         }
 
         return position;
