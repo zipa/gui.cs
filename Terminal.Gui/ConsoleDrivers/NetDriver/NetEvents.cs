@@ -19,7 +19,7 @@ internal class NetEvents : IDisposable
     public NetEvents (ConsoleDriver consoleDriver)
     {
         _consoleDriver = consoleDriver ?? throw new ArgumentNullException (nameof (consoleDriver));
-        _inputReadyCancellationTokenSource = new CancellationTokenSource ();
+        _inputReadyCancellationTokenSource = new ();
 
         Task.Run (ProcessInputQueue, _inputReadyCancellationTokenSource.Token);
 
