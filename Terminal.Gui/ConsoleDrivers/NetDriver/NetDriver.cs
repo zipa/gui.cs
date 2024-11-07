@@ -754,17 +754,7 @@ internal class NetDriver : ConsoleDriver
                 _mainLoopDriver._netEvents._forceRead = true;
             }
 
-            if (!_ansiResponseTokenSource.IsCancellationRequested)
-            {
-                _mainLoopDriver._netEvents._waitForStart.Set ();
-
-                if (!_mainLoopDriver._waitForProbe.IsSet)
-                {
-                    _mainLoopDriver._waitForProbe.Set ();
-                }
-
-                _waitAnsiResponse.Wait (_ansiResponseTokenSource.Token);
-            }
+            _waitAnsiResponse.Wait (_ansiResponseTokenSource.Token);
         }
         catch (OperationCanceledException)
         {
