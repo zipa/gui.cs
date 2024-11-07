@@ -793,7 +793,7 @@ public class UICatalogApp
                 CanFocus = true,
                 Title = "_Categories",
                 BorderStyle = LineStyle.Rounded,
-                //SuperViewRendersLineCanvas = true,
+                SuperViewRendersLineCanvas = true,
                 Source = new ListWrapper<string> (_categories)
             };
             CategoryList.OpenSelectedItem += (s, a) => { ScenarioList!.SetFocus (); };
@@ -804,7 +804,7 @@ public class UICatalogApp
             // category).
             ScenarioList = new ()
             {
-                X = Pos.Right (CategoryList),
+                X = Pos.Right (CategoryList) - 1,
                 Y = Pos.Bottom (menuBar),
                 Width = Dim.Fill (),
                 Height = Dim.Fill (Dim.Func (() =>
@@ -819,7 +819,7 @@ public class UICatalogApp
                 CanFocus = true,
                 Title = "_Scenarios",
                 BorderStyle = CategoryList.BorderStyle,
-                //SuperViewRendersLineCanvas = true
+                SuperViewRendersLineCanvas = true
             };
 
             // TableView provides many options for table headers. For simplicity we turn all 
