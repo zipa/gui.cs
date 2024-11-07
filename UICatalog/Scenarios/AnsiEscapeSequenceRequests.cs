@@ -6,7 +6,7 @@ using Terminal.Gui;
 namespace UICatalog.Scenarios;
 
 [ScenarioMetadata ("AnsiEscapeSequenceRequest", "Ansi Escape Sequence Request")]
-[ScenarioCategory ("Ansi Escape Sequence")]
+[ScenarioCategory ("Tests")]
 public sealed class AnsiEscapeSequenceRequests : Scenario
 {
     private GraphView _graphView;
