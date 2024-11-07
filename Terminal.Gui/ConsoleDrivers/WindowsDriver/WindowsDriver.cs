@@ -1,4 +1,4 @@
-// TODO: #nullable enable
+#nullable enable
 // 
 // WindowsDriver.cs: Windows specific driver
 //
@@ -9,14 +9,13 @@
 // 2) The values provided during Init (and the first WindowsConsole.EventType.WindowBufferSize) are not correct.
 //
 // If HACK_CHECK_WINCHANGED is defined then we ignore WindowsConsole.EventType.WindowBufferSize events
-// and instead check the console size every 500ms in a thread in WidowsMainLoop. 
-// As of Windows 11 23H2 25947.1000 and/or WT 1.19.2682 tearing no longer occurs when using 
+// and instead check the console size every 500ms in a thread in WidowsMainLoop.
+// As of Windows 11 23H2 25947.1000 and/or WT 1.19.2682 tearing no longer occurs when using
 // the WindowsConsole.EventType.WindowBufferSize event. However, on Init the window size is
 // still incorrect so we still need this hack.
 
 //#define HACK_CHECK_WINCHANGED
 
-using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -35,7 +34,7 @@ internal class WindowsDriver : ConsoleDriver
     private bool _isOneFingerDoubleClicked;
 
     private WindowsConsole.ButtonState? _lastMouseButtonPressed;
-    private WindowsMainLoop _mainLoopDriver;
+    private WindowsMainLoop? _mainLoopDriver;
     private WindowsConsole.ExtendedCharInfo [] _outputBuffer;
     private Point? _point;
     private Point _pointMove;
@@ -45,7 +44,7 @@ internal class WindowsDriver : ConsoleDriver
     {
         if (Environment.OSVersion.Platform == PlatformID.Win32NT)
         {
-            WinConsole = new WindowsConsole ();
+            WinConsole = new ();
 
             // otherwise we're probably running in unit tests
             Clipboard = new WindowsClipboard ();
@@ -68,7 +67,7 @@ internal class WindowsDriver : ConsoleDriver
 
     public override bool SupportsTrueColor => RunningUnitTests || (Environment.OSVersion.Version.Build >= 14931 && _isWindowsTerminal);
 
-    public WindowsConsole WinConsole { get; private set; }
+    public WindowsConsole? WinConsole { get; private set; }
 
     public WindowsConsole.KeyEventRecord FromVKPacketToKeyEventRecord (WindowsConsole.KeyEventRecord keyEvent)
     {
@@ -202,7 +201,7 @@ internal class WindowsDriver : ConsoleDriver
     private readonly CancellationTokenSource _ansiResponseTokenSource = new ();
 
     /// <inheritdoc/>
-    public override string WriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest)
+    public override string? WriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest)
     {
         if (_mainLoopDriver is null)
         {
@@ -242,12 +241,12 @@ internal class WindowsDriver : ConsoleDriver
         {
             _mainLoopDriver._forceRead = false;
 
-            if (_mainLoopDriver.EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus request))
+            if (_mainLoopDriver.EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? request))
             {
                 if (_mainLoopDriver.EscSeqRequests.Statuses.Count > 0
                     && string.IsNullOrEmpty (request.AnsiRequest.Response))
                 {
-                    lock (request!.AnsiRequest._responseLock)
+                    lock (request.AnsiRequest._responseLock)
                     {
                         // Bad request or no response at all
                         _mainLoopDriver.EscSeqRequests.Statuses.TryDequeue (out _);
@@ -404,7 +403,7 @@ internal class WindowsDriver : ConsoleDriver
 
         for (var row = 0; row < Rows; row++)
         {
-            if (!_dirtyLines [row])
+            if (!_dirtyLines! [row])
             {
                 continue;
             }
@@ -414,7 +413,7 @@ internal class WindowsDriver : ConsoleDriver
             for (var col = 0; col < Cols; col++)
             {
                 int position = row * Cols + col;
-                _outputBuffer [position].Attribute = Contents [row, col].Attribute.GetValueOrDefault ();
+                _outputBuffer [position].Attribute = Contents! [row, col].Attribute.GetValueOrDefault ();
 
                 if (Contents [row, col].IsDirty == false)
                 {
@@ -504,7 +503,7 @@ internal class WindowsDriver : ConsoleDriver
                 {
                     // BUGBUG: The results from GetConsoleOutputWindow are incorrect when called from Init.
                     // Our thread in WindowsMainLoop.CheckWin will get the correct results. See #if HACK_CHECK_WINCHANGED
-                    Size winSize = WinConsole.GetConsoleOutputWindow (out Point pos);
+                    Size winSize = WinConsole.GetConsoleOutputWindow (out Point _);
                     Cols = winSize.Width;
                     Rows = winSize.Height;
                 }
@@ -592,7 +591,7 @@ internal class WindowsDriver : ConsoleDriver
             case WindowsConsole.EventType.Mouse:
                 MouseEventArgs me = ToDriverMouse (inputEvent.MouseEvent);
 
-                if (me is null || me.Flags == MouseFlags.None)
+                if (me.Flags == MouseFlags.None)
                 {
                     break;
                 }
@@ -717,7 +716,7 @@ internal class WindowsDriver : ConsoleDriver
                 if (mapResult == 0)
                 {
                     // There is no mapping - this should not happen
-                    Debug.Assert (mapResult != 0, $@"Unable to map the virtual key code {keyInfo.Key}.");
+                    Debug.Assert (true, $@"Unable to map the virtual key code {keyInfo.Key}.");
 
                     return KeyCode.Null;
                 }
@@ -727,13 +726,13 @@ internal class WindowsDriver : ConsoleDriver
 
                 if (keyInfo.KeyChar == 0)
                 {
-                    // If the keyChar is 0, keyInfo.Key value is not a printable character. 
+                    // If the keyChar is 0, keyInfo.Key value is not a printable character.
 
-                    // Dead keys (diacritics) are indicated by setting the top bit of the return value. 
+                    // Dead keys (diacritics) are indicated by setting the top bit of the return value.
                     if ((mapResult & 0x80000000) != 0)
                     {
                         // Dead key (e.g. Oem2 '~'/'^' on POR keyboard)
-                        // Option 1: Throw it out. 
+                        // Option 1: Throw it out.
                         //    - Apps will never see the dead keys
                         //    - If user presses a key that can be combined with the dead key ('a'), the right thing happens (app will see '�').
                         //      - NOTE: With Dead Keys, KeyDown != KeyUp. The KeyUp event will have just the base char ('a').
@@ -754,7 +753,7 @@ internal class WindowsDriver : ConsoleDriver
                     if (keyInfo.Modifiers != 0)
                     {
                         // These Oem keys have well-defined chars. We ensure the representative char is used.
-                        // If we don't do this, then on some keyboard layouts the wrong char is 
+                        // If we don't do this, then on some keyboard layouts the wrong char is
                         // returned (e.g. on ENG OemPlus un-shifted is =, not +). This is important
                         // for key persistence ("Ctrl++" vs. "Ctrl+=").
                         mappedChar = keyInfo.Key switch
@@ -925,25 +924,25 @@ internal class WindowsDriver : ConsoleDriver
     {
         // When a user presses-and-holds, start generating pressed events every `startDelay`
         // After `iterationsUntilFast` iterations, speed them up to `fastDelay` ms
-        const int startDelay = 500;
-        const int iterationsUntilFast = 4;
-        const int fastDelay = 50;
+        const int START_DELAY = 500;
+        const int ITERATIONS_UNTIL_FAST = 4;
+        const int FAST_DELAY = 50;
 
         int iterations = 0;
-        int delay = startDelay;
+        int delay = START_DELAY;
         while (_isButtonPressed)
         {
             // TODO: This makes ConsoleDriver dependent on Application, which is not ideal. This should be moved to Application.
-            View view = Application.WantContinuousButtonPressedView;
+            View? view = Application.WantContinuousButtonPressedView;
 
             if (view is null)
             {
                 break;
             }
 
-            if (iterations++ >= iterationsUntilFast)
+            if (iterations++ >= ITERATIONS_UNTIL_FAST)
             {
-                delay = fastDelay;
+                delay = FAST_DELAY;
             }
             await Task.Delay (delay);
 
@@ -1012,13 +1011,13 @@ internal class WindowsDriver : ConsoleDriver
         if (_isButtonDoubleClicked || _isOneFingerDoubleClicked)
         {
             // TODO: This makes ConsoleDriver dependent on Application, which is not ideal. This should be moved to Application.
-            Application.MainLoop.AddIdle (
-                                          () =>
-                                          {
-                                              Task.Run (async () => await ProcessButtonDoubleClickedAsync ());
+            Application.MainLoop!.AddIdle (
+                                           () =>
+                                           {
+                                               Task.Run (async () => await ProcessButtonDoubleClickedAsync ());
 
-                                              return false;
-                                          });
+                                               return false;
+                                           });
         }
 
         // The ButtonState member of the MouseEvent structure has bit corresponding to each mouse button.
@@ -1084,13 +1083,13 @@ internal class WindowsDriver : ConsoleDriver
             if ((mouseFlag & MouseFlags.ReportMousePosition) == 0)
             {
                 // TODO: This makes ConsoleDriver dependent on Application, which is not ideal. This should be moved to Application.
-                Application.MainLoop.AddIdle (
-                                              () =>
-                                              {
-                                                  Task.Run (async () => await ProcessContinuousButtonPressedAsync (mouseFlag));
+                Application.MainLoop!.AddIdle (
+                                               () =>
+                                               {
+                                                   Task.Run (async () => await ProcessContinuousButtonPressedAsync (mouseFlag));
 
-                                                  return false;
-                                              });
+                                                   return false;
+                                               });
             }
         }
         else if (_lastMouseButtonPressed != null
@@ -1253,421 +1252,4 @@ internal class WindowsDriver : ConsoleDriver
             Flags = mouseFlag
         };
     }
-}
-
-/// <summary>
-///     Mainloop intended to be used with the <see cref="WindowsDriver"/>, and can
-///     only be used on Windows.
-/// </summary>
-/// <remarks>
-///     This implementation is used for WindowsDriver.
-/// </remarks>
-internal class WindowsMainLoop : IMainLoopDriver
-{
-    /// <summary>
-    ///     Invoked when the window is changed.
-    /// </summary>
-    public EventHandler<SizeChangedEventArgs> WinChanged;
-
-    private readonly ConsoleDriver _consoleDriver;
-    private readonly ManualResetEventSlim _eventReady = new (false);
-
-    // The records that we keep fetching
-    private readonly ConcurrentQueue<WindowsConsole.InputRecord []> _resultQueue = new ();
-    internal readonly ManualResetEventSlim _waitForProbe = new (false);
-    private readonly WindowsConsole _winConsole;
-    private CancellationTokenSource _eventReadyTokenSource = new ();
-    private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
-    private MainLoop _mainLoop;
-
-    public WindowsMainLoop (ConsoleDriver consoleDriver = null)
-    {
-        _consoleDriver = consoleDriver ?? throw new ArgumentNullException (nameof (consoleDriver));
-
-        if (!ConsoleDriver.RunningUnitTests)
-        {
-            _winConsole = ((WindowsDriver)consoleDriver).WinConsole;
-            _winConsole._mainLoop = this;
-        }
-    }
-
-    public AnsiEscapeSequenceRequests EscSeqRequests { get; } = new ();
-
-    void IMainLoopDriver.Setup (MainLoop mainLoop)
-    {
-        _mainLoop = mainLoop;
-
-        if (ConsoleDriver.RunningUnitTests)
-        {
-            return;
-        }
-
-        Task.Run (WindowsInputHandler, _inputHandlerTokenSource.Token);
-#if HACK_CHECK_WINCHANGED
-        Task.Run (CheckWinChange);
-#endif
-    }
-
-    void IMainLoopDriver.Wakeup () { _eventReady.Set (); }
-
-    bool IMainLoopDriver.EventsPending ()
-    {
-        _waitForProbe.Set ();
-#if HACK_CHECK_WINCHANGED
-        _winChange.Set ();
-#endif
-        if (_mainLoop.CheckTimersAndIdleHandlers (out int waitTimeout))
-        {
-            return true;
-        }
-
-        try
-        {
-            if (!_eventReadyTokenSource.IsCancellationRequested)
-            {
-                // Note: ManualResetEventSlim.Wait will wait indefinitely if the timeout is -1. The timeout is -1 when there
-                // are no timers, but there IS an idle handler waiting.
-                _eventReady.Wait (waitTimeout, _eventReadyTokenSource.Token);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            return true;
-        }
-        finally
-        {
-            _eventReady.Reset ();
-        }
-
-        if (!_eventReadyTokenSource.IsCancellationRequested)
-        {
-#if HACK_CHECK_WINCHANGED
-            return _resultQueue.Count > 0 || _mainLoop.CheckTimersAndIdleHandlers (out _) || _winChanged;
-#else
-			return _resultQueue.Count > 0 || _mainLoop.CheckTimersAndIdleHandlers (out _);
-#endif
-        }
-
-        _eventReadyTokenSource.Dispose ();
-        _eventReadyTokenSource = new CancellationTokenSource ();
-
-        return true;
-    }
-
-    void IMainLoopDriver.Iteration ()
-    {
-        while (_resultQueue.Count > 0)
-        {
-            if (_resultQueue.TryDequeue (out WindowsConsole.InputRecord [] inputRecords))
-            {
-                if (inputRecords is { Length: > 0 })
-                {
-                    ((WindowsDriver)_consoleDriver).ProcessInput (inputRecords [0]);
-                }
-            }
-        }
-#if HACK_CHECK_WINCHANGED
-        if (_winChanged)
-        {
-            _winChanged = false;
-            WinChanged?.Invoke (this, new SizeChangedEventArgs (_windowSize));
-        }
-#endif
-    }
-
-    void IMainLoopDriver.TearDown ()
-    {
-        _inputHandlerTokenSource?.Cancel ();
-        _inputHandlerTokenSource?.Dispose ();
-
-        if (_winConsole is { })
-        {
-            var numOfEvents = _winConsole.GetNumberOfConsoleInputEvents ();
-
-            if (numOfEvents > 0)
-            {
-                _winConsole.FlushConsoleInputBuffer ();
-                //Debug.WriteLine ($"Flushed {numOfEvents} events.");
-            }
-        }
-
-        _waitForProbe?.Dispose ();
-
-        _resultQueue?.Clear ();
-
-        _eventReadyTokenSource?.Cancel ();
-        _eventReadyTokenSource?.Dispose ();
-        _eventReady?.Dispose ();
-
-#if HACK_CHECK_WINCHANGED
-        _winChange?.Dispose ();
-#endif
-
-        _mainLoop = null;
-    }
-
-    internal bool _forceRead;
-
-    private void WindowsInputHandler ()
-    {
-        while (_mainLoop is { })
-        {
-            try
-            {
-                if (!_inputHandlerTokenSource.IsCancellationRequested && !_forceRead)
-                {
-                    _waitForProbe.Wait (_inputHandlerTokenSource.Token);
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                // Wakes the _waitForProbe if it's waiting
-                _waitForProbe.Set ();
-
-                return;
-            }
-            finally
-            {
-                // If IsCancellationRequested is true the code after
-                // the `finally` block will not be executed.
-                if (!_inputHandlerTokenSource.IsCancellationRequested)
-                {
-                    _waitForProbe.Reset ();
-                }
-            }
-
-            if (_resultQueue?.Count == 0 || _forceRead)
-            {
-                while (!_inputHandlerTokenSource.IsCancellationRequested)
-                {
-                    WindowsConsole.InputRecord [] inpRec = _winConsole.ReadConsoleInput ();
-
-                    if (inpRec is { })
-                    {
-                        _resultQueue!.Enqueue (inpRec);
-
-                        break;
-                    }
-
-                    if (!_forceRead)
-                    {
-                        try
-                        {
-                            Task.Delay (100, _inputHandlerTokenSource.Token).Wait (_inputHandlerTokenSource.Token);
-                        }
-                        catch (OperationCanceledException)
-                        { }
-                    }
-                }
-            }
-
-            _eventReady.Set ();
-        }
-    }
-
-#if HACK_CHECK_WINCHANGED
-    private readonly ManualResetEventSlim _winChange = new (false);
-    private bool _winChanged;
-    private Size _windowSize;
-    private void CheckWinChange ()
-    {
-        while (_mainLoop is { })
-        {
-            _winChange.Wait ();
-            _winChange.Reset ();
-
-            // Check if the window size changed every half second. 
-            // We do this to minimize the weird tearing seen on Windows when resizing the console
-            while (_mainLoop is { })
-            {
-                Task.Delay (500).Wait ();
-                _windowSize = _winConsole.GetConsoleBufferWindow (out _);
-
-                if (_windowSize != Size.Empty
-                    && (_windowSize.Width != _consoleDriver.Cols
-                        || _windowSize.Height != _consoleDriver.Rows))
-                {
-                    break;
-                }
-            }
-
-            _winChanged = true;
-            _eventReady.Set ();
-        }
-    }
-#endif
-}
-
-internal class WindowsClipboard : ClipboardBase
-{
-    private const uint CF_UNICODE_TEXT = 13;
-
-    public override bool IsSupported { get; } = CheckClipboardIsAvailable ();
-
-    private static bool CheckClipboardIsAvailable ()
-    {
-        // Attempt to open the clipboard
-        if (OpenClipboard (nint.Zero))
-        {
-            // Clipboard is available
-            // Close the clipboard after use
-            CloseClipboard ();
-
-            return true;
-        }
-        // Clipboard is not available
-        return false;
-    }
-
-    protected override string GetClipboardDataImpl ()
-    {
-        try
-        {
-            if (!OpenClipboard (nint.Zero))
-            {
-                return string.Empty;
-            }
-
-            nint handle = GetClipboardData (CF_UNICODE_TEXT);
-
-            if (handle == nint.Zero)
-            {
-                return string.Empty;
-            }
-
-            nint pointer = nint.Zero;
-
-            try
-            {
-                pointer = GlobalLock (handle);
-
-                if (pointer == nint.Zero)
-                {
-                    return string.Empty;
-                }
-
-                int size = GlobalSize (handle);
-                var buff = new byte [size];
-
-                Marshal.Copy (pointer, buff, 0, size);
-
-                return Encoding.Unicode.GetString (buff).TrimEnd ('\0');
-            }
-            finally
-            {
-                if (pointer != nint.Zero)
-                {
-                    GlobalUnlock (handle);
-                }
-            }
-        }
-        finally
-        {
-            CloseClipboard ();
-        }
-    }
-
-    protected override void SetClipboardDataImpl (string text)
-    {
-        OpenClipboard ();
-
-        EmptyClipboard ();
-        nint hGlobal = default;
-
-        try
-        {
-            int bytes = (text.Length + 1) * 2;
-            hGlobal = Marshal.AllocHGlobal (bytes);
-
-            if (hGlobal == default (nint))
-            {
-                ThrowWin32 ();
-            }
-
-            nint target = GlobalLock (hGlobal);
-
-            if (target == default (nint))
-            {
-                ThrowWin32 ();
-            }
-
-            try
-            {
-                Marshal.Copy (text.ToCharArray (), 0, target, text.Length);
-            }
-            finally
-            {
-                GlobalUnlock (target);
-            }
-
-            if (SetClipboardData (CF_UNICODE_TEXT, hGlobal) == default (nint))
-            {
-                ThrowWin32 ();
-            }
-
-            hGlobal = default (nint);
-        }
-        finally
-        {
-            if (hGlobal != default (nint))
-            {
-                Marshal.FreeHGlobal (hGlobal);
-            }
-
-            CloseClipboard ();
-        }
-    }
-
-    [DllImport ("user32.dll", SetLastError = true)]
-    [return: MarshalAs (UnmanagedType.Bool)]
-    private static extern bool CloseClipboard ();
-
-    [DllImport ("user32.dll")]
-    private static extern bool EmptyClipboard ();
-
-    [DllImport ("user32.dll", SetLastError = true)]
-    private static extern nint GetClipboardData (uint uFormat);
-
-    [DllImport ("kernel32.dll", SetLastError = true)]
-    private static extern nint GlobalLock (nint hMem);
-
-    [DllImport ("kernel32.dll", SetLastError = true)]
-    private static extern int GlobalSize (nint handle);
-
-    [DllImport ("kernel32.dll", SetLastError = true)]
-    [return: MarshalAs (UnmanagedType.Bool)]
-    private static extern bool GlobalUnlock (nint hMem);
-
-    [DllImport ("User32.dll", SetLastError = true)]
-    [return: MarshalAs (UnmanagedType.Bool)]
-    private static extern bool IsClipboardFormatAvailable (uint format);
-
-    private void OpenClipboard ()
-    {
-        var num = 10;
-
-        while (true)
-        {
-            if (OpenClipboard (default (nint)))
-            {
-                break;
-            }
-
-            if (--num == 0)
-            {
-                ThrowWin32 ();
-            }
-
-            Thread.Sleep (100);
-        }
-    }
-
-    [DllImport ("user32.dll", SetLastError = true)]
-    [return: MarshalAs (UnmanagedType.Bool)]
-    private static extern bool OpenClipboard (nint hWndNewOwner);
-
-    [DllImport ("user32.dll", SetLastError = true)]
-    private static extern nint SetClipboardData (uint uFormat, nint data);
-
-    private void ThrowWin32 () { throw new Win32Exception (Marshal.GetLastWin32Error ()); }
 }

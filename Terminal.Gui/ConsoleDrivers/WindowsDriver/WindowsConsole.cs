@@ -1,4 +1,4 @@
-// TODO: #nullable enable
+#nullable enable
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Terminal.Gui.ConsoleDrivers;
@@ -7,7 +7,7 @@ namespace Terminal.Gui;
 
 internal class WindowsConsole
 {
-    internal WindowsMainLoop _mainLoop;
+    internal WindowsMainLoop? _mainLoop;
 
     public const int STD_OUTPUT_HANDLE = -11;
     public const int STD_INPUT_HANDLE = -10;
@@ -34,7 +34,7 @@ internal class WindowsConsole
         ConsoleMode = newConsoleMode;
     }
 
-    private CharInfo [] _originalStdOutChars;
+    private CharInfo []? _originalStdOutChars;
 
     public bool WriteToConsole (Size size, ExtendedCharInfo [] charInfoBuffer, Coord bufferSize, SmallRect window, bool force16Colors)
     {
@@ -598,15 +598,15 @@ internal class WindowsConsole
 
         public readonly override string ToString ()
         {
-            return EventType switch
-                   {
-                       EventType.Focus => FocusEvent.ToString (),
-                       EventType.Key => KeyEvent.ToString (),
-                       EventType.Menu => MenuEvent.ToString (),
-                       EventType.Mouse => MouseEvent.ToString (),
-                       EventType.WindowBufferSize => WindowBufferSizeEvent.ToString (),
-                       _ => "Unknown event type: " + EventType
-                   };
+            return (EventType switch
+                    {
+                        EventType.Focus => FocusEvent.ToString (),
+                        EventType.Key => KeyEvent.ToString (),
+                        EventType.Menu => MenuEvent.ToString (),
+                        EventType.Mouse => MouseEvent.ToString (),
+                        EventType.WindowBufferSize => WindowBufferSizeEvent.ToString (),
+                        _ => "Unknown event type: " + EventType
+                    })!;
         }
     }
 
@@ -866,7 +866,7 @@ internal class WindowsConsole
     internal static nint INVALID_HANDLE_VALUE = new (-1);
 
     [DllImport ("kernel32.dll", SetLastError = true)]
-    private static extern bool SetConsoleActiveScreenBuffer (nint Handle);
+    private static extern bool SetConsoleActiveScreenBuffer (nint handle);
 
     [DllImport ("kernel32.dll", SetLastError = true)]
     private static extern bool GetNumberOfConsoleInputEvents (nint handle, out uint lpcNumberOfEvents);
@@ -896,9 +896,9 @@ internal class WindowsConsole
 
     private int _retries;
 
-    public InputRecord [] ReadConsoleInput ()
+    public InputRecord []? ReadConsoleInput ()
     {
-        const int bufferSize = 1;
+        const int BUFFER_SIZE = 1;
         InputRecord inputRecord = default;
         uint numberEventsRead = 0;
         StringBuilder ansiSequence = new StringBuilder ();
@@ -910,13 +910,13 @@ internal class WindowsConsole
             try
             {
                 // Peek to check if there is any input available
-                if (PeekConsoleInput (_inputHandle, out _, bufferSize, out uint eventsRead) && eventsRead > 0)
+                if (PeekConsoleInput (_inputHandle, out _, BUFFER_SIZE, out uint eventsRead) && eventsRead > 0)
                 {
                     // Read the input since it is available
                     ReadConsoleInput (
                                       _inputHandle,
                                       out inputRecord,
-                                      bufferSize,
+                                      BUFFER_SIZE,
                                       out numberEventsRead);
 
                     if (inputRecord.EventType == EventType.Key)
@@ -931,7 +931,7 @@ internal class WindowsConsole
                             if (inputChar == '\u001B') // Escape character
                             {
                                 // Peek to check if there is any input available with key event and bKeyDown
-                                if (PeekConsoleInput (_inputHandle, out InputRecord peekRecord, bufferSize, out eventsRead) && eventsRead > 0)
+                                if (PeekConsoleInput (_inputHandle, out InputRecord peekRecord, BUFFER_SIZE, out eventsRead) && eventsRead > 0)
                                 {
                                     if (peekRecord is { EventType: EventType.Key, KeyEvent.bKeyDown: true })
                                     {
@@ -949,7 +949,7 @@ internal class WindowsConsole
                                 ansiSequence.Append (inputChar);
 
                                 // Check if the sequence has ended with an expected command terminator
-                                if (_mainLoop.EscSeqRequests is { } && _mainLoop.EscSeqRequests.HasResponse (inputChar.ToString (), out AnsiEscapeSequenceRequestStatus seqReqStatus))
+                                if (_mainLoop?.EscSeqRequests is { } && _mainLoop.EscSeqRequests.HasResponse (inputChar.ToString (), out AnsiEscapeSequenceRequestStatus? seqReqStatus))
                                 {
                                     // Finished reading the sequence and remove the enqueued request
                                     _mainLoop.EscSeqRequests.Remove (seqReqStatus);
@@ -970,9 +970,9 @@ internal class WindowsConsole
                     }
                 }
 
-                if (readingSequence && !raisedResponse && AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && _mainLoop.EscSeqRequests is { Statuses.Count: > 0 })
+                if (readingSequence && !raisedResponse && AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && _mainLoop?.EscSeqRequests is { Statuses.Count: > 0 })
                 {
-                    _mainLoop.EscSeqRequests.Statuses.TryDequeue (out AnsiEscapeSequenceRequestStatus seqReqStatus);
+                    _mainLoop.EscSeqRequests.Statuses.TryDequeue (out AnsiEscapeSequenceRequestStatus? seqReqStatus);
 
                     lock (seqReqStatus!.AnsiRequest._responseLock)
                     {
@@ -984,13 +984,13 @@ internal class WindowsConsole
 
                     _retries = 0;
                 }
-                else if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && _mainLoop.EscSeqRequests is { Statuses.Count: > 0 })
+                else if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && _mainLoop?.EscSeqRequests is { Statuses.Count: > 0 })
                 {
                     if (_retries > 1)
                     {
-                        if (_mainLoop.EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.Response))
+                        if (_mainLoop.EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.Response))
                         {
-                            lock (seqReqStatus!.AnsiRequest._responseLock)
+                            lock (seqReqStatus.AnsiRequest._responseLock)
                             {
                                 _mainLoop.EscSeqRequests.Statuses.TryDequeue (out _);
 
@@ -1012,9 +1012,9 @@ internal class WindowsConsole
                     _retries = 0;
                 }
 
-                return numberEventsRead == 0
-                           ? null
-                           : [inputRecord];
+                return (numberEventsRead == 0
+                            ? null
+                            : [inputRecord])!;
             }
             catch (Exception)
             {
@@ -1096,7 +1096,7 @@ internal class WindowsConsole
     private static extern bool GetConsoleScreenBufferInfoEx (nint hConsoleOutput, ref CONSOLE_SCREEN_BUFFER_INFOEX csbi);
 
     [DllImport ("kernel32.dll", SetLastError = true)]
-    private static extern bool SetConsoleScreenBufferInfoEx (nint hConsoleOutput, ref CONSOLE_SCREEN_BUFFER_INFOEX ConsoleScreenBufferInfo);
+    private static extern bool SetConsoleScreenBufferInfoEx (nint hConsoleOutput, ref CONSOLE_SCREEN_BUFFER_INFOEX consoleScreenBufferInfo);
 
     [DllImport ("kernel32.dll", SetLastError = true)]
     private static extern bool SetConsoleWindowInfo (
