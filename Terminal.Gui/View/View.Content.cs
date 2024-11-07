@@ -308,6 +308,8 @@ public partial class View
             {
                 _viewportLocation = viewport.Location;
                 SetNeedsLayout ();
+                //SetNeedsDraw();
+                //SetSubViewNeedsDraw();
             }
 
             OnViewportChanged (new (IsInitialized ? Viewport : Rectangle.Empty, oldViewport));

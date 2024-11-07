@@ -171,7 +171,7 @@ public class Adornment : View, IDesignable
         // This just draws/clears the thickness, not the insides.
         Thickness.Draw (ViewportToScreen (Viewport), Diagnostics, ToString ());
 
-        //NeedsDraw = true;
+        NeedsDraw = true;
 
         return true;
     }

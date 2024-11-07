@@ -68,6 +68,8 @@ public class Border : Adornment
         ThicknessChanged += OnThicknessChanged;
     }
 
+    // TODO: Move DrawIndicator out of Border and into View
+
     private void OnThicknessChanged (object? sender, EventArgs e)
     {
         if (IsInitialized)
@@ -75,7 +77,6 @@ public class Border : Adornment
             ShowHideDrawIndicator ();
         }
     }
-
     private void ShowHideDrawIndicator ()
     {
         if (View.Diagnostics.HasFlag (ViewDiagnosticFlags.DrawIndicator) && Thickness != Thickness.Empty)

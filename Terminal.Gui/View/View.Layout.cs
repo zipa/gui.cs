@@ -777,7 +777,7 @@ public partial class View // Layout APIs
         {
             foreach (Toplevel tl in Application.TopLevels)
             {
-                tl.SetNeedsDraw ();
+               // tl.SetNeedsDraw ();
             }
         }
 

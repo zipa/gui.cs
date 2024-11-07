@@ -97,8 +97,6 @@ public class Shortcut : View, IOrientation, IDesignable
         HighlightStyle = HighlightStyle.None;
         CanFocus = true;
 
-        SuperViewRendersLineCanvas = true;
-
         if (Border is { })
         {
             Border.Settings &= ~BorderSettings.Title;
@@ -655,11 +653,11 @@ public class Shortcut : View, IOrientation, IDesignable
             _minimumKeyTextSize = value;
             SetKeyViewDefaultLayout ();
 
-            // TODO: Prob not needed
-            CommandView.SetNeedsLayout ();
-            HelpView.SetNeedsLayout ();
-            KeyView.SetNeedsLayout ();
-            SetSubViewNeedsDraw ();
+            //// TODO: Prob not needed
+            //CommandView.SetNeedsLayout ();
+            //HelpView.SetNeedsLayout ();
+            //KeyView.SetNeedsLayout ();
+            //SetSubViewNeedsDraw ();
         }
     }
 

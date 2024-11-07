@@ -320,8 +320,13 @@ public class TableView : View, IDesignable
         //try to prevent this being set to an out of bounds column
         set
         {
+            int prev = columnOffset;
             columnOffset = TableIsNullOrInvisible () ? 0 : Math.Max (0, Math.Min (Table.Columns - 1, value));
-            SetNeedsDraw ();
+
+            if (prev != columnOffset)
+            {
+                SetNeedsDraw ();
+            }
         }
     }
 
@@ -358,7 +363,16 @@ public class TableView : View, IDesignable
     public int RowOffset
     {
         get => rowOffset;
-        set => rowOffset = TableIsNullOrInvisible () ? 0 : Math.Max (0, Math.Min (Table.Rows - 1, value));
+        set
+        {
+            int prev = rowOffset;
+            rowOffset = TableIsNullOrInvisible () ? 0 : Math.Max (0, Math.Min (Table.Rows - 1, value));
+
+            if (rowOffset != prev)
+            {
+                SetNeedsDraw ();
+            }
+        }
     }
 
     /// <summary>The index of <see cref="DataTable.Columns"/> in <see cref="Table"/> that the user has currently selected</summary>
@@ -830,28 +844,28 @@ public class TableView : View, IDesignable
             case MouseFlags.WheeledDown:
                 RowOffset++;
                 EnsureValidScrollOffsets ();
-                SetNeedsDraw ();
+                //SetNeedsDraw ();
 
                 return true;
 
             case MouseFlags.WheeledUp:
                 RowOffset--;
                 EnsureValidScrollOffsets ();
-                SetNeedsDraw ();
+                //SetNeedsDraw ();
 
                 return true;
 
             case MouseFlags.WheeledRight:
                 ColumnOffset++;
                 EnsureValidScrollOffsets ();
-                SetNeedsDraw ();
+                //SetNeedsDraw ();
 
                 return true;
 
             case MouseFlags.WheeledLeft:
                 ColumnOffset--;
                 EnsureValidScrollOffsets ();
-                SetNeedsDraw ();
+                //SetNeedsDraw ();
 
                 return true;
         }

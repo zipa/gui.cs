@@ -785,7 +785,7 @@ public class UICatalogApp
                                              {
                                                  if (_statusBar.NeedsLayout)
                                                  {
-                                                     throw new LayoutException ("DimFunc.Fn aborted because dependent View needs layout.");
+                                                   //  throw new LayoutException ("DimFunc.Fn aborted because dependent View needs layout.");
                                                  }
                                                  return _statusBar.Frame.Height;
                                              })),
@@ -793,7 +793,7 @@ public class UICatalogApp
                 CanFocus = true,
                 Title = "_Categories",
                 BorderStyle = LineStyle.Rounded,
-                SuperViewRendersLineCanvas = true,
+                //SuperViewRendersLineCanvas = true,
                 Source = new ListWrapper<string> (_categories)
             };
             CategoryList.OpenSelectedItem += (s, a) => { ScenarioList!.SetFocus (); };
@@ -804,14 +804,14 @@ public class UICatalogApp
             // category).
             ScenarioList = new ()
             {
-                X = Pos.Right (CategoryList) - 1,
+                X = Pos.Right (CategoryList),
                 Y = Pos.Bottom (menuBar),
                 Width = Dim.Fill (),
                 Height = Dim.Fill (Dim.Func (() =>
                                              {
                                                  if (_statusBar.NeedsLayout)
                                                  {
-                                                     throw new LayoutException ("DimFunc.Fn aborted because dependent View needs layout.");
+                                                    // throw new LayoutException ("DimFunc.Fn aborted because dependent View needs layout.");
                                                  }
                                                  return _statusBar.Frame.Height;
                                              })),
@@ -819,7 +819,7 @@ public class UICatalogApp
                 CanFocus = true,
                 Title = "_Scenarios",
                 BorderStyle = CategoryList.BorderStyle,
-                SuperViewRendersLineCanvas = true
+                //SuperViewRendersLineCanvas = true
             };
 
             // TableView provides many options for table headers. For simplicity we turn all 

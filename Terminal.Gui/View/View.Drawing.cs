@@ -5,6 +5,11 @@ namespace Terminal.Gui;
 
 public partial class View // Drawing APIs
 {
+    /// <summary>
+    ///     Draws a set of views.
+    /// </summary>
+    /// <param name="views">The peer views to draw.</param>
+    /// <param name="force">If <see langword="true"/>, <see cref="View.SetNeedsDraw()"/> will be called on each view to force it to be drawn.</param>
     internal static void Draw (IEnumerable<View> views, bool force)
     {
         IEnumerable<View> viewsArray = views as View [] ?? views.ToArray ();
@@ -130,9 +135,14 @@ public partial class View // Drawing APIs
     {
         if (Border?.Subviews is { } && Border.Thickness != Thickness.Empty)
         {
+            // PERFORMANCE: Get the check for DrawIndicator out of this somehow.
             foreach (View subview in Border.Subviews.Where (v => v.Visible || v.Id == "DrawIndicator"))
             {
-                subview.SetNeedsDraw ();
+                if (subview.Id != "DrawIndicator")
+                {
+                    subview.SetNeedsDraw ();
+                }
+
                 LineCanvas.Exclude (new (subview.FrameToScreen()));
             }
 
@@ -759,6 +769,7 @@ public partial class View // Drawing APIs
             SuperView.SubViewNeedsDraw = false;
         }
 
+        // This ensures LineCanvas' get redrawn
         if (!SuperViewRendersLineCanvas)
         {
             LineCanvas.Clear ();

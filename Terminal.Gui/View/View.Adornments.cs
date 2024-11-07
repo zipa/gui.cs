@@ -149,6 +149,10 @@ public partial class View // Adornments
             }
 
             LineStyle old = Border?.LineStyle ?? LineStyle.None;
+
+            // It's tempting to try to optimize this by checking that old != value and returning.
+            // Do not.
+
             CancelEventArgs<LineStyle> e = new (ref old, ref value);
 
             if (OnBorderStyleChanging (e) || e.Cancel)
