@@ -83,7 +83,12 @@ public class AnsiEscapeSequenceRequest
                 throw new InvalidOperationException ("Terminator request is empty.");
             }
 
-            if (!ansiRequest.Response.EndsWith (ansiRequest.Terminator [^1]))
+            if (string.IsNullOrEmpty (ansiRequest.Response))
+            {
+                throw new InvalidOperationException ("Response request is null.");
+            }
+
+            if (!string.IsNullOrEmpty (ansiRequest.Response) && !ansiRequest.Response.EndsWith (ansiRequest.Terminator [^1]))
             {
                 string resp = string.IsNullOrEmpty (ansiRequest.Response) ? "" : ansiRequest.Response.Last ().ToString ();
 

@@ -172,7 +172,7 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
                                                                                           out AnsiEscapeSequenceResponse ansiEscapeSequenceResponse
                                                                                          );
 
-                                     tvResponse.Text = ansiEscapeSequenceResponse.Response;
+                                     tvResponse.Text = ansiEscapeSequenceResponse.Response ?? "";
                                      tvError.Text = ansiEscapeSequenceResponse.Error;
                                      tvValue.Text = ansiEscapeSequenceResponse.ExpectedResponseValue ?? "";
                                      tvTerminator.Text = ansiEscapeSequenceResponse.Terminator;

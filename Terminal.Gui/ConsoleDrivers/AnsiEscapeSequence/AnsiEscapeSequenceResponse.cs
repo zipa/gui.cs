@@ -24,7 +24,7 @@ public class AnsiEscapeSequenceResponse
     ///     </see>
     ///     .
     /// </summary>
-    public required string Response { get; init; }
+    public required string? Response { get; init; }
 
     // QUESTION: Does string.Empty indicate no terminator expected? If not, perhaps make this property nullable?
     /// <summary>
