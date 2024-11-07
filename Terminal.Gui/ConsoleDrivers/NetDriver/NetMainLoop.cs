@@ -86,7 +86,6 @@ internal class NetMainLoop : IMainLoopDriver
     {
         while (_resultQueue.Count > 0)
         {
-            // Always dequeue even if it's null and invoke if isn't null
             if (_resultQueue.TryTake (out NetEvents.InputResult dequeueResult))
             {
                 ProcessInput?.Invoke (dequeueResult);
