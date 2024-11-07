@@ -18,7 +18,7 @@ public class DrawTests (ITestOutputHelper _output)
             Y = 1,
             Width = 3, Height = 3
         };
-        view.Margin.Thickness = new (1);
+        view.Margin!.Thickness = new (1);
 
         // Only valid location w/in Viewport is 0, 0 (view) - 2, 2 (screen)
 
@@ -42,7 +42,7 @@ public class DrawTests (ITestOutputHelper _output)
             Y = 1,
             Width = 3, Height = 3
         };
-        view.Padding.Thickness = new (1);
+        view.Padding!.Thickness = new (1);
         view.Padding.Diagnostics = ViewDiagnosticFlags.Thickness;
         view.BeginInit ();
         view.EndInit ();
@@ -315,7 +315,7 @@ public class DrawTests (ITestOutputHelper _output)
                    これは広いルーンラインです。
                    """,
         };
-        frameView.Border.LineStyle = LineStyle.Single;
+        frameView.Border!.LineStyle = LineStyle.Single;
         frameView.Border.Thickness = new (1, 0, 0, 0);
 
         top.Add (frameView);
@@ -338,7 +338,7 @@ public class DrawTests (ITestOutputHelper _output)
             Width = Dim.Auto (),
             BorderStyle = LineStyle.Single
         };
-        view.Border.Thickness = new (1, 0, 1, 0);
+        view.Border!.Thickness = new (1, 0, 1, 0);
 
         top.Add (view);
         top.Layout ();
@@ -451,7 +451,7 @@ public class DrawTests (ITestOutputHelper _output)
     public void Draw_Minimum_Full_Border_With_Empty_Viewport_Without_Bottom ()
     {
         var view = new View { Width = 2, Height = 1, BorderStyle = LineStyle.Single };
-        view.Border.Thickness = new (1, 1, 1, 0);
+        view.Border!.Thickness = new (1, 1, 1, 0);
         view.BeginInit ();
         view.EndInit ();
         view.SetRelativeLayout (Application.Screen.Size);
@@ -469,7 +469,7 @@ public class DrawTests (ITestOutputHelper _output)
     public void Draw_Minimum_Full_Border_With_Empty_Viewport_Without_Left ()
     {
         var view = new View { Width = 1, Height = 2, BorderStyle = LineStyle.Single };
-        view.Border.Thickness = new (0, 1, 1, 1);
+        view.Border!.Thickness = new (0, 1, 1, 1);
         view.BeginInit ();
         view.EndInit ();
         view.SetRelativeLayout (Application.Screen.Size);
@@ -494,7 +494,7 @@ public class DrawTests (ITestOutputHelper _output)
     public void Draw_Minimum_Full_Border_With_Empty_Viewport_Without_Right ()
     {
         var view = new View { Width = 1, Height = 2, BorderStyle = LineStyle.Single };
-        view.Border.Thickness = new (1, 1, 0, 1);
+        view.Border!.Thickness = new (1, 1, 0, 1);
         view.BeginInit ();
         view.EndInit ();
         view.SetRelativeLayout (Application.Screen.Size);
@@ -519,7 +519,7 @@ public class DrawTests (ITestOutputHelper _output)
     public void Draw_Minimum_Full_Border_With_Empty_Viewport_Without_Top ()
     {
         var view = new View { Width = 2, Height = 1, BorderStyle = LineStyle.Single };
-        view.Border.Thickness = new (1, 0, 1, 1);
+        view.Border!.Thickness = new (1, 0, 1, 1);
 
         view.BeginInit ();
         view.EndInit ();
@@ -964,7 +964,7 @@ public class DrawTests (ITestOutputHelper _output)
             ViewportSettings = ViewportSettings.ClipContentOnly
         };
         view.SetContentSize (new Size (10, 10));
-        view.Border.Thickness = new (1);
+        view.Border!.Thickness = new (1);
         view.BeginInit ();
         view.EndInit ();
         Assert.Equal (view.Frame, View.GetClip ()!.GetBounds ());
@@ -997,7 +997,7 @@ public class DrawTests (ITestOutputHelper _output)
             Height = Dim.Fill ()
         };
         view.SetContentSize (new Size (10, 10));
-        view.Border.Thickness = new (1);
+        view.Border!.Thickness = new (1);
         view.BeginInit ();
         view.EndInit ();
         Assert.Equal (view.Frame, View.GetClip ()!.GetBounds ());

@@ -194,7 +194,7 @@ public class AllViewsTester : Scenario
             // X = Pos.Right(_layoutEditor),
             SuperViewRendersLineCanvas = true
         };
-        _eventLog.Border.Thickness = new (1);
+        _eventLog.Border!.Thickness = new (1);
         _eventLog.X = Pos.AnchorEnd () - 1;
         _eventLog.Y = 0;
 

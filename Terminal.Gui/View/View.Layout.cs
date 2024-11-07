@@ -501,7 +501,7 @@ public partial class View // Layout APIs
                 newH = _height.Calculate (newY, superviewContentSize.Height, this, Dimension.Height);
             }
         }
-        catch (LayoutException le)
+        catch (LayoutException)
         {
             //Debug.WriteLine ($"A Dim/PosFunc function threw (typically this is because a dependent View was not laid out)\n{le}.");
             return false;
