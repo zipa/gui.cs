@@ -9,15 +9,14 @@ namespace UICatalog.Scenarios;
 [ScenarioCategory ("Tests")]
 public sealed class AnsiEscapeSequenceRequests : Scenario
 {
-    private GraphView _graphView;
-
-    private ScatterSeries _sentSeries;
-    private ScatterSeries _answeredSeries;
-
     private readonly List<DateTime> _sends = new ();
 
     private readonly object _lockAnswers = new ();
     private readonly Dictionary<DateTime, string> _answers = new ();
+    private GraphView _graphView;
+
+    private ScatterSeries _sentSeries;
+    private ScatterSeries _answeredSeries;
     private Label _lblSummary;
 
     public override void Main ()
@@ -58,6 +57,120 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
 
         // Shutdown - Calling Application.Shutdown is required.
         Application.Shutdown ();
+    }
+
+    private View BuildBulkTab ()
+    {
+        var w = new View
+        {
+            Width = Dim.Fill (),
+            Height = Dim.Fill (),
+            CanFocus = true
+        };
+
+        var lbl = new Label
+        {
+            Text =
+                "_This scenario tests Ansi request/response processing. Use the TextView to ensure regular user interaction continues as normal during sends. Responses are in red, queued messages are in green.",
+            Height = 2,
+            Width = Dim.Fill ()
+        };
+
+        Application.AddTimeout (
+                                TimeSpan.FromMilliseconds (1000),
+                                () =>
+                                {
+                                    lock (_lockAnswers)
+                                    {
+                                        UpdateGraph ();
+
+                                        UpdateResponses ();
+                                    }
+
+                                    return true;
+                                });
+
+        var tv = new TextView
+        {
+            Y = Pos.Bottom (lbl),
+            Width = Dim.Percent (50),
+            Height = Dim.Fill ()
+        };
+
+        var lblDar = new Label
+        {
+            Y = Pos.Bottom (lbl),
+            X = Pos.Right (tv) + 1,
+            Text = "_DAR per second: "
+        };
+
+        var cbDar = new NumericUpDown
+        {
+            X = Pos.Right (lblDar),
+            Y = Pos.Bottom (lbl),
+            Value = 0
+        };
+
+        cbDar.ValueChanging += (s, e) =>
+                               {
+                                   if (e.NewValue < 0 || e.NewValue > 20)
+                                   {
+                                       e.Cancel = true;
+                                   }
+                               };
+        w.Add (cbDar);
+
+        int lastSendTime = Environment.TickCount;
+        var lockObj = new object ();
+
+        Application.AddTimeout (
+                                TimeSpan.FromMilliseconds (50),
+                                () =>
+                                {
+                                    lock (lockObj)
+                                    {
+                                        if (cbDar.Value > 0)
+                                        {
+                                            int interval = 1000 / cbDar.Value; // Calculate the desired interval in milliseconds
+                                            int currentTime = Environment.TickCount; // Current system time in milliseconds
+
+                                            // Check if the time elapsed since the last send is greater than the interval
+                                            if (currentTime - lastSendTime >= interval)
+                                            {
+                                                SendDar (); // Send the request
+                                                lastSendTime = currentTime; // Update the last send time
+                                            }
+                                        }
+                                    }
+
+                                    return true;
+                                });
+
+        _graphView = new ()
+        {
+            Y = Pos.Bottom (cbDar),
+            X = Pos.Right (tv),
+            Width = Dim.Fill (),
+            Height = Dim.Fill (1)
+        };
+
+        _lblSummary = new ()
+        {
+            Y = Pos.Bottom (_graphView),
+            X = Pos.Right (tv),
+            Width = Dim.Fill ()
+        };
+
+        SetupGraph ();
+
+        w.Add (lbl);
+        w.Add (lblDar);
+        w.Add (cbDar);
+        w.Add (tv);
+        w.Add (_graphView);
+        w.Add (_lblSummary);
+
+        return w;
     }
 
     private View BuildSingleTab ()
@@ -195,126 +308,6 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         return w;
     }
 
-    private View BuildBulkTab ()
-    {
-        var w = new View
-        {
-            Width = Dim.Fill (),
-            Height = Dim.Fill (),
-            CanFocus = true
-        };
-
-        var lbl = new Label
-        {
-            Text =
-                "_This scenario tests Ansi request/response processing. Use the TextView to ensure regular user interaction continues as normal during sends. Responses are in red, queued messages are in green.",
-            Height = 2,
-            Width = Dim.Fill ()
-        };
-
-        Application.AddTimeout (
-                                TimeSpan.FromMilliseconds (1000),
-                                () =>
-                                {
-                                    lock (_lockAnswers)
-                                    {
-                                        UpdateGraph ();
-
-                                        UpdateResponses ();
-                                    }
-
-                                    return true;
-                                });
-
-        var tv = new TextView
-        {
-            Y = Pos.Bottom (lbl),
-            Width = Dim.Percent (50),
-            Height = Dim.Fill ()
-        };
-
-        var lblDar = new Label
-        {
-            Y = Pos.Bottom (lbl),
-            X = Pos.Right (tv) + 1,
-            Text = "_DAR per second: "
-        };
-
-        var cbDar = new NumericUpDown
-        {
-            X = Pos.Right (lblDar),
-            Y = Pos.Bottom (lbl),
-            Value = 0
-        };
-
-        cbDar.ValueChanging += (s, e) =>
-                               {
-                                   if (e.NewValue < 0 || e.NewValue > 20)
-                                   {
-                                       e.Cancel = true;
-                                   }
-                               };
-        w.Add (cbDar);
-
-        int lastSendTime = Environment.TickCount;
-        var lockObj = new object ();
-
-        Application.AddTimeout (
-                                TimeSpan.FromMilliseconds (50),
-                                () =>
-                                {
-                                    lock (lockObj)
-                                    {
-                                        if (cbDar.Value > 0)
-                                        {
-                                            int interval = 1000 / cbDar.Value; // Calculate the desired interval in milliseconds
-                                            int currentTime = Environment.TickCount; // Current system time in milliseconds
-
-                                            // Check if the time elapsed since the last send is greater than the interval
-                                            if (currentTime - lastSendTime >= interval)
-                                            {
-                                                SendDar (); // Send the request
-                                                lastSendTime = currentTime; // Update the last send time
-                                            }
-                                        }
-                                    }
-
-                                    return true;
-                                });
-
-        _graphView = new ()
-        {
-            Y = Pos.Bottom (cbDar),
-            X = Pos.Right (tv),
-            Width = Dim.Fill (),
-            Height = Dim.Fill (1)
-        };
-
-        _lblSummary = new ()
-        {
-            Y = Pos.Bottom (_graphView),
-            X = Pos.Right (tv),
-            Width = Dim.Fill ()
-        };
-
-        SetupGraph ();
-
-        w.Add (lbl);
-        w.Add (lblDar);
-        w.Add (cbDar);
-        w.Add (tv);
-        w.Add (_graphView);
-        w.Add (_lblSummary);
-
-        return w;
-    }
-
-    private void UpdateResponses ()
-    {
-        _lblSummary.Text = GetSummary ();
-        _lblSummary.SetNeedsDisplay ();
-    }
-
     private string GetSummary ()
     {
         if (_answers.Count == 0)
@@ -328,6 +321,21 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         int total = _answers.Count;
 
         return $"Last:{last} U:{unique} T:{total}";
+    }
+
+    private void HandleResponse (string response)
+    {
+        lock (_lockAnswers)
+        {
+            _answers.Add (DateTime.Now, response);
+        }
+    }
+
+    private void SendDar ()
+    {
+        _sends.Add (DateTime.Now);
+        string result = Application.Driver.WriteAnsiRequest (AnsiEscapeSequenceRequestUtils.CSI_SendDeviceAttributes);
+        HandleResponse (result);
     }
 
     private void SetupGraph ()
@@ -348,6 +356,8 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         _graphView.GraphColor = new Attribute (Color.Green, Color.Black);
     }
 
+    private int ToSeconds (DateTime t) { return (int)(DateTime.Now - t).TotalSeconds; }
+
     private void UpdateGraph ()
     {
         _sentSeries.Points = _sends
@@ -356,9 +366,9 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
                              .ToList ();
 
         _answeredSeries.Points = _answers.Keys
-                                        .GroupBy (ToSeconds)
-                                        .Select (g => new PointF (g.Key, g.Count ()))
-                                        .ToList ();
+                                         .GroupBy (ToSeconds)
+                                         .Select (g => new PointF (g.Key, g.Count ()))
+                                         .ToList ();
 
         //  _graphView.ScrollOffset  = new PointF(,0);
         if (_sentSeries.Points.Count > 0 || _answeredSeries.Points.Count > 0)
@@ -367,20 +377,9 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         }
     }
 
-    private int ToSeconds (DateTime t) { return (int)(DateTime.Now - t).TotalSeconds; }
-
-    private void SendDar ()
+    private void UpdateResponses ()
     {
-        _sends.Add (DateTime.Now);
-        string result = Application.Driver.WriteAnsiRequest (AnsiEscapeSequenceRequestUtils.CSI_SendDeviceAttributes);
-        HandleResponse (result);
-    }
-
-    private void HandleResponse (string response)
-    {
-        lock (_lockAnswers)
-        {
-            _answers.Add (DateTime.Now, response);
-        }
+        _lblSummary.Text = GetSummary ();
+        _lblSummary.SetNeedsDisplay ();
     }
 }
