@@ -1,4 +1,4 @@
-﻿// TODO: #nullable enable
+﻿#nullable enable
 using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 
@@ -6,10 +6,10 @@ namespace Terminal.Gui;
 
 internal class NetEvents : IDisposable
 {
-    private CancellationTokenSource _inputReadyCancellationTokenSource;
+    private CancellationTokenSource? _inputReadyCancellationTokenSource;
     private readonly BlockingCollection<InputResult> _inputQueue = new (new ConcurrentQueue<InputResult> ());
     private readonly ConsoleDriver _consoleDriver;
-    private ConsoleKeyInfo [] _cki;
+    private ConsoleKeyInfo []? _cki;
     private bool _isEscSeq;
 #if PROCESS_REQUEST
     bool _neededProcessRequest;
@@ -62,9 +62,9 @@ internal class NetEvents : IDisposable
             {
                 if (_retries > 1)
                 {
-                    if (EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.Response))
+                    if (EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.Response))
                     {
-                        lock (seqReqStatus!.AnsiRequest._responseLock)
+                        lock (seqReqStatus.AnsiRequest._responseLock)
                         {
                             EscSeqRequests.Statuses.TryDequeue (out _);
 
@@ -319,7 +319,7 @@ internal class NetEvents : IDisposable
                                   out bool isMouse,
                                   out List<MouseFlags> mouseFlags,
                                   out Point pos,
-                                  out AnsiEscapeSequenceRequestStatus seqReqStatus,
+                                  out AnsiEscapeSequenceRequestStatus? seqReqStatus,
                                   (f, p) => HandleMouseEvent (MapMouseFlags (f), p)
                                  );
 
@@ -350,7 +350,7 @@ internal class NetEvents : IDisposable
 
         if (!string.IsNullOrEmpty (AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator))
         {
-            if (EscSeqRequests.Statuses.TryDequeue (out AnsiEscapeSequenceRequestStatus result))
+            if (EscSeqRequests.Statuses.TryDequeue (out AnsiEscapeSequenceRequestStatus? result))
             {
                 lock (result.AnsiRequest._responseLock)
                 {
@@ -504,7 +504,7 @@ internal class NetEvents : IDisposable
         return mbs;
     }
 
-    private Point _lastCursorPosition;
+    //private Point _lastCursorPosition;
 
     //private void HandleRequestResponseEvent (string c1Control, string code, string [] values, string terminating)
     //{
@@ -651,15 +651,15 @@ internal class NetEvents : IDisposable
 
         public readonly override string ToString ()
         {
-            return EventType switch
-                   {
-                       EventType.Key => ToString (ConsoleKeyInfo),
-                       EventType.Mouse => MouseEvent.ToString (),
+            return (EventType switch
+                    {
+                        EventType.Key => ToString (ConsoleKeyInfo),
+                        EventType.Mouse => MouseEvent.ToString (),
 
-                       //EventType.WindowSize => WindowSize.ToString (),
-                       //EventType.RequestResponse => RequestResponse.ToString (),
-                       _ => "Unknown event type: " + EventType
-                   };
+                        //EventType.WindowSize => WindowSize.ToString (),
+                        //EventType.RequestResponse => RequestResponse.ToString (),
+                        _ => "Unknown event type: " + EventType
+                    })!;
         }
 
         /// <summary>Prints a ConsoleKeyInfoEx structure</summary>

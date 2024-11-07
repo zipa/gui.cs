@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿#nullable enable
+using System.Collections.Concurrent;
 
 namespace Terminal.Gui;
 
@@ -9,22 +10,22 @@ namespace Terminal.Gui;
 /// <remarks>This implementation is used for NetDriver.</remarks>
 internal class NetMainLoop : IMainLoopDriver
 {
-    internal NetEvents _netEvents;
+    internal NetEvents? _netEvents;
 
     /// <summary>Invoked when a Key is pressed.</summary>
-    internal Action<NetEvents.InputResult> ProcessInput;
+    internal Action<NetEvents.InputResult>? ProcessInput;
 
     private readonly ManualResetEventSlim _eventReady = new (false);
     private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
     private readonly BlockingCollection<NetEvents.InputResult> _resultQueue = new (new ConcurrentQueue<NetEvents.InputResult> ());
     private readonly CancellationTokenSource _eventReadyTokenSource = new ();
-    private MainLoop _mainLoop;
+    private MainLoop? _mainLoop;
 
     /// <summary>Initializes the class with the console driver.</summary>
     /// <remarks>Passing a consoleDriver is provided to capture windows resizing.</remarks>
     /// <param name="consoleDriver">The console driver used by this Net main loop.</param>
     /// <exception cref="ArgumentNullException"></exception>
-    public NetMainLoop (ConsoleDriver consoleDriver = null)
+    public NetMainLoop (ConsoleDriver consoleDriver)
     {
         ArgumentNullException.ThrowIfNull (consoleDriver);
 
@@ -47,7 +48,7 @@ internal class NetMainLoop : IMainLoopDriver
 
     bool IMainLoopDriver.EventsPending ()
     {
-        if (_resultQueue.Count > 0 || _mainLoop.CheckTimersAndIdleHandlers (out int waitTimeout))
+        if (_resultQueue.Count > 0 || _mainLoop!.CheckTimersAndIdleHandlers (out int waitTimeout))
         {
             return true;
         }
@@ -88,24 +89,21 @@ internal class NetMainLoop : IMainLoopDriver
             // Always dequeue even if it's null and invoke if isn't null
             if (_resultQueue.TryTake (out NetEvents.InputResult dequeueResult))
             {
-                if (dequeueResult is { })
-                {
-                    ProcessInput?.Invoke (dequeueResult);
-                }
+                ProcessInput?.Invoke (dequeueResult);
             }
         }
     }
 
     void IMainLoopDriver.TearDown ()
     {
-        _inputHandlerTokenSource?.Cancel ();
-        _inputHandlerTokenSource?.Dispose ();
-        _eventReadyTokenSource?.Cancel ();
-        _eventReadyTokenSource?.Dispose ();
+        _inputHandlerTokenSource.Cancel ();
+        _inputHandlerTokenSource.Dispose ();
+        _eventReadyTokenSource.Cancel ();
+        _eventReadyTokenSource.Dispose ();
 
-        _eventReady?.Dispose ();
+        _eventReady.Dispose ();
 
-        _resultQueue?.Dispose();
+        _resultQueue.Dispose();
         _netEvents?.Dispose ();
         _netEvents = null;
 
@@ -123,9 +121,9 @@ internal class NetMainLoop : IMainLoopDriver
                     return;
                 }
 
-                if (_resultQueue?.Count == 0 || _netEvents._forceRead)
+                if (_resultQueue?.Count == 0 || _netEvents!._forceRead)
                 {
-                    NetEvents.InputResult? result = _netEvents.DequeueInput ();
+                    NetEvents.InputResult? result = _netEvents!.DequeueInput ();
 
                     if (result.HasValue)
                     {

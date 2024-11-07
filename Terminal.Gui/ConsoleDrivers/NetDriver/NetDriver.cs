@@ -1,4 +1,4 @@
-﻿// TODO: #nullable enable
+﻿#nullable enable
 //
 // NetDriver.cs: The System.Console-based .NET driver, works on Windows and Unix, but is not particularly efficient.
 //
@@ -14,7 +14,7 @@ namespace Terminal.Gui;
 internal class NetDriver : ConsoleDriver
 {
     public bool IsWinPlatform { get; private set; }
-    public NetWinVTConsole NetWinConsole { get; private set; }
+    public NetWinVTConsole? NetWinConsole { get; private set; }
 
     public override void Refresh ()
     {
@@ -61,7 +61,7 @@ internal class NetDriver : ConsoleDriver
         if (RunningUnitTests
             || _winSizeChanging
             || Console.WindowHeight < 1
-            || Contents.Length != Rows * Cols
+            || Contents?.Length != Rows * Cols
             || Rows != Console.WindowHeight)
         {
             return;
@@ -85,7 +85,7 @@ internal class NetDriver : ConsoleDriver
                 return;
             }
 
-            if (!_dirtyLines [row])
+            if (!_dirtyLines! [row])
             {
                 continue;
             }
@@ -129,7 +129,7 @@ internal class NetDriver : ConsoleDriver
                         lastCol = col;
                     }
 
-                    Attribute attr = Contents [row, col].Attribute.Value;
+                    Attribute attr = Contents [row, col].Attribute!.Value;
 
                     // Performance: Only send the escape sequence if the attribute has changed.
                     if (attr != redrawAttr)
@@ -229,7 +229,7 @@ internal class NetDriver : ConsoleDriver
 
     #region Init/End/MainLoop
 
-    internal NetMainLoop _mainLoopDriver;
+    internal NetMainLoop? _mainLoopDriver;
 
     internal override MainLoop Init ()
     {
@@ -339,7 +339,7 @@ internal class NetDriver : ConsoleDriver
                 Left = 0;
                 Cols = inputEvent.WindowSizeEvent.Size.Width;
                 Rows = Math.Max (inputEvent.WindowSizeEvent.Size.Height, 0);
-                ;
+
                 ResizeScreen ();
                 ClearContents ();
                 _winSizeChanging = false;
@@ -727,15 +727,20 @@ internal class NetDriver : ConsoleDriver
     #region Low-Level DotNet tuff
 
     private readonly ManualResetEventSlim _waitAnsiResponse = new (false);
-    private readonly CancellationTokenSource _ansiResponseTokenSource = new ();
+    private CancellationTokenSource? _ansiResponseTokenSource;
 
     /// <inheritdoc/>
-    public override string WriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest)
+    public override string? WriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest)
     {
-        if (_mainLoopDriver is null)
+        lock (ansiRequest._responseLock)
         {
-            return string.Empty;
+            if (_mainLoopDriver is null)
+            {
+                return string.Empty;
+            }
         }
+
+        _ansiResponseTokenSource ??= new ();
 
         try
         {
@@ -765,12 +770,12 @@ internal class NetDriver : ConsoleDriver
         {
             _mainLoopDriver._netEvents._forceRead = false;
 
-            if (_mainLoopDriver._netEvents.EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus request))
+            if (_mainLoopDriver._netEvents.EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? request))
             {
                 if (_mainLoopDriver._netEvents.EscSeqRequests.Statuses.Count > 0
                     && string.IsNullOrEmpty (request.AnsiRequest.Response))
                 {
-                    lock (request!.AnsiRequest._responseLock)
+                    lock (request.AnsiRequest._responseLock)
                     {
                         // Bad request or no response at all
                         _mainLoopDriver._netEvents.EscSeqRequests.Statuses.TryDequeue (out _);
