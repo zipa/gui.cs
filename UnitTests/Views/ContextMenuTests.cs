@@ -115,11 +115,11 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.True (ContextMenu.IsShow);
         Assert.Equal (cm.MenuBar, Application.MouseGrabView);
         Assert.False (menu.IsMenuOpen);
-        Assert.False (menu.NewMouseEvent (new MouseEvent { Position = new (1, 0), Flags = MouseFlags.ReportMousePosition, View = menu }));
+        Assert.False (menu.NewMouseEvent (new MouseEventArgs { Position = new (1, 0), Flags = MouseFlags.ReportMousePosition, View = menu }));
         Assert.True (ContextMenu.IsShow);
         Assert.Equal (cm.MenuBar, Application.MouseGrabView);
         Assert.False (menu.IsMenuOpen);
-        Assert.True (menu.NewMouseEvent (new MouseEvent { Position = new (1, 0), Flags = MouseFlags.Button1Clicked, View = menu }));
+        Assert.True (menu.NewMouseEvent (new MouseEventArgs { Position = new (1, 0), Flags = MouseFlags.Button1Clicked, View = menu }));
         Assert.False (ContextMenu.IsShow);
         Assert.Equal (menu, Application.MouseGrabView);
         Assert.True (menu.IsMenuOpen);
@@ -148,7 +148,7 @@ public class ContextMenuTests (ITestOutputHelper output)
                                                       output
                                                      );
 
-        Application.OnMouseEvent (new MouseEvent { Position = new (8, 2), Flags = MouseFlags.Button3Clicked });
+        Application.RaiseMouseEvent (new MouseEventArgs { ScreenPosition = new (8, 2), Flags = MouseFlags.Button3Clicked });
 
         var firstIteration = false;
         Application.RunIteration (ref rs, ref firstIteration);
@@ -231,7 +231,7 @@ public class ContextMenuTests (ITestOutputHelper output)
                                                       output
                                                      );
 
-        Application.OnMouseEvent (new MouseEvent { Position = new (9, 3), Flags = MouseFlags.Button3Clicked });
+        Application.RaiseMouseEvent (new MouseEventArgs { ScreenPosition = new (9, 3), Flags = MouseFlags.Button3Clicked });
 
         var firstIteration = false;
         Application.RunIteration (ref rsDialog, ref firstIteration);
@@ -287,7 +287,7 @@ public class ContextMenuTests (ITestOutputHelper output)
                                                       output
                                                      );
 
-        Application.OnMouseEvent (new MouseEvent { Position = new (9, 3), Flags = MouseFlags.Button3Clicked });
+        Application.RaiseMouseEvent (new MouseEventArgs { ScreenPosition = new (9, 3), Flags = MouseFlags.Button3Clicked });
 
         var firstIteration = false;
         Application.RunIteration (ref rs, ref firstIteration);
@@ -400,9 +400,9 @@ public class ContextMenuTests (ITestOutputHelper output)
         top.Add (tf);
         Application.Begin (top);
 
-        Assert.True (Application.OnKeyDown (ContextMenu.DefaultKey));
+        Assert.True (Application.RaiseKeyDownEvent (ContextMenu.DefaultKey));
         Assert.True (tf.ContextMenu.MenuBar!.IsMenuOpen);
-        Assert.True (Application.OnKeyDown (ContextMenu.DefaultKey));
+        Assert.True (Application.RaiseKeyDownEvent (ContextMenu.DefaultKey));
 
         // The last context menu bar opened is always preserved
         Assert.NotNull (tf.ContextMenu.MenuBar);
@@ -532,7 +532,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.True (
                      top.Subviews [0]
                         .NewMouseEvent (
-                                        new MouseEvent { Position = new (0, 3), Flags = MouseFlags.ReportMousePosition, View = top.Subviews [0] }
+                                        new MouseEventArgs { Position = new (0, 3), Flags = MouseFlags.ReportMousePosition, View = top.Subviews [0] }
                                        )
                     );
         Application.Refresh ();
@@ -580,7 +580,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.True (
                      top.Subviews [0]
                         .NewMouseEvent (
-                                        new MouseEvent { Position = new (30, 3), Flags = MouseFlags.ReportMousePosition, View = top.Subviews [0] }
+                                        new MouseEventArgs { Position = new (30, 3), Flags = MouseFlags.ReportMousePosition, View = top.Subviews [0] }
                                        )
                     );
         Application.Refresh ();
@@ -627,7 +627,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.True (
                      top.Subviews [0]
                         .NewMouseEvent (
-                                        new MouseEvent { Position = new (30, 3), Flags = MouseFlags.ReportMousePosition, View = top.Subviews [0] }
+                                        new MouseEventArgs { Position = new (30, 3), Flags = MouseFlags.ReportMousePosition, View = top.Subviews [0] }
                                        )
                     );
         Application.Refresh ();
@@ -671,7 +671,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.True (
                      top.Subviews [0]
                         .NewMouseEvent (
-                                        new MouseEvent { Position = new (30, 3), Flags = MouseFlags.ReportMousePosition, View = top.Subviews [0] }
+                                        new MouseEventArgs { Position = new (30, 3), Flags = MouseFlags.ReportMousePosition, View = top.Subviews [0] }
                                        )
                     );
         Application.Refresh ();
@@ -715,7 +715,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.True (
                      top.Subviews [0]
                         .NewMouseEvent (
-                                        new MouseEvent { Position = new (30, 3), Flags = MouseFlags.ReportMousePosition, View = top.Subviews [0] }
+                                        new MouseEventArgs { Position = new (30, 3), Flags = MouseFlags.ReportMousePosition, View = top.Subviews [0] }
                                        )
                     );
         Application.Refresh ();
@@ -747,7 +747,7 @@ public class ContextMenuTests (ITestOutputHelper output)
 
         lbl.MouseClick += (s, e) =>
                           {
-                              if (e.MouseEvent.Flags == cm.MouseFlags)
+                              if (e.Flags == cm.MouseFlags)
                               {
                                   lbl.Text = "Replaced";
                                   e.Handled = true;
@@ -758,12 +758,12 @@ public class ContextMenuTests (ITestOutputHelper output)
         top.Add (lbl);
         Application.Begin (top);
 
-        Assert.True (lbl.NewMouseEvent (new MouseEvent { Flags = cm.MouseFlags }));
+        Assert.True (lbl.NewMouseEvent (new MouseEventArgs { Flags = cm.MouseFlags }));
         Assert.Equal ("Replaced", lbl.Text);
 
         lbl.Text = "Original";
         cm.MouseFlags = MouseFlags.Button2Clicked;
-        Assert.True (lbl.NewMouseEvent (new MouseEvent { Flags = cm.MouseFlags }));
+        Assert.True (lbl.NewMouseEvent (new MouseEventArgs { Flags = cm.MouseFlags }));
         Assert.Equal ("Replaced", lbl.Text);
         top.Dispose ();
     }
@@ -855,7 +855,9 @@ public class ContextMenuTests (ITestOutputHelper output)
 
                                          mi.Action = () =>
                                                      {
-                                                         var dialog1 = new Dialog ();
+                                                         Assert.True (ContextMenu.IsShow);
+
+                                                         var dialog1 = new Dialog () { Id = "dialog1" };
                                                          Application.Run (dialog1);
                                                          dialog1.Dispose ();
                                                          Assert.False (ContextMenu.IsShow);
@@ -893,7 +895,7 @@ public class ContextMenuTests (ITestOutputHelper output)
 
         top.Closing += (_, _) =>
                        {
-                           var dialog2 = new Dialog ();
+                           var dialog2 = new Dialog () { Id = "dialog2" };
                            Application.Run (dialog2);
                            dialog2.Dispose ();
                            Assert.False (ContextMenu.IsShow);
@@ -1233,7 +1235,7 @@ public class ContextMenuTests (ITestOutputHelper output)
                                                      );
 
         // X=5 is the border and so need to use at least one more
-        Application.OnMouseEvent (new MouseEvent { Position = new (6, 13), Flags = MouseFlags.Button1Clicked });
+        Application.RaiseMouseEvent (new MouseEventArgs { ScreenPosition = new (6, 13), Flags = MouseFlags.Button1Clicked });
 
         var firstIteration = false;
         Application.RunIteration (ref rs, ref firstIteration);
@@ -1251,7 +1253,7 @@ public class ContextMenuTests (ITestOutputHelper output)
                                                       output
                                                      );
 
-        Application.OnMouseEvent (new MouseEvent { Position = new (6, 12), Flags = MouseFlags.Button1Clicked });
+        Application.RaiseMouseEvent (new MouseEventArgs { ScreenPosition = new (6, 12), Flags = MouseFlags.Button1Clicked });
 
         firstIteration = false;
         Application.RunIteration (ref rs, ref firstIteration);
@@ -1325,7 +1327,7 @@ public class ContextMenuTests (ITestOutputHelper output)
                                                       output
                                                      );
 
-        Application.OnMouseEvent (new MouseEvent { Position = new (6, 13), Flags = MouseFlags.ReportMousePosition });
+        Application.RaiseMouseEvent (new MouseEventArgs { ScreenPosition = new (6, 13), Flags = MouseFlags.ReportMousePosition });
 
         var firstIteration = false;
         Application.RunIteration (ref rs, ref firstIteration);
@@ -1342,7 +1344,7 @@ public class ContextMenuTests (ITestOutputHelper output)
                                                       output
                                                      );
 
-        Application.OnMouseEvent (new MouseEvent { Position = new (6, 14), Flags = MouseFlags.ReportMousePosition });
+        Application.RaiseMouseEvent (new MouseEventArgs { ScreenPosition = new (6, 14), Flags = MouseFlags.ReportMousePosition });
 
         firstIteration = false;
         Application.RunIteration (ref rs, ref firstIteration);
@@ -1360,7 +1362,7 @@ public class ContextMenuTests (ITestOutputHelper output)
                                                       output
                                                      );
 
-        Application.OnMouseEvent (new MouseEvent { Position = new (6, 13), Flags = MouseFlags.ReportMousePosition });
+        Application.RaiseMouseEvent (new MouseEventArgs { ScreenPosition = new (6, 13), Flags = MouseFlags.ReportMousePosition });
 
         firstIteration = false;
         Application.RunIteration (ref rs, ref firstIteration);
@@ -1394,20 +1396,20 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.True (tf1.HasFocus);
         Assert.False (tf2.HasFocus);
         Assert.Equal (4, win.Subviews.Count); // TF & TV add autocomplete popup's to their superviews.
-        Assert.Null (Application.MouseEnteredView);
+        Assert.Empty (Application._cachedViewsUnderMouse);
 
         // Right click on tf2 to open context menu
-        Application.OnMouseEvent (new () { Position = new (1, 3), Flags = MouseFlags.Button3Clicked });
+        Application.RaiseMouseEvent (new () { ScreenPosition = new (1, 3), Flags = MouseFlags.Button3Clicked });
         Assert.False (tf1.HasFocus);
         Assert.False (tf2.HasFocus);
         Assert.Equal (5, win.Subviews.Count);
         Assert.True (tf2.ContextMenu.MenuBar.IsMenuOpen);
         Assert.True (win.Focused is Menu);
         Assert.True (Application.MouseGrabView is MenuBar);
-        Assert.Equal (tf2, Application.MouseEnteredView);
+        Assert.Equal (tf2, Application._cachedViewsUnderMouse.LastOrDefault ());
 
         // Click on tf1 to focus it, which cause context menu being closed
-        Application.OnMouseEvent (new () { Position = new (1, 1), Flags = MouseFlags.Button1Clicked });
+        Application.RaiseMouseEvent (new () { ScreenPosition = new (1, 1), Flags = MouseFlags.Button1Clicked });
         Assert.True (tf1.HasFocus);
         Assert.False (tf2.HasFocus);
         Assert.Equal (4, win.Subviews.Count);
@@ -1416,10 +1418,10 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.NotNull (tf2.ContextMenu.MenuBar);
         Assert.Equal (win.Focused, tf1);
         Assert.Null (Application.MouseGrabView);
-        Assert.Equal (tf1, Application.MouseEnteredView);
+        Assert.Equal (tf1, Application._cachedViewsUnderMouse.LastOrDefault ());
 
         // Click on tf2 to focus it
-        Application.OnMouseEvent (new () { Position = new (1, 3), Flags = MouseFlags.Button1Clicked });
+        Application.RaiseMouseEvent (new () { ScreenPosition = new (1, 3), Flags = MouseFlags.Button1Clicked });
         Assert.False (tf1.HasFocus);
         Assert.True (tf2.HasFocus);
         Assert.Equal (4, win.Subviews.Count);
@@ -1428,7 +1430,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.NotNull (tf2.ContextMenu.MenuBar);
         Assert.Equal (win.Focused, tf2);
         Assert.Null (Application.MouseGrabView);
-        Assert.Equal (tf2, Application.MouseEnteredView);
+        Assert.Equal (tf2, Application._cachedViewsUnderMouse.LastOrDefault ());
 
         Application.End (rs);
         win.Dispose ();
@@ -1471,9 +1473,9 @@ public class ContextMenuTests (ITestOutputHelper output)
         Application.Begin (top);
 
         Assert.Null (cm.MenuBar);
-        Assert.False (Application.OnKeyDown (Key.N.WithCtrl));
-        Assert.False (Application.OnKeyDown (Key.R.WithCtrl));
-        Assert.False (Application.OnKeyDown (Key.D.WithCtrl));
+        Assert.False (Application.RaiseKeyDownEvent (Key.N.WithCtrl));
+        Assert.False (Application.RaiseKeyDownEvent (Key.R.WithCtrl));
+        Assert.False (Application.RaiseKeyDownEvent (Key.D.WithCtrl));
         Assert.False (newFile);
         Assert.False (renameFile);
         Assert.False (deleteFile);
@@ -1483,17 +1485,17 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.True (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.R.WithCtrl));
         Assert.True (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.D.WithCtrl));
 
-        Assert.True (Application.OnKeyDown (Key.N.WithCtrl));
+        Assert.True (Application.RaiseKeyDownEvent (Key.N.WithCtrl));
         Application.MainLoop!.RunIteration ();
         Assert.True (newFile);
         Assert.False (cm.MenuBar!.IsMenuOpen);
         cm.Show (menuItems);
-        Assert.True (Application.OnKeyDown (Key.R.WithCtrl));
+        Assert.True (Application.RaiseKeyDownEvent (Key.R.WithCtrl));
         Application.MainLoop!.RunIteration ();
         Assert.True (renameFile);
         Assert.False (cm.MenuBar.IsMenuOpen);
         cm.Show (menuItems);
-        Assert.True (Application.OnKeyDown (Key.D.WithCtrl));
+        Assert.True (Application.RaiseKeyDownEvent (Key.D.WithCtrl));
         Application.MainLoop!.RunIteration ();
         Assert.True (deleteFile);
         Assert.False (cm.MenuBar.IsMenuOpen);
@@ -1505,9 +1507,9 @@ public class ContextMenuTests (ITestOutputHelper output)
         newFile = false;
         renameFile = false;
         deleteFile = false;
-        Assert.False (Application.OnKeyDown (Key.N.WithCtrl));
-        Assert.False (Application.OnKeyDown (Key.R.WithCtrl));
-        Assert.False (Application.OnKeyDown (Key.D.WithCtrl));
+        Assert.False (Application.RaiseKeyDownEvent (Key.N.WithCtrl));
+        Assert.False (Application.RaiseKeyDownEvent (Key.R.WithCtrl));
+        Assert.False (Application.RaiseKeyDownEvent (Key.D.WithCtrl));
         Assert.False (newFile);
         Assert.False (renameFile);
         Assert.False (deleteFile);
@@ -1555,8 +1557,8 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.False (menuBar.KeyBindings.Bindings.ContainsKey (Key.R.WithCtrl));
         Assert.Null (cm.MenuBar);
 
-        Assert.True (Application.OnKeyDown (Key.N.WithCtrl));
-        Assert.False (Application.OnKeyDown (Key.R.WithCtrl));
+        Assert.True (Application.RaiseKeyDownEvent (Key.N.WithCtrl));
+        Assert.False (Application.RaiseKeyDownEvent (Key.R.WithCtrl));
         Application.MainLoop!.RunIteration ();
         Assert.True (newFile);
         Assert.False (renameFile);
@@ -1570,12 +1572,12 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.True (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.R.WithCtrl));
 
         Assert.True (cm.MenuBar.IsMenuOpen);
-        Assert.True (Application.OnKeyDown (Key.N.WithCtrl));
+        Assert.True (Application.RaiseKeyDownEvent (Key.N.WithCtrl));
         Application.MainLoop!.RunIteration ();
         Assert.True (newFile);
         Assert.False (cm.MenuBar!.IsMenuOpen);
         cm.Show (menuItems);
-        Assert.True (Application.OnKeyDown (Key.R.WithCtrl));
+        Assert.True (Application.RaiseKeyDownEvent (Key.R.WithCtrl));
         Application.MainLoop!.RunIteration ();
         Assert.True (renameFile);
         Assert.False (cm.MenuBar.IsMenuOpen);
@@ -1587,8 +1589,8 @@ public class ContextMenuTests (ITestOutputHelper output)
 
         newFile = false;
         renameFile = false;
-        Assert.True (Application.OnKeyDown (Key.N.WithCtrl));
-        Assert.False (Application.OnKeyDown (Key.R.WithCtrl));
+        Assert.True (Application.RaiseKeyDownEvent (Key.N.WithCtrl));
+        Assert.False (Application.RaiseKeyDownEvent (Key.R.WithCtrl));
         Application.MainLoop!.RunIteration ();
         Assert.True (newFile);
         Assert.False (renameFile);
@@ -1633,7 +1635,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.True (menuBar.KeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
         Assert.Null (cm.MenuBar);
 
-        Assert.True (Application.OnKeyDown (Key.N.WithCtrl));
+        Assert.True (Application.RaiseKeyDownEvent (Key.N.WithCtrl));
         Application.MainLoop!.RunIteration ();
         Assert.True (newMenuBar);
         Assert.False (newContextMenu);
@@ -1645,7 +1647,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.True (cm.MenuBar!.KeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
 
         Assert.True (cm.MenuBar.IsMenuOpen);
-        Assert.True (Application.OnKeyDown (Key.N.WithCtrl));
+        Assert.True (Application.RaiseKeyDownEvent (Key.N.WithCtrl));
         Application.MainLoop!.RunIteration ();
         Assert.False (newMenuBar);
 
@@ -1658,7 +1660,7 @@ public class ContextMenuTests (ITestOutputHelper output)
 
         newMenuBar = false;
         newContextMenu = false;
-        Assert.True (Application.OnKeyDown (Key.N.WithCtrl));
+        Assert.True (Application.RaiseKeyDownEvent (Key.N.WithCtrl));
         Application.MainLoop!.RunIteration ();
         Assert.True (newMenuBar);
         Assert.False (newContextMenu);
@@ -1691,9 +1693,9 @@ public class ContextMenuTests (ITestOutputHelper output)
         Application.Begin (top);
 
         Assert.Null (cm.MenuBar);
-        Assert.False (Application.OnKeyDown (Key.N.WithAlt));
-        Assert.False (Application.OnKeyDown (Key.R.WithAlt));
-        Assert.False (Application.OnKeyDown (Key.D.WithAlt));
+        Assert.False (Application.RaiseKeyDownEvent (Key.N.WithAlt));
+        Assert.False (Application.RaiseKeyDownEvent (Key.R.WithAlt));
+        Assert.False (Application.RaiseKeyDownEvent (Key.D.WithAlt));
         Assert.False (newFile);
         Assert.False (renameFile);
         Assert.False (deleteFile);
@@ -1706,8 +1708,8 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.R.NoShift));
         Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.D.WithAlt));
         Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.D.NoShift));
-        Assert.Single (Application.Current!.Subviews);
-        View [] menus = Application.Current!.Subviews.Where (v => v is Menu m && m.Host == cm.MenuBar).ToArray ();
+        Assert.Single (Application.Top!.Subviews);
+        View [] menus = Application.Top!.Subviews.Where (v => v is Menu m && m.Host == cm.MenuBar).ToArray ();
         Assert.True (menus [0].KeyBindings.Bindings.ContainsKey (Key.N.WithAlt));
         Assert.True (menus [0].KeyBindings.Bindings.ContainsKey (Key.N.NoShift));
         Assert.True (menus [0].KeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
@@ -1715,17 +1717,17 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.True (menus [0].KeyBindings.Bindings.ContainsKey (Key.D.WithAlt));
         Assert.True (menus [0].KeyBindings.Bindings.ContainsKey (Key.D.NoShift));
 
-        Assert.True (Application.OnKeyDown (Key.N.WithAlt));
+        Assert.True (Application.RaiseKeyDownEvent (Key.N.WithAlt));
         Assert.False (cm.MenuBar!.IsMenuOpen);
         Application.MainLoop!.RunIteration ();
         Assert.True (newFile);
         cm.Show (menuItems);
-        Assert.True (Application.OnKeyDown (Key.R.WithAlt));
+        Assert.True (Application.RaiseKeyDownEvent (Key.R.WithAlt));
         Assert.False (cm.MenuBar.IsMenuOpen);
         Application.MainLoop!.RunIteration ();
         Assert.True (renameFile);
         cm.Show (menuItems);
-        Assert.True (Application.OnKeyDown (Key.D.WithAlt));
+        Assert.True (Application.RaiseKeyDownEvent (Key.D.WithAlt));
         Assert.False (cm.MenuBar.IsMenuOpen);
         Application.MainLoop!.RunIteration ();
         Assert.True (deleteFile);
@@ -1740,9 +1742,9 @@ public class ContextMenuTests (ITestOutputHelper output)
         newFile = false;
         renameFile = false;
         deleteFile = false;
-        Assert.False (Application.OnKeyDown (Key.N.WithAlt));
-        Assert.False (Application.OnKeyDown (Key.R.WithAlt));
-        Assert.False (Application.OnKeyDown (Key.D.WithAlt));
+        Assert.False (Application.RaiseKeyDownEvent (Key.N.WithAlt));
+        Assert.False (Application.RaiseKeyDownEvent (Key.R.WithAlt));
+        Assert.False (Application.RaiseKeyDownEvent (Key.D.WithAlt));
         Assert.False (newFile);
         Assert.False (renameFile);
         Assert.False (deleteFile);
@@ -1795,18 +1797,18 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.True (menuBar.KeyBindings.Bindings.ContainsKey (Key.F.WithAlt));
         Assert.False (menuBar.KeyBindings.Bindings.ContainsKey (Key.N.WithAlt));
         Assert.False (menuBar.KeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
-        View [] menus = Application.Current!.Subviews.Where (v => v is Menu m && m.Host == menuBar).ToArray ();
+        View [] menus = Application.Top!.Subviews.Where (v => v is Menu m && m.Host == menuBar).ToArray ();
         Assert.Empty (menus);
         Assert.Null (cm.MenuBar);
 
-        Assert.True (Application.OnKeyDown (Key.F.WithAlt));
+        Assert.True (Application.RaiseKeyDownEvent (Key.F.WithAlt));
         Assert.True (menuBar.IsMenuOpen);
-        Assert.Equal (2, Application.Current!.Subviews.Count);
-        menus = Application.Current!.Subviews.Where (v => v is Menu m && m.Host == menuBar).ToArray ();
+        Assert.Equal (2, Application.Top!.Subviews.Count);
+        menus = Application.Top!.Subviews.Where (v => v is Menu m && m.Host == menuBar).ToArray ();
         Assert.True (menus [0].KeyBindings.Bindings.ContainsKey (Key.N.WithAlt));
-        Assert.True (Application.OnKeyDown (Key.N.WithAlt));
+        Assert.True (Application.RaiseKeyDownEvent (Key.N.WithAlt));
         Assert.False (menuBar.IsMenuOpen);
-        Assert.False (Application.OnKeyDown (Key.R.WithAlt));
+        Assert.False (Application.RaiseKeyDownEvent (Key.R.WithAlt));
         Application.MainLoop!.RunIteration ();
         Assert.True (newFile);
         Assert.False (renameFile);
@@ -1831,23 +1833,23 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.False (cm.MenuBar!.KeyBindings.Bindings.ContainsKey (Key.E.NoShift));
         Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
         Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.R.NoShift));
-        Assert.Equal (3, Application.Current!.Subviews.Count);
-        menus = Application.Current!.Subviews.Where (v => v is Menu m && m.Host == cm.MenuBar).ToArray ();
+        Assert.Equal (3, Application.Top!.Subviews.Count);
+        menus = Application.Top!.Subviews.Where (v => v is Menu m && m.Host == cm.MenuBar).ToArray ();
         Assert.True (menus [0].KeyBindings.Bindings.ContainsKey (Key.E.WithAlt));
         Assert.True (menus [0].KeyBindings.Bindings.ContainsKey (Key.E.NoShift));
         Assert.True (menus [1].KeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
         Assert.True (menus [1].KeyBindings.Bindings.ContainsKey (Key.R.NoShift));
         Assert.True (cm.MenuBar.IsMenuOpen);
-        Assert.True (Application.OnKeyDown (Key.F.WithAlt));
+        Assert.True (Application.RaiseKeyDownEvent (Key.F.WithAlt));
         Assert.False (cm.MenuBar.IsMenuOpen);
-        Assert.True (Application.OnKeyDown (Key.N.WithAlt));
+        Assert.True (Application.RaiseKeyDownEvent (Key.N.WithAlt));
         Application.MainLoop!.RunIteration ();
         Assert.True (newFile);
 
         cm.Show (menuItems);
         Assert.True (cm.MenuBar.IsMenuOpen);
-        Assert.Equal (3, Application.Current!.Subviews.Count);
-        menus = Application.Current!.Subviews.Where (v => v is Menu m && m.Host == cm.MenuBar).ToArray ();
+        Assert.Equal (3, Application.Top!.Subviews.Count);
+        menus = Application.Top!.Subviews.Where (v => v is Menu m && m.Host == cm.MenuBar).ToArray ();
         Assert.True (menus [0].KeyBindings.Bindings.ContainsKey (Key.E.WithAlt));
         Assert.True (menus [0].KeyBindings.Bindings.ContainsKey (Key.E.NoShift));
         Assert.False (menus [0].KeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
@@ -1856,13 +1858,13 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.False (menus [1].KeyBindings.Bindings.ContainsKey (Key.E.NoShift));
         Assert.True (menus [1].KeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
         Assert.True (menus [1].KeyBindings.Bindings.ContainsKey (Key.R.NoShift));
-        Assert.True (Application.OnKeyDown (Key.E.NoShift));
-        Assert.True (Application.OnKeyDown (Key.R.WithAlt));
+        Assert.True (Application.RaiseKeyDownEvent (Key.E.NoShift));
+        Assert.True (Application.RaiseKeyDownEvent (Key.R.WithAlt));
         Assert.False (cm.MenuBar.IsMenuOpen);
         Application.MainLoop!.RunIteration ();
         Assert.True (renameFile);
 
-        Assert.Single (Application.Current!.Subviews);
+        Assert.Single (Application.Top!.Subviews);
         Assert.True (menuBar.KeyBindings.Bindings.ContainsKey (Key.F.WithAlt));
         Assert.True (menuBar.KeyBindings.Bindings.ContainsKey (Key.F.NoShift));
         Assert.False (menuBar.KeyBindings.Bindings.ContainsKey (Key.N.WithAlt));
@@ -1874,9 +1876,9 @@ public class ContextMenuTests (ITestOutputHelper output)
 
         newFile = false;
         renameFile = false;
-        Assert.True (Application.OnKeyDown (Key.F.WithAlt));
-        Assert.True (Application.OnKeyDown (Key.N.WithAlt));
-        Assert.False (Application.OnKeyDown (Key.R.WithAlt));
+        Assert.True (Application.RaiseKeyDownEvent (Key.F.WithAlt));
+        Assert.True (Application.RaiseKeyDownEvent (Key.N.WithAlt));
+        Assert.False (Application.RaiseKeyDownEvent (Key.R.WithAlt));
         Application.MainLoop!.RunIteration ();
         Assert.True (newFile);
         Assert.False (renameFile);
@@ -1921,14 +1923,14 @@ public class ContextMenuTests (ITestOutputHelper output)
         top.Add (menuBar);
         Application.Begin (top);
 
-        Assert.True (Application.OnKeyDown (Key.F.WithAlt));
+        Assert.True (Application.RaiseKeyDownEvent (Key.F.WithAlt));
         Assert.True (menuBar.IsMenuOpen);
 
         cm.Show (menuItems);
         Assert.False (menuBar.IsMenuOpen);
         Assert.True (cm.MenuBar!.IsMenuOpen);
 
-        Assert.True (Application.OnKeyDown (Key.F.WithAlt));
+        Assert.True (Application.RaiseKeyDownEvent (Key.F.WithAlt));
         Assert.True (menuBar.IsMenuOpen);
         Assert.False (cm.MenuBar!.IsMenuOpen);
 

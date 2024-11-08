@@ -286,11 +286,11 @@ public class TileView : View
 
     //// BUGBUG: Why is this not handled by a key binding???
     /// <inheritdoc/>
-    public override bool OnProcessKeyDown (Key keyEvent)
+    protected override bool OnKeyDownNotHandled (Key key)
     {
         var focusMoved = false;
 
-        if (keyEvent.KeyCode == ToggleResizable)
+        if (key.KeyCode == ToggleResizable)
         {
             foreach (TileViewLineView l in _splitterLines)
             {
@@ -887,14 +887,14 @@ public class TileView : View
 
             AddCommand (Command.Left, () => { return MoveSplitter (-1, 0); });
 
-            AddCommand (Command.LineUp, () => { return MoveSplitter (0, -1); });
+            AddCommand (Command.Up, () => { return MoveSplitter (0, -1); });
 
-            AddCommand (Command.LineDown, () => { return MoveSplitter (0, 1); });
+            AddCommand (Command.Down, () => { return MoveSplitter (0, 1); });
 
             KeyBindings.Add (Key.CursorRight, Command.Right);
             KeyBindings.Add (Key.CursorLeft, Command.Left);
-            KeyBindings.Add (Key.CursorUp, Command.LineUp);
-            KeyBindings.Add (Key.CursorDown, Command.LineDown);
+            KeyBindings.Add (Key.CursorUp, Command.Up);
+            KeyBindings.Add (Key.CursorDown, Command.Down);
         }
 
         public int Idx { get; }
@@ -910,13 +910,12 @@ public class TileView : View
             }
         }
 
-        protected internal override bool OnMouseEvent (MouseEvent mouseEvent)
+        protected override bool OnMouseEvent (MouseEventArgs mouseEvent)
         {
             if (!dragPosition.HasValue && mouseEvent.Flags == MouseFlags.Button1Pressed)
             {
                 // Start a Drag
                 SetFocus ();
-                ApplicationOverlapped.BringOverlappedTopToFront ();
 
                 if (mouseEvent.Flags == MouseFlags.Button1Pressed)
                 {

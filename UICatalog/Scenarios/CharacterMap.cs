@@ -76,7 +76,7 @@ public class CharacterMap : Scenario
         };
         top.Add (_errorLabel);
 
-        jumpEdit.Accept += JumpEditOnAccept;
+        jumpEdit.Accepting += JumpEditOnAccept;
 
         _categoryList = new () { X = Pos.Right (_charMap), Y = Pos.Bottom (jumpLabel), Height = Dim.Fill () };
         _categoryList.FullRowSelect = true;
@@ -97,9 +97,9 @@ public class CharacterMap : Scenario
         // if user clicks the mouse in TableView
         _categoryList.MouseClick += (s, e) =>
                                     {
-                                        _categoryList.ScreenToCell (e.MouseEvent.Position, out int? clickedCol);
+                                        _categoryList.ScreenToCell (e.Position, out int? clickedCol);
 
-                                        if (clickedCol != null && e.MouseEvent.Flags.HasFlag (MouseFlags.Button1Clicked))
+                                        if (clickedCol != null && e.Flags.HasFlag (MouseFlags.Button1Clicked))
                                         {
                                             EnumerableTableSource<UnicodeRange> table = (EnumerableTableSource<UnicodeRange>)_categoryList.Table;
                                             string prevSelection = table.Data.ElementAt (_categoryList.SelectedRow).Category;
@@ -172,7 +172,7 @@ public class CharacterMap : Scenario
 
         return;
 
-        void JumpEditOnAccept (object sender, HandledEventArgs e)
+        void JumpEditOnAccept (object sender, CommandEventArgs e)
         {
             if (jumpEdit.Text.Length == 0)
             {
@@ -243,7 +243,7 @@ public class CharacterMap : Scenario
             _charMap.SelectedCodePoint = (int)result;
 
             // Cancel the event to prevent ENTER from being handled elsewhere
-            e.Handled = true;
+            e.Cancel = true;
         }
     }
 
@@ -421,7 +421,7 @@ internal class CharMap : View
                    );
 
         AddCommand (
-                    Command.TopHome,
+                    Command.Start,
                     () =>
                     {
                         SelectedCodePoint = 0;
@@ -431,7 +431,7 @@ internal class CharMap : View
                    );
 
         AddCommand (
-                    Command.BottomEnd,
+                    Command.End,
                     () =>
                     {
                         SelectedCodePoint = _maxCodePoint;
@@ -451,15 +451,14 @@ internal class CharMap : View
                     }
                    );
 
-        KeyBindings.Add (Key.Enter, Command.Accept);
         KeyBindings.Add (Key.CursorUp, Command.ScrollUp);
         KeyBindings.Add (Key.CursorDown, Command.ScrollDown);
         KeyBindings.Add (Key.CursorLeft, Command.ScrollLeft);
         KeyBindings.Add (Key.CursorRight, Command.ScrollRight);
         KeyBindings.Add (Key.PageUp, Command.PageUp);
         KeyBindings.Add (Key.PageDown, Command.PageDown);
-        KeyBindings.Add (Key.Home, Command.TopHome);
-        KeyBindings.Add (Key.End, Command.BottomEnd);
+        KeyBindings.Add (Key.Home, Command.Start);
+        KeyBindings.Add (Key.End, Command.End);
 
         MouseClick += Handle_MouseClick;
         MouseEvent += Handle_MouseEvent;
@@ -510,9 +509,9 @@ internal class CharMap : View
                            };
     }
 
-    private void Handle_MouseEvent (object sender, MouseEventEventArgs e)
+    private void Handle_MouseEvent (object sender, MouseEventArgs e)
     {
-        if (e.MouseEvent.Flags == MouseFlags.WheeledDown)
+        if (e.Flags == MouseFlags.WheeledDown)
         {
             ScrollVertical (1);
             e.Handled = true;
@@ -520,7 +519,7 @@ internal class CharMap : View
             return;
         }
 
-        if (e.MouseEvent.Flags == MouseFlags.WheeledUp)
+        if (e.Flags == MouseFlags.WheeledUp)
         {
             ScrollVertical (-1);
             e.Handled = true;
@@ -528,7 +527,7 @@ internal class CharMap : View
             return;
         }
 
-        if (e.MouseEvent.Flags == MouseFlags.WheeledRight)
+        if (e.Flags == MouseFlags.WheeledRight)
         {
             ScrollHorizontal (1);
             e.Handled = true;
@@ -536,7 +535,7 @@ internal class CharMap : View
             return;
         }
 
-        if (e.MouseEvent.Flags == MouseFlags.WheeledLeft)
+        if (e.Flags == MouseFlags.WheeledLeft)
         {
             ScrollHorizontal (-1);
             e.Handled = true;
@@ -822,10 +821,8 @@ internal class CharMap : View
     private void CopyCodePoint () { Clipboard.Contents = $"U+{SelectedCodePoint:x5}"; }
     private void CopyGlyph () { Clipboard.Contents = $"{new Rune (SelectedCodePoint)}"; }
 
-    private void Handle_MouseClick (object sender, MouseEventEventArgs args)
+    private void Handle_MouseClick (object sender, MouseEventArgs me)
     {
-        MouseEvent me = args.MouseEvent;
-
         if (me.Flags != MouseFlags.ReportMousePosition && me.Flags != MouseFlags.Button1Clicked && me.Flags != MouseFlags.Button1DoubleClicked)
         {
             return;
@@ -866,7 +863,7 @@ internal class CharMap : View
             SetFocus ();
         }
 
-        args.Handled = true;
+        me.Handled = true;
 
         if (me.Flags == MouseFlags.Button1Clicked)
         {
@@ -999,18 +996,18 @@ internal class CharMap : View
 
             var dlg = new Dialog { Title = title, Buttons = [copyGlyph, copyCP, cancel] };
 
-            copyGlyph.Accept += (s, a) =>
+            copyGlyph.Accepting += (s, a) =>
                                 {
                                     CopyGlyph ();
                                     dlg.RequestStop ();
                                 };
 
-            copyCP.Accept += (s, a) =>
+            copyCP.Accepting += (s, a) =>
                              {
                                  CopyCodePoint ();
                                  dlg.RequestStop ();
                              };
-            cancel.Accept += (s, a) => dlg.RequestStop ();
+            cancel.Accepting += (s, a) => dlg.RequestStop ();
 
             var rune = (Rune)SelectedCodePoint;
             var label = new Label { Text = "IsAscii: ", X = 0, Y = 0 };

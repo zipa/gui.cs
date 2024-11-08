@@ -10,7 +10,7 @@ public static partial class Application // Driver abstractions
 
     /// <summary>
     ///     Gets or sets whether <see cref="Application.Driver"/> will be forced to output only the 16 colors defined in
-    ///     <see cref="ColorName"/>. The default is <see langword="false"/>, meaning 24-bit (TrueColor) colors will be output
+    ///     <see cref="ColorName16"/>. The default is <see langword="false"/>, meaning 24-bit (TrueColor) colors will be output
     ///     as long as the selected <see cref="ConsoleDriver"/> supports TrueColor.
     /// </summary>
     [SerializableConfigurationProperty (Scope = typeof (SettingsScope))]
@@ -26,4 +26,10 @@ public static partial class Application // Driver abstractions
     /// </remarks>
     [SerializableConfigurationProperty (Scope = typeof (SettingsScope))]
     public static string ForceDriver { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Collection of sixel images to write out to screen when updating.
+    /// Only add to this collection if you are sure terminal supports sixel format.
+    /// </summary>
+    public static List<SixelToRender> Sixel = new List<SixelToRender> ();
 }

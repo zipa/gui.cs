@@ -78,7 +78,7 @@ public class FileDialog : Dialog
             Y = Pos.AnchorEnd (),
             IsDefault = true, Text = Style.OkButtonText
         };
-        _btnOk.Accept += (s, e) => Accept (true);
+        _btnOk.Accepting += (s, e) => Accept (true);
 
 
         _btnCancel = new Button
@@ -88,7 +88,7 @@ public class FileDialog : Dialog
             Text = Strings.btnCancel
         };
 
-        _btnCancel.Accept += (s, e) =>
+        _btnCancel.Accepting += (s, e) =>
         {
             Canceled = true;
             Application.RequestStop ();
@@ -96,15 +96,15 @@ public class FileDialog : Dialog
 
         _btnUp = new Button { X = 0, Y = 1, NoPadding = true };
         _btnUp.Text = GetUpButtonText ();
-        _btnUp.Accept += (s, e) => _history.Up ();
+        _btnUp.Accepting += (s, e) => _history.Up ();
 
         _btnBack = new Button { X = Pos.Right (_btnUp) + 1, Y = 1, NoPadding = true };
         _btnBack.Text = GetBackButtonText ();
-        _btnBack.Accept += (s, e) => _history.Back ();
+        _btnBack.Accepting += (s, e) => _history.Back ();
 
         _btnForward = new Button { X = Pos.Right (_btnBack) + 1, Y = 1, NoPadding = true };
         _btnForward.Text = GetForwardButtonText ();
-        _btnForward.Accept += (s, e) => _history.Forward ();
+        _btnForward.Accepting += (s, e) => _history.Forward ();
 
         _tbPath = new TextField { Width = Dim.Fill (), CaptionColor = new Color (Color.Black) };
 
@@ -182,7 +182,7 @@ public class FileDialog : Dialog
             Y = Pos.AnchorEnd (), Text = GetToggleSplitterText (false)
         };
 
-        _btnToggleSplitterCollapse.Accept += (s, e) =>
+        _btnToggleSplitterCollapse.Accepting += (s, e) =>
                                               {
                                                   Tile tile = _splitContainer.Tiles.ElementAt (0);
 
@@ -233,13 +233,13 @@ public class FileDialog : Dialog
         _tbPath.TextChanged += (s, e) => PathChanged ();
 
         _tableView.CellActivated += CellActivate;
-        _tableView.KeyUp += (s, k) => k.Handled = TableView_KeyUp (k);
+        _tableView.KeyDown += (s, k) => k.Handled = TableView_KeyUp (k);
         _tableView.SelectedCellChanged += TableView_SelectedCellChanged;
 
-        _tableView.KeyBindings.ReplaceCommands (Key.Home, Command.TopHome);
-        _tableView.KeyBindings.ReplaceCommands (Key.End, Command.BottomEnd);
-        _tableView.KeyBindings.ReplaceCommands (Key.Home.WithShift, Command.TopHomeExtend);
-        _tableView.KeyBindings.ReplaceCommands (Key.End.WithShift, Command.BottomEndExtend);
+        _tableView.KeyBindings.ReplaceCommands (Key.Home, Command.Start);
+        _tableView.KeyBindings.ReplaceCommands (Key.End, Command.End);
+        _tableView.KeyBindings.ReplaceCommands (Key.Home.WithShift, Command.StartExtend);
+        _tableView.KeyBindings.ReplaceCommands (Key.End.WithShift, Command.EndExtend);
         
         AllowsMultipleSelection = false;
 
@@ -610,7 +610,7 @@ public class FileDialog : Dialog
         ApplySort ();
     }
 
-    private new void Accept (IEnumerable<FileSystemInfoStats> toMultiAccept)
+    private void Accept (IEnumerable<FileSystemInfoStats> toMultiAccept)
     {
         if (!AllowsMultipleSelection)
         {
@@ -629,7 +629,7 @@ public class FileDialog : Dialog
         FinishAccept ();
     }
 
-    private new void Accept (IFileInfo f)
+    private void Accept (IFileInfo f)
     {
         if (!IsCompatibleWithOpenMode (f.FullName, out string reason))
         {
@@ -649,7 +649,7 @@ public class FileDialog : Dialog
         FinishAccept ();
     }
 
-    private new void Accept (bool allowMulti)
+    private void Accept (bool allowMulti)
     {
         if (allowMulti && TryAcceptMulti ())
         {
@@ -670,11 +670,11 @@ public class FileDialog : Dialog
         FinishAccept ();
     }
 
-    private void AcceptIf (Key keyEvent, KeyCode isKey)
+    private void AcceptIf (Key key, KeyCode isKey)
     {
-        if (!keyEvent.Handled && keyEvent.KeyCode == isKey)
+        if (!key.Handled && key.KeyCode == isKey)
         {
-            keyEvent.Handled = true;
+            key.Handled = true;
 
             // User hit Enter in text box so probably wants the
             // contents of the text box as their selection not
@@ -1007,18 +1007,18 @@ public class FileDialog : Dialog
         }
     }
 
-    private void OnTableViewMouseClick (object sender, MouseEventEventArgs e)
+    private void OnTableViewMouseClick (object sender, MouseEventArgs e)
     {
-        Point? clickedCell = _tableView.ScreenToCell (e.MouseEvent.Position.X, e.MouseEvent.Position.Y, out int? clickedCol);
+        Point? clickedCell = _tableView.ScreenToCell (e.Position.X, e.Position.Y, out int? clickedCol);
 
         if (clickedCol is { })
         {
-            if (e.MouseEvent.Flags.HasFlag (MouseFlags.Button1Clicked))
+            if (e.Flags.HasFlag (MouseFlags.Button1Clicked))
             {
                 // left click in a header
                 SortColumn (clickedCol.Value);
             }
-            else if (e.MouseEvent.Flags.HasFlag (MouseFlags.Button3Clicked))
+            else if (e.Flags.HasFlag (MouseFlags.Button3Clicked))
             {
                 // right click in a header
                 ShowHeaderContextMenu (clickedCol.Value, e);
@@ -1026,7 +1026,7 @@ public class FileDialog : Dialog
         }
         else
         {
-            if (clickedCell is { } && e.MouseEvent.Flags.HasFlag (MouseFlags.Button3Clicked))
+            if (clickedCell is { } && e.Flags.HasFlag (MouseFlags.Button3Clicked))
             {
                 // right click in rest of table
                 ShowCellContextMenu (clickedCell, e);
@@ -1198,7 +1198,7 @@ public class FileDialog : Dialog
 
     private FileSystemInfoStats RowToStats (int rowIndex) { return State?.Children [rowIndex]; }
 
-    private void ShowCellContextMenu (Point? clickedCell, MouseEventEventArgs e)
+    private void ShowCellContextMenu (Point? clickedCell, MouseEventArgs e)
     {
         if (clickedCell is null)
         {
@@ -1207,7 +1207,7 @@ public class FileDialog : Dialog
 
         var contextMenu = new ContextMenu
         {
-            Position = new Point (e.MouseEvent.Position.X + 1, e.MouseEvent.Position.Y + 1)
+            Position = new Point (e.Position.X + 1, e.Position.Y + 1)
         };
 
         var menuItems = new MenuBarItem (
@@ -1222,13 +1222,13 @@ public class FileDialog : Dialog
         contextMenu.Show (menuItems);
     }
 
-    private void ShowHeaderContextMenu (int clickedCol, MouseEventEventArgs e)
+    private void ShowHeaderContextMenu (int clickedCol, MouseEventArgs e)
     {
         string sort = GetProposedNewSortOrder (clickedCol, out bool isAsc);
 
         var contextMenu = new ContextMenu
         {
-            Position = new Point (e.MouseEvent.Position.X + 1, e.MouseEvent.Position.Y + 1)
+            Position = new Point (e.Position.X + 1, e.Position.Y + 1)
         };
 
         var menuItems = new MenuBarItem (

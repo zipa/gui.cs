@@ -20,11 +20,11 @@ public class ListViewTests (ITestOutputHelper output)
         Assert.NotNull (lv.Source);
         Assert.Equal (-1, lv.SelectedItem);
 
-        lv = new() { Source = new NewListDataSource () };
+        lv = new () { Source = new NewListDataSource () };
         Assert.NotNull (lv.Source);
         Assert.Equal (-1, lv.SelectedItem);
 
-        lv = new()
+        lv = new ()
         {
             Y = 1, Width = 10, Height = 20, Source = new ListWrapper<string> (["One", "Two", "Three"])
         };
@@ -32,7 +32,7 @@ public class ListViewTests (ITestOutputHelper output)
         Assert.Equal (-1, lv.SelectedItem);
         Assert.Equal (new (0, 1, 10, 20), lv.Frame);
 
-        lv = new() { Y = 1, Width = 10, Height = 20, Source = new NewListDataSource () };
+        lv = new () { Y = 1, Width = 10, Height = 20, Source = new NewListDataSource () };
         Assert.NotNull (lv.Source);
         Assert.Equal (-1, lv.SelectedItem);
         Assert.Equal (new (0, 1, 10, 20), lv.Frame);
@@ -78,6 +78,7 @@ public class ListViewTests (ITestOutputHelper output)
                                                      );
 
         Assert.True (lv.ScrollVertical (10));
+        //Application.Refresh ();
         lv.Draw ();
         Assert.Equal (-1, lv.SelectedItem);
 
@@ -413,14 +414,14 @@ Item 6",
         var listView = new ListView ();
         var accepted = false;
 
-        listView.Accept += OnAccept;
+        listView.Accepting += OnAccepted;
         listView.InvokeCommand (Command.HotKey);
 
         Assert.False (accepted);
 
         return;
 
-        void OnAccept (object sender, HandledEventArgs e) { accepted = true; }
+        void OnAccepted (object sender, CommandEventArgs e) { accepted = true; }
     }
 
     [Fact]
@@ -434,7 +435,7 @@ Item 6",
         var opened = false;
         var selectedValue = string.Empty;
 
-        listView.Accept += Accept;
+        listView.Accepting += Accepted;
         listView.OpenSelectedItem += OpenSelectedItem;
 
         listView.InvokeCommand (Command.Accept);
@@ -451,7 +452,7 @@ Item 6",
             selectedValue = e.Value.ToString ();
         }
 
-        void Accept (object sender, HandledEventArgs e) { accepted = true; }
+        void Accepted (object sender, CommandEventArgs e) { accepted = true; }
     }
 
     [Fact]
@@ -465,7 +466,7 @@ Item 6",
         var opened = false;
         var selectedValue = string.Empty;
 
-        listView.Accept += Accept;
+        listView.Accepting += Accepted;
         listView.OpenSelectedItem += OpenSelectedItem;
 
         listView.InvokeCommand (Command.Accept);
@@ -482,10 +483,10 @@ Item 6",
             selectedValue = e.Value.ToString ();
         }
 
-        void Accept (object sender, HandledEventArgs e)
+        void Accepted (object sender, CommandEventArgs e)
         {
             accepted = true;
-            e.Handled = true;
+            e.Cancel = true;
         }
     }
 
@@ -504,7 +505,7 @@ Item 6",
         Assert.Equal (-1, lv.SelectedItem);
 
         // bind shift down to move down twice in control
-        lv.KeyBindings.Add (Key.CursorDown.WithShift, Command.LineDown, Command.LineDown);
+        lv.KeyBindings.Add (Key.CursorDown.WithShift, Command.Down, Command.Down);
 
         Key ev = Key.CursorDown.WithShift;
 
@@ -521,7 +522,7 @@ Item 6",
     }
 
     [Fact]
-    public void ListViewSelectThenDown ()
+    public void AllowsMarking_True_SpaceWithShift_SelectsThenDown ()
     {
         var lv = new ListView { Source = new ListWrapper<string> (["One", "Two", "Three"]) };
         lv.AllowsMarking = true;
@@ -536,12 +537,8 @@ Item 6",
         Assert.False (lv.Source.IsMarked (1));
         Assert.False (lv.Source.IsMarked (2));
 
-        lv.KeyBindings.Add (Key.Space.WithShift, Command.Select, Command.LineDown);
-
-        Key ev = Key.Space.WithShift;
-
         // view should indicate that it has accepted and consumed the event
-        Assert.True (lv.NewKeyDownEvent (ev));
+        Assert.True (lv.NewKeyDownEvent (Key.Space.WithShift));
 
         // first item should now be selected
         Assert.Equal (0, lv.SelectedItem);
@@ -552,7 +549,7 @@ Item 6",
         Assert.False (lv.Source.IsMarked (2));
 
         // Press key combo again
-        Assert.True (lv.NewKeyDownEvent (ev));
+        Assert.True (lv.NewKeyDownEvent (Key.Space.WithShift));
 
         // second item should now be selected
         Assert.Equal (1, lv.SelectedItem);
@@ -563,21 +560,21 @@ Item 6",
         Assert.False (lv.Source.IsMarked (2));
 
         // Press key combo again
-        Assert.True (lv.NewKeyDownEvent (ev));
+        Assert.True (lv.NewKeyDownEvent (Key.Space.WithShift));
         Assert.Equal (2, lv.SelectedItem);
         Assert.True (lv.Source.IsMarked (0));
         Assert.True (lv.Source.IsMarked (1));
         Assert.False (lv.Source.IsMarked (2));
 
         // Press key combo again
-        Assert.True (lv.NewKeyDownEvent (ev));
+        Assert.True (lv.NewKeyDownEvent (Key.Space.WithShift));
         Assert.Equal (2, lv.SelectedItem); // cannot move down any further
         Assert.True (lv.Source.IsMarked (0));
         Assert.True (lv.Source.IsMarked (1));
         Assert.True (lv.Source.IsMarked (2)); // but can toggle marked
 
         // Press key combo again 
-        Assert.True (lv.NewKeyDownEvent (ev));
+        Assert.True (lv.NewKeyDownEvent (Key.Space.WithShift));
         Assert.Equal (2, lv.SelectedItem); // cannot move down any further
         Assert.True (lv.Source.IsMarked (0));
         Assert.True (lv.Source.IsMarked (1));
@@ -612,7 +609,7 @@ Item 6",
         var lv = new ListView ();
         var top = new View ();
         top.Add (lv);
-        Exception exception = Record.Exception (() => lv.SetFocus());
+        Exception exception = Record.Exception (() => lv.SetFocus ());
         Assert.Null (exception);
     }
 
@@ -740,38 +737,38 @@ Item 6",
 └─────┘",
                                                       output);
 
-        Application.OnMouseEvent (new () { Position = new (0, 0), Flags = MouseFlags.Button1Clicked });
+        Application.RaiseMouseEvent (new () { ScreenPosition = new (0, 0), Flags = MouseFlags.Button1Clicked });
         Assert.Equal ("", selected);
         Assert.Equal (-1, lv.SelectedItem);
 
-        Application.OnMouseEvent (
+        Application.RaiseMouseEvent (
                                   new ()
                                   {
-                                      Position = new (1, 1), Flags = MouseFlags.Button1Clicked
+                                      ScreenPosition = new (1, 1), Flags = MouseFlags.Button1Clicked
                                   });
         Assert.Equal ("One", selected);
         Assert.Equal (0, lv.SelectedItem);
 
-        Application.OnMouseEvent (
+        Application.RaiseMouseEvent (
                                   new ()
                                   {
-                                      Position = new (1, 2), Flags = MouseFlags.Button1Clicked
+                                      ScreenPosition = new (1, 2), Flags = MouseFlags.Button1Clicked
                                   });
         Assert.Equal ("Two", selected);
         Assert.Equal (1, lv.SelectedItem);
 
-        Application.OnMouseEvent (
+        Application.RaiseMouseEvent (
                                   new ()
                                   {
-                                      Position = new (1, 3), Flags = MouseFlags.Button1Clicked
+                                      ScreenPosition = new (1, 3), Flags = MouseFlags.Button1Clicked
                                   });
         Assert.Equal ("Three", selected);
         Assert.Equal (2, lv.SelectedItem);
 
-        Application.OnMouseEvent (
+        Application.RaiseMouseEvent (
                                   new ()
                                   {
-                                      Position = new (1, 4), Flags = MouseFlags.Button1Clicked
+                                      ScreenPosition = new (1, 4), Flags = MouseFlags.Button1Clicked
                                   });
         Assert.Equal ("Three", selected);
         Assert.Equal (2, lv.SelectedItem);
@@ -868,7 +865,7 @@ Item 6",
         var removed = 0;
         var otherActions = 0;
         IList<string> source1 = [];
-        var lv = new ListView { Source = new ListWrapper<string> (new ( source1)) };
+        var lv = new ListView { Source = new ListWrapper<string> (new (source1)) };
 
         lv.CollectionChanged += (sender, args) =>
                                 {

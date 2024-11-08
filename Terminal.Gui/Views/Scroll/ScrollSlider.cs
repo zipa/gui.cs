@@ -1,5 +1,7 @@
 ﻿#nullable enable
 
+using System.ComponentModel;
+
 namespace Terminal.Gui;
 
 internal class ScrollSlider : View
@@ -54,7 +56,8 @@ internal class ScrollSlider : View
     }
 
     /// <inheritdoc/>
-    protected internal override bool? OnMouseEnter (MouseEvent mouseEvent)
+    /// <inheritdoc />
+    protected override bool OnMouseEnter (CancelEventArgs eventArgs)
     {
         _savedColorScheme ??= SuperViewAsScroll.ColorScheme;
 
@@ -66,12 +69,11 @@ internal class ScrollSlider : View
             HotFocus = new (_savedColorScheme.HotFocus.Foreground, _savedColorScheme.HotFocus.Foreground),
             Disabled = new (_savedColorScheme.Disabled.Foreground, _savedColorScheme.Disabled.Foreground)
         };
-
-        return base.OnMouseEnter (mouseEvent);
+        return true;
     }
 
     /// <inheritdoc/>
-    protected internal override bool OnMouseEvent (MouseEvent mouseEvent)
+    protected override bool OnMouseEvent (MouseEventArgs mouseEvent)
     {
         int location = SuperViewAsScroll.Orientation == Orientation.Vertical ? mouseEvent.Position.Y : mouseEvent.Position.X;
         int offset = _lastLocation > -1 ? location - _lastLocation : 0;
@@ -138,15 +140,14 @@ internal class ScrollSlider : View
     }
 
     /// <inheritdoc/>
-    protected internal override bool OnMouseLeave (MouseEvent mouseEvent)
+    /// <inheritdoc />
+    protected override void OnMouseLeave ()
     {
-        if (_savedColorScheme is { } && !mouseEvent.Flags.HasFlag (MouseFlags.Button1Pressed))
+        if (_savedColorScheme is { } /*&& !mouseEvent.Flags.HasFlag (MouseFlags.Button1Pressed)*/)
         {
             ColorScheme = _savedColorScheme;
             _savedColorScheme = null;
         }
-
-        return base.OnMouseLeave (mouseEvent);
     }
 
     internal int GetPositionFromSliderLocation (int location)

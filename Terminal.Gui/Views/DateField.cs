@@ -114,16 +114,19 @@ public class DateField : TextField
     }
 
     /// <inheritdoc/>
-    protected internal override bool OnMouseEvent  (MouseEvent ev)
+    protected override bool OnMouseEvent  (MouseEventArgs ev)
     {
-        bool result = base.OnMouseEvent (ev);
+        if (base.OnMouseEvent (ev) || ev.Handled)
+        {
+            return true;
+        }
 
-        if (result && SelectedLength == 0 && ev.Flags.HasFlag (MouseFlags.Button1Pressed))
+        if (SelectedLength == 0 && ev.Flags.HasFlag (MouseFlags.Button1Pressed))
         {
             AdjCursorPosition (ev.Position.X);
         }
 
-        return result;
+        return ev.Handled;
     }
 
     /// <summary>Event firing method for the <see cref="DateChanged"/> event.</summary>
@@ -131,7 +134,7 @@ public class DateField : TextField
     public virtual void OnDateChanged (DateTimeEventArgs<DateTime> args) { DateChanged?.Invoke (this, args); }
 
     /// <inheritdoc/>
-    public override bool OnProcessKeyDown (Key a)
+    protected override bool OnKeyDownNotHandled (Key a)
     {
         // Ignore non-numeric characters.
         if (a >= Key.D0 && a <= Key.D9)
@@ -169,7 +172,7 @@ public class DateField : TextField
             CursorPosition = newPoint;
         }
 
-        while (Text [CursorPosition].ToString () == _separator)
+        while (CursorPosition < Text.GetColumns () - 1 && Text [CursorPosition].ToString () == _separator)
         {
             if (increment)
             {
@@ -395,7 +398,7 @@ public class DateField : TextField
                         return true;
                     }
                    );
-        AddCommand (Command.LeftHome, () => MoveHome ());
+        AddCommand (Command.LeftStart, () => MoveHome ());
         AddCommand (Command.Left, () => MoveLeft ());
         AddCommand (Command.RightEnd, () => MoveEnd ());
         AddCommand (Command.Right, () => MoveRight ());
@@ -406,8 +409,8 @@ public class DateField : TextField
 
         KeyBindings.ReplaceCommands (Key.Backspace, Command.DeleteCharLeft);
 
-        KeyBindings.ReplaceCommands (Key.Home, Command.LeftHome);
-        KeyBindings.ReplaceCommands (Key.A.WithCtrl, Command.LeftHome);
+        KeyBindings.ReplaceCommands (Key.Home, Command.LeftStart);
+        KeyBindings.ReplaceCommands (Key.A.WithCtrl, Command.LeftStart);
 
         KeyBindings.ReplaceCommands (Key.CursorLeft, Command.Left);
         KeyBindings.ReplaceCommands (Key.B.WithCtrl, Command.Left);

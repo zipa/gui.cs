@@ -1,6 +1,6 @@
 ﻿namespace Terminal.Gui;
 
-/// <summary>The Padding for a <see cref="View"/>.</summary>
+/// <summary>The Padding for a <see cref="View"/>. Accessed via <see cref="View.Padding"/></summary>
 /// <remarks>
 ///     <para>See the <see cref="Adornment"/> class.</para>
 /// </remarks>
@@ -50,7 +50,7 @@ public class Padding : Adornment
     /// </remarks>
     /// <param name="mouseEvent"></param>
     /// <returns><see langword="true"/>, if the event was handled, <see langword="false"/> otherwise.</returns>
-    protected internal override bool OnMouseEvent (MouseEvent mouseEvent)
+    protected override bool OnMouseEvent (MouseEventArgs mouseEvent)
     {
         if (Parent is null)
         {

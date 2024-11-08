@@ -401,7 +401,7 @@ namespace Terminal.Gui
 
             // Things this view knows how to do
             AddCommand (
-                        Command.LeftHome,
+                        Command.LeftStart,
                         () =>
                         {
                             HomeKeyHandler ();
@@ -461,7 +461,7 @@ namespace Terminal.Gui
                        );
 
             // Default keybindings for this view
-            KeyBindings.Add (Key.Home, Command.LeftHome);
+            KeyBindings.Add (Key.Home, Command.LeftStart);
             KeyBindings.Add (Key.End, Command.RightEnd);
 
             KeyBindings.Add (Key.Delete, Command.DeleteCharRight);
@@ -531,7 +531,7 @@ namespace Terminal.Gui
         }
 
         /// <inheritdoc/>
-        protected internal override bool OnMouseEvent (MouseEvent mouseEvent)
+        protected override bool OnMouseEvent (MouseEventArgs mouseEvent)
         {
             if (mouseEvent.Flags.HasFlag (MouseFlags.Button1Pressed))
             {
@@ -597,7 +597,7 @@ namespace Terminal.Gui
         }
 
         /// <inheritdoc/>
-        public override bool OnProcessKeyDown (Key a)
+        protected override bool OnKeyDownNotHandled (Key a)
         {
             if (_provider is null)
             {

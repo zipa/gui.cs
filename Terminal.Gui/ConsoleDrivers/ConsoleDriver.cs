@@ -485,6 +485,7 @@ public abstract class ConsoleDriver
     public virtual bool SupportsTrueColor => true;
 
     // TODO: This makes ConsoleDriver dependent on Application, which is not ideal. This should be moved to Application.
+    // BUGBUG: Application.Force16Colors should be bool? so if SupportsTrueColor and Application.Force16Colors == false, this doesn't override
     /// <summary>
     ///     Gets or sets whether the <see cref="ConsoleDriver"/> should use 16 colors instead of the default TrueColors.
     ///     See <see cref="Application.Force16Colors"/> to change this setting via <see cref="ConfigurationManager"/>.
@@ -587,11 +588,17 @@ public abstract class ConsoleDriver
     public void OnKeyUp (Key a) { KeyUp?.Invoke (this, a); }
 
     /// <summary>Event fired when a mouse event occurs.</summary>
-    public event EventHandler<MouseEvent>? MouseEvent;
+    public event EventHandler<MouseEventArgs>? MouseEvent;
 
     /// <summary>Called when a mouse event occurs. Fires the <see cref="MouseEvent"/> event.</summary>
     /// <param name="a"></param>
-    public void OnMouseEvent (MouseEvent a) { MouseEvent?.Invoke (this, a); }
+    public void OnMouseEvent (MouseEventArgs a)
+    {
+        // Ensure ScreenPosition is set
+        a.ScreenPosition = a.Position;
+
+        MouseEvent?.Invoke (this, a);
+    }
 
     /// <summary>Simulates a key press.</summary>
     /// <param name="keyChar">The key character.</param>

@@ -64,14 +64,14 @@ public class ColorPickerTests
 
         cp.Draw ();
 
-        Application.OnKeyDown (Key.CursorRight);
+        Application.RaiseKeyDownEvent (Key.CursorRight);
 
         cp.Draw ();
 
         Assert.Equal (3, r.TrianglePosition);
         Assert.Equal ("#0F0000", hex.Text);
 
-        Application.OnKeyDown (Key.CursorRight);
+        Application.RaiseKeyDownEvent (Key.CursorRight);
 
         cp.Draw ();
 
@@ -81,7 +81,7 @@ public class ColorPickerTests
         // Use cursor to move the triangle all the way to the right
         for (int i = 0; i < 1000; i++)
         {
-            Application.OnKeyDown (Key.CursorRight);
+            Application.RaiseKeyDownEvent (Key.CursorRight);
         }
 
         cp.Draw ();
@@ -91,7 +91,7 @@ public class ColorPickerTests
         Assert.Equal (19, r.TrianglePosition);
         Assert.Equal ("#FF0000", hex.Text);
 
-        Application.Current.Dispose ();
+        Application.Top.Dispose ();
     }
 
     [Fact]
@@ -120,7 +120,7 @@ public class ColorPickerTests
 
         Assert.IsAssignableFrom<IColorBar> (cp.Focused);
 
-        cp.Focused.OnMouseEvent (
+        cp.Focused.RaiseMouseEvent (
                                  new ()
                                  {
                                      Flags = MouseFlags.Button1Pressed,
@@ -132,7 +132,7 @@ public class ColorPickerTests
         Assert.Equal (3, r.TrianglePosition);
         Assert.Equal ("#0F0000", hex.Text);
 
-        cp.Focused.OnMouseEvent (
+        cp.Focused.RaiseMouseEvent (
                                   new ()
                                   {
                                       Flags = MouseFlags.Button1Pressed,
@@ -144,7 +144,7 @@ public class ColorPickerTests
         Assert.Equal (4, r.TrianglePosition);
         Assert.Equal ("#1E0000", hex.Text);
 
-        Application.Current?.Dispose ();
+        Application.Top?.Dispose ();
     }
 
 
@@ -198,7 +198,7 @@ public class ColorPickerTests
         Assert.Equal (expectedBTriangle, b.TrianglePosition);
         Assert.Equal (expectedHex, hex.Text);
 
-        Application.Current.Dispose ();
+        Application.Top.Dispose ();
     }
 
     public static IEnumerable<object []> ColorPickerTestData_WithTextFields ()
@@ -257,7 +257,7 @@ public class ColorPickerTests
         Assert.Equal (expectedBValue.ToString (), bTextField.Text);
         Assert.Equal (expectedHex, hex.Text);
 
-        Application.Current?.Dispose ();
+        Application.Top?.Dispose ();
     }
 
     [Fact]
@@ -269,7 +269,7 @@ public class ColorPickerTests
         cp.Draw ();
 
         // Click at the end of the Red bar
-        cp.Focused.OnMouseEvent (
+        cp.Focused.RaiseMouseEvent (
                                  new ()
                                  {
                                      Flags = MouseFlags.Button1Pressed,
@@ -291,7 +291,7 @@ public class ColorPickerTests
         Assert.Equal (2, b.TrianglePosition);
         Assert.Equal ("#FF0000", hex.Text);
 
-        Application.Current?.Dispose ();
+        Application.Top?.Dispose ();
     }
 
     [Fact]
@@ -303,7 +303,7 @@ public class ColorPickerTests
         cp.Draw ();
 
         // Click beyond the bar
-        cp.Focused.OnMouseEvent (
+        cp.Focused.RaiseMouseEvent (
                                  new ()
                                  {
                                      Flags = MouseFlags.Button1Pressed,
@@ -325,7 +325,7 @@ public class ColorPickerTests
         Assert.Equal (2, b.TrianglePosition);
         Assert.Equal ("#FF0000", hex.Text);
 
-        Application.Current?.Dispose ();
+        Application.Top?.Dispose ();
     }
 
     [Fact]
@@ -336,7 +336,7 @@ public class ColorPickerTests
 
         View otherView = new View () { CanFocus = true };
 
-        Application.Current?.Add (otherView); // thi sets focus to otherView
+        Application.Top?.Add (otherView); // thi sets focus to otherView
         Assert.True (otherView.HasFocus);
 
         cp.SetFocus ();
@@ -384,7 +384,7 @@ public class ColorPickerTests
         Assert.Equal ("0", bTextField.Text);
         Assert.Equal ("#800000", hex.Text);
 
-        Application.Current?.Dispose ();
+        Application.Top?.Dispose ();
     }
 
     [Fact]
@@ -422,7 +422,7 @@ public class ColorPickerTests
         Assert.Equal (2, b.TrianglePosition);
         Assert.Equal ("#000000", hex.Text);
 
-        Application.Current?.Dispose ();
+        Application.Top?.Dispose ();
     }
 
     [Fact]
@@ -434,10 +434,10 @@ public class ColorPickerTests
         cp.Draw ();
 
         // Click on Green bar
-        Application.OnMouseEvent (new ()
+        Application.RaiseMouseEvent (new ()
         {
             Flags = MouseFlags.Button1Pressed,
-            Position = new (0, 1)
+            ScreenPosition = new (0, 1)
         });
         //cp.Subviews.OfType<GBar> ()
         //  .Single ()
@@ -453,10 +453,10 @@ public class ColorPickerTests
         Assert.IsAssignableFrom<GBar> (cp.Focused);
 
         // Click on Blue bar
-        Application.OnMouseEvent (new ()
+        Application.RaiseMouseEvent (new ()
         {
             Flags = MouseFlags.Button1Pressed,
-            Position = new (0, 2)
+            ScreenPosition = new (0, 2)
         });
         //cp.Subviews.OfType<BBar> ()
         //  .Single ()
@@ -471,7 +471,7 @@ public class ColorPickerTests
 
         Assert.IsAssignableFrom<BBar> (cp.Focused);
 
-        Application.Current?.Dispose ();
+        Application.Top?.Dispose ();
     }
 
     [Fact]
@@ -516,7 +516,7 @@ public class ColorPickerTests
         Assert.Equal (19, v.TrianglePosition);
         Assert.Equal ("#FF0000", hex.Text);
 
-        Application.Current?.Dispose ();
+        Application.Top!.Dispose ();
     }
 
     [Fact]
@@ -552,7 +552,7 @@ public class ColorPickerTests
         Assert.Equal ("0", bTextField.Text);
         Assert.Equal ("#800000", hex.Text);
 
-        Application.Current?.Dispose ();
+        Application.Top?.Dispose ();
     }
 
     enum ColorPickerPart
@@ -694,8 +694,8 @@ public class ColorPickerTests
     {
         var cp = GetColorPicker (ColorModel.RGB, true, true);
         Application.Navigation = new ();
-        Application.Current = new ();
-        Application.Current.Add (cp);
+        Application.Top = new ();
+        Application.Top.Add (cp);
 
         cp.Draw ();
 
@@ -713,27 +713,27 @@ public class ColorPickerTests
         name.Text = "";
         Assert.Empty (name.Text);
 
-        Application.OnKeyDown (Key.A);
-        Application.OnKeyDown (Key.Q);
+        Application.RaiseKeyDownEvent (Key.A);
+        Application.RaiseKeyDownEvent (Key.Q);
 
         Assert.Equal ("aq", name.Text);
 
 
         // Auto complete the color name
-        Application.OnKeyDown (Key.Tab);
+        Application.RaiseKeyDownEvent (Key.Tab);
 
         Assert.Equal ("Aquamarine", name.Text);
 
         // Tab out of the text field
-        Application.OnKeyDown (Key.Tab);
+        Application.RaiseKeyDownEvent (Key.Tab);
 
         Assert.False (name.HasFocus);
         Assert.NotSame (name, cp.Focused);
 
         Assert.Equal ("#7FFFD4", hex.Text);
 
-        Application.Current?.Dispose ();
-        Application.ResetState ();
+        Application.Top?.Dispose ();
+        Application.ResetState (ignoreDisposed: true);
     }
 
     [Fact]
@@ -742,8 +742,8 @@ public class ColorPickerTests
     {
         var cp = GetColorPicker (ColorModel.RGB, true, true);
         Application.Navigation = new ();
-        Application.Current = new ();
-        Application.Current.Add (cp);
+        Application.Top = new ();
+        Application.Top.Add (cp);
 
         cp.Draw ();
 
@@ -761,24 +761,24 @@ public class ColorPickerTests
         Assert.Empty (hex.Text);
         Assert.Empty (name.Text);
 
-        Application.OnKeyDown ('#');
+        Application.RaiseKeyDownEvent ('#');
         Assert.Empty (name.Text);
         //7FFFD4
 
         Assert.Equal ("#", hex.Text);
-        Application.OnKeyDown ('7');
-        Application.OnKeyDown ('F');
-        Application.OnKeyDown ('F');
-        Application.OnKeyDown ('F');
-        Application.OnKeyDown ('D');
+        Application.RaiseKeyDownEvent ('7');
+        Application.RaiseKeyDownEvent ('F');
+        Application.RaiseKeyDownEvent ('F');
+        Application.RaiseKeyDownEvent ('F');
+        Application.RaiseKeyDownEvent ('D');
         Assert.Empty (name.Text);
 
-        Application.OnKeyDown ('4');
+        Application.RaiseKeyDownEvent ('4');
 
         Assert.True (hex.HasFocus);
 
         // Tab out of the hex field - should wrap to first focusable subview 
-        Application.OnKeyDown (Key.Tab);
+        Application.RaiseKeyDownEvent (Key.Tab);
         Assert.False (hex.HasFocus);
         Assert.NotSame (hex, cp.Focused);
 
@@ -786,8 +786,8 @@ public class ColorPickerTests
         Assert.Equal ("#7FFFD4", hex.Text);
         Assert.Equal ("Aquamarine", name.Text);
 
-        Application.Current?.Dispose ();
-        Application.ResetState ();
+        Application.Top?.Dispose ();
+        Application.ResetState (ignoreDisposed: true);
     }
 
     /// <summary>
@@ -800,8 +800,8 @@ public class ColorPickerTests
     {
         var cp = GetColorPicker (ColorModel.RGB, true, true);
         Application.Navigation = new ();
-        Application.Current = new ();
-        Application.Current.Add (cp);
+        Application.Top = new ();
+        Application.Top.Add (cp);
 
         cp.Draw ();
 
@@ -819,24 +819,24 @@ public class ColorPickerTests
         Assert.Empty (hex.Text);
         Assert.Empty (name.Text);
 
-        Application.OnKeyDown ('#');
+        Application.RaiseKeyDownEvent ('#');
         Assert.Empty (name.Text);
         //7FFFD4
 
         Assert.Equal ("#", hex.Text);
-        Application.OnKeyDown ('7');
-        Application.OnKeyDown ('F');
-        Application.OnKeyDown ('F');
-        Application.OnKeyDown ('F');
-        Application.OnKeyDown ('D');
+        Application.RaiseKeyDownEvent ('7');
+        Application.RaiseKeyDownEvent ('F');
+        Application.RaiseKeyDownEvent ('F');
+        Application.RaiseKeyDownEvent ('F');
+        Application.RaiseKeyDownEvent ('D');
         Assert.Empty (name.Text);
 
-        Application.OnKeyDown ('4');
+        Application.RaiseKeyDownEvent ('4');
 
         Assert.True (hex.HasFocus);
 
         // Should stay in the hex field (because accept not tab)
-        Application.OnKeyDown (Key.Enter);
+        Application.RaiseKeyDownEvent (Key.Enter);
         Assert.True (hex.HasFocus);
         Assert.Same (hex, cp.Focused);
 
@@ -844,8 +844,8 @@ public class ColorPickerTests
         Assert.Equal ("#7FFFD4", hex.Text);
         Assert.Equal ("Aquamarine", name.Text);
 
-        Application.Current?.Dispose ();
-        Application.ResetState ();
+        Application.Top?.Dispose ();
+        Application.ResetState (ignoreDisposed: true);
     }
 
     [Fact]
@@ -863,11 +863,11 @@ public class ColorPickerTests
         cp.Style.ShowColorName = showName;
         cp.ApplyStyleChanges ();
 
-        Application.Current = new Toplevel () { Width = 20, Height = 5 };
-        Application.Current.Add (cp);
+        Application.Top = new Toplevel () { Width = 20, Height = 5 };
+        Application.Top.Add (cp);
 
-        Application.Current.LayoutSubviews ();
-        Application.Current.SetFocus ();
+        Application.Top.LayoutSubviews ();
+        Application.Top.SetFocus ();
 
         return cp;
     }

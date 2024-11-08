@@ -23,14 +23,14 @@ internal abstract class ColorBar : View, IColorBar
         AddCommand (Command.LeftExtend, _ => Adjust (-MaxValue / 20));
         AddCommand (Command.RightExtend, _ => Adjust (MaxValue / 20));
 
-        AddCommand (Command.LeftHome, _ => SetZero ());
+        AddCommand (Command.LeftStart, _ => SetZero ());
         AddCommand (Command.RightEnd, _ => SetMax ());
 
         KeyBindings.Add (Key.CursorLeft, Command.Left);
         KeyBindings.Add (Key.CursorRight, Command.Right);
         KeyBindings.Add (Key.CursorLeft.WithShift, Command.LeftExtend);
         KeyBindings.Add (Key.CursorRight.WithShift, Command.RightExtend);
-        KeyBindings.Add (Key.Home, Command.LeftHome);
+        KeyBindings.Add (Key.Home, Command.LeftStart);
         KeyBindings.Add (Key.End, Command.RightEnd);
     }
 
@@ -110,7 +110,7 @@ internal abstract class ColorBar : View, IColorBar
     public event EventHandler<EventArgs<int>>? ValueChanged;
 
     /// <inheritdoc/>
-    protected internal override bool OnMouseEvent (MouseEvent mouseEvent)
+    protected override bool OnMouseEvent (MouseEventArgs mouseEvent)
     {
         if (mouseEvent.Flags.HasFlag (MouseFlags.Button1Pressed))
         {
@@ -123,10 +123,9 @@ internal abstract class ColorBar : View, IColorBar
             mouseEvent.Handled = true;
             SetFocus ();
 
-            return true;
         }
 
-        return base.OnMouseEvent (mouseEvent);
+        return mouseEvent.Handled;
     }
 
     /// <summary>

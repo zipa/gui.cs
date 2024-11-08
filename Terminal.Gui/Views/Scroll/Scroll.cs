@@ -168,7 +168,7 @@ public class Scroll : View
     public event EventHandler<EventArgs<int>>? SizeChanged;
 
     /// <inheritdoc/>
-    protected internal override bool OnMouseEvent (MouseEvent mouseEvent)
+    protected override bool OnMouseEvent (MouseEventArgs mouseEvent)
     {
         int location = Orientation == Orientation.Vertical ? mouseEvent.Position.Y : mouseEvent.Position.X;
         int barSize = BarSize;
@@ -201,11 +201,11 @@ public class Scroll : View
         {
             if (_slider.Frame.Contains (mouseEvent.Position))
             {
-                return _slider.OnMouseEvent (mouseEvent);
+                //return _slider.OnMouseEvent (mouseEvent);
             }
         }
 
-        return base.OnMouseEvent (mouseEvent);
+        return false;
     }
 
     /// <summary>Virtual method called when <see cref="Position"/> has changed. Raises <see cref="PositionChanged"/>.</summary>
@@ -241,10 +241,8 @@ public class Scroll : View
     }
 
     /// <inheritdoc/>
-    internal override void OnLayoutComplete (LayoutEventArgs args)
+    internal override void OnLayoutStarted (LayoutEventArgs args)
     {
-        base.OnLayoutComplete (args);
-
         AdjustScroll ();
     }
 

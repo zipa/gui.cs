@@ -22,8 +22,16 @@ public class ScrollBar : View
     public ScrollBar ()
     {
         _scroll = new ();
-        _decrease = new ();
-        _increase = new () { NavigationDirection = NavigationDirection.Forward };
+        _decrease = new ()
+        {
+            NoDecorations = true,
+            NoPadding = true,
+        };
+        _increase = new ()
+        {
+            NoDecorations = true,
+            NoPadding = true,
+        };
         Add (_scroll, _decrease, _increase);
 
         CanFocus = false;
@@ -37,8 +45,8 @@ public class ScrollBar : View
     }
 
     private readonly Scroll _scroll;
-    private readonly ScrollButton _decrease;
-    private readonly ScrollButton _increase;
+    private readonly Button _decrease;
+    private readonly Button _increase;
 
     private bool _autoHide = true;
     private bool _showScrollIndicator = true;
@@ -149,10 +157,9 @@ public class ScrollBar : View
     public event EventHandler<EventArgs<int>>? SizeChanged;
 
     /// <inheritdoc/>
-    internal override void OnLayoutComplete (LayoutEventArgs args)
+    /// <inheritdoc />
+    internal override void OnLayoutStarted (LayoutEventArgs args) 
     {
-        base.OnLayoutComplete (args);
-
         AdjustAll ();
     }
 
@@ -162,8 +169,33 @@ public class ScrollBar : View
     {
         CheckVisibility ();
         _scroll.AdjustScroll ();
-        _decrease.AdjustButton ();
-        _increase.AdjustButton ();
+
+        if (Orientation == Orientation.Vertical)
+        {
+            _decrease.Y = 0;
+            _decrease.X = 0;
+            _decrease.Width = Dim.Fill ();
+            _decrease.Height = 1;
+            _decrease.Text = Glyphs.DownArrow.ToString ();
+            _increase.Y = Pos.Bottom (_scroll);
+            _increase.X = 0;
+            _increase.Width = Dim.Fill ();
+            _increase.Height = 1;
+            _increase.Text = Glyphs.UpArrow.ToString ();
+        }
+        else
+        {
+            _decrease.Y = 0;
+            _decrease.X = 0;
+            _decrease.Width = 1;
+            _decrease.Height = Dim.Fill ();
+            _decrease.Text = Glyphs.LeftArrow.ToString ();
+            _increase.Y = 0;
+            _increase.X = Pos.Right (_scroll);
+            _increase.Width = 1;
+            _increase.Height = Dim.Fill ();
+            _increase.Text = Glyphs.RightArrow.ToString ();
+        }
     }
 
     private bool CheckVisibility ()

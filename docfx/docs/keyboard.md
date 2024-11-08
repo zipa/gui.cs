@@ -4,7 +4,7 @@
 
 Tenets higher in the list have precedence over tenets lower in the list.
 
-* **Users Have Control** - *Terminal.Gui* provides default key bindings consistent with these tenets, but those defaults are configurable by the user. For example, `ConfigurationManager` allows users to redefine key bindings for the system, a user, or an application.
+* **Users Have Control** - *Terminal.Gui* provides default key bindings consistent with these tenets, but those defaults are configurable by the user. For example, @Terminal.Gui.ConfigurationManager allows users to redefine key bindings for the system, a user, or an application.
 
 * **More Editor than Command Line** - Once a *Terminal.Gui* app starts, the user is no longer using the command line. Users expect keyboard idioms in TUI apps to be consistent with GUI apps (such as VS Code, Vim, and Emacs). For example, in almost all GUI apps, `Ctrl+V` is `Paste`. But the Linux shells often use `Shift+Insert`. *Terminal.Gui* binds `Ctrl+V` by default.
 
@@ -12,7 +12,7 @@ Tenets higher in the list have precedence over tenets lower in the list.
 
 * **The Source of Truth is Wikipedia** - We use this [Wikipedia article](https://en.wikipedia.org/wiki/Table_of_keyboard_shortcuts) as our guide for default key bindings.
 
-* **If It's Hot, It Works** - If a View with a [HotKey](~/api/Terminal.Gui.View.yml#Terminal_Gui_View_HotKey) is visible, and the HotKey is visible, the user should be able to press that HotKey and whatever behavior is defined for it should work. For example, in v1, when a Modal view was active, the HotKeys on MenuBar continued to show "hot". In v2 we strive to ensure this doesn't happen.
+* **If It's Hot, It Works** - If a View with a @Terminal.Gui.View.HotKey is visible, and the HotKey is visible, the user should be able to press that HotKey and whatever behavior is defined for it should work. For example, in v1, when a Modal view was active, the HotKeys on MenuBar continued to show "hot". In v2 we strive to ensure this doesn't happen.
 
 
 ## Keyboard APIs
@@ -37,15 +37,15 @@ btn.KeyBindings.ReplaceKey (btn.KeyBindings.GetKeyFromCommands (Command.Accept))
 
 The [Command](~/api/Terminal.Gui.Command.yml) enum lists generic operations that are implemented by views. For example `Command.Accept` in a `Button` results in the `Clicked` event 
 firing while in `TableView` it is bound to `CellActivated`. Not all commands
-are implemented by all views (e.g. you cannot scroll in a `Button`). Use the `GetSupportedCommands()` method to determine which commands are implemented by a `View`. 
+are implemented by all views (e.g. you cannot scroll in a `Button`). Use the @Terminal.Gui.View.GetSupportedCommands() method to determine which commands are implemented by a `View`. 
 
-Key Bindings can be added at the `Application` or `View` level. For Application-scoped Key Bindings see [ApplicationNavigation](~/api/Terminal.Gui.ApplicationNavigation.yml). For View-scoped Key Bindings see [Key Bindings](~/api/Terminal.Gui.View.yml#Terminal_Gui_View_KeyBinings).
+Key Bindings can be added at the `Application` or `View` level. For Application-scoped Key Bindings see @Terminal.Gui.Application.Navigation. For View-scoped Key Bindings see @Terminal.Gui.View.KeyBindings.
 
-### **[HotKey](~/api/Terminal.Gui.View.yml#Terminal_Gui_View_HotKey)** 
+### **@"Terminal.Gui.View.HotKey"** 
 
 A **HotKey** is a key press that selects a visible UI item. For selecting items across `View`s (e.g. a `Button` in a `Dialog`) the key press must have the `Alt` modifier. For selecting items within a `View` that are not `View`s themselves, the key press can be key without the `Alt` modifier.  For example, in a `Dialog`, a `Button` with the text of "_Text" can be selected with `Alt+T`. Or, in a `Menu` with "_File _Edit", `Alt+F` will select (show) the "_File" menu. If the "_File" menu has a sub-menu of "_New" `Alt+N` or `N` will ONLY select the "_New" sub-menu if the "_File" menu is already opened.
 
-By default, the `Text` of a `View` is used to determine the `HotKey` by looking for the first occurrence of the [HotKeySpecifier](~/api/Terminal.Gui.View.yml#Terminal_Gui_View_HotKeySpecifier) (which is underscore (`_`) by default). The character following the underscore is the `HotKey`. If the `HotKeySpecifier` is not found in `Text`, the first character of `Text` is used as the `HotKey`. The `Text` of a `View` can be changed at runtime, and the `HotKey` will be updated accordingly. [HotKey](~/api/Terminal.Gui.View.yml#Terminal_Gui_View_HotKey) is `virtual` enabling this behavior to be customized.
+By default, the `Text` of a `View` is used to determine the `HotKey` by looking for the first occurrence of the @Terminal.Gui.View.HotKeySpecifier (which is underscore (`_`) by default). The character following the underscore is the `HotKey`. If the `HotKeySpecifier` is not found in `Text`, the first character of `Text` is used as the `HotKey`. The `Text` of a `View` can be changed at runtime, and the `HotKey` will be updated accordingly. @"Terminal.Gui.View.HotKey" is `virtual` enabling this behavior to be customized.
 
 ### **[Shortcut](~/api/Terminal.Gui.Shortcut.yml)**
 
@@ -57,28 +57,31 @@ The Command can be invoked even if the `View` that defines them is not focused o
 
 [MenuBar](~/api/Terminal.Gui.MenuBar.yml), [ContextMenu](~/api/Terminal.Gui.ContextMenu.yml), and [StatusBar](~/api/Terminal.Gui.StatusBar.yml) support `Shortcut`s. 
 
-### **[Handling Keyboard Events](~/api/Terminal.Gui.View.yml#Terminal_Gui_View_KeyDown)**
+### **Handling Keyboard Events**
 
-Keyboard events are retrieved from [Console Drivers](drivers.md) and passed on 
-to the [Application](~/api/Terminal.Gui.Application.yml) class by the [Main Loop](mainloop.md). 
+Keyboard events are retrieved from [Console Drivers](drivers.md) each iteration of the [Application](~/api/Terminal.Gui.Application.yml) [Main Loop](mainloop.md). The console driver raises the @Terminal.Gui.ConsoleDriver.KeyDown and @Terminal.Gui.ConsoleDriver.KeyUp events which invoke @Terminal.Gui.Application.RaiseKeyDown(Terminal.Gui.Key) and @Terminal.Gui.Application.RaiseKeyUp(Terminal.Gui.Key) respectively.
 
-[Application](~/api/Terminal.Gui.Application.yml) then determines the current [Toplevel](~/api/Terminal.Gui.Toplevel.yml) view
-(either the default created by calling `Application.Init`, or the one set by calling `Application.Run`). The mouse event, using [Bounds-relative coordinates](~/api/Terminal.Gui.View.yml#Terminal_Gui_View_Bounds) is then passed to the [NewKeyDownEvent](~/api/Terminal.Gui.View.yml#Terminal_Gui_View_NewKeyDownEvent_Terminal_Gui_Key_) method of the current [Toplevel](~/api/Terminal.Gui.Toplevel.yml) view. 
+    NOTE: Not all drivers/platforms support sensing distinct KeyUp events. These drivers will simulate KeyUp events by raising @Terminal.Gui.ConsoleDriver.KeyUp after @Terminal.Gui.ConsoleDriver.KeyDown.
 
-If the view is enabled, the [NewKeyDownEvent](~/api/Terminal.Gui.View.yml#Terminal_Gui_View_NewKeyDownEvent_Terminal_Gui_Key_) method will do the following: 
+@Terminal.Gui.Application.RaiseKeyDown(Terminal.Gui.Key) raises @Terminal.Gui.Application.KeyDown and then calls @Terminal.Gui.View.NewKeyDownEvent(Terminal.Gui.Key) on all toplevel Views. If no View handles the key event, any Application-scoped key bindings will be invoked.
 
-1) If the view has a subview that has focus, 'ProcessKeyDown' on the focused view will be called. If the focused view handles the key press, processing stops.
-2) If there is no focused sub-view, or the focused sub-view does not handle the key press, [OnKeyDown](~/api/Terminal.Gui.View.yml#Terminal_Gui_View_OnKeyDown_Terminal_Gui_Key_) will be called. If the view handles the key press, processing stops.
-3) If the view does not handle the key press, [OnInvokingKeyBindings](~/api/Terminal.Gui.View.yml#Terminal_Gui_View_OnInvokingKeyBindings_Terminal_Gui_Key_) will be called. This method calls[InvokeKeyBindings](~/api/Terminal.Gui.View.yml#Terminal_Gui_View_InvokeKeyBindings_Terminal_Gui_Key_) to invoke any keys bound to commands. If the key is bound and any of it's command handlers return true, processing stops.
-4) If the key is not bound, or the bound command handlers do not return true, [OnProcessKeyDow](~/api/Terminal.Gui.View.yml#Terminal_Gui_View_OnProcessKeyDown_Terminal_Gui_Key_) is called. If the view handles the key press, processing stops.
+@Terminal.Gui.Application.RaiseKeyDown(Terminal.Gui.Key) raises @Terminal.Gui.Application.KeyDown and then calls @Terminal.Gui.View.NewKeyUpEvent(Terminal.Gui.Key) on all toplevel Views.
 
-## **[Application Key Handling](~/api/Terminal.Gui.Application.yml#Terminal_Gui_Application_OnKeyDown_Terminal_Gui_Key_)**
+If a view is enabled, the @Terminal.Gui.View.NewKeyDownEvent(Terminal.Gui.Key) method will do the following: 
 
-To define application key handling logic for an entire application in cases where the methods listed above are not suitable, use the `Application.OnKeyDown` event. 
+1) If the view has a subview that has focus, 'NewKeyDown' on the focused view will be called. This is recursive. If the most-focused view handles the key press, processing stops.
+2) If there is no most-focused sub-view, or a most-focused sub-view does not handle the key press, @Terminal.Gui.View.OnKeyDown(Terminal.Gui.Key) will be called. If the view handles the key press, processing stops.
+3) If @Terminal.Gui.View.OnKeyDown(Terminal.Gui.Key) does not handle the event. @Terminal.Gui.View.KeyDown will be raised.
+4) If the view does not handle the key down event, any bindings for the key will be invoked (see @Terminal.Gui.View.KeyBindings). If the key is bound and any of it's command handlers return true, processing stops.
+5) If the key is not bound, or the bound command handlers do not return true, @Terminal.Gui.View.OnKeyDownNotHandled(Terminal.Gui.Key) is called. 
 
-## **[Key Down/Up Events](~/api/Terminal.Gui.View.yml#Terminal_Gui_View_KeyDown)**
+## **Application Key Handling**
 
-*Terminal.Gui* supports key up/down events with [OnKeyDown](~/api/Terminal.Gui.View.yml#Terminal_Gui_View_OnKeyDown_Terminal_Gui_Key_) and [OnKeyUp](~/api/Terminal.Gui.View.yml#Terminal_Gui_View_OnKeyUp_Terminal_Gui_Key_), but not all [Console Drivers](drivers.md) do. To receive these key down and key up events, you must use a driver that supports them (e.g. `WindowsDriver`).
+To define application key handling logic for an entire application in cases where the methods listed above are not suitable, use the @Terminal.Gui.Application.KeyDown event. 
+
+## **Key Down/Up Events**
+
+*Terminal.Gui* supports key up/down events with @Terminal.Gui.View.OnKeyDown(Terminal.Gui.Key) and @Terminal.Gui.View.OnKeyUp(Terminal.Gui.Key), but not all [Console Drivers](drivers.md) do. To receive these key down and key up events, you must use a driver that supports them (e.g. `WindowsDriver`).
 
 # General input model
 
@@ -90,17 +93,14 @@ To define application key handling logic for an entire application in cases wher
     - `NewKeyDownEvent` is called on the most-focused SubView (if any) that has focus. If that call returns true, the method returns.
     - Calls `OnKeyDown`.
   - **During**
-    - Assuming `OnKeyDown` call returns false (indicating the key wasn't handled)
-       - `OnInvokingKeyBindings` is called to invoke any bound commands.
-       - `OnInvokingKeyBindings` fires the `InvokingKeyBindings` event
+    - Assuming `OnKeyDown` call returns false (indicating the key wasn't handled) any commands bound to the key will be invoked.
   - **After**
-    - Assuming `OnInvokingKeyBindings` returns false (indicating the key wasn't handled)
-       - `OnProcessKeyDown` is called to process the key.
-       - `OnProcessKeyDown` fires the `ProcessKeyDown` event
+    - Assuming no keybinding was found or all invoked commands were not handled:
+       - `OnKeyDownNotHandled` is called to process the key.
+       - `KeyDownNotHandled` is raised.
 
-- Subclasses of `View` can (rarely) override `OnKeyDown` to see keys before they are processed by `OnInvokingKeyBindings` and `OnProcessKeyDown
-- Subclasses of `View` can (rarely) override `OnInvokingKeyBindings` to see keys before they are processed by `OnProcessKeyDown`
-- Subclasses of `View` can (often) override `OnProcessKeyDown` to do normal key processing.
+- Subclasses of `View` can (rarely) override `OnKeyDown` (or subscribe to `KeyDown`) to see keys before they are processed 
+- Subclasses of `View` can (often) override `OnKeyDownNotHandled` to do key processing for keys that were not previously handled. `TextField` and `TextView` are examples.
 
 ## ConsoleDriver
 
@@ -111,7 +111,7 @@ To define application key handling logic for an entire application in cases wher
 ## Application
 
 * Implements support for `KeyBindingScope.Application`.
-* Exposes [Application.KeyBindings](~/api/Terminal.Gui.Application.yml#Terminal_Gui_Application_KeyBindings_).
+* Exposes @Terminal.Gui.Application.KeyBindings.
 * Exposes cancelable `KeyDown/Up` events (via `Handled = true`). The `OnKey/Down/Up/` methods are public and can be used to simulate keyboard input.
 
 ## View

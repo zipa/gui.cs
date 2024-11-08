@@ -1,5 +1,6 @@
 ﻿namespace Terminal.Gui;
 
+// TODO: FrameView is mis-named, really. It's far more about it being a TabGroup than a frame. 
 /// <summary>
 ///     The FrameView is a container View with a border around it. 
 /// </summary>
@@ -21,9 +22,10 @@ public class FrameView : View
         MouseClick += FrameView_MouseClick;
     }
 
-    private void FrameView_MouseClick (object sender, MouseEventEventArgs e)
+    private void FrameView_MouseClick (object sender, MouseEventArgs e)
     {
-        e.Handled = InvokeCommand (Command.HotKey) == true;
+        // base sets focus on HotKey
+        e.Handled = InvokeCommand (Command.HotKey, ctx: new (Command.HotKey, key: null, data: this)) == true;
     }
 
 

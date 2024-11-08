@@ -163,7 +163,7 @@ public class TreeView<T> : View, ITreeView where T : class
                    );
 
         AddCommand (
-                    Command.LineUp,
+                    Command.Up,
                     () =>
                     {
                         AdjustSelection (-1);
@@ -173,7 +173,7 @@ public class TreeView<T> : View, ITreeView where T : class
                    );
 
         AddCommand (
-                    Command.LineUpExtend,
+                    Command.UpExtend,
                     () =>
                     {
                         AdjustSelection (-1, true);
@@ -193,7 +193,7 @@ public class TreeView<T> : View, ITreeView where T : class
                    );
 
         AddCommand (
-                    Command.LineDown,
+                    Command.Down,
                     () =>
                     {
                         AdjustSelection (1);
@@ -203,7 +203,7 @@ public class TreeView<T> : View, ITreeView where T : class
                    );
 
         AddCommand (
-                    Command.LineDownExtend,
+                    Command.DownExtend,
                     () =>
                     {
                         AdjustSelection (1, true);
@@ -223,7 +223,7 @@ public class TreeView<T> : View, ITreeView where T : class
                    );
 
         AddCommand (
-                    Command.TopHome,
+                    Command.Start,
                     () =>
                     {
                         GoToFirst ();
@@ -233,7 +233,7 @@ public class TreeView<T> : View, ITreeView where T : class
                    );
 
         AddCommand (
-                    Command.BottomEnd,
+                    Command.End,
                     () =>
                     {
                         GoToEnd ();
@@ -285,17 +285,19 @@ public class TreeView<T> : View, ITreeView where T : class
         KeyBindings.Add (Key.CursorLeft, Command.Collapse);
         KeyBindings.Add (Key.CursorLeft.WithCtrl, Command.CollapseAll);
 
-        KeyBindings.Add (Key.CursorUp, Command.LineUp);
-        KeyBindings.Add (Key.CursorUp.WithShift, Command.LineUpExtend);
+        KeyBindings.Add (Key.CursorUp, Command.Up);
+        KeyBindings.Add (Key.CursorUp.WithShift, Command.UpExtend);
         KeyBindings.Add (Key.CursorUp.WithCtrl, Command.LineUpToFirstBranch);
 
-        KeyBindings.Add (Key.CursorDown, Command.LineDown);
-        KeyBindings.Add (Key.CursorDown.WithShift, Command.LineDownExtend);
+        KeyBindings.Add (Key.CursorDown, Command.Down);
+        KeyBindings.Add (Key.CursorDown.WithShift, Command.DownExtend);
         KeyBindings.Add (Key.CursorDown.WithCtrl, Command.LineDownToLastBranch);
 
-        KeyBindings.Add (Key.Home, Command.TopHome);
-        KeyBindings.Add (Key.End, Command.BottomEnd);
+        KeyBindings.Add (Key.Home, Command.Start);
+        KeyBindings.Add (Key.End, Command.End);
         KeyBindings.Add (Key.A.WithCtrl, Command.SelectAll);
+
+        KeyBindings.Remove (ObjectActivationKey);
         KeyBindings.Add (ObjectActivationKey, Command.Select);
     }
 
@@ -356,6 +358,7 @@ public class TreeView<T> : View, ITreeView where T : class
             {
                 KeyBindings.ReplaceKey (ObjectActivationKey, value);
                 objectActivationKey = value;
+                SetNeedsDisplay ();
             }
         }
     }
@@ -371,7 +374,11 @@ public class TreeView<T> : View, ITreeView where T : class
     public int ScrollOffsetHorizontal
     {
         get => scrollOffsetHorizontal;
-        set => scrollOffsetHorizontal = Math.Max (0, value);
+        set
+        {
+            scrollOffsetHorizontal = Math.Max (0, value);
+            SetNeedsDisplay ();
+        }
     }
 
     /// <summary>The amount of tree view that has been scrolled off the top of the screen (by the user scrolling down).</summary>
@@ -382,7 +389,11 @@ public class TreeView<T> : View, ITreeView where T : class
     public int ScrollOffsetVertical
     {
         get => scrollOffsetVertical;
-        set => scrollOffsetVertical = Math.Max (0, value);
+        set
+        {
+            scrollOffsetVertical = Math.Max (0, value);
+            SetNeedsDisplay ();
+        }
     }
 
     /// <summary>
@@ -432,10 +443,10 @@ public class TreeView<T> : View, ITreeView where T : class
     ///     <para>This method also ensures that the selected object is visible.</para>
     /// </summary>
     /// <returns><see langword="true"/> if <see cref="ObjectActivated"/> was fired.</returns>
-    public bool? ActivateSelectedObjectIfAny ()
+    public bool? ActivateSelectedObjectIfAny (CommandContext ctx)
     {
         // By default, Command.Accept calls OnAccept, so we need to call it here to ensure that the event is fired.
-        if (OnAccept () == true)
+        if (RaiseAccepting (ctx) == true)
         {
             return true;
         }
@@ -979,18 +990,14 @@ public class TreeView<T> : View, ITreeView where T : class
 
     // BUGBUG: OnMouseEvent is internal. TreeView should not be overriding.
     ///<inheritdoc/>
-    protected internal override bool OnMouseEvent (MouseEvent me)
+    protected override bool OnMouseEvent (MouseEventArgs me)
     {
         // If it is not an event we care about
-        if (!me.Flags.HasFlag (MouseFlags.Button1Clicked)
-            && !me.Flags.HasFlag (ObjectActivationButton ?? MouseFlags.Button1DoubleClicked)
-            && !me.Flags.HasFlag (MouseFlags.WheeledDown)
-            && !me.Flags.HasFlag (MouseFlags.WheeledUp)
-            && !me.Flags.HasFlag (MouseFlags.WheeledRight)
-            && !me.Flags.HasFlag (MouseFlags.WheeledLeft))
+        if (me is { IsSingleClicked: false, IsPressed: false, IsReleased: false, IsWheel: false }
+            && !me.Flags.HasFlag (ObjectActivationButton ?? MouseFlags.Button1DoubleClicked))
         {
             // do nothing
-            return base.OnMouseEvent (me);
+            return false;
         }
 
         if (!HasFocus && CanFocus)
@@ -1171,26 +1178,23 @@ public class TreeView<T> : View, ITreeView where T : class
     }
 
     /// <inheritdoc/>
-    public override bool OnProcessKeyDown (Key keyEvent)
+    protected override bool OnKeyDown (Key key)
     {
         if (!Enabled)
         {
             return false;
         }
 
-        // BUGBUG: this should move to OnInvokingKeyBindings
         // If not a keybinding, is the key a searchable key press?
-        if (CollectionNavigatorBase.IsCompatibleKey (keyEvent) && AllowLetterBasedNavigation)
+        if (CollectionNavigatorBase.IsCompatibleKey (key) && AllowLetterBasedNavigation)
         {
-            IReadOnlyCollection<Branch<T>> map;
-
             // If there has been a call to InvalidateMap since the last time
             // we need a new one to reflect the new exposed tree state
-            map = BuildLineMap ();
+            IReadOnlyCollection<Branch<T>> map = BuildLineMap ();
 
             // Find the current selected object within the tree
             int current = map.IndexOf (b => b.Model == SelectedObject);
-            int? newIndex = KeystrokeNavigator?.GetNextMatchingItem (current, (char)keyEvent);
+            int? newIndex = KeystrokeNavigator?.GetNextMatchingItem (current, (char)key);
 
             if (newIndex is int && newIndex != -1)
             {
@@ -1218,7 +1222,7 @@ public class TreeView<T> : View, ITreeView where T : class
             {
                 Move (0, idx - ScrollOffsetVertical);
 
-                return MultiSelect ? new (0, idx - ScrollOffsetVertical) : null ;
+                return MultiSelect ? new (0, idx - ScrollOffsetVertical) : null;
             }
         }
         return base.PositionCursor ();

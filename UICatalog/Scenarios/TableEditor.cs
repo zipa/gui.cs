@@ -752,16 +752,16 @@ public class TableEditor : Scenario
                                          return;
                                      }
 
-                                     _tableView.ScreenToCell (e.MouseEvent.Position, out int? clickedCol);
+                                     _tableView.ScreenToCell (e.Position, out int? clickedCol);
 
                                      if (clickedCol != null)
                                      {
-                                         if (e.MouseEvent.Flags.HasFlag (MouseFlags.Button1Clicked))
+                                         if (e.Flags.HasFlag (MouseFlags.Button1Clicked))
                                          {
                                              // left click in a header
                                              SortColumn (clickedCol.Value);
                                          }
-                                         else if (e.MouseEvent.Flags.HasFlag (MouseFlags.Button3Clicked))
+                                         else if (e.Flags.HasFlag (MouseFlags.Button3Clicked))
                                          {
                                              // right click in a header
                                              ShowHeaderContextMenu (clickedCol.Value, e);
@@ -878,13 +878,13 @@ public class TableEditor : Scenario
 
         var ok = new Button { Text = "Ok", IsDefault = true };
 
-        ok.Accept += (s, e) =>
+        ok.Accepting += (s, e) =>
                      {
                          okPressed = true;
                          Application.RequestStop ();
                      };
         var cancel = new Button { Text = "Cancel" };
-        cancel.Accept += (s, e) => { Application.RequestStop (); };
+        cancel.Accepting += (s, e) => { Application.RequestStop (); };
         var d = new Dialog { Title = title, Buttons = [ok, cancel] };
 
         var lbl = new Label { X = 0, Y = 1, Text = _tableView.Table.ColumnNames [e.Col] };
@@ -1076,13 +1076,13 @@ public class TableEditor : Scenario
         var accepted = false;
         var ok = new Button { Text = "Ok", IsDefault = true };
 
-        ok.Accept += (s, e) =>
+        ok.Accepting += (s, e) =>
                      {
                          accepted = true;
                          Application.RequestStop ();
                      };
         var cancel = new Button { Text = "Cancel" };
-        cancel.Accept += (s, e) => { Application.RequestStop (); };
+        cancel.Accepting += (s, e) => { Application.RequestStop (); };
         var d = new Dialog
         {
             Title = prompt,
@@ -1254,7 +1254,7 @@ public class TableEditor : Scenario
         _tableView.Update ();
     }
 
-    private void ShowHeaderContextMenu (int clickedCol, MouseEventEventArgs e)
+    private void ShowHeaderContextMenu (int clickedCol, MouseEventArgs e)
     {
         if (HasCheckboxes () && clickedCol == 0)
         {
@@ -1266,7 +1266,7 @@ public class TableEditor : Scenario
 
         var contextMenu = new ContextMenu
         {
-            Position = new (e.MouseEvent.Position.X + 1, e.MouseEvent.Position.Y + 1)
+            Position = new (e.Position.X + 1, e.Position.Y + 1)
         };
 
         MenuBarItem menuItems = new (
