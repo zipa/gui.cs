@@ -1394,7 +1394,8 @@ public static class AnsiEscapeSequenceRequestUtils
             case ConsoleKey.Oem102:
                 if (keyInfo.KeyChar == 0)
                 {
-                    // If the keyChar is 0, keyInfo.Key value is not a printable character. 
+                    // If the keyChar is 0, keyInfo.Key value is not a printable character.
+                    System.Diagnostics.Debug.Assert (keyInfo.Key == 0);
 
                     return KeyCode.Null; // MapToKeyCodeModifiers (keyInfo.Modifiers, KeyCode)keyInfo.Key);
                 }

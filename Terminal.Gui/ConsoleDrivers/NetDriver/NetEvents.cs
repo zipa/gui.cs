@@ -125,7 +125,7 @@ internal class NetEvents : IDisposable
 
                         if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is { })
                         {
-                            AnsiEscapeSequenceRequestUtils.InsertArray (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos, _cki);
+                            _cki = AnsiEscapeSequenceRequestUtils.InsertArray (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos, _cki);
                         }
 
                         if ((consoleKeyInfo.KeyChar == (char)KeyCode.Esc && !_isEscSeq)

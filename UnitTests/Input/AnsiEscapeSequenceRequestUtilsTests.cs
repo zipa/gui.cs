@@ -1547,12 +1547,14 @@ public class AnsiEscapeSequenceRequestUtilsTests
 
         if (index is null)
         {
-            Assert.Equal (result, AnsiEscapeSequenceRequestUtils.InsertArray (toIns, cki));
+            cki = AnsiEscapeSequenceRequestUtils.InsertArray (toIns, cki);
         }
         else
         {
-            Assert.Equal (result, AnsiEscapeSequenceRequestUtils.InsertArray (toIns, cki, (int)index));
+            cki = AnsiEscapeSequenceRequestUtils.InsertArray (toIns, cki, (int)index);
         }
+
+        Assert.Equal (result, cki);
     }
 
     private void ClearAll ()
