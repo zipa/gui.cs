@@ -4,11 +4,10 @@ using System.Collections.Concurrent;
 
 namespace Terminal.Gui;
 
-// QUESTION: Can this class be moved/refactored/combined with the new AnsiEscapeSequenceRequest/Response class?
-
 // TODO: This class is a singleton. It should use the singleton pattern.
 /// <summary>
-///     Manages ANSI Escape Sequence requests and responses. The list of <see cref="AnsiEscapeSequenceRequestStatus"/> contains the
+///     Manages ANSI Escape Sequence requests and responses. The list of <see cref="AnsiEscapeSequenceRequestStatus"/>
+///     contains the
 ///     status of the request. Each request is identified by the terminator (e.g. ESC[8t ... t is the terminator).
 /// </summary>
 public class AnsiEscapeSequenceRequests
@@ -50,7 +49,7 @@ public class AnsiEscapeSequenceRequests
         {
             Statuses.TryPeek (out seqReqStatus);
 
-            var result = seqReqStatus?.AnsiRequest.Terminator == terminator;
+            bool result = seqReqStatus?.AnsiRequest.Terminator == terminator;
 
             if (result)
             {
@@ -64,7 +63,8 @@ public class AnsiEscapeSequenceRequests
     }
 
     /// <summary>
-    ///     Removes a request defined by <paramref name="seqReqStatus"/>. If a matching <see cref="AnsiEscapeSequenceRequestStatus"/> is
+    ///     Removes a request defined by <paramref name="seqReqStatus"/>. If a matching
+    ///     <see cref="AnsiEscapeSequenceRequestStatus"/> is
     ///     found and the number of outstanding requests is greater than 0, the number of outstanding requests is decremented.
     ///     If the number of outstanding requests is 0, the <see cref="AnsiEscapeSequenceRequestStatus"/> is removed from
     ///     <see cref="Statuses"/>.
@@ -74,7 +74,7 @@ public class AnsiEscapeSequenceRequests
     {
         lock (Statuses)
         {
-            Statuses.TryDequeue (out var request);
+            Statuses.TryDequeue (out AnsiEscapeSequenceRequestStatus? request);
 
             if (request != seqReqStatus)
             {
