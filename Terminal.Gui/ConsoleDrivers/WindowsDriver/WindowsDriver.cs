@@ -198,15 +198,17 @@ internal class WindowsDriver : ConsoleDriver
     }
 
     private readonly ManualResetEventSlim _waitAnsiResponse = new (false);
-    private readonly CancellationTokenSource _ansiResponseTokenSource = new ();
+    private CancellationTokenSource? _ansiResponseTokenSource;
 
     /// <inheritdoc/>
-    public override string? WriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest)
+    public override bool TryWriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest)
     {
         if (_mainLoopDriver is null)
         {
-            return string.Empty;
+            return false;
         }
+
+        _ansiResponseTokenSource ??= new ();
 
         try
         {
@@ -215,7 +217,7 @@ internal class WindowsDriver : ConsoleDriver
                 ansiRequest.ResponseFromInput += (s, e) =>
                                                  {
                                                      Debug.Assert (s == ansiRequest);
-                                                     Debug.Assert (e == ansiRequest.Response);
+                                                     Debug.Assert (e == ansiRequest.AnsiEscapeSequenceResponse);
 
                                                      _waitAnsiResponse.Set ();
                                                  };
@@ -225,16 +227,11 @@ internal class WindowsDriver : ConsoleDriver
                 _mainLoopDriver._forceRead = true;
             }
 
-            if (!_ansiResponseTokenSource.IsCancellationRequested)
-            {
-                _mainLoopDriver._waitForProbe.Set ();
-
-                _waitAnsiResponse.Wait (_ansiResponseTokenSource.Token);
-            }
+            _waitAnsiResponse.Wait (_ansiResponseTokenSource.Token);
         }
         catch (OperationCanceledException)
         {
-            return string.Empty;
+            return false;
         }
 
         lock (ansiRequest._responseLock)
@@ -244,7 +241,7 @@ internal class WindowsDriver : ConsoleDriver
             if (_mainLoopDriver.EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? request))
             {
                 if (_mainLoopDriver.EscSeqRequests.Statuses.Count > 0
-                    && string.IsNullOrEmpty (request.AnsiRequest.Response))
+                    && string.IsNullOrEmpty (request.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
                 {
                     lock (request.AnsiRequest._responseLock)
                     {
@@ -256,11 +253,11 @@ internal class WindowsDriver : ConsoleDriver
 
             _waitAnsiResponse.Reset ();
 
-            return ansiRequest.Response;
+            return ansiRequest.AnsiEscapeSequenceResponse is { Valid: true };
         }
     }
 
-    public override void WriteRaw (string ansi)
+    internal override void WriteRaw (string ansi)
     {
         WinConsole?.WriteANSI (ansi);
     }

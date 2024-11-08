@@ -62,13 +62,13 @@ internal class NetEvents : IDisposable
             {
                 if (_retries > 1)
                 {
-                    if (EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.Response))
+                    if (EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
                     {
                         lock (seqReqStatus.AnsiRequest._responseLock)
                         {
                             EscSeqRequests.Statuses.TryDequeue (out _);
 
-                            seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, null);
+                            seqReqStatus.AnsiRequest.RaiseResponseFromInput (null);
                         }
                     }
 
@@ -150,7 +150,9 @@ internal class NetEvents : IDisposable
                             if ((_cki is { } && _cki [^1].KeyChar != Key.Esc && consoleKeyInfo.KeyChar != Key.Esc && consoleKeyInfo.KeyChar <= Key.Space)
                                 || (_cki is { } && _cki [^1].KeyChar != '\u001B' && consoleKeyInfo.KeyChar == 127)
                                 || (_cki is { } && char.IsLetter (_cki [^1].KeyChar) && char.IsLower (consoleKeyInfo.KeyChar) && char.IsLetter (consoleKeyInfo.KeyChar))
-                                || (_cki is { Length: > 2 } && char.IsLetter (_cki [^1].KeyChar) && char.IsLetter (consoleKeyInfo.KeyChar)))
+                                || (_cki is { Length: > 2 } && char.IsLetter (_cki [^1].KeyChar) && char.IsLetterOrDigit (consoleKeyInfo.KeyChar))
+                                || (_cki is { Length: > 2 } && char.IsLetter (_cki [^1].KeyChar) && char.IsPunctuation (consoleKeyInfo.KeyChar))
+                                || (_cki is { Length: > 2 } && char.IsLetter (_cki [^1].KeyChar) && char.IsSymbol (consoleKeyInfo.KeyChar)))
                             {
                                 ProcessRequestResponse (ref newConsoleKeyInfo, ref key, _cki, ref mod);
                                 _cki = null;
@@ -341,8 +343,7 @@ internal class NetEvents : IDisposable
 
             lock (seqReqStatus.AnsiRequest._responseLock)
             {
-                seqReqStatus.AnsiRequest.Response = ckiString;
-                seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, ckiString);
+                seqReqStatus.AnsiRequest.RaiseResponseFromInput (ckiString);
             }
 
             return;
@@ -354,8 +355,7 @@ internal class NetEvents : IDisposable
             {
                 lock (result.AnsiRequest._responseLock)
                 {
-                    result.AnsiRequest.Response = AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator;
-                    result.AnsiRequest.RaiseResponseFromInput (result.AnsiRequest, AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator);
+                    result.AnsiRequest.RaiseResponseFromInput (AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator);
 
                     AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator = null;
                 }

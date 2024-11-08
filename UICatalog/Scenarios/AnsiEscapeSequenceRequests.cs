@@ -280,15 +280,14 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
                                          ExpectedResponseValue = string.IsNullOrEmpty (tfValue.Text) ? null : tfValue.Text
                                      };
 
-                                     bool success = AnsiEscapeSequenceRequest.TryRequest (
-                                                                                          ansiEscapeSequenceRequest,
-                                                                                          out AnsiEscapeSequenceResponse ansiEscapeSequenceResponse
-                                                                                         );
+                                     bool success = Application.Driver!.TryWriteAnsiRequest (
+                                                                                             ansiEscapeSequenceRequest
+                                                                                            );
 
-                                     tvResponse.Text = ansiEscapeSequenceResponse.Response ?? "";
-                                     tvError.Text = ansiEscapeSequenceResponse.Error;
-                                     tvValue.Text = ansiEscapeSequenceResponse.ExpectedResponseValue ?? "";
-                                     tvTerminator.Text = ansiEscapeSequenceResponse.Terminator;
+                                     tvResponse.Text = ansiEscapeSequenceRequest.AnsiEscapeSequenceResponse?.Response ?? "";
+                                     tvError.Text = ansiEscapeSequenceRequest.AnsiEscapeSequenceResponse?.Error ?? "";
+                                     tvValue.Text = ansiEscapeSequenceRequest.AnsiEscapeSequenceResponse?.ExpectedResponseValue ?? "";
+                                     tvTerminator.Text = ansiEscapeSequenceRequest.AnsiEscapeSequenceResponse?.Terminator ?? "";
 
                                      if (success)
                                      {
@@ -334,8 +333,11 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
     private void SendDar ()
     {
         _sends.Add (DateTime.Now);
-        string result = Application.Driver.WriteAnsiRequest (AnsiEscapeSequenceRequestUtils.CSI_SendDeviceAttributes);
-        HandleResponse (result);
+        AnsiEscapeSequenceRequest ansiRequest = AnsiEscapeSequenceRequestUtils.CSI_SendDeviceAttributes;
+        if (Application.Driver!.TryWriteAnsiRequest (ansiRequest))
+        {
+            HandleResponse (ansiRequest.AnsiEscapeSequenceResponse.Response);
+        }
     }
 
     private void SetupGraph ()

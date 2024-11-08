@@ -242,13 +242,13 @@ internal class UnixMainLoop : IMainLoopDriver
                     {
                         if (_retries > 1)
                         {
-                            if (EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.Response))
+                            if (EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus seqReqStatus) && seqReqStatus.AnsiRequest.AnsiEscapeSequenceResponse is { } && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.AnsiEscapeSequenceResponse.Response))
                             {
                                 lock (seqReqStatus!.AnsiRequest._responseLock)
                                 {
                                     EscSeqRequests.Statuses.TryDequeue (out _);
 
-                                    seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, null);
+                                    seqReqStatus.AnsiRequest.RaiseResponseFromInput (null);
                                 }
                             }
 
@@ -331,8 +331,7 @@ internal class UnixMainLoop : IMainLoopDriver
 
             lock (seqReqStatus.AnsiRequest._responseLock)
             {
-                seqReqStatus.AnsiRequest.Response = ckiString;
-                seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, ckiString);
+                seqReqStatus.AnsiRequest.RaiseResponseFromInput (ckiString);
             }
 
             return;
@@ -344,8 +343,7 @@ internal class UnixMainLoop : IMainLoopDriver
             {
                 lock (result.AnsiRequest._responseLock)
                 {
-                    result.AnsiRequest.Response = AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator;
-                    result.AnsiRequest.RaiseResponseFromInput (result.AnsiRequest, AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator);
+                    result.AnsiRequest.RaiseResponseFromInput (AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator);
 
                     AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator = null;
                 }

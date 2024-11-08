@@ -45,7 +45,7 @@ public abstract class ConsoleDriver
     /// </summary>
     /// <param name="ansiRequest">The <see cref="AnsiEscapeSequenceRequest"/> object.</param>
     /// <returns>The request response.</returns>
-    public abstract string? WriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest);
+    public abstract bool TryWriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest);
 
     // QUESTION: This appears to be an API to help in debugging. It's only implemented in CursesDriver and WindowsDriver.
     // QUESTION: Can it be factored such that it does not contaminate the ConsoleDriver API?
@@ -53,7 +53,7 @@ public abstract class ConsoleDriver
     ///     Provide proper writing to send escape sequence recognized by the <see cref="ConsoleDriver"/>.
     /// </summary>
     /// <param name="ansi"></param>
-    public abstract void WriteRaw (string ansi);
+    internal abstract void WriteRaw (string ansi);
 
     #endregion ANSI Esc Sequence Handling
 

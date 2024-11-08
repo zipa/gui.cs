@@ -21,8 +21,7 @@ internal class WindowsMainLoop : IMainLoopDriver
     private readonly ManualResetEventSlim _eventReady = new (false);
 
     // The records that we keep fetching
-    private readonly ConcurrentQueue<WindowsConsole.InputRecord []> _resultQueue = new ();
-    internal readonly ManualResetEventSlim _waitForProbe = new (false);
+    private readonly BlockingCollection<WindowsConsole.InputRecord> _resultQueue = new (new ConcurrentQueue<WindowsConsole.InputRecord> ());
     private readonly WindowsConsole? _winConsole;
     private CancellationTokenSource _eventReadyTokenSource = new ();
     private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
@@ -60,11 +59,10 @@ internal class WindowsMainLoop : IMainLoopDriver
 
     bool IMainLoopDriver.EventsPending ()
     {
-        _waitForProbe.Set ();
 #if HACK_CHECK_WINCHANGED
         _winChange.Set ();
 #endif
-        if (_mainLoop!.CheckTimersAndIdleHandlers (out int waitTimeout))
+        if (_resultQueue.Count > 0 || _mainLoop!.CheckTimersAndIdleHandlers (out int waitTimeout))
         {
             return true;
         }
@@ -99,6 +97,7 @@ internal class WindowsMainLoop : IMainLoopDriver
         _eventReadyTokenSource.Dispose ();
         _eventReadyTokenSource = new CancellationTokenSource ();
 
+        // If cancellation was requested then always return true
         return true;
     }
 
@@ -106,12 +105,9 @@ internal class WindowsMainLoop : IMainLoopDriver
     {
         while (_resultQueue.Count > 0)
         {
-            if (_resultQueue.TryDequeue (out WindowsConsole.InputRecord []? inputRecords))
+            if (_resultQueue.TryTake (out WindowsConsole.InputRecord dequeueResult))
             {
-                if (inputRecords is { Length: > 0 })
-                {
-                    ((WindowsDriver)_consoleDriver).ProcessInput (inputRecords [0]);
-                }
+                ((WindowsDriver)_consoleDriver).ProcessInput (dequeueResult);
             }
         }
 #if HACK_CHECK_WINCHANGED
@@ -139,9 +135,7 @@ internal class WindowsMainLoop : IMainLoopDriver
             }
         }
 
-        _waitForProbe.Dispose ();
-
-        _resultQueue.Clear ();
+        _resultQueue.Dispose ();
 
         _eventReadyTokenSource.Cancel ();
         _eventReadyTokenSource.Dispose ();
@@ -162,54 +156,30 @@ internal class WindowsMainLoop : IMainLoopDriver
         {
             try
             {
-                if (!_inputHandlerTokenSource.IsCancellationRequested && !_forceRead)
+                if (_inputHandlerTokenSource.IsCancellationRequested)
                 {
-                    _waitForProbe.Wait (_inputHandlerTokenSource.Token);
+                    return;
+                }
+
+                if (_resultQueue?.Count == 0 || _forceRead)
+                {
+                    WindowsConsole.InputRecord? result = _winConsole!.DequeueInput ();
+
+                    if (result.HasValue)
+                    {
+                        _resultQueue!.Add (result.Value);
+                    }
+                }
+
+                if (!_inputHandlerTokenSource.IsCancellationRequested && _resultQueue?.Count > 0)
+                {
+                    _eventReady.Set ();
                 }
             }
             catch (OperationCanceledException)
             {
-                // Wakes the _waitForProbe if it's waiting
-                _waitForProbe.Set ();
-
                 return;
             }
-            finally
-            {
-                // If IsCancellationRequested is true the code after
-                // the `finally` block will not be executed.
-                if (!_inputHandlerTokenSource.IsCancellationRequested)
-                {
-                    _waitForProbe.Reset ();
-                }
-            }
-
-            if (_resultQueue?.Count == 0 || _forceRead)
-            {
-                while (!_inputHandlerTokenSource.IsCancellationRequested)
-                {
-                    WindowsConsole.InputRecord [] inpRec = _winConsole.ReadConsoleInput ();
-
-                    if (inpRec is { })
-                    {
-                        _resultQueue!.Enqueue (inpRec);
-
-                        break;
-                    }
-
-                    if (!_forceRead)
-                    {
-                        try
-                        {
-                            Task.Delay (100, _inputHandlerTokenSource.Token).Wait (_inputHandlerTokenSource.Token);
-                        }
-                        catch (OperationCanceledException)
-                        { }
-                    }
-                }
-            }
-
-            _eventReady.Set ();
         }
     }
 

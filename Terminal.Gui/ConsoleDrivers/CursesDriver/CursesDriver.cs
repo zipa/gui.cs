@@ -1,4 +1,4 @@
-﻿// TODO: #nullable enable
+﻿#nullable enable
 //
 // Driver.cs: Curses-based Driver
 //
@@ -10,7 +10,7 @@ using Unix.Terminal;
 
 namespace Terminal.Gui;
 
-/// <summary>A Linux/Mac driver based on the Curses libary.</summary>
+/// <summary>A Linux/Mac driver based on the Curses library.</summary>
 internal class CursesDriver : ConsoleDriver
 {
     public override string GetVersionInfo () { return $"{Curses.curses_version ()}"; }
@@ -94,7 +94,7 @@ internal class CursesDriver : ConsoleDriver
         {
             for (var row = 0; row < Rows; row++)
             {
-                if (!_dirtyLines [row])
+                if (!_dirtyLines! [row])
                 {
                     continue;
                 }
@@ -103,7 +103,7 @@ internal class CursesDriver : ConsoleDriver
 
                 for (var col = 0; col < Cols; col++)
                 {
-                    if (Contents [row, col].IsDirty == false)
+                    if (Contents! [row, col].IsDirty == false)
                     {
                         continue;
                     }
@@ -147,14 +147,14 @@ internal class CursesDriver : ConsoleDriver
             if (!RunningUnitTests)
             {
                 Curses.move (Row, Col);
-                _window.wrefresh ();
+                _window?.wrefresh ();
             }
         }
         else
         {
             if (RunningUnitTests
                 || Console.WindowHeight < 1
-                || Contents.Length != Rows * Cols
+                || Contents!.Length != Rows * Cols
                 || Rows != Console.WindowHeight)
             {
                 return;
@@ -178,7 +178,7 @@ internal class CursesDriver : ConsoleDriver
                     return;
                 }
 
-                if (!_dirtyLines [row])
+                if (!_dirtyLines! [row])
                 {
                     continue;
                 }
@@ -222,7 +222,7 @@ internal class CursesDriver : ConsoleDriver
                             lastCol = col;
                         }
 
-                        Attribute attr = Contents [row, col].Attribute.Value;
+                        Attribute attr = Contents [row, col].Attribute!.Value;
 
                         // Performance: Only send the escape sequence if the attribute has changed.
                         if (attr != redrawAttr)
@@ -515,7 +515,7 @@ internal class CursesDriver : ConsoleDriver
             }
             else
             {
-                _mainLoopDriver.WriteRaw (AnsiEscapeSequenceRequestUtils.CSI_SetCursorPosition (Row + 1, Col + 1));
+                _mainLoopDriver?.WriteRaw (AnsiEscapeSequenceRequestUtils.CSI_SetCursorPosition (Row + 1, Col + 1));
             }
         }
     }
@@ -530,22 +530,22 @@ internal class CursesDriver : ConsoleDriver
 
         if (consoleKey == ConsoleKey.Packet)
         {
-            var mod = new ConsoleModifiers ();
+            //var mod = new ConsoleModifiers ();
 
-            if (shift)
-            {
-                mod |= ConsoleModifiers.Shift;
-            }
+            //if (shift)
+            //{
+            //    mod |= ConsoleModifiers.Shift;
+            //}
 
-            if (alt)
-            {
-                mod |= ConsoleModifiers.Alt;
-            }
+            //if (alt)
+            //{
+            //    mod |= ConsoleModifiers.Alt;
+            //}
 
-            if (control)
-            {
-                mod |= ConsoleModifiers.Control;
-            }
+            //if (control)
+            //{
+            //    mod |= ConsoleModifiers.Control;
+            //}
 
             var cKeyInfo = new ConsoleKeyInfo (keyChar, consoleKey, shift, alt, control);
             cKeyInfo = ConsoleKeyMapping.DecodeVKPacketToKConsoleKeyInfo (cKeyInfo);
@@ -560,84 +560,6 @@ internal class CursesDriver : ConsoleDriver
         OnKeyUp (new (key));
 
         //OnKeyPressed (new KeyEventArgsEventArgs (key));
-    }
-
-    // TODO: Unused- Remove
-    private static KeyCode MapCursesKey (int cursesKey)
-    {
-        switch (cursesKey)
-        {
-            case Curses.KeyF1: return KeyCode.F1;
-            case Curses.KeyF2: return KeyCode.F2;
-            case Curses.KeyF3: return KeyCode.F3;
-            case Curses.KeyF4: return KeyCode.F4;
-            case Curses.KeyF5: return KeyCode.F5;
-            case Curses.KeyF6: return KeyCode.F6;
-            case Curses.KeyF7: return KeyCode.F7;
-            case Curses.KeyF8: return KeyCode.F8;
-            case Curses.KeyF9: return KeyCode.F9;
-            case Curses.KeyF10: return KeyCode.F10;
-            case Curses.KeyF11: return KeyCode.F11;
-            case Curses.KeyF12: return KeyCode.F12;
-            case Curses.KeyUp: return KeyCode.CursorUp;
-            case Curses.KeyDown: return KeyCode.CursorDown;
-            case Curses.KeyLeft: return KeyCode.CursorLeft;
-            case Curses.KeyRight: return KeyCode.CursorRight;
-            case Curses.KeyHome: return KeyCode.Home;
-            case Curses.KeyEnd: return KeyCode.End;
-            case Curses.KeyNPage: return KeyCode.PageDown;
-            case Curses.KeyPPage: return KeyCode.PageUp;
-            case Curses.KeyDeleteChar: return KeyCode.Delete;
-            case Curses.KeyInsertChar: return KeyCode.Insert;
-            case Curses.KeyTab: return KeyCode.Tab;
-            case Curses.KeyBackTab: return KeyCode.Tab | KeyCode.ShiftMask;
-            case Curses.KeyBackspace: return KeyCode.Backspace;
-            case Curses.ShiftKeyUp: return KeyCode.CursorUp | KeyCode.ShiftMask;
-            case Curses.ShiftKeyDown: return KeyCode.CursorDown | KeyCode.ShiftMask;
-            case Curses.ShiftKeyLeft: return KeyCode.CursorLeft | KeyCode.ShiftMask;
-            case Curses.ShiftKeyRight: return KeyCode.CursorRight | KeyCode.ShiftMask;
-            case Curses.ShiftKeyHome: return KeyCode.Home | KeyCode.ShiftMask;
-            case Curses.ShiftKeyEnd: return KeyCode.End | KeyCode.ShiftMask;
-            case Curses.ShiftKeyNPage: return KeyCode.PageDown | KeyCode.ShiftMask;
-            case Curses.ShiftKeyPPage: return KeyCode.PageUp | KeyCode.ShiftMask;
-            case Curses.AltKeyUp: return KeyCode.CursorUp | KeyCode.AltMask;
-            case Curses.AltKeyDown: return KeyCode.CursorDown | KeyCode.AltMask;
-            case Curses.AltKeyLeft: return KeyCode.CursorLeft | KeyCode.AltMask;
-            case Curses.AltKeyRight: return KeyCode.CursorRight | KeyCode.AltMask;
-            case Curses.AltKeyHome: return KeyCode.Home | KeyCode.AltMask;
-            case Curses.AltKeyEnd: return KeyCode.End | KeyCode.AltMask;
-            case Curses.AltKeyNPage: return KeyCode.PageDown | KeyCode.AltMask;
-            case Curses.AltKeyPPage: return KeyCode.PageUp | KeyCode.AltMask;
-            case Curses.CtrlKeyUp: return KeyCode.CursorUp | KeyCode.CtrlMask;
-            case Curses.CtrlKeyDown: return KeyCode.CursorDown | KeyCode.CtrlMask;
-            case Curses.CtrlKeyLeft: return KeyCode.CursorLeft | KeyCode.CtrlMask;
-            case Curses.CtrlKeyRight: return KeyCode.CursorRight | KeyCode.CtrlMask;
-            case Curses.CtrlKeyHome: return KeyCode.Home | KeyCode.CtrlMask;
-            case Curses.CtrlKeyEnd: return KeyCode.End | KeyCode.CtrlMask;
-            case Curses.CtrlKeyNPage: return KeyCode.PageDown | KeyCode.CtrlMask;
-            case Curses.CtrlKeyPPage: return KeyCode.PageUp | KeyCode.CtrlMask;
-            case Curses.ShiftCtrlKeyUp: return KeyCode.CursorUp | KeyCode.ShiftMask | KeyCode.CtrlMask;
-            case Curses.ShiftCtrlKeyDown: return KeyCode.CursorDown | KeyCode.ShiftMask | KeyCode.CtrlMask;
-            case Curses.ShiftCtrlKeyLeft: return KeyCode.CursorLeft | KeyCode.ShiftMask | KeyCode.CtrlMask;
-            case Curses.ShiftCtrlKeyRight: return KeyCode.CursorRight | KeyCode.ShiftMask | KeyCode.CtrlMask;
-            case Curses.ShiftCtrlKeyHome: return KeyCode.Home | KeyCode.ShiftMask | KeyCode.CtrlMask;
-            case Curses.ShiftCtrlKeyEnd: return KeyCode.End | KeyCode.ShiftMask | KeyCode.CtrlMask;
-            case Curses.ShiftCtrlKeyNPage: return KeyCode.PageDown | KeyCode.ShiftMask | KeyCode.CtrlMask;
-            case Curses.ShiftCtrlKeyPPage: return KeyCode.PageUp | KeyCode.ShiftMask | KeyCode.CtrlMask;
-            case Curses.ShiftAltKeyUp: return KeyCode.CursorUp | KeyCode.ShiftMask | KeyCode.AltMask;
-            case Curses.ShiftAltKeyDown: return KeyCode.CursorDown | KeyCode.ShiftMask | KeyCode.AltMask;
-            case Curses.ShiftAltKeyLeft: return KeyCode.CursorLeft | KeyCode.ShiftMask | KeyCode.AltMask;
-            case Curses.ShiftAltKeyRight: return KeyCode.CursorRight | KeyCode.ShiftMask | KeyCode.AltMask;
-            case Curses.ShiftAltKeyNPage: return KeyCode.PageDown | KeyCode.ShiftMask | KeyCode.AltMask;
-            case Curses.ShiftAltKeyPPage: return KeyCode.PageUp | KeyCode.ShiftMask | KeyCode.AltMask;
-            case Curses.ShiftAltKeyHome: return KeyCode.Home | KeyCode.ShiftMask | KeyCode.AltMask;
-            case Curses.ShiftAltKeyEnd: return KeyCode.End | KeyCode.ShiftMask | KeyCode.AltMask;
-            case Curses.AltCtrlKeyNPage: return KeyCode.PageDown | KeyCode.AltMask | KeyCode.CtrlMask;
-            case Curses.AltCtrlKeyPPage: return KeyCode.PageUp | KeyCode.AltMask | KeyCode.CtrlMask;
-            case Curses.AltCtrlKeyHome: return KeyCode.Home | KeyCode.AltMask | KeyCode.CtrlMask;
-            case Curses.AltCtrlKeyEnd: return KeyCode.End | KeyCode.AltMask | KeyCode.CtrlMask;
-            default: return KeyCode.Null;
-        }
     }
 
     #endregion Keyboard Support
@@ -672,8 +594,8 @@ internal class CursesDriver : ConsoleDriver
 
     #region Init/End/MainLoop
 
-    public Curses.Window _window;
-    private UnixMainLoop _mainLoopDriver;
+    public Curses.Window? _window;
+    private UnixMainLoop? _mainLoopDriver;
 
     internal override MainLoop Init ()
     {
@@ -801,7 +723,7 @@ internal class CursesDriver : ConsoleDriver
                 break;
             case UnixMainLoop.EventType.WindowSize:
                 Size size = new (inputEvent.WindowSizeEvent.Size.Width, inputEvent.WindowSizeEvent.Size.Height);
-                ProcessWinChange (inputEvent.WindowSizeEvent.Size);
+                ProcessWinChange (size);
 
                 break;
             default:
@@ -821,7 +743,7 @@ internal class CursesDriver : ConsoleDriver
     {
         _ansiResponseTokenSource?.Cancel ();
         _ansiResponseTokenSource?.Dispose ();
-        _waitAnsiResponse?.Dispose ();
+        _waitAnsiResponse.Dispose ();
 
         StopReportingMouseMoves ();
         SetCursorVisibility (CursorVisibility.Default);
@@ -860,27 +782,29 @@ internal class CursesDriver : ConsoleDriver
 
 
     private readonly ManualResetEventSlim _waitAnsiResponse = new (false);
-    private readonly CancellationTokenSource _ansiResponseTokenSource = new ();
+    private CancellationTokenSource? _ansiResponseTokenSource;
 
     /// <inheritdoc/>
-    public override string WriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest)
+    public override bool TryWriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest)
     {
         if (_mainLoopDriver is null)
         {
-            return string.Empty;
+            return false;
         }
+
+        _ansiResponseTokenSource ??= new ();
 
         try
         {
             lock (ansiRequest._responseLock)
             {
                 ansiRequest.ResponseFromInput += (s, e) =>
-                {
-                    Debug.Assert (s == ansiRequest);
-                    Debug.Assert (e == ansiRequest.Response);
+                                                 {
+                                                     Debug.Assert (s == ansiRequest);
+                                                     Debug.Assert (e == ansiRequest.AnsiEscapeSequenceResponse);
 
-                    _waitAnsiResponse.Set ();
-                };
+                                                     _waitAnsiResponse.Set ();
+                                                 };
 
                 _mainLoopDriver.EscSeqRequests.Add (ansiRequest, this);
 
@@ -896,19 +820,19 @@ internal class CursesDriver : ConsoleDriver
         }
         catch (OperationCanceledException)
         {
-            return string.Empty;
+            return false;
         }
 
         lock (ansiRequest._responseLock)
         {
             _mainLoopDriver._forceRead = false;
 
-            if (_mainLoopDriver.EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus request))
+            if (_mainLoopDriver.EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? request))
             {
                 if (_mainLoopDriver.EscSeqRequests.Statuses.Count > 0
-                    && string.IsNullOrEmpty (request.AnsiRequest.Response))
+                    && string.IsNullOrEmpty (request.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
                 {
-                    lock (request!.AnsiRequest._responseLock)
+                    lock (request.AnsiRequest._responseLock)
                     {
                         // Bad request or no response at all
                         _mainLoopDriver.EscSeqRequests.Statuses.TryDequeue (out _);
@@ -918,12 +842,12 @@ internal class CursesDriver : ConsoleDriver
 
             _waitAnsiResponse.Reset ();
 
-            return ansiRequest.Response;
+            return ansiRequest.AnsiEscapeSequenceResponse is { Valid: true };
         }
     }
 
     /// <inheritdoc/>
-    public override void WriteRaw (string ansi) { _mainLoopDriver.WriteRaw (ansi); }
+    internal override void WriteRaw (string ansi) { _mainLoopDriver?.WriteRaw (ansi); }
 
 }
 

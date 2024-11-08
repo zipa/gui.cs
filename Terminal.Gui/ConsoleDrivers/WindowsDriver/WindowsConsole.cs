@@ -1,4 +1,5 @@
 #nullable enable
+using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Terminal.Gui.ConsoleDrivers;
@@ -7,6 +8,8 @@ namespace Terminal.Gui;
 
 internal class WindowsConsole
 {
+    private CancellationTokenSource? _inputReadyCancellationTokenSource;
+    private readonly BlockingCollection<InputRecord> _inputQueue = new (new ConcurrentQueue<InputRecord> ());
     internal WindowsMainLoop? _mainLoop;
 
     public const int STD_OUTPUT_HANDLE = -11;
@@ -32,7 +35,205 @@ internal class WindowsConsole
         newConsoleMode &= ~(uint)ConsoleModes.EnableQuickEditMode;
         newConsoleMode &= ~(uint)ConsoleModes.EnableProcessedInput;
         ConsoleMode = newConsoleMode;
+
+        _inputReadyCancellationTokenSource = new ();
+        Task.Run (ProcessInputQueue, _inputReadyCancellationTokenSource.Token);
     }
+
+    public InputRecord? DequeueInput ()
+    {
+        while (_inputReadyCancellationTokenSource is { })
+        {
+            try
+            {
+                return _inputQueue.Take (_inputReadyCancellationTokenSource.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    public InputRecord? ReadConsoleInput ()
+    {
+        const int BUFFER_SIZE = 1;
+        InputRecord inputRecord = default;
+        uint numberEventsRead = 0;
+        StringBuilder ansiSequence = new StringBuilder ();
+        bool readingSequence = false;
+        bool raisedResponse = false;
+
+        while (!_inputReadyCancellationTokenSource!.IsCancellationRequested)
+        {
+            try
+            {
+                // Peek to check if there is any input available
+                if (PeekConsoleInput (_inputHandle, out _, BUFFER_SIZE, out uint eventsRead) && eventsRead > 0)
+                {
+                    // Read the input since it is available
+                    ReadConsoleInput (
+                                      _inputHandle,
+                                      out inputRecord,
+                                      BUFFER_SIZE,
+                                      out numberEventsRead);
+
+                    if (inputRecord.EventType == EventType.Key)
+                    {
+                        KeyEventRecord keyEvent = inputRecord.KeyEvent;
+
+                        if (keyEvent.bKeyDown)
+                        {
+                            char inputChar = keyEvent.UnicodeChar;
+
+                            // Check if input is part of an ANSI escape sequence
+                            if (inputChar == '\u001B') // Escape character
+                            {
+                                // Peek to check if there is any input available with key event and bKeyDown
+                                if (PeekConsoleInput (_inputHandle, out InputRecord peekRecord, BUFFER_SIZE, out eventsRead) && eventsRead > 0)
+                                {
+                                    if (peekRecord is { EventType: EventType.Key, KeyEvent.bKeyDown: true })
+                                    {
+                                        // It's really an ANSI request response
+                                        readingSequence = true;
+                                        ansiSequence.Clear (); // Start a new sequence
+                                        ansiSequence.Append (inputChar);
+
+                                        continue;
+                                    }
+                                }
+                            }
+                            else if (readingSequence)
+                            {
+                                ansiSequence.Append (inputChar);
+
+                                // Check if the sequence has ended with an expected command terminator
+                                if (_mainLoop?.EscSeqRequests is { } && _mainLoop.EscSeqRequests.HasResponse (inputChar.ToString (), out AnsiEscapeSequenceRequestStatus? seqReqStatus))
+                                {
+                                    // Finished reading the sequence and remove the enqueued request
+                                    _mainLoop.EscSeqRequests.Remove (seqReqStatus);
+
+                                    lock (seqReqStatus!.AnsiRequest._responseLock)
+                                    {
+                                        raisedResponse = true;
+                                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (ansiSequence.ToString ());
+                                        // Clear the terminator for not be enqueued
+                                        inputRecord = default (InputRecord);
+                                    }
+                                }
+
+                                continue;
+                            }
+                        }
+                    }
+                }
+
+                if (readingSequence && !raisedResponse && AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && _mainLoop?.EscSeqRequests is { Statuses.Count: > 0 })
+                {
+                    _mainLoop.EscSeqRequests.Statuses.TryDequeue (out AnsiEscapeSequenceRequestStatus? seqReqStatus);
+
+                    lock (seqReqStatus!.AnsiRequest._responseLock)
+                    {
+                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (ansiSequence.ToString ());
+                        // Clear the terminator for not be enqueued
+                        inputRecord = default (InputRecord);
+                    }
+
+                    _retries = 0;
+                }
+                else if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && _mainLoop?.EscSeqRequests is { Statuses.Count: > 0 })
+                {
+                    if (_retries > 1)
+                    {
+                        if (_mainLoop.EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
+                        {
+                            lock (seqReqStatus.AnsiRequest._responseLock)
+                            {
+                                _mainLoop.EscSeqRequests.Statuses.TryDequeue (out _);
+
+                                seqReqStatus.AnsiRequest.RaiseResponseFromInput (null);
+                                // Clear the terminator for not be enqueued
+                                inputRecord = default (InputRecord);
+                            }
+                        }
+
+                        _retries = 0;
+                    }
+                    else
+                    {
+                        _retries++;
+                    }
+                }
+                else
+                {
+                    _retries = 0;
+                }
+
+                if (numberEventsRead > 0)
+                {
+                    return inputRecord;
+                }
+
+                if (!_forceRead)
+                {
+                    try
+                    {
+                        Task.Delay (100, _inputReadyCancellationTokenSource.Token).Wait (_inputReadyCancellationTokenSource.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return null;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        return null;
+    }
+
+    internal bool _forceRead;
+
+    private void ProcessInputQueue ()
+    {
+        while (_inputReadyCancellationTokenSource is { IsCancellationRequested: false })
+        {
+            try
+            {
+                if (_inputQueue.Count == 0 || _forceRead)
+                {
+                    while (_inputReadyCancellationTokenSource is { IsCancellationRequested: false })
+                    {
+                        try
+                        {
+                            InputRecord? inpRec = ReadConsoleInput ();
+
+                            if (inpRec is { })
+                            {
+                                _inputQueue.Add (inpRec.Value);
+
+                                break;
+                            }
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            return;
+                        }
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+        }
+    }
+
 
     private CharInfo []? _originalStdOutChars;
 
@@ -310,6 +511,10 @@ internal class WindowsConsole
         //}
 
         //_screenBuffer = nint.Zero;
+
+        _inputReadyCancellationTokenSource?.Cancel ();
+        _inputReadyCancellationTokenSource?.Dispose ();
+        _inputReadyCancellationTokenSource = null;
     }
 
     //internal Size GetConsoleBufferWindow (out Point position)
@@ -895,133 +1100,6 @@ internal class WindowsConsole
     }
 
     private int _retries;
-
-    public InputRecord []? ReadConsoleInput ()
-    {
-        const int BUFFER_SIZE = 1;
-        InputRecord inputRecord = default;
-        uint numberEventsRead = 0;
-        StringBuilder ansiSequence = new StringBuilder ();
-        bool readingSequence = false;
-        bool raisedResponse = false;
-
-        while (true)
-        {
-            try
-            {
-                // Peek to check if there is any input available
-                if (PeekConsoleInput (_inputHandle, out _, BUFFER_SIZE, out uint eventsRead) && eventsRead > 0)
-                {
-                    // Read the input since it is available
-                    ReadConsoleInput (
-                                      _inputHandle,
-                                      out inputRecord,
-                                      BUFFER_SIZE,
-                                      out numberEventsRead);
-
-                    if (inputRecord.EventType == EventType.Key)
-                    {
-                        KeyEventRecord keyEvent = inputRecord.KeyEvent;
-
-                        if (keyEvent.bKeyDown)
-                        {
-                            char inputChar = keyEvent.UnicodeChar;
-
-                            // Check if input is part of an ANSI escape sequence
-                            if (inputChar == '\u001B') // Escape character
-                            {
-                                // Peek to check if there is any input available with key event and bKeyDown
-                                if (PeekConsoleInput (_inputHandle, out InputRecord peekRecord, BUFFER_SIZE, out eventsRead) && eventsRead > 0)
-                                {
-                                    if (peekRecord is { EventType: EventType.Key, KeyEvent.bKeyDown: true })
-                                    {
-                                        // It's really an ANSI request response
-                                        readingSequence = true;
-                                        ansiSequence.Clear (); // Start a new sequence
-                                        ansiSequence.Append (inputChar);
-
-                                        continue;
-                                    }
-                                }
-                            }
-                            else if (readingSequence)
-                            {
-                                ansiSequence.Append (inputChar);
-
-                                // Check if the sequence has ended with an expected command terminator
-                                if (_mainLoop?.EscSeqRequests is { } && _mainLoop.EscSeqRequests.HasResponse (inputChar.ToString (), out AnsiEscapeSequenceRequestStatus? seqReqStatus))
-                                {
-                                    // Finished reading the sequence and remove the enqueued request
-                                    _mainLoop.EscSeqRequests.Remove (seqReqStatus);
-
-                                    lock (seqReqStatus!.AnsiRequest._responseLock)
-                                    {
-                                        raisedResponse = true;
-                                        seqReqStatus.AnsiRequest.Response = ansiSequence.ToString ();
-                                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, seqReqStatus.AnsiRequest.Response);
-                                        // Clear the terminator for not be enqueued
-                                        inputRecord = default (InputRecord);
-                                    }
-                                }
-
-                                continue;
-                            }
-                        }
-                    }
-                }
-
-                if (readingSequence && !raisedResponse && AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && _mainLoop?.EscSeqRequests is { Statuses.Count: > 0 })
-                {
-                    _mainLoop.EscSeqRequests.Statuses.TryDequeue (out AnsiEscapeSequenceRequestStatus? seqReqStatus);
-
-                    lock (seqReqStatus!.AnsiRequest._responseLock)
-                    {
-                        seqReqStatus.AnsiRequest.Response = ansiSequence.ToString ();
-                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, seqReqStatus.AnsiRequest.Response);
-                        // Clear the terminator for not be enqueued
-                        inputRecord = default (InputRecord);
-                    }
-
-                    _retries = 0;
-                }
-                else if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && _mainLoop?.EscSeqRequests is { Statuses.Count: > 0 })
-                {
-                    if (_retries > 1)
-                    {
-                        if (_mainLoop.EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.Response))
-                        {
-                            lock (seqReqStatus.AnsiRequest._responseLock)
-                            {
-                                _mainLoop.EscSeqRequests.Statuses.TryDequeue (out _);
-
-                                seqReqStatus.AnsiRequest.RaiseResponseFromInput (seqReqStatus.AnsiRequest, null);
-                                // Clear the terminator for not be enqueued
-                                inputRecord = default (InputRecord);
-                            }
-                        }
-
-                        _retries = 0;
-                    }
-                    else
-                    {
-                        _retries++;
-                    }
-                }
-                else
-                {
-                    _retries = 0;
-                }
-
-                return (numberEventsRead == 0
-                            ? null
-                            : [inputRecord])!;
-            }
-            catch (Exception)
-            {
-                return null;
-            }
-        }
-    }
 
 #if false // Not needed on the constructor. Perhaps could be used on resizing. To study.
 		[DllImport ("kernel32.dll", ExactSpelling = true)]

@@ -4,9 +4,7 @@
 //
 
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
-using static Terminal.Gui.ConsoleDrivers.ConsoleKeyMapping;
 using static Terminal.Gui.NetEvents;
 
 namespace Terminal.Gui;
@@ -367,7 +365,7 @@ internal class NetDriver : ConsoleDriver
         _ansiResponseTokenSource?.Cancel ();
         _ansiResponseTokenSource?.Dispose ();
 
-        _waitAnsiResponse?.Dispose ();
+        _waitAnsiResponse.Dispose ();
 
         if (!RunningUnitTests)
         {
@@ -406,19 +404,19 @@ internal class NetDriver : ConsoleDriver
     private const int COLOR_WHITE = 37;
     private const int COLOR_YELLOW = 33;
 
-    // Cache the list of ConsoleColor values.
-    [UnconditionalSuppressMessage (
-                                      "AOT",
-                                      "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.",
-                                      Justification = "<Pending>")]
-    private static readonly HashSet<int> ConsoleColorValues = new (
-                                                                   Enum.GetValues (typeof (ConsoleColor))
-                                                                       .OfType<ConsoleColor> ()
-                                                                       .Select (c => (int)c)
-                                                                  );
+    //// Cache the list of ConsoleColor values.
+    //[UnconditionalSuppressMessage (
+    //                                  "AOT",
+    //                                  "IL3050:Calling members annotated with 'RequiresDynamicCodeAttribute' may break functionality when AOT compiling.",
+    //                                  Justification = "<Pending>")]
+    //private static readonly HashSet<int> ConsoleColorValues = new (
+    //                                                               Enum.GetValues (typeof (ConsoleColor))
+    //                                                                   .OfType<ConsoleColor> ()
+    //                                                                   .Select (c => (int)c)
+    //                                                              );
 
     // Dictionary for mapping ConsoleColor values to the values used by System.Net.Console.
-    private static readonly Dictionary<ConsoleColor, int> colorMap = new ()
+    private static readonly Dictionary<ConsoleColor, int> _colorMap = new ()
     {
         { ConsoleColor.Black, COLOR_BLACK },
         { ConsoleColor.DarkBlue, COLOR_BLUE },
@@ -441,7 +439,7 @@ internal class NetDriver : ConsoleDriver
     // Map a ConsoleColor to a platform dependent value.
     private int MapColors (ConsoleColor color, bool isForeground = true)
     {
-        return colorMap.TryGetValue (color, out int colorValue) ? colorValue + (isForeground ? 0 : 10) : 0;
+        return _colorMap.TryGetValue (color, out int colorValue) ? colorValue + (isForeground ? 0 : 10) : 0;
     }
 
     #endregion
@@ -705,22 +703,22 @@ internal class NetDriver : ConsoleDriver
         { }
     }
 
-    private ConsoleKeyInfo FromVKPacketToKConsoleKeyInfo (ConsoleKeyInfo consoleKeyInfo)
-    {
-        if (consoleKeyInfo.Key != ConsoleKey.Packet)
-        {
-            return consoleKeyInfo;
-        }
+    //private ConsoleKeyInfo FromVKPacketToKConsoleKeyInfo (ConsoleKeyInfo consoleKeyInfo)
+    //{
+    //    if (consoleKeyInfo.Key != ConsoleKey.Packet)
+    //    {
+    //        return consoleKeyInfo;
+    //    }
 
-        ConsoleModifiers mod = consoleKeyInfo.Modifiers;
-        bool shift = (mod & ConsoleModifiers.Shift) != 0;
-        bool alt = (mod & ConsoleModifiers.Alt) != 0;
-        bool control = (mod & ConsoleModifiers.Control) != 0;
+    //    ConsoleModifiers mod = consoleKeyInfo.Modifiers;
+    //    bool shift = (mod & ConsoleModifiers.Shift) != 0;
+    //    bool alt = (mod & ConsoleModifiers.Alt) != 0;
+    //    bool control = (mod & ConsoleModifiers.Control) != 0;
 
-        ConsoleKeyInfo cKeyInfo = DecodeVKPacketToKConsoleKeyInfo (consoleKeyInfo);
+    //    ConsoleKeyInfo cKeyInfo = DecodeVKPacketToKConsoleKeyInfo (consoleKeyInfo);
 
-        return new (cKeyInfo.KeyChar, cKeyInfo.Key, shift, alt, control);
-    }
+    //    return new (cKeyInfo.KeyChar, cKeyInfo.Key, shift, alt, control);
+    //}
 
     #endregion Keyboard Handling
 
@@ -730,13 +728,13 @@ internal class NetDriver : ConsoleDriver
     private CancellationTokenSource? _ansiResponseTokenSource;
 
     /// <inheritdoc/>
-    public override string? WriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest)
+    public override bool TryWriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest)
     {
         lock (ansiRequest._responseLock)
         {
             if (_mainLoopDriver is null)
             {
-                return string.Empty;
+                return false;
             }
         }
 
@@ -749,21 +747,20 @@ internal class NetDriver : ConsoleDriver
                 ansiRequest.ResponseFromInput += (s, e) =>
                                                  {
                                                      Debug.Assert (s == ansiRequest);
-                                                     Debug.Assert (e == ansiRequest.Response);
+                                                     Debug.Assert (e == ansiRequest.AnsiEscapeSequenceResponse);
 
                                                      _waitAnsiResponse.Set ();
                                                  };
 
-                _mainLoopDriver._netEvents.EscSeqRequests.Add (ansiRequest);
+                _mainLoopDriver._netEvents!.EscSeqRequests.Add (ansiRequest);
 
                 _mainLoopDriver._netEvents._forceRead = true;
             }
-
             _waitAnsiResponse.Wait (_ansiResponseTokenSource.Token);
         }
         catch (OperationCanceledException)
         {
-            return string.Empty;
+            return false;
         }
 
         lock (ansiRequest._responseLock)
@@ -773,7 +770,7 @@ internal class NetDriver : ConsoleDriver
             if (_mainLoopDriver._netEvents.EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? request))
             {
                 if (_mainLoopDriver._netEvents.EscSeqRequests.Statuses.Count > 0
-                    && string.IsNullOrEmpty (request.AnsiRequest.Response))
+                    && string.IsNullOrEmpty (request.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
                 {
                     lock (request.AnsiRequest._responseLock)
                     {
@@ -785,12 +782,12 @@ internal class NetDriver : ConsoleDriver
 
             _waitAnsiResponse.Reset ();
 
-            return ansiRequest.Response;
+            return ansiRequest.AnsiEscapeSequenceResponse is { Valid: true };
         }
     }
 
     /// <inheritdoc/>
-    public override void WriteRaw (string ansi) { throw new NotImplementedException (); }
+    internal override void WriteRaw (string ansi) { throw new NotImplementedException (); }
 
     private volatile bool _winSizeChanging;
 

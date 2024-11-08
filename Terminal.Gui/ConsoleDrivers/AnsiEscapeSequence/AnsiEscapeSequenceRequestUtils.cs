@@ -183,7 +183,7 @@ public static class AnsiEscapeSequenceRequestUtils
     /// <summary>
     ///     Decodes an ANSI escape sequence.
     /// </summary>
-    /// <param name="escSeqRequests">The <see cref="EscSeqRequests"/> which may contain a request.</param>
+    /// <param name="escSeqRequests">The <see cref="AnsiEscapeSequenceRequests"/> which may contain a request.</param>
     /// <param name="newConsoleKeyInfo">The <see cref="ConsoleKeyInfo"/> which may change.</param>
     /// <param name="key">The <see cref="ConsoleKey"/> which may change.</param>
     /// <param name="cki">The <see cref="ConsoleKeyInfo"/> array.</param>
@@ -195,7 +195,7 @@ public static class AnsiEscapeSequenceRequestUtils
     /// <param name="isMouse">Indicates if the escape sequence is a mouse event.</param>
     /// <param name="buttonState">The <see cref="MouseFlags"/> button state.</param>
     /// <param name="pos">The <see cref="MouseFlags"/> position.</param>
-    /// <param name="seqReqStatus">The <see cref="EscSeqReqStatus"/> object.</param>
+    /// <param name="seqReqStatus">The <see cref="AnsiEscapeSequenceRequestStatus"/> object.</param>
     /// <param name="continuousButtonPressedHandler">The handler that will process the event.</param>
     public static void DecodeEscSeq (
         AnsiEscapeSequenceRequests? escSeqRequests,
