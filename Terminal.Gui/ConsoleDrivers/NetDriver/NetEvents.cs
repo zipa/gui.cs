@@ -29,7 +29,7 @@ internal class NetEvents : IDisposable
 
     public InputResult? DequeueInput ()
     {
-        while (_inputReadyCancellationTokenSource is { })
+        while (_inputReadyCancellationTokenSource is { Token.IsCancellationRequested: false })
         {
             _waitForStart.Set ();
 
@@ -163,11 +163,20 @@ internal class NetEvents : IDisposable
                             return;
                         }
 
+                        var ckiAlreadyResized = false;
+
                         if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is { })
                         {
+                            ckiAlreadyResized = true;
+
                             _cki = AnsiEscapeSequenceRequestUtils.ResizeArray (consoleKeyInfo, _cki);
                             _cki = AnsiEscapeSequenceRequestUtils.InsertArray (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos, _cki);
                             AnsiEscapeSequenceRequestUtils.IncompleteCkInfos = null;
+
+                            if (_cki.Length > 1 && _cki [0].KeyChar == '\u001B')
+                            {
+                                _isEscSeq = true;
+                            }
                         }
 
                         if ((consoleKeyInfo.KeyChar == (char)KeyCode.Esc && !_isEscSeq)
@@ -205,7 +214,11 @@ internal class NetEvents : IDisposable
                             else
                             {
                                 newConsoleKeyInfo = consoleKeyInfo;
-                                _cki = AnsiEscapeSequenceRequestUtils.ResizeArray (consoleKeyInfo, _cki);
+
+                                if (!ckiAlreadyResized)
+                                {
+                                    _cki = AnsiEscapeSequenceRequestUtils.ResizeArray (consoleKeyInfo, _cki);
+                                }
 
                                 if (Console.KeyAvailable)
                                 {
