@@ -178,19 +178,15 @@ public partial class View
         else if (viewportSettings.HasFlag (ViewportSettings.AllowNegativeX))
         {
             _horizontalScrollBar.Value.AutoHide = false;
-            _horizontalScrollBar.Value.ShowScrollIndicator = false;
         }
         else if (viewportSettings.HasFlag (ViewportSettings.AllowNegativeY))
         {
             _verticalScrollBar.Value.AutoHide = false;
-            _verticalScrollBar.Value.ShowScrollIndicator = false;
         }
         else if (viewportSettings.HasFlag (ViewportSettings.AllowNegativeLocation))
         {
             _horizontalScrollBar.Value.AutoHide = false;
-            _horizontalScrollBar.Value.ShowScrollIndicator = false;
             _verticalScrollBar.Value.AutoHide = false;
-            _verticalScrollBar.Value.ShowScrollIndicator = false;
         }
         else if (viewportSettings.HasFlag (ViewportSettings.AllowXGreaterThanContentWidth))
         {

@@ -1,249 +1,293 @@
 ﻿#nullable enable
 
-using System.ComponentModel;
+using System.Diagnostics;
 
 namespace Terminal.Gui;
 
-internal class ScrollSlider : View
+/// <summary>
+///     The ScrollSlider can be dragged with the mouse, constrained by the size of the Viewport of it's superview. The ScrollSlider can be
+///     oriented either vertically or horizontally.
+/// </summary>
+/// <remarks>
+///     <para>
+///         If <see cref="View.Text"/> is set, it will be displayed centered within the slider. Set
+///         <see cref="ShowPercent"/> to automatically have the Text
+///         be show what percent the slider is to the Superview's Viewport size.
+///     </para>
+///     <para>
+///        Used to represent the proportion of the visible content to the Viewport in a <see cref="Scroll"/>.
+///     </para>
+/// </remarks>
+public class ScrollSlider : View, IOrientation, IDesignable
 {
+    /// <summary>
+    ///     Initializes a new instance.
+    /// </summary>
     public ScrollSlider ()
     {
         Id = "scrollSlider";
-        Width = Dim.Auto (DimAutoStyle.Content);
-        Height = Dim.Auto (DimAutoStyle.Content);
         WantMousePositionReports = true;
+
+        _orientationHelper = new (this); // Do not use object initializer!
+        _orientationHelper.Orientation = Orientation.Vertical;
+        _orientationHelper.OrientationChanging += (sender, e) => OrientationChanging?.Invoke (this, e);
+        _orientationHelper.OrientationChanged += (sender, e) => OrientationChanged?.Invoke (this, e);
+
+        OnOrientationChanged (Orientation);
+
+        HighlightStyle = HighlightStyle.Hover;
+
+        // Default size is 1
+        Size = 1;
     }
 
-    private int _lastLocation = -1;
-    private ColorScheme? _savedColorScheme;
+    #region IOrientation members
+    private readonly OrientationHelper _orientationHelper;
 
-    public void AdjustSlider ()
+    /// <inheritdoc/>
+    public Orientation Orientation
     {
-        if (!IsInitialized)
-        {
-            return;
-        }
-
-        (int Location, int Dimension) sliderLocationAndDimension = GetSliderLocationDimensionFromPosition ();
-        X = SuperViewAsScroll.Orientation == Orientation.Vertical ? 0 : sliderLocationAndDimension.Location;
-        Y = SuperViewAsScroll.Orientation == Orientation.Vertical ? sliderLocationAndDimension.Location : 0;
-
-        SetContentSize (
-                        new (
-                             SuperViewAsScroll.Orientation == Orientation.Vertical
-                                 ? SuperViewAsScroll.GetContentSize ().Width
-                                 : sliderLocationAndDimension.Dimension,
-                             SuperViewAsScroll.Orientation == Orientation.Vertical
-                                 ? sliderLocationAndDimension.Dimension
-                                 : SuperViewAsScroll.GetContentSize ().Height
-                            ));
-        SetSliderText ();
+        get => _orientationHelper.Orientation;
+        set => _orientationHelper.Orientation = value;
     }
 
     /// <inheritdoc/>
-    public override Attribute GetNormalColor ()
+    public event EventHandler<CancelEventArgs<Orientation>>? OrientationChanging;
+
+    /// <inheritdoc/>
+    public event EventHandler<EventArgs<Orientation>>? OrientationChanged;
+
+    /// <inheritdoc/>
+    public void OnOrientationChanged (Orientation newOrientation)
     {
-        if (_savedColorScheme is null)
+        TextDirection = Orientation == Orientation.Vertical ? TextDirection.TopBottom_LeftRight : TextDirection.LeftRight_TopBottom;
+        TextAlignment = Alignment.Center;
+        VerticalTextAlignment = Alignment.Center;
+
+        // Reset Position to 0 when changing orientation
+        X = 0;
+        Y = 0;
+
+        // Reset Size to 1 when changing orientation
+        if (Orientation == Orientation.Vertical)
         {
-            ColorScheme = new () { Normal = new (SuperViewAsScroll.ColorScheme.HotNormal.Foreground, SuperViewAsScroll.ColorScheme.HotNormal.Foreground) };
+            Width = Dim.Fill ();
+            Height = 1;
         }
         else
         {
-            ColorScheme = new () { Normal = new (SuperViewAsScroll.ColorScheme.Normal.Foreground, SuperViewAsScroll.ColorScheme.Normal.Foreground) };
+            Width = 1;
+            Height = Dim.Fill ();
         }
+    }
 
-        return base.GetNormalColor ();
+    #endregion
+
+    /// <inheritdoc/>
+    protected override bool OnClearingViewport ()
+    {
+        FillRect (Viewport, Glyphs.ContinuousMeterSegment);
+
+        return true;
+    }
+
+    /// <summary>
+    ///     Gets or sets whether the ScrollSlider will set <see cref="View.Text"/> to show the percentage the slider
+    ///     takes up within the <see cref="View.SuperView"/>'s Viewport.
+    /// </summary>
+    public bool ShowPercent { get; set; }
+
+    /// <summary>
+    ///     Gets or sets the size of the ScrollSlider. This is a helper that simply gets or sets the Width or Height depending on the
+    ///     <see cref="Orientation"/>. The size will be constrained such that the ScrollSlider will not go outside the Viewport of
+    ///     the <see cref="View.SuperView"/>. The size will never be less than 1.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         The dimension of the ScrollSlider that is perpendicular to the <see cref="Orientation"/> will be set to <see cref="Dim.Fill()"/>
+    ///     </para>
+    /// </remarks>
+    public int Size
+    {
+        get
+        {
+            if (Orientation == Orientation.Vertical)
+            {
+                return Frame.Height;
+            }
+            else
+            {
+                return Frame.Width;
+            }
+        }
+        set
+        {
+            if (Orientation == Orientation.Vertical)
+            {
+                Width = Dim.Fill ();
+                int viewport = Math.Max (1, SuperView?.Viewport.Height ?? 1);
+                Height = Math.Clamp (value, 1, viewport);
+            }
+            else
+            {
+                int viewport = Math.Max (1, SuperView?.Viewport.Width ?? 1);
+                Width = Math.Clamp (value, 1, viewport);
+                Height = Dim.Fill ();
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Gets or sets the position of the ScrollSlider. This is a helper that simply gets or sets the X or Y depending on the
+    ///     <see cref="Orientation"/>. The position will be constrained such that the ScrollSlider will not go outside the Viewport of
+    ///     the <see cref="View.SuperView"/>.
+    /// </summary>
+    public int Position
+    {
+        get
+        {
+            if (Orientation == Orientation.Vertical)
+            {
+                return Frame.Y;
+            }
+            else
+            {
+                return Frame.X;
+            }
+        }
+        set
+        {
+            if (Orientation == Orientation.Vertical)
+            {
+                int viewport = Math.Max (1, SuperView?.Viewport.Height ?? 1);
+                Y = Math.Clamp (value, 0, viewport - Frame.Height);
+            }
+            else
+            {
+                int viewport = Math.Max (1, SuperView?.Viewport.Width ?? 1);
+                X = Math.Clamp (value, 0, viewport - Frame.Width);
+            }
+        }
     }
 
     /// <inheritdoc/>
-    /// <inheritdoc />
-    protected override bool OnMouseEnter (CancelEventArgs eventArgs)
+    protected override bool OnDrawingText ()
     {
-        _savedColorScheme ??= SuperViewAsScroll.ColorScheme;
-
-        ColorScheme = new ()
+        if (!ShowPercent)
         {
-            Normal = new (_savedColorScheme.HotNormal.Foreground, _savedColorScheme.HotNormal.Foreground),
-            Focus = new (_savedColorScheme.Focus.Foreground, _savedColorScheme.Focus.Foreground),
-            HotNormal = new (_savedColorScheme.Normal.Foreground, _savedColorScheme.Normal.Foreground),
-            HotFocus = new (_savedColorScheme.HotFocus.Foreground, _savedColorScheme.HotFocus.Foreground),
-            Disabled = new (_savedColorScheme.Disabled.Foreground, _savedColorScheme.Disabled.Foreground)
-        };
-        return true;
+            return false;
+        }
+
+        if (Orientation == Orientation.Vertical)
+        {
+            Text = $"{(int)Math.Round ((double)Viewport.Height / SuperView!.GetContentSize ().Height * 100)}%";
+        }
+        else
+        {
+            Text = $"{(int)Math.Round ((double)Viewport.Width / SuperView!.GetContentSize ().Width * 100)}%";
+        }
+
+        return false;
     }
+
+    /// <inheritdoc/>
+    public override Attribute GetNormalColor () { return base.GetHotNormalColor (); }
+
+    ///// <inheritdoc/>
+    private int _lastLocation = -1;
 
     /// <inheritdoc/>
     protected override bool OnMouseEvent (MouseEventArgs mouseEvent)
     {
-        int location = SuperViewAsScroll.Orientation == Orientation.Vertical ? mouseEvent.Position.Y : mouseEvent.Position.X;
-        int offset = _lastLocation > -1 ? location - _lastLocation : 0;
-        int barSize = SuperViewAsScroll.Orientation == Orientation.Vertical ? SuperViewAsScroll.Viewport.Height : SuperViewAsScroll.Viewport.Width;
-
-        if (mouseEvent.Flags.HasFlag (MouseFlags.Button1Pressed) && _lastLocation == -1)
+        if (SuperView is null)
         {
-            if (Application.MouseGrabView != this)
+            return false;
+        }
+
+        int location = Orientation == Orientation.Vertical ? mouseEvent.Position.Y : mouseEvent.Position.X;
+        int offset = _lastLocation > -1 ? location - _lastLocation : 0;
+        int superViewDimension = Orientation == Orientation.Vertical ? SuperView!.Viewport.Height : SuperView!.Viewport.Width;
+
+        if (mouseEvent.IsPressed || mouseEvent.IsReleased)
+        {
+            if (mouseEvent.Flags.HasFlag (MouseFlags.Button1Pressed) && _lastLocation == -1)
             {
-                Application.GrabMouse (this);
-                _lastLocation = location;
+                if (Application.MouseGrabView != this)
+                {
+                    Application.GrabMouse (this);
+                    _lastLocation = location;
+                }
+            }
+            else if (mouseEvent.Flags == (MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition))
+            {
+                if (Orientation == Orientation.Vertical)
+                {
+                    Y = Frame.Y + offset < 0
+                            ? 0
+                            : Frame.Y + offset + Frame.Height > superViewDimension
+                                ? Math.Max (superViewDimension - Frame.Height, 0)
+                                : Frame.Y + offset;
+                }
+                else
+                {
+                    X = Frame.X + offset < 0
+                            ? 0
+                            : Frame.X + offset + Frame.Width > superViewDimension
+                                ? Math.Max (superViewDimension - Frame.Width, 0)
+                                : Frame.X + offset;
+                }
+            }
+            else if (mouseEvent.Flags == MouseFlags.Button1Released)
+            {
+                _lastLocation = -1;
+
+                if (Application.MouseGrabView == this)
+                {
+                    Application.UngrabMouse ();
+                }
             }
         }
-        else if (mouseEvent.Flags == (MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition))
+
+        if (mouseEvent.IsWheel)
         {
-            if (SuperViewAsScroll.Orientation == Orientation.Vertical)
+            if (mouseEvent.Flags.HasFlag (MouseFlags.WheeledDown) || mouseEvent.Flags.HasFlag (MouseFlags.WheeledRight))
+            {
+                offset = 1;
+            }
+            else if (mouseEvent.Flags.HasFlag (MouseFlags.WheeledDown) || mouseEvent.Flags.HasFlag (MouseFlags.WheeledLeft))
+            {
+                offset = -1;
+            }
+
+            if (Orientation == Orientation.Vertical)
             {
                 Y = Frame.Y + offset < 0
                         ? 0
-                        : Frame.Y + offset + Frame.Height > barSize
-                            ? Math.Max (barSize - Frame.Height, 0)
+                        : Frame.Y + offset + Frame.Height > superViewDimension
+                            ? Math.Max (superViewDimension - Frame.Height, 0)
                             : Frame.Y + offset;
-
-                SuperViewAsScroll.Position = GetPositionFromSliderLocation (Frame.Y);
             }
             else
             {
                 X = Frame.X + offset < 0
                         ? 0
-                        : Frame.X + offset + Frame.Width > barSize
-                            ? Math.Max (barSize - Frame.Width, 0)
+                        : Frame.X + offset + Frame.Width > superViewDimension
+                            ? Math.Max (superViewDimension - Frame.Width, 0)
                             : Frame.X + offset;
-
-                SuperViewAsScroll.Position = GetPositionFromSliderLocation (Frame.X);
             }
-        }
-        else if (mouseEvent.Flags == MouseFlags.Button1Released)
-        {
-            _lastLocation = -1;
-
-            if (Application.MouseGrabView == this)
-            {
-                Application.UngrabMouse ();
-            }
-        }
-        else if ((mouseEvent.Flags == MouseFlags.WheeledDown && SuperViewAsScroll.Orientation == Orientation.Vertical)
-                 || (mouseEvent.Flags == MouseFlags.WheeledRight && SuperViewAsScroll.Orientation == Orientation.Horizontal))
-        {
-            SuperViewAsScroll.Position = Math.Min (
-                                                   SuperViewAsScroll.Position + 1,
-                                                   SuperViewAsScroll.KeepContentInAllViewport ? SuperViewAsScroll.Size - barSize : SuperViewAsScroll.Size - 1);
-        }
-        else if ((mouseEvent.Flags == MouseFlags.WheeledUp && SuperViewAsScroll.Orientation == Orientation.Vertical)
-                 || (mouseEvent.Flags == MouseFlags.WheeledLeft && SuperViewAsScroll.Orientation == Orientation.Horizontal))
-        {
-            SuperViewAsScroll.Position = Math.Max (SuperViewAsScroll.Position - 1, 0);
-        }
-        else if (mouseEvent.Flags != MouseFlags.ReportMousePosition)
-        {
-            return base.OnMouseEvent (mouseEvent);
         }
 
         return true;
     }
 
-    /// <inheritdoc/>
     /// <inheritdoc />
-    protected override void OnMouseLeave ()
+    public bool EnableForDesign ()
     {
-        if (_savedColorScheme is { } /*&& !mouseEvent.Flags.HasFlag (MouseFlags.Button1Pressed)*/)
-        {
-            ColorScheme = _savedColorScheme;
-            _savedColorScheme = null;
-        }
+        Orientation = Orientation.Vertical;
+        Width = 1;
+        Height = 10;
+        ShowPercent = true;
+
+        return true;
     }
-
-    internal int GetPositionFromSliderLocation (int location)
-    {
-        if (SuperViewAsScroll.GetContentSize ().Height == 0 || SuperViewAsScroll.GetContentSize ().Width == 0)
-        {
-            return 0;
-        }
-
-        int scrollSize = SuperViewAsScroll.Orientation == Orientation.Vertical
-                             ? SuperViewAsScroll.GetContentSize ().Height
-                             : SuperViewAsScroll.GetContentSize ().Width;
-
-        // Ensure the Position is valid if the slider is at end
-        // We use Frame here instead of ContentSize because even if the slider has a margin or border, Frame indicates the actual size
-        if ((SuperViewAsScroll.Orientation == Orientation.Vertical && location + Frame.Height >= scrollSize)
-            || (SuperViewAsScroll.Orientation == Orientation.Horizontal && location + Frame.Width >= scrollSize))
-        {
-            return SuperViewAsScroll.Size - scrollSize + (SuperViewAsScroll.KeepContentInAllViewport ? 0 : scrollSize);
-        }
-
-        return (int)Math.Min (
-                              Math.Round (
-                                          (double)(location * (SuperViewAsScroll.Size + (SuperViewAsScroll.KeepContentInAllViewport ? 0 : scrollSize))
-                                                   + location)
-                                          / scrollSize),
-                              SuperViewAsScroll.Size - scrollSize + (SuperViewAsScroll.KeepContentInAllViewport ? 0 : scrollSize));
-    }
-
-    internal (int Location, int Dimension) GetSliderLocationDimensionFromPosition ()
-    {
-        if (SuperViewAsScroll.GetContentSize ().Height == 0 || SuperViewAsScroll.GetContentSize ().Width == 0)
-        {
-            return new (0, 0);
-        }
-
-        int scrollSize = SuperViewAsScroll.Orientation == Orientation.Vertical
-                             ? SuperViewAsScroll.GetContentSize ().Height
-                             : SuperViewAsScroll.GetContentSize ().Width;
-        int location;
-        int dimension;
-
-        if (SuperViewAsScroll.Size > 0)
-        {
-            dimension = (int)Math.Min (
-                                       Math.Max (
-                                                 Math.Ceiling (
-                                                               (double)scrollSize
-                                                               * scrollSize
-                                                               / (SuperViewAsScroll.Size + (SuperViewAsScroll.KeepContentInAllViewport ? 0 : scrollSize))),
-                                                 1),
-                                       scrollSize);
-
-            // Ensure the Position is valid
-            if (SuperViewAsScroll.Position > 0
-                && SuperViewAsScroll.Position + scrollSize > SuperViewAsScroll.Size + (SuperViewAsScroll.KeepContentInAllViewport ? 0 : scrollSize))
-            {
-                SuperViewAsScroll.Position = SuperViewAsScroll.KeepContentInAllViewport ? SuperViewAsScroll.Size - scrollSize : SuperViewAsScroll.Size - 1;
-            }
-
-            location = (int)Math.Min (
-                                      Math.Round (
-                                                  (double)SuperViewAsScroll.Position
-                                                  * scrollSize
-                                                  / (SuperViewAsScroll.Size + (SuperViewAsScroll.KeepContentInAllViewport ? 0 : scrollSize))),
-                                      scrollSize - dimension);
-
-            if (SuperViewAsScroll.Position == SuperViewAsScroll.Size - scrollSize + (SuperViewAsScroll.KeepContentInAllViewport ? 0 : scrollSize)
-                && location + dimension < scrollSize)
-            {
-                location = scrollSize - dimension;
-            }
-        }
-        else
-        {
-            location = 0;
-            dimension = scrollSize;
-        }
-
-        return new (location, dimension);
-    }
-
-    // TODO: I think you should create a new `internal` view named "ScrollSlider" with an `Orientation` property. It should inherit from View and override GetNormalColor and the mouse events
-    // that can be moved within it's Superview, constrained to move only horizontally or vertically depending on Orientation.
-    // This will really simplify a lot of this.
-
-    private void SetSliderText ()
-    {
-        TextDirection = SuperViewAsScroll.Orientation == Orientation.Vertical ? TextDirection.TopBottom_LeftRight : TextDirection.LeftRight_TopBottom;
-
-        // QUESTION: Should these Glyphs be configurable via CM?
-        Text = string.Concat (
-                              Enumerable.Repeat (
-                                                 Glyphs.ContinuousMeterSegment.ToString (),
-                                                 SuperViewAsScroll.GetContentSize ().Width * SuperViewAsScroll.GetContentSize ().Height));
-    }
-
-    private Scroll SuperViewAsScroll => (SuperView as Scroll)!;
 }

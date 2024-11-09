@@ -14,8 +14,6 @@ public class ScrollDemo : Scenario
     {
         Application.Init ();
 
-        _diagnosticFlags = View.Diagnostics;
-
         Window app = new ()
         {
             Title = $"{Application.QuitKey} to Quit - Scenario: {GetName ()}"
@@ -24,7 +22,7 @@ public class ScrollDemo : Scenario
         var editor = new AdornmentsEditor ();
         app.Add (editor);
 
-        var view = new FrameView
+        var frameView = new FrameView
         {
             Title = "Demo View",
             X = Pos.Right (editor),
@@ -32,20 +30,25 @@ public class ScrollDemo : Scenario
             Height = Dim.Fill (),
             ColorScheme = Colors.ColorSchemes ["Base"]
         };
-        app.Add (view);
+        app.Add (frameView);
 
         var scroll = new Scroll
         {
             X = Pos.AnchorEnd (),
-            Height = Dim.Fill (),
+            ShowPercent = true
         };
-        view.Add (scroll);
+        frameView.Add (scroll);
+
+        app.Loaded += (s, e) =>
+                                 {
+                                     scroll.Size = frameView.Viewport.Height;
+                                 };
 
         var lblWidthHeight = new Label
         {
             Text = "Width/Height:"
         };
-        view.Add (lblWidthHeight);
+        frameView.Add (lblWidthHeight);
 
         NumericUpDown<int> scrollWidthHeight = new ()
         {
@@ -53,7 +56,7 @@ public class ScrollDemo : Scenario
             X = Pos.Right (lblWidthHeight) + 1,
             Y = Pos.Top (lblWidthHeight)
         };
-        view.Add (scrollWidthHeight);
+        frameView.Add (scrollWidthHeight);
 
         scrollWidthHeight.ValueChanging += (s, e) =>
                                            {
@@ -85,7 +88,7 @@ public class ScrollDemo : Scenario
             RadioLabels = ["Vertical", "Horizontal"],
             Orientation = Orientation.Horizontal
         };
-        view.Add (rgOrientation);
+        frameView.Add (rgOrientation);
 
         rgOrientation.SelectedItemChanged += (s, e) =>
                                              {
@@ -122,7 +125,7 @@ public class ScrollDemo : Scenario
             Y = Pos.Bottom (rgOrientation),
             Text = "Size:"
         };
-        view.Add (lblSize);
+        frameView.Add (lblSize);
 
         NumericUpDown<int> scrollSize = new ()
         {
@@ -130,7 +133,8 @@ public class ScrollDemo : Scenario
             X = Pos.Right (lblSize) + 1,
             Y = Pos.Top (lblSize)
         };
-        view.Add (scrollSize);
+        scroll.SizeChanged += (sender, args) => scrollSize.Value = args.CurrentValue;
+        frameView.Add (scrollSize);
 
         scrollSize.ValueChanging += (s, e) =>
                                     {
@@ -152,7 +156,7 @@ public class ScrollDemo : Scenario
             Y = Pos.Bottom (lblSize),
             Text = "Position:"
         };
-        view.Add (lblPosition);
+        frameView.Add (lblPosition);
 
         NumericUpDown<int> scrollPosition = new ()
         {
@@ -160,7 +164,7 @@ public class ScrollDemo : Scenario
             X = Pos.Right (lblPosition) + 1,
             Y = Pos.Top (lblPosition)
         };
-        view.Add (scrollPosition);
+        frameView.Add (scrollPosition);
 
         scrollPosition.ValueChanging += (s, e) =>
                                         {
@@ -182,19 +186,19 @@ public class ScrollDemo : Scenario
                                             }
                                         };
 
-        var ckbKeepContentInAllViewport = new CheckBox
-        {
-            Y = Pos.Bottom (scrollPosition), Text = "KeepContentInAllViewport",
-            CheckedState = scroll.KeepContentInAllViewport ? CheckState.Checked : CheckState.UnChecked
-        };
-        ckbKeepContentInAllViewport.CheckedStateChanging += (s, e) => scroll.KeepContentInAllViewport = e.NewValue == CheckState.Checked;
-        view.Add (ckbKeepContentInAllViewport);
+        //var ckbKeepContentInAllViewport = new CheckBox
+        //{
+        //    Y = Pos.Bottom (scrollPosition), Text = "KeepContentInAllViewport",
+        //    CheckedState = scroll.KeepContentInAllViewport ? CheckState.Checked : CheckState.UnChecked
+        //};
+        //ckbKeepContentInAllViewport.CheckedStateChanging += (s, e) => scroll.KeepContentInAllViewport = e.NewValue == CheckState.Checked;
+        //view.Add (ckbKeepContentInAllViewport);
 
         var lblSizeChanged = new Label
         {
-            Y = Pos.Bottom (ckbKeepContentInAllViewport) + 1
+            Y = Pos.Bottom (scrollPosition) + 1
         };
-        view.Add (lblSizeChanged);
+        frameView.Add (lblSizeChanged);
 
         scroll.SizeChanged += (s, e) =>
                               {
@@ -210,7 +214,7 @@ public class ScrollDemo : Scenario
         {
             Y = Pos.Bottom (lblSizeChanged)
         };
-        view.Add (lblPosChanging);
+        frameView.Add (lblPosChanging);
 
         scroll.PositionChanging += (s, e) => { lblPosChanging.Text = $"PositionChanging event - CurrentValue: {e.CurrentValue}; NewValue: {e.NewValue}"; };
 
@@ -218,7 +222,7 @@ public class ScrollDemo : Scenario
         {
             Y = Pos.Bottom (lblPosChanging)
         };
-        view.Add (lblPositionChanged);
+        frameView.Add (lblPositionChanged);
 
         scroll.PositionChanged += (s, e) =>
                                   {
@@ -230,22 +234,22 @@ public class ScrollDemo : Scenario
         {
             Y = Pos.Bottom (lblPositionChanged) + 1
         };
-        view.Add (lblScrollFrame);
+        frameView.Add (lblScrollFrame);
 
         var lblScrollViewport = new Label
         {
             Y = Pos.Bottom (lblScrollFrame)
         };
-        view.Add (lblScrollViewport);
+        frameView.Add (lblScrollViewport);
 
         var lblScrollContentSize = new Label
         {
             Y = Pos.Bottom (lblScrollViewport)
         };
-        view.Add (lblScrollContentSize);
+        frameView.Add (lblScrollContentSize);
 
 
-        scroll.LayoutComplete += (s, e) =>
+        scroll.SubviewsLaidOut += (s, e) =>
                                  {
                                      lblScrollFrame.Text = $"Scroll Frame: {scroll.Frame.ToString ()}";
                                      lblScrollViewport.Text = $"Scroll Viewport: {scroll.Viewport.ToString ()}";

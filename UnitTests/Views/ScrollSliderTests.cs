@@ -1,104 +1,448 @@
-﻿namespace Terminal.Gui.ViewsTests;
+﻿using Microsoft.VisualStudio.TestPlatform.Utilities;
+using Xunit.Abstractions;
+using static Unix.Terminal.Delegates;
 
-public class ScrollSliderTests
+namespace Terminal.Gui.ViewsTests;
+
+public class ScrollSliderTests (ITestOutputHelper output)
 {
-    // Test for GetPositionFromSliderLocation to GetSliderLocationDimensionFromPosition
-    [Theory]
-    [InlineData (Orientation.Vertical, 26, 236, -1, 0)]
-    [InlineData (Orientation.Vertical, 26, 236, 0, 0)]
-    [InlineData (Orientation.Vertical, 26, 236, 5, 46)]
-    [InlineData (Orientation.Vertical, 26, 236, 10, 91)]
-    [InlineData (Orientation.Vertical, 26, 236, 15, 137)]
-    [InlineData (Orientation.Vertical, 26, 236, 20, 182)]
-    [InlineData (Orientation.Vertical, 26, 236, 26, 210)]
-    [InlineData (Orientation.Vertical, 26, 236, 27, 210)]
-    [InlineData (Orientation.Vertical, 37, 236, 2, 13)]
-    [InlineData (Orientation.Vertical, 42, 236, 29, 164)]
-    public void Test_Position_Location_Consistency_KeepContentInAllViewport_True (Orientation orientation, int scrollLength, int size, int location, int expectedPosition)
+
+    [Fact]
+    public void Constructor_Initializes_Correctly ()
     {
-        // Arrange
-        Scroll scroll = new ()
-        {
-            Orientation = orientation,
-            Width = orientation == Orientation.Vertical ? 1 : scrollLength,
-            Height = orientation == Orientation.Vertical ? scrollLength : 1,
-            Size = size,
-            KeepContentInAllViewport = true
-        };
-
-        scroll.BeginInit ();
-        scroll.EndInit ();
-
-        // Act
-        scroll.Position = scroll._slider.GetPositionFromSliderLocation (location);
-        (int calculatedLocation, int calculatedDimension) = scroll._slider.GetSliderLocationDimensionFromPosition ();
-        int calculatedPosition = scroll._slider.GetPositionFromSliderLocation (calculatedLocation);
-
-        // Assert
-        AssertLocation (scrollLength, location, calculatedLocation, calculatedDimension);
-
-        Assert.Equal (scroll.Position, expectedPosition);
-        Assert.Equal (calculatedPosition, expectedPosition);
+        var scrollSlider = new ScrollSlider ();
+        Assert.False (scrollSlider.CanFocus);
+        Assert.Equal (Orientation.Vertical, scrollSlider.Orientation);
+        Assert.Equal (TextDirection.TopBottom_LeftRight, scrollSlider.TextDirection);
+        Assert.Equal (Alignment.Center, scrollSlider.TextAlignment);
+        Assert.Equal (Alignment.Center, scrollSlider.VerticalTextAlignment);
+        scrollSlider.Layout ();
+        Assert.Equal (0, scrollSlider.Frame.X);
+        Assert.Equal (0, scrollSlider.Frame.Y);
+        Assert.Equal (1, scrollSlider.Size);
     }
 
-    // Randomized Test for more extensive testing
-    [Theory]
-    [InlineData (Orientation.Vertical, true, 26, 236, 5)]
-    [InlineData (Orientation.Vertical, false, 26, 236, 5)]
-    public void Test_Position_Location_Consistency_Random (Orientation orientation, bool keepContentInAllViewport, int scrollLength, int size, int testCount)
+    [Fact]
+    public void OnOrientationChanged_Sets_Size_To_1 ()
     {
-        var random = new Random ();
-
-        Scroll scroll = new ()
-        {
-            Orientation = orientation,
-            Width = orientation == Orientation.Vertical ? 1 : scrollLength,
-            Height = orientation == Orientation.Vertical ? scrollLength : 1,
-            Size = size,
-            KeepContentInAllViewport = keepContentInAllViewport
-        };
-
-        scroll.BeginInit ();
-        scroll.EndInit ();
-
-        // Number of random tests to run
-        for (var i = 0; i < testCount; i++)
-        {
-            // Arrange
-            int randomScrollLength = random.Next (0, 60); // Random content size length
-            int randomLocation = random.Next (0, randomScrollLength); // Random location
-
-            scroll.Width = scroll.Orientation == Orientation.Vertical ? 1 : randomScrollLength;
-            scroll.Height = scroll.Orientation == Orientation.Vertical ? randomScrollLength : 1;
-
-            // Slider may have changed content size
-            scroll.LayoutSubviews ();
-
-            // Act
-            scroll.Position = scroll._slider.GetPositionFromSliderLocation (randomLocation);
-            (int calculatedLocation, int calculatedDimension) = scroll._slider.GetSliderLocationDimensionFromPosition ();
-            int calculatedPosition = scroll._slider.GetPositionFromSliderLocation (calculatedLocation);
-
-            // Assert
-            AssertLocation (randomScrollLength, randomLocation, calculatedLocation, calculatedDimension);
-
-            Assert.Equal (scroll.Position, calculatedPosition);
-        }
+        var scrollSlider = new ScrollSlider ();
+        scrollSlider.Orientation = Orientation.Horizontal;
+        Assert.Equal (1, scrollSlider.Size);
     }
 
-    private static void AssertLocation (int scrollLength, int location, int calculatedLocation, int calculatedDimension)
+    [Fact]
+    public void OnOrientationChanged_Sets_Position_To_0 ()
     {
-        if (location < 0)
+        View super = new View ()
         {
-            Assert.Equal (0, calculatedLocation);
-        }
-        else if (location + calculatedDimension >= scrollLength)
+            Id = "super",
+            Width = 10,
+            Height = 10
+        };
+        var scrollSlider = new ScrollSlider ()
         {
-            Assert.Equal (scrollLength - calculatedDimension, calculatedLocation);
-        }
-        else
+        };
+        super.Add (scrollSlider);
+        scrollSlider.Layout ();
+        scrollSlider.Position = 1;
+        scrollSlider.Orientation = Orientation.Horizontal;
+
+        Assert.Equal (0, scrollSlider.Position);
+    }
+
+    [Fact]
+    public void OnOrientationChanged_Updates_TextDirection_And_TextAlignment ()
+    {
+        var scrollSlider = new ScrollSlider ();
+        scrollSlider.Orientation = Orientation.Horizontal;
+        Assert.Equal (TextDirection.LeftRight_TopBottom, scrollSlider.TextDirection);
+        Assert.Equal (Alignment.Center, scrollSlider.TextAlignment);
+        Assert.Equal (Alignment.Center, scrollSlider.VerticalTextAlignment);
+    }
+
+    [Theory]
+    [CombinatorialData]
+    public void Size_Clamps_To_SuperView_Viewport ([CombinatorialRange (-1, 6, 1)] int sliderSize, Orientation orientation)
+    {
+        var super = new View
         {
-            Assert.Equal (location, calculatedLocation);
-        }
+            Id = "super",
+            Width = 5,
+            Height = 5
+        };
+
+        var scrollSlider = new ScrollSlider
+        {
+            Orientation = orientation,
+        };
+        super.Add (scrollSlider);
+        scrollSlider.Layout ();
+
+        scrollSlider.Size = sliderSize;
+        scrollSlider.Layout ();
+
+        Assert.True (scrollSlider.Size > 0);
+
+        Assert.True (scrollSlider.Size <= 5);
+    }
+
+    [Theory]
+    [CombinatorialData]
+    public void Position_Clamps_To_SuperView_Viewport ([CombinatorialRange (1, 6, 1)] int sliderSize, [CombinatorialRange (-1, 6, 1)] int sliderPosition, Orientation orientation)
+    {
+        var super = new View
+        {
+            Id = "super",
+            Width = 5,
+            Height = 5
+        };
+
+        var scrollSlider = new ScrollSlider
+        {
+            Orientation = orientation,
+        };
+        super.Add (scrollSlider);
+        scrollSlider.Size = sliderSize;
+        scrollSlider.Layout ();
+
+        scrollSlider.Position = sliderPosition;
+        scrollSlider.Layout ();
+
+        Assert.True (scrollSlider.Position <= 5);
+    }
+
+    [Theory]
+    [SetupFakeDriver]
+    [InlineData (
+                    3,
+                    10,
+                    1,
+                    0,
+                    Orientation.Vertical,
+                    @"
+┌───┐
+│███│
+│   │
+│   │
+│   │
+│   │
+│   │
+│   │
+│   │
+│   │
+│   │
+└───┘")]
+    [InlineData (
+                    10,
+                    1,
+                    3,
+                    0,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│███       │
+└──────────┘")]
+    [InlineData (
+                    3,
+                    10,
+                    3,
+                    0,
+                    Orientation.Vertical,
+                    @"
+┌───┐
+│███│
+│███│
+│███│
+│   │
+│   │
+│   │
+│   │
+│   │
+│   │
+│   │
+└───┘")]
+
+
+
+    [InlineData (
+                    3,
+                    10,
+                    5,
+                    0,
+                    Orientation.Vertical,
+                    @"
+┌───┐
+│███│
+│███│
+│███│
+│███│
+│███│
+│   │
+│   │
+│   │
+│   │
+│   │
+└───┘")]
+
+    [InlineData (
+                    3,
+                    10,
+                    5,
+                    1,
+                    Orientation.Vertical,
+                    @"
+┌───┐
+│   │
+│███│
+│███│
+│███│
+│███│
+│███│
+│   │
+│   │
+│   │
+│   │
+└───┘")]
+    [InlineData (
+                    3,
+                    10,
+                    5,
+                    4,
+                    Orientation.Vertical,
+                    @"
+┌───┐
+│   │
+│   │
+│   │
+│   │
+│███│
+│███│
+│███│
+│███│
+│███│
+│   │
+└───┘")]
+    [InlineData (
+                    3,
+                    10,
+                    5,
+                    5,
+                    Orientation.Vertical,
+                    @"
+┌───┐
+│   │
+│   │
+│   │
+│   │
+│   │
+│███│
+│███│
+│███│
+│███│
+│███│
+└───┘")]
+    [InlineData (
+                    3,
+                    10,
+                    5,
+                    6,
+                    Orientation.Vertical,
+                    @"
+┌───┐
+│   │
+│   │
+│   │
+│   │
+│   │
+│███│
+│███│
+│███│
+│███│
+│███│
+└───┘")]
+
+    [InlineData (
+                    3,
+                    10,
+                    10,
+                    0,
+                    Orientation.Vertical,
+                    @"
+┌───┐
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+└───┘")]
+
+    [InlineData (
+                    3,
+                    10,
+                    10,
+                    5,
+                    Orientation.Vertical,
+                    @"
+┌───┐
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+└───┘")]
+    [InlineData (
+                    3,
+                    10,
+                    11,
+                    0,
+                    Orientation.Vertical,
+                    @"
+┌───┐
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+└───┘")]
+
+    [InlineData (
+                    10,
+                    3,
+                    5,
+                    0,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│█████     │
+│█████     │
+│█████     │
+└──────────┘")]
+
+    [InlineData (
+                    10,
+                    3,
+                    5,
+                    1,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│ █████    │
+│ █████    │
+│ █████    │
+└──────────┘")]
+    [InlineData (
+                    10,
+                    3,
+                    5,
+                    4,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│    █████ │
+│    █████ │
+│    █████ │
+└──────────┘")]
+    [InlineData (
+                    10,
+                    3,
+                    5,
+                    5,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│     █████│
+│     █████│
+│     █████│
+└──────────┘")]
+    [InlineData (
+                    10,
+                    3,
+                    5,
+                    6,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│     █████│
+│     █████│
+│     █████│
+└──────────┘")]
+
+    [InlineData (
+                    10,
+                    3,
+                    10,
+                    0,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│██████████│
+│██████████│
+│██████████│
+└──────────┘")]
+
+    [InlineData (
+                    10,
+                    3,
+                    10,
+                    5,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│██████████│
+│██████████│
+│██████████│
+└──────────┘")]
+    [InlineData (
+                    10,
+                    3,
+                    11,
+                    0,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│██████████│
+│██████████│
+│██████████│
+└──────────┘")]
+    public void Draws_Correctly (int superViewportWidth, int superViewportHeight, int sliderSize, int sliderPosition, Orientation orientation, string expected)
+    {
+        var super = new Window
+        {
+            Id = "super",
+            Width = superViewportWidth + 2,
+            Height = superViewportHeight + 2
+        };
+
+        var scrollSlider = new ScrollSlider
+        {
+            Orientation = orientation,
+        };
+        super.Add (scrollSlider);
+
+        scrollSlider.Size = sliderSize;
+        scrollSlider.Layout ();
+        scrollSlider.Position = sliderPosition;
+
+        super.BeginInit ();
+        super.EndInit ();
+        super.Layout ();
+        super.Draw ();
+
+        _ = TestHelpers.AssertDriverContentsWithFrameAre (expected, output);
     }
 }

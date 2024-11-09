@@ -9,7 +9,7 @@ namespace UICatalog.Scenarios;
 [ScenarioCategory ("Menus")]
 public class ContextMenus : Scenario
 {
-    private readonly List<CultureInfo> _cultureInfos = Application.SupportedCultures;
+    private List<CultureInfo> _cultureInfos = null;
     private ContextMenu _contextMenu = new ();
     private bool _forceMinimumPosToZero = true;
     private MenuItem _miForceMinimumPosToZero;
@@ -22,6 +22,7 @@ public class ContextMenus : Scenario
         // Init
         Application.Init ();
 
+        _cultureInfos = Application.SupportedCultures;
         // Setup - Create a top-level application window and configure it.
         Window appWindow = new ()
         {
@@ -109,6 +110,11 @@ public class ContextMenus : Scenario
     {
         List<MenuItem> supportedCultures = new ();
         int index = -1;
+
+        if (_cultureInfos == null)
+        {
+            return supportedCultures.ToArray ();
+        }
 
         foreach (CultureInfo c in _cultureInfos)
         {
@@ -282,5 +288,44 @@ public class ContextMenus : Scenario
         _tfBottomRight.ContextMenu.ForceMinimumPosToZero = _forceMinimumPosToZero;
 
         _contextMenu.Show (menuItems);
+    }
+
+
+    public override List<Key> GetDemoKeyStrokes ()
+    {
+        var keys = new List<Key> ();
+
+        keys.Add (Key.F10.WithShift);
+        keys.Add (Key.Esc);
+
+        keys.Add (Key.Space.WithCtrl);
+        keys.Add (Key.CursorDown);
+        keys.Add (Key.Enter);
+
+        keys.Add (Key.F10.WithShift);
+        keys.Add (Key.Esc);
+
+        keys.Add (Key.Tab);
+
+        keys.Add (Key.Space.WithCtrl);
+        keys.Add (Key.CursorDown);
+        keys.Add (Key.CursorDown);
+        keys.Add (Key.Enter);
+
+        keys.Add (Key.F10.WithShift);
+        keys.Add (Key.Esc);
+
+        keys.Add (Key.Tab);
+
+        keys.Add (Key.Space.WithCtrl);
+        keys.Add (Key.CursorDown);
+        keys.Add (Key.CursorDown);
+        keys.Add (Key.CursorDown);
+        keys.Add (Key.Enter);
+
+        keys.Add (Key.F10.WithShift);
+        keys.Add (Key.Esc);
+
+        return keys;
     }
 }

@@ -4,7 +4,6 @@ using Terminal.Gui;
 namespace UICatalog.Scenarios;
 
 [ScenarioMetadata ("ScrollBar Demo", "Demonstrates using ScrollBar view.")]
-[ScenarioCategory ("Drawing")]
 [ScenarioCategory ("Scrolling")]
 public class ScrollBarDemo : Scenario
 {
@@ -14,11 +13,10 @@ public class ScrollBarDemo : Scenario
     {
         Application.Init ();
 
-        _diagnosticFlags = View.Diagnostics;
-
         Window app = new ()
         {
-            Title = $"{Application.QuitKey} to Quit - Scenario: {GetName ()}"
+            Title = $"{Application.QuitKey} to Quit - Scenario: {GetName ()}",
+            Arrangement = ViewArrangement.Fixed
         };
 
         var editor = new AdornmentsEditor ();
@@ -37,9 +35,14 @@ public class ScrollBarDemo : Scenario
         var scrollBar = new ScrollBar
         {
             X = Pos.AnchorEnd (),
-            Height = Dim.Fill (),
+            //ShowPercent = true
         };
         view.Add (scrollBar);
+
+        app.Loaded += (s, e) =>
+                      {
+                          scrollBar.Size = scrollBar.Viewport.Height;
+                      };
 
         var lblWidthHeight = new Label
         {
@@ -187,25 +190,17 @@ public class ScrollBarDemo : Scenario
         ckbAutoHide.CheckedStateChanging += (s, e) => scrollBar.AutoHide = e.NewValue == CheckState.Checked;
         view.Add (ckbAutoHide);
 
-        var ckbShowScrollIndicator = new CheckBox
-        {
-            X = Pos.Right (ckbAutoHide) + 1, Y = Pos.Bottom (scrollPosition), Text = "ShowScrollIndicator",
-            CheckedState = scrollBar.ShowScrollIndicator ? CheckState.Checked : CheckState.UnChecked
-        };
-        ckbShowScrollIndicator.CheckedStateChanging += (s, e) => scrollBar.ShowScrollIndicator = e.NewValue == CheckState.Checked;
-        view.Add (ckbShowScrollIndicator);
-
-        var ckbKeepContentInAllViewport = new CheckBox
-        {
-            X = Pos.Right (ckbShowScrollIndicator) + 1, Y = Pos.Bottom (scrollPosition), Text = "KeepContentInAllViewport",
-            CheckedState = scrollBar.KeepContentInAllViewport ? CheckState.Checked : CheckState.UnChecked
-        };
-        ckbKeepContentInAllViewport.CheckedStateChanging += (s, e) => scrollBar.KeepContentInAllViewport = e.NewValue == CheckState.Checked;
-        view.Add (ckbKeepContentInAllViewport);
+        //var ckbKeepContentInAllViewport = new CheckBox
+        //{
+        //    X = Pos.Right (ckbShowScrollIndicator) + 1, Y = Pos.Bottom (scrollPosition), Text = "KeepContentInAllViewport",
+        //    CheckedState = scrollBar.KeepContentInAllViewport ? CheckState.Checked : CheckState.UnChecked
+        //};
+        //ckbKeepContentInAllViewport.CheckedStateChanging += (s, e) => scrollBar.KeepContentInAllViewport = e.NewValue == CheckState.Checked;
+        //view.Add (ckbKeepContentInAllViewport);
 
         var lblSizeChanged = new Label
         {
-            Y = Pos.Bottom (ckbShowScrollIndicator) + 1
+            Y = Pos.Bottom (ckbAutoHide) + 1
         };
         view.Add (lblSizeChanged);
 
@@ -258,7 +253,7 @@ public class ScrollBarDemo : Scenario
         view.Add (lblScrollContentSize);
 
 
-        scrollBar.LayoutComplete += (s, e) =>
+        scrollBar.SubviewsLaidOut += (s, e) =>
                                  {
                                      lblScrollFrame.Text = $"ScrollBar Frame: {scrollBar.Frame.ToString ()}";
                                      lblScrollViewport.Text = $"ScrollBar Viewport: {scrollBar.Viewport.ToString ()}";

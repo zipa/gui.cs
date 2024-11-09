@@ -17,6 +17,7 @@ public class ContentScrolling : Scenario
     {
         public ScrollingDemoView ()
         {
+            Id = "ScrollingDemoView";
             Width = Dim.Fill ();
             Height = Dim.Fill ();
             ColorScheme = Colors.ColorSchemes ["Base"];
@@ -47,7 +48,7 @@ public class ContentScrolling : Scenario
             // Add a status label to the border that shows Viewport and ContentSize values. Bit of a hack.
             // TODO: Move to Padding with controls
             Border.Add (new Label { X = 20 });
-            LayoutComplete += VirtualDemoView_LayoutComplete;
+            ViewportChanged += VirtualDemoView_LayoutComplete;
 
             MouseEvent += VirtualDemoView_MouseEvent;
         }
@@ -81,18 +82,14 @@ public class ContentScrolling : Scenario
             }
         }
 
-        private void VirtualDemoView_LayoutComplete (object sender, LayoutEventArgs e)
+        private void VirtualDemoView_LayoutComplete (object sender, DrawEventArgs drawEventArgs)
         {
-            Label status = Border.Subviews.OfType<Label> ().FirstOrDefault ();
+            Label frameLabel = Padding.Subviews.OfType<Label> ().FirstOrDefault ();
 
-            if (status is { })
+            if (frameLabel is { })
             {
-                status.Title = $"Frame: {Frame}\n\nViewport: {Viewport}, ContentSize = {GetContentSize ()}";
-                status.Width = Border.Frame.Width - status.Frame.X - Border.Thickness.Right;
-                status.Height = Border.Thickness.Top;
+                frameLabel.Text = $"Viewport: {Viewport}\nFrame: {Frame}";
             }
-
-            SetNeedsDisplay ();
         }
     }
 
@@ -112,7 +109,8 @@ public class ContentScrolling : Scenario
 
         var editor = new AdornmentsEditor
         {
-            AutoSelectViewToEdit = true
+            AutoSelectViewToEdit = true,
+            ShowViewIdentifier = true
         };
         app.Add (editor);
 
@@ -128,15 +126,23 @@ public class ContentScrolling : Scenario
 
         // Add Scroll Setting UI to Padding
         view.Padding.Thickness = view.Padding.Thickness with { Top = view.Padding.Thickness.Top + 4 };
-        //view.Padding.ColorScheme = Colors.ColorSchemes ["Error"];
+        view.Padding.CanFocus = true;
+
+        Label frameLabel = new ()
+        {
+            Text = "Frame\nContent",
+            Id = "frameLabel",
+            Y = 0
+        };
+        view.Padding.Add (frameLabel);
 
         var cbAllowNegativeX = new CheckBox
         {
             Title = "Allow _X < 0",
-            Y = 0,
+            Y = Pos.Bottom (frameLabel),
             CanFocus = true
         };
-        cbAllowNegativeX.CheckedState = view.ViewportSettings.HasFlag (ViewportSettings.AllowNegativeX) ? CheckState.Checked : CheckState.UnChecked;
+        cbAllowNegativeX.CheckedState = view.ViewportSettings.HasFlag  (ViewportSettings.AllowNegativeX) ? CheckState.Checked : CheckState.UnChecked;
 
         view.Padding.Add (cbAllowNegativeX);
 
@@ -144,10 +150,10 @@ public class ContentScrolling : Scenario
         {
             Title = "Allow _Y < 0",
             X = Pos.Right (cbAllowNegativeX) + 1,
-            Y = 0,
-            CanFocus = true
+            Y = Pos.Bottom (frameLabel),
+            CanFocus = true,
         };
-        cbAllowNegativeY.CheckedState = view.ViewportSettings.HasFlag (ViewportSettings.AllowNegativeY) ? CheckState.Checked : CheckState.UnChecked;
+        cbAllowNegativeY.CheckedState = view.ViewportSettings.HasFlag  (ViewportSettings.AllowNegativeY) ? CheckState.Checked : CheckState.UnChecked;
 
         view.Padding.Add (cbAllowNegativeY);
 
@@ -157,7 +163,7 @@ public class ContentScrolling : Scenario
             Y = Pos.Bottom (cbAllowNegativeX),
             CanFocus = true
         };
-        cbAllowXGreaterThanContentWidth.CheckedState = view.ViewportSettings.HasFlag (ViewportSettings.AllowXGreaterThanContentWidth) ? CheckState.Checked : CheckState.UnChecked;
+        cbAllowXGreaterThanContentWidth.CheckedState = view.ViewportSettings.HasFlag  (ViewportSettings.AllowXGreaterThanContentWidth) ? CheckState.Checked : CheckState.UnChecked;
 
         view.Padding.Add (cbAllowXGreaterThanContentWidth);
 
@@ -196,7 +202,7 @@ public class ContentScrolling : Scenario
             Y = Pos.Bottom (cbAllowNegativeX),
             CanFocus = true
         };
-        cbAllowYGreaterThanContentHeight.CheckedState = view.ViewportSettings.HasFlag (ViewportSettings.AllowYGreaterThanContentHeight) ? CheckState.Checked : CheckState.UnChecked;
+        cbAllowYGreaterThanContentHeight.CheckedState = view.ViewportSettings.HasFlag  (ViewportSettings.AllowYGreaterThanContentHeight) ? CheckState.Checked : CheckState.UnChecked;
 
         view.Padding.Add (cbAllowYGreaterThanContentHeight);
 
@@ -334,13 +340,12 @@ public class ContentScrolling : Scenario
             Y = Pos.Bottom (labelContentSize),
             CanFocus = false
         };
-        view.VerticalScrollBar.ShowScrollIndicator = false;
         cbVerticalScrollBar.CheckedState = view.VerticalScrollBar.Visible ? CheckState.Checked : CheckState.UnChecked;
         cbVerticalScrollBar.CheckedStateChanging += VerticalScrollBar_Toggle;
 
         void VerticalScrollBar_Toggle (object sender, CancelEventArgs<CheckState> e)
         {
-            view.VerticalScrollBar.ShowScrollIndicator = e.NewValue == CheckState.Checked;
+            //view.VerticalScrollBar.ShowScrollIndicator = e.NewValue == CheckState.Checked;
         }
 
         var cbHorizontalScrollBar = new CheckBox
@@ -349,14 +354,14 @@ public class ContentScrolling : Scenario
             X = Pos.Right (cbVerticalScrollBar) + 1,
             Y = Pos.Bottom (labelContentSize),
             CanFocus = false,
-            CheckedState = view.HorizontalScrollBar.ShowScrollIndicator ? CheckState.Checked : CheckState.UnChecked
+            //CheckedState = view.HorizontalScrollBar.ShowScrollIndicator ? CheckState.Checked : CheckState.UnChecked
         };
-        view.HorizontalScrollBar.ShowScrollIndicator = false;
+        //view.HorizontalScrollBar.ShowScrollIndicator = false;
         cbHorizontalScrollBar.CheckedStateChanging += HorizontalScrollBar_Toggle;
 
         void HorizontalScrollBar_Toggle (object sender, CancelEventArgs<CheckState> e)
         {
-            view.HorizontalScrollBar.ShowScrollIndicator = e.NewValue == CheckState.Checked;
+            //view.HorizontalScrollBar.ShowScrollIndicator = e.NewValue == CheckState.Checked;
         }
 
         var cbAutoHideVerticalScrollBar = new CheckBox
@@ -402,15 +407,15 @@ public class ContentScrolling : Scenario
             if (newValue == CheckState.Checked)
             {
                 cbAutoHideHorizontalScrollBar.CheckedState = CheckState.UnChecked;
-                view.HorizontalScrollBar.AutoHide = view.HorizontalScrollBar.ShowScrollIndicator = false;
+                //view.HorizontalScrollBar.AutoHide = view.HorizontalScrollBar.ShowScrollIndicator = false;
                 cbHorizontalScrollBar.CheckedState = CheckState.UnChecked;
             }
             else
             {
                 cbAutoHideHorizontalScrollBar.CheckedState = CheckState.Checked;
 
-                view.HorizontalScrollBar.AutoHide = view.HorizontalScrollBar.ShowScrollIndicator = newValue == CheckState.UnChecked
-                                                    && value == CheckState.UnChecked;
+                //view.HorizontalScrollBar.AutoHide = view.HorizontalScrollBar.ShowScrollIndicator = newValue == CheckState.UnChecked
+                                                    //&& value == CheckState.UnChecked;
                 cbHorizontalScrollBar.CheckedState = CheckState.Checked;
             }
         }
@@ -420,15 +425,15 @@ public class ContentScrolling : Scenario
             if (newValue == CheckState.Checked)
             {
                 cbAutoHideVerticalScrollBar.CheckedState = CheckState.UnChecked;
-                view.VerticalScrollBar.AutoHide = view.VerticalScrollBar.ShowScrollIndicator = false;
+                //view.VerticalScrollBar.AutoHide = view.VerticalScrollBar.ShowScrollIndicator = false;
                 cbVerticalScrollBar.CheckedState = CheckState.UnChecked;
             }
             else
             {
                 cbAutoHideVerticalScrollBar.CheckedState = CheckState.Checked;
 
-                view.VerticalScrollBar.AutoHide = view.VerticalScrollBar.ShowScrollIndicator = newValue == CheckState.UnChecked
-                                                  && value == CheckState.UnChecked;
+                //view.VerticalScrollBar.AutoHide = view.VerticalScrollBar.ShowScrollIndicator = newValue == CheckState.UnChecked
+                //                                  && value == CheckState.UnChecked;
                 cbVerticalScrollBar.CheckedState = CheckState.Checked;
             }
         }
@@ -477,8 +482,9 @@ public class ContentScrolling : Scenario
 
         var buttonAnchored = new Button
         {
-            X = Pos.AnchorEnd (), Y = Pos.AnchorEnd (), Text = "Bottom Right"
+            X = Pos.AnchorEnd (), Y = Pos.AnchorEnd (), Text = "Bottom Rig_ht"
         };
+        buttonAnchored.Accepting += (sender, args) => MessageBox.Query ("Hi", $"You pressed {((Button)sender)?.Text}", "_Ok");
 
         view.Margin.Data = "Margin";
         view.Margin.Thickness = new (0);
@@ -523,8 +529,36 @@ public class ContentScrolling : Scenario
         editor.AutoSelectSuperView = view;
         editor.AutoSelectAdornments = false;
 
+        view.SetFocus ();
         Application.Run (app);
         app.Dispose ();
         Application.Shutdown ();
+    }
+
+    public override List<Key> GetDemoKeyStrokes ()
+    {
+        var keys = new List<Key> ();
+
+        for (int i = 0; i < 50; i++)
+        {
+            keys.Add (Key.CursorRight);
+        }
+
+        for (int i = 0; i < 25; i++)
+        {
+            keys.Add (Key.CursorLeft);
+        }
+
+        for (int i = 0; i < 50; i++)
+        {
+            keys.Add (Key.CursorDown);
+        }
+
+        for (int i = 0; i < 25; i++)
+        {
+            keys.Add (Key.CursorUp);
+        }
+
+        return keys;
     }
 }

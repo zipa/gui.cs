@@ -6,50 +6,116 @@ namespace Terminal.Gui;
 
 /// <summary>
 ///     Provides a visual indicator that content can be scrolled. ScrollBars consist of two buttons, one each for scrolling
-///     forward or backwards, a Scroll that can be clicked to scroll large amounts, and a ScrollSlider that can be dragged
+///     forward or backwards, a <see cref="Scroll"/> that can be dragged
 ///     to scroll continuously. ScrollBars can be oriented either horizontally or vertically and support the user dragging
 ///     and clicking with the mouse to scroll.
 /// </summary>
 /// <remarks>
 ///     <para>
-///         <see cref="Position"/> indicates the current location between zero and <see cref="Size"/>.
+///         <see cref="Position"/> indicates the number of rows or columns the Scroll has moved from 0.
 ///     </para>
-///     <para>If the scrollbar is larger than three cells, arrow indicators are drawn.</para>
 /// </remarks>
-public class ScrollBar : View
+public class ScrollBar : View, IOrientation, IDesignable
 {
+    private readonly Scroll _scroll;
+    private readonly Button _decreaseButton;
+    private readonly Button _increaseButton;
+
     /// <inheritdoc/>
     public ScrollBar ()
     {
-        _scroll = new ();
-        _decrease = new ()
-        {
-            NoDecorations = true,
-            NoPadding = true,
-        };
-        _increase = new ()
-        {
-            NoDecorations = true,
-            NoPadding = true,
-        };
-        Add (_scroll, _decrease, _increase);
-
         CanFocus = false;
-        Orientation = Orientation.Vertical;
-        Width = Dim.Auto (DimAutoStyle.Content, 1);
-        Height = Dim.Auto (DimAutoStyle.Content, 1);
 
-        _scroll.PositionChanging += Scroll_PositionChanging;
-        _scroll.PositionChanged += Scroll_PositionChanged;
-        _scroll.SizeChanged += _scroll_SizeChanged;
+        _scroll = new ();
+        _scroll.PositionChanging += OnScrollOnPositionChanging;
+        _scroll.PositionChanged += OnScrollOnPositionChanged;
+        _scroll.SizeChanged += OnScrollOnSizeChanged;
+
+        _decreaseButton = new ()
+        {
+            CanFocus = false,
+            NoDecorations = true,
+            NoPadding = true,
+            ShadowStyle = ShadowStyle.None,
+            WantContinuousButtonPressed = true
+        };
+        _decreaseButton.Accepting += OnDecreaseButtonOnAccept;
+
+        _increaseButton = new ()
+        {
+            CanFocus = false,
+            NoDecorations = true,
+            NoPadding = true,
+            ShadowStyle = ShadowStyle.None,
+            WantContinuousButtonPressed = true
+        };
+        _increaseButton.Accepting += OnIncreaseButtonOnAccept;
+        Add (_decreaseButton, _scroll, _increaseButton);
+
+        _orientationHelper = new (this); // Do not use object initializer!
+        _orientationHelper.Orientation = Orientation.Vertical;
+        _orientationHelper.OrientationChanging += (sender, e) => OrientationChanging?.Invoke (this, e);
+        _orientationHelper.OrientationChanged += (sender, e) => OrientationChanged?.Invoke (this, e);
+
+        // This sets the width/height etc...
+        OnOrientationChanged (Orientation);
+
+        return;
+
+        void OnDecreaseButtonOnAccept (object? s, CommandEventArgs e)
+        {
+            _scroll.Position--;
+            e.Cancel = true;
+        }
+
+        void OnIncreaseButtonOnAccept (object? s, CommandEventArgs e)
+        {
+            _scroll.Position++;
+            e.Cancel = true;
+        }
     }
 
-    private readonly Scroll _scroll;
-    private readonly Button _decrease;
-    private readonly Button _increase;
+    #region IOrientation members
+
+    private readonly OrientationHelper _orientationHelper;
+
+    /// <inheritdoc/>
+    public Orientation Orientation
+    {
+        get => _orientationHelper.Orientation;
+        set => _orientationHelper.Orientation = value;
+    }
+
+    /// <inheritdoc/>
+    public event EventHandler<CancelEventArgs<Orientation>>? OrientationChanging;
+
+    /// <inheritdoc/>
+    public event EventHandler<EventArgs<Orientation>>? OrientationChanged;
+
+    /// <inheritdoc/>
+    public void OnOrientationChanged (Orientation newOrientation)
+    {
+        TextDirection = Orientation == Orientation.Vertical ? TextDirection.TopBottom_LeftRight : TextDirection.LeftRight_TopBottom;
+        TextAlignment = Alignment.Center;
+        VerticalTextAlignment = Alignment.Center;
+
+        if (Orientation == Orientation.Vertical)
+        {
+            Width = 1;
+            Height = Dim.Fill ();
+        }
+        else
+        {
+            Width = Dim.Fill ();
+            Height = 1;
+        }
+
+        _scroll.Orientation = newOrientation;
+    }
+
+    #endregion
 
     private bool _autoHide = true;
-    private bool _showScrollIndicator = true;
 
     /// <summary>
     ///     Gets or sets whether <see cref="View.Visible"/> will be set to <see langword="false"/> if the dimension of the
@@ -63,27 +129,55 @@ public class ScrollBar : View
             if (_autoHide != value)
             {
                 _autoHide = value;
-                AdjustAll ();
+
+                if (!AutoHide)
+                {
+                    Visible = true;
+                }
+
+                SetNeedsLayout ();
             }
         }
     }
 
+    /// <inheritdoc/>
+    protected override void OnFrameChanged (in Rectangle frame) { ShowHide (); }
+
+    private void ShowHide ()
+    {
+        if (!AutoHide || !IsInitialized)
+        {
+            return;
+        }
+
+        if (Orientation == Orientation.Vertical)
+        {
+            Visible = Frame.Height - (_decreaseButton.Frame.Height + _increaseButton.Frame.Height) < Size;
+        }
+        else
+        {
+            Visible = Frame.Width - (_decreaseButton.Frame.Width + _increaseButton.Frame.Width) < Size;
+        }
+    }
+
+    /// <summary>
+    ///     Gets or sets whether the Scroll will show the percentage the slider
+    ///     takes up within the <see cref="Size"/>.
+    /// </summary>
+    public bool ShowPercent
+    {
+        get => _scroll.ShowPercent;
+        set => _scroll.ShowPercent = value;
+    }
+
+
     /// <summary>Get or sets if the view-port is kept in all visible area of this <see cref="ScrollBar"/>.</summary>
     public bool KeepContentInAllViewport
     {
-        get => _scroll.KeepContentInAllViewport;
-        set => _scroll.KeepContentInAllViewport = value;
-    }
-
-    /// <summary>Gets or sets if a scrollbar is vertical or horizontal.</summary>
-    public Orientation Orientation
-    {
-        get => _scroll.Orientation;
-        set
-        {
-            Resize (value);
-            _scroll.Orientation = value;
-        }
+        //get => _scroll.KeepContentInAllViewport;
+        //set => _scroll.KeepContentInAllViewport = value;
+        get;
+        set;
     }
 
     /// <summary>Gets or sets the position, relative to <see cref="Size"/>, to set the scrollbar at.</summary>
@@ -91,12 +185,11 @@ public class ScrollBar : View
     public int Position
     {
         get => _scroll.Position;
-        set
-        {
-            _scroll.Position = value;
-            AdjustAll ();
-        }
+        set => _scroll.Position = value;
     }
+
+    private void OnScrollOnPositionChanged (object? sender, EventArgs<int> e) { PositionChanged?.Invoke (this, e); }
+    private void OnScrollOnPositionChanging (object? sender, CancelEventArgs<int> e) { PositionChanging?.Invoke (this, e); }
 
     /// <summary>Raised when the <see cref="Position"/> has changed.</summary>
     public event EventHandler<EventArgs<int>>? PositionChanged;
@@ -107,149 +200,87 @@ public class ScrollBar : View
     /// </summary>
     public event EventHandler<CancelEventArgs<int>>? PositionChanging;
 
-    /// <summary>Gets or sets the visibility for the vertical or horizontal scroll indicator.</summary>
-    /// <value><c>true</c> if show vertical or horizontal scroll indicator; otherwise, <c>false</c>.</value>
-    public bool ShowScrollIndicator
-    {
-        get => Visible;
-        set
-        {
-            if (value == _showScrollIndicator)
-            {
-                return;
-            }
-
-            _showScrollIndicator = value;
-
-            if (IsInitialized)
-            {
-                SetNeedsLayout ();
-
-                if (value)
-                {
-                    Visible = true;
-                }
-                else
-                {
-                    Visible = false;
-                    Position = 0;
-                }
-
-                AdjustAll ();
-            }
-        }
-    }
-
     /// <summary>
     ///     Gets or sets the size of the Scroll. This is the total size of the content that can be scrolled through.
     /// </summary>
     public int Size
     {
         get => _scroll.Size;
-        set
-        {
-            _scroll.Size = value;
-            AdjustAll ();
-        }
+        set => _scroll.Size = value;
     }
 
     /// <summary>Raised when <see cref="Size"/> has changed.</summary>
     public event EventHandler<EventArgs<int>>? SizeChanged;
 
-    /// <inheritdoc/>
-    /// <inheritdoc />
-    internal override void OnLayoutStarted (LayoutEventArgs args) 
+    private void OnScrollOnSizeChanged (object? sender, EventArgs<int> e)
     {
-        AdjustAll ();
+        ShowHide ();
+        SizeChanged?.Invoke (this, e);
     }
 
-    private void _scroll_SizeChanged (object? sender, EventArgs<int> e) { SizeChanged?.Invoke (this, e); }
+    /// <inheritdoc/>
+    protected override void OnSubviewLayout (LayoutEventArgs args) { PositionSubviews (); }
 
-    private void AdjustAll ()
+    private void PositionSubviews ()
     {
-        CheckVisibility ();
-        _scroll.AdjustScroll ();
-
         if (Orientation == Orientation.Vertical)
         {
-            _decrease.Y = 0;
-            _decrease.X = 0;
-            _decrease.Width = Dim.Fill ();
-            _decrease.Height = 1;
-            _decrease.Text = Glyphs.DownArrow.ToString ();
-            _increase.Y = Pos.Bottom (_scroll);
-            _increase.X = 0;
-            _increase.Width = Dim.Fill ();
-            _increase.Height = 1;
-            _increase.Text = Glyphs.UpArrow.ToString ();
+            _decreaseButton.Y = 0;
+            _decreaseButton.X = 0;
+            _decreaseButton.Width = Dim.Fill ();
+            _decreaseButton.Height = 1;
+            _decreaseButton.Title = Glyphs.UpArrow.ToString ();
+            _increaseButton.Y = Pos.Bottom (_scroll);
+            _increaseButton.X = 0;
+            _increaseButton.Width = Dim.Fill ();
+            _increaseButton.Height = 1;
+            _increaseButton.Title = Glyphs.DownArrow.ToString ();
+            _scroll.X = 0;
+            _scroll.Y = Pos.Bottom (_decreaseButton);
+            _scroll.Height = Dim.Fill (1);
+            _scroll.Width = Dim.Fill ();
         }
         else
         {
-            _decrease.Y = 0;
-            _decrease.X = 0;
-            _decrease.Width = 1;
-            _decrease.Height = Dim.Fill ();
-            _decrease.Text = Glyphs.LeftArrow.ToString ();
-            _increase.Y = 0;
-            _increase.X = Pos.Right (_scroll);
-            _increase.Width = 1;
-            _increase.Height = Dim.Fill ();
-            _increase.Text = Glyphs.RightArrow.ToString ();
+            _decreaseButton.Y = 0;
+            _decreaseButton.X = 0;
+            _decreaseButton.Width = 1;
+            _decreaseButton.Height = Dim.Fill ();
+            _decreaseButton.Title = Glyphs.LeftArrow.ToString ();
+            _increaseButton.Y = 0;
+            _increaseButton.X = Pos.Right (_scroll);
+            _increaseButton.Width = 1;
+            _increaseButton.Height = Dim.Fill ();
+            _increaseButton.Title = Glyphs.RightArrow.ToString ();
+            _scroll.Y = 0;
+            _scroll.X = Pos.Bottom (_decreaseButton);
+            _scroll.Width = Dim.Fill (1);
+            _scroll.Height = Dim.Fill ();
         }
     }
 
-    private bool CheckVisibility ()
+    /// <inheritdoc/>
+    public bool EnableForDesign ()
     {
-        if (!AutoHide)
-        {
-            if (Visible != _showScrollIndicator)
-            {
-                Visible = _showScrollIndicator;
-                SetNeedsDisplay ();
-            }
+        OrientationChanged += (sender, args) =>
+                              {
+                                  if (args.CurrentValue == Orientation.Vertical)
+                                  {
+                                      Width = 1;
+                                      Height = Dim.Fill ();
+                                  }
+                                  else
+                                  {
+                                      Width = Dim.Fill ();
+                                      Height = 1;
+                                  }
+                              };
 
-            return _showScrollIndicator;
-        }
-
-        int barSize = Orientation == Orientation.Vertical ? Viewport.Height : Viewport.Width;
-
-        if (barSize == 0 || barSize >= Size)
-        {
-            if (Visible)
-            {
-                Visible = false;
-                SetNeedsDisplay ();
-
-                return false;
-            }
-        }
-        else
-        {
-            if (!Visible)
-            {
-                Visible = true;
-                SetNeedsDisplay ();
-            }
-        }
-
+        Width = 1;
+        Height = Dim.Fill ();
+        Size = 200;
+        Position = 10;
+        //ShowPercent = true;
         return true;
     }
-
-    private void Resize (Orientation orientation)
-    {
-        switch (orientation)
-        {
-            case Orientation.Horizontal:
-
-                break;
-            case Orientation.Vertical:
-                break;
-            default:
-                throw new ArgumentOutOfRangeException (nameof (orientation), orientation, null);
-        }
-    }
-
-    private void Scroll_PositionChanged (object? sender, EventArgs<int> e) { PositionChanged?.Invoke (this, e); }
-
-    private void Scroll_PositionChanging (object? sender, CancelEventArgs<int> e) { PositionChanging?.Invoke (this, e); }
 }

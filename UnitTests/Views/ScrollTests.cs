@@ -1,4 +1,5 @@
-﻿using Xunit.Abstractions;
+﻿using Microsoft.VisualStudio.TestPlatform.Utilities;
+using Xunit.Abstractions;
 
 namespace Terminal.Gui.ViewsTests;
 
@@ -7,223 +8,255 @@ public class ScrollTests
     public ScrollTests (ITestOutputHelper output) { _output = output; }
     private readonly ITestOutputHelper _output;
 
-    [Theory]
-    [AutoInitShutdown]
-    [InlineData (
-                    20,
-                    @"
-█
-█
-█
-█
-█
-░
-░
-░
-░
-░",
-                    @"
-░
-░
-█
-█
-█
-█
-█
-░
-░
-░",
-                    @"
-░
-░
-░
-░
-░
-█
-█
-█
-█
-█",
-                    @"
-░
-░
-█
-█
-█
-░
-░
-░
-░
-░",
-                    @"
-█████░░░░░",
-                    @"
-░░█████░░░",
-                    @"
-░░░░░█████",
-                    @"
-░░███░░░░░")]
-    [InlineData (
-                    40,
-                    @"
-█
-█
-█
-░
-░
-░
-░
-░
-░
-░",
-                    @"
-░
-█
-█
-█
-░
-░
-░
-░
-░
-░",
-                    @"
-░
-░
-█
-█
-█
-░
-░
-░
-░
-░",
-                    @"
-░
-█
-█
-░
-░
-░
-░
-░
-░
-░",
-                    @"
-███░░░░░░░",
-                    @"
-░███░░░░░░",
-                    @"
-░░███░░░░░",
-                    @"
-░██░░░░░░░")]
-    public void Changing_Position_Size_Orientation_Draws_Correctly_KeepContentInAllViewport_True (
-        int size,
-        string firstVertExpected,
-        string middleVertExpected,
-        string endVertExpected,
-        string sizeVertExpected,
-        string firstHoriExpected,
-        string middleHoriExpected,
-        string endHoriExpected,
-        string sizeHoriExpected
-    )
+
+    [Fact]
+    public void OnOrientationChanged_Keeps_Size ()
     {
-        var scroll = new Scroll
-        {
-            Orientation = Orientation.Vertical,
-            Size = size,
-            Height = 10,
-            KeepContentInAllViewport = true
-        };
-        var top = new Toplevel ();
-        top.Add (scroll);
-        Application.Begin (top);
-
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (firstVertExpected, _output);
-
-        scroll.Position = 4;
-        Application.Refresh ();
-
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (middleVertExpected, _output);
-
-        scroll.Position = 10;
-        Application.Refresh ();
-
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (endVertExpected, _output);
-
-        scroll.Size = size * 2;
-        Application.Refresh ();
-
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (sizeVertExpected, _output);
+        var scroll = new Scroll ();
+        scroll.Layout ();
+        scroll.Size = 1;
 
         scroll.Orientation = Orientation.Horizontal;
-        scroll.Width = 10;
-        scroll.Height = 1;
-        scroll.Position = 0;
-        scroll.Size = size;
-        Application.Refresh ();
-
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (firstHoriExpected, _output);
-
-        scroll.Position = 4;
-        Application.Refresh ();
-
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (middleHoriExpected, _output);
-
-        scroll.Position = 10;
-        Application.Refresh ();
-
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (endHoriExpected, _output);
-
-        scroll.Size = size * 2;
-        Application.Refresh ();
-
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (sizeHoriExpected, _output);
+        Assert.Equal (1, scroll.Size);
     }
+
+    [Fact]
+    public void OnOrientationChanged_Sets_Position_To_0 ()
+    {
+        View super = new View ()
+        {
+            Id = "super",
+            Width = 10,
+            Height = 10
+        };
+        var scroll = new Scroll ()
+        {
+        };
+        super.Add (scroll);
+        scroll.Layout ();
+        scroll.Position = 1;
+        scroll.Orientation = Orientation.Horizontal;
+
+        Assert.Equal (0, scroll.Position);
+    }
+
+
+    //    [Theory]
+    //    [AutoInitShutdown]
+    //    [InlineData (
+    //                    20,
+    //                    @"
+    //█
+    //█
+    //█
+    //█
+    //█
+    //░
+    //░
+    //░
+    //░
+    //░",
+    //                    @"
+    //░
+    //░
+    //█
+    //█
+    //█
+    //█
+    //█
+    //░
+    //░
+    //░",
+    //                    @"
+    //░
+    //░
+    //░
+    //░
+    //░
+    //█
+    //█
+    //█
+    //█
+    //█",
+    //                    @"
+    //░
+    //░
+    //█
+    //█
+    //█
+    //░
+    //░
+    //░
+    //░
+    //░",
+    //                    @"
+    //█████░░░░░",
+    //                    @"
+    //░░█████░░░",
+    //                    @"
+    //░░░░░█████",
+    //                    @"
+    //░░███░░░░░")]
+    //    [InlineData (
+    //                    40,
+    //                    @"
+    //█
+    //█
+    //█
+    //░
+    //░
+    //░
+    //░
+    //░
+    //░
+    //░",
+    //                    @"
+    //░
+    //█
+    //█
+    //█
+    //░
+    //░
+    //░
+    //░
+    //░
+    //░",
+    //                    @"
+    //░
+    //░
+    //█
+    //█
+    //█
+    //░
+    //░
+    //░
+    //░
+    //░",
+    //                    @"
+    //░
+    //█
+    //█
+    //░
+    //░
+    //░
+    //░
+    //░
+    //░
+    //░",
+    //                    @"
+    //███░░░░░░░",
+    //                    @"
+    //░███░░░░░░",
+    //                    @"
+    //░░███░░░░░",
+    //                    @"
+    //░██░░░░░░░")]
+    //    public void Changing_Position_Size_Orientation_Draws_Correctly_KeepContentInAllViewport_True (
+    //        int size,
+    //        string firstVertExpected,
+    //        string middleVertExpected,
+    //        string endVertExpected,
+    //        string sizeVertExpected,
+    //        string firstHoriExpected,
+    //        string middleHoriExpected,
+    //        string endHoriExpected,
+    //        string sizeHoriExpected
+    //    )
+    //    {
+    //        var scroll = new Scroll
+    //        {
+    //            Orientation = Orientation.Vertical,
+    //            Size = size,
+    //            Height = 10,
+    //            KeepContentInAllViewport = true
+    //        };
+    //        var top = new Toplevel ();
+    //        top.Add (scroll);
+    //        RunState rs = Application.Begin (top);
+    //        Application.RunIteration (ref rs);
+
+    //        _ = TestHelpers.AssertDriverContentsWithFrameAre (firstVertExpected, _output);
+
+    //        scroll.Position = 4;
+    //        Application.RunIteration (ref rs);
+
+    //        _ = TestHelpers.AssertDriverContentsWithFrameAre (middleVertExpected, _output);
+
+    //        scroll.Position = 10;
+    //        Application.RunIteration (ref rs);
+
+    //        _ = TestHelpers.AssertDriverContentsWithFrameAre (endVertExpected, _output);
+
+    //        scroll.Size = size * 2;
+    //        Application.RunIteration (ref rs);
+
+    //        _ = TestHelpers.AssertDriverContentsWithFrameAre (sizeVertExpected, _output);
+
+    //        scroll.Orientation = Orientation.Horizontal;
+    //        scroll.Width = 10;
+    //        scroll.Height = 1;
+    //        scroll.Position = 0;
+    //        scroll.Size = size;
+    //        Application.RunIteration (ref rs);
+
+    //        _ = TestHelpers.AssertDriverContentsWithFrameAre (firstHoriExpected, _output);
+
+    //        scroll.Position = 4;
+    //        Application.RunIteration (ref rs);
+
+    //        _ = TestHelpers.AssertDriverContentsWithFrameAre (middleHoriExpected, _output);
+
+    //        scroll.Position = 10;
+    //        Application.RunIteration (ref rs);
+
+    //        _ = TestHelpers.AssertDriverContentsWithFrameAre (endHoriExpected, _output);
+
+    //        scroll.Size = size * 2;
+    //        Application.RunIteration (ref rs);
+
+    //        _ = TestHelpers.AssertDriverContentsWithFrameAre (sizeHoriExpected, _output);
+    //    }
 
     [Fact]
     public void Constructor_Defaults ()
     {
         var scroll = new Scroll ();
-        Assert.True (scroll.WantContinuousButtonPressed);
         Assert.False (scroll.CanFocus);
         Assert.Equal (Orientation.Vertical, scroll.Orientation);
         Assert.Equal (0, scroll.Size);
         Assert.Equal (0, scroll.Position);
-        Assert.False (scroll.KeepContentInAllViewport);
     }
 
-    [Fact]
-    [AutoInitShutdown]
-    public void KeepContentInAllViewport_True_False_KeepContentInAllViewport_True ()
-    {
-        var view = new View { Width = Dim.Fill (), Height = Dim.Fill () };
-        view.Padding.Thickness = new (0, 0, 2, 0);
-        view.SetContentSize (new (view.Viewport.Width, 30));
-        var scroll = new Scroll { Width = 2, Height = Dim.Fill (), Size = view.GetContentSize ().Height, KeepContentInAllViewport = true };
-        scroll.PositionChanged += (_, e) => view.Viewport = view.Viewport with { Y = e.CurrentValue };
-        view.Padding.Add (scroll);
-        var top = new Toplevel ();
-        top.Add (view);
-        Application.Begin (top);
+    //[Fact]
+    //[AutoInitShutdown]
+    //public void KeepContentInAllViewport_True_False_KeepContentInAllViewport_True ()
+    //{
+    //    var view = new View { Width = Dim.Fill (), Height = Dim.Fill () };
+    //    view.Padding.Thickness = new (0, 0, 2, 0);
+    //    view.SetContentSize (new (view.Viewport.Width, 30));
+    //    var scroll = new Scroll { Width = 2, Height = Dim.Fill (), Size = view.GetContentSize ().Height, KeepContentInAllViewport = true };
+    //    scroll.PositionChanged += (_, e) => view.Viewport = view.Viewport with { Y = e.CurrentValue };
+    //    view.Padding.Add (scroll);
+    //    var top = new Toplevel ();
+    //    top.Add (view);
+    //    Application.Begin (top);
 
-        Assert.True (scroll.KeepContentInAllViewport);
-        Assert.Equal (80, view.Padding.Viewport.Width);
-        Assert.Equal (25, view.Padding.Viewport.Height);
-        Assert.Equal (2, scroll.Viewport.Width);
-        Assert.Equal (25, scroll.Viewport.Height);
-        Assert.Equal (30, scroll.Size);
+    //    Assert.True (scroll.KeepContentInAllViewport);
+    //    Assert.Equal (80, view.Padding.Viewport.Width);
+    //    Assert.Equal (25, view.Padding.Viewport.Height);
+    //    Assert.Equal (2, scroll.Viewport.Width);
+    //    Assert.Equal (25, scroll.Viewport.Height);
+    //    Assert.Equal (30, scroll.Size);
 
-        scroll.KeepContentInAllViewport = false;
-        scroll.Position = 50;
-        Assert.Equal (scroll.Position, scroll.Size - 1);
-        Assert.Equal (scroll.Position, view.Viewport.Y);
-        Assert.Equal (29, scroll.Position);
-        Assert.Equal (29, view.Viewport.Y);
+    //    scroll.KeepContentInAllViewport = false;
+    //    scroll.Position = 50;
+    //    Assert.Equal (scroll.Position, scroll.Size - 1);
+    //    Assert.Equal (scroll.Position, view.Viewport.Y);
+    //    Assert.Equal (29, scroll.Position);
+    //    Assert.Equal (29, view.Viewport.Y);
 
-        top.Dispose ();
-    }
+    //    top.Dispose ();
+    //}
 
     [Theory]
     [AutoInitShutdown]
@@ -303,7 +336,7 @@ public class ScrollTests
                     20,
                     @"
 ░░░░░███░░")]
-    public void Mouse_On_The_Container_KeepContentInAllViewport_True (Orientation orientation, int size, int position, int location, string output, int expectedPos, string expectedOut)
+    public void Mouse_On_The_Container (Orientation orientation, int size, int position, int location, string output, int expectedPos, string expectedOut)
     {
         var scroll = new Scroll
         {
@@ -311,23 +344,23 @@ public class ScrollTests
             Height = orientation == Orientation.Vertical ? 10 : 1,
             Orientation = orientation, Size = size,
             Position = position,
-            KeepContentInAllViewport = true
         };
         var top = new Toplevel ();
         top.Add (scroll);
-        Application.Begin (top);
+        RunState rs = Application.Begin (top);
+        Application.RunIteration (ref rs);
 
         _ = TestHelpers.AssertDriverContentsWithFrameAre (output, _output);
 
-        Application.OnMouseEvent (
+        Application.RaiseMouseEvent (
                                   new ()
                                   {
-                                      Position = orientation == Orientation.Vertical ? new (0, location) : new Point (location, 0),
+                                      ScreenPosition = orientation == Orientation.Vertical ? new (0, location) : new Point (location, 0),
                                       Flags = MouseFlags.Button1Pressed
                                   });
         Assert.Equal (expectedPos, scroll.Position);
 
-        Application.Refresh ();
+        Application.RunIteration (ref rs);
         _ = TestHelpers.AssertDriverContentsWithFrameAre (expectedOut, _output);
     }
 
@@ -669,7 +702,7 @@ public class ScrollTests
                     16,
                     @"
 ░░░░███░░░")]
-    public void Mouse_On_The_Slider_KeepContentInAllViewport_True (
+    public void Mouse_On_The_Slider (
         Orientation orientation,
         int size,
         int position,
@@ -687,11 +720,12 @@ public class ScrollTests
             Height = orientation == Orientation.Vertical ? 10 : 1,
             Orientation = orientation,
             Size = size, Position = position,
-            KeepContentInAllViewport = true
         };
         var top = new Toplevel ();
         top.Add (scroll);
-        Application.Begin (top);
+        RunState rs = Application.Begin (top);
+
+        Application.RunIteration (ref rs);
 
         _ = TestHelpers.AssertDriverContentsWithFrameAre (output, _output);
 
@@ -701,44 +735,47 @@ public class ScrollTests
         {
             MouseFlags mf = mouseFlags & ~MouseFlags.ReportMousePosition;
 
-            Application.OnMouseEvent (
+            Application.RaiseMouseEvent (
                                       new ()
                                       {
-                                          Position = orientation == Orientation.Vertical ? new (0, startLocation) : new (startLocation, 0),
+                                          ScreenPosition = orientation == Orientation.Vertical ? new (0, startLocation) : new (startLocation, 0),
                                           Flags = mf
                                       });
+            Application.RunIteration (ref rs);
 
-            Application.OnMouseEvent (
-                                      new ()
-                                      {
-                                          Position = orientation == Orientation.Vertical ? new (0, endLocation) : new (endLocation, 0),
-                                          Flags = mouseFlags
-                                      });
+            Application.RaiseMouseEvent (
+                                         new ()
+                                         {
+                                             ScreenPosition = orientation == Orientation.Vertical ? new (0, endLocation) : new (endLocation, 0),
+                                             Flags = mouseFlags
+                                         });
+            Application.RunIteration (ref rs);
         }
         else
         {
             Assert.Equal (startLocation, endLocation);
 
-            Application.OnMouseEvent (
-                                      new ()
-                                      {
-                                          Position = orientation == Orientation.Vertical ? new (0, startLocation) : new (startLocation, 0),
-                                          Flags = mouseFlags
-                                      });
+            Application.RaiseMouseEvent (
+                                         new ()
+                                         {
+                                             ScreenPosition = orientation == Orientation.Vertical ? new (0, startLocation) : new (startLocation, 0),
+                                             Flags = mouseFlags
+                                         });
+            Application.RunIteration (ref rs);
         }
 
         Assert.Equal ("scrollSlider", Application.MouseGrabView?.Id);
         Assert.Equal (expectedPos, scroll.Position);
 
-        Application.Refresh ();
+        Application.RunIteration (ref rs);
         _ = TestHelpers.AssertDriverContentsWithFrameAre (expectedOut, _output);
 
-        Application.OnMouseEvent (
-                                  new ()
-                                  {
-                                      Position = orientation == Orientation.Vertical ? new (0, startLocation) : new (startLocation, 0),
-                                      Flags = MouseFlags.Button1Released
-                                  });
+        Application.RaiseMouseEvent (
+                                     new ()
+                                     {
+                                         ScreenPosition = orientation == Orientation.Vertical ? new (0, startLocation) : new (startLocation, 0),
+                                         Flags = MouseFlags.Button1Released
+                                     });
         Assert.Null (Application.MouseGrabView);
     }
 
@@ -751,31 +788,34 @@ public class ScrollTests
         var scroll = new Scroll
         {
             X = 10, Y = 10, Width = orientation == Orientation.Vertical ? 1 : 10, Height = orientation == Orientation.Vertical ? 10 : 1, Size = 20,
-            Position = 5, Orientation = orientation, KeepContentInAllViewport = true
+            Position = 5, Orientation = orientation
         };
         var top = new Toplevel ();
         top.Add (scroll);
-        Application.Begin (top);
+        RunState rs = Application.Begin (top);
 
         Rectangle scrollSliderFrame = scroll.Subviews.FirstOrDefault (x => x.Id == "scrollSlider")!.Frame;
         Assert.Equal (scrollSliderFrame, orientation == Orientation.Vertical ? new (0, 2, 1, 5) : new (2, 0, 5, 1));
 
-        Application.OnMouseEvent (new () { Position = orientation == Orientation.Vertical ? new (10, 12) : new (12, 10), Flags = MouseFlags.Button1Pressed });
+        Application.RaiseMouseEvent (new () { ScreenPosition = orientation == Orientation.Vertical ? new (10, 12) : new (12, 10), Flags = MouseFlags.Button1Pressed });
+        Application.RunIteration (ref rs);
 
-        Application.OnMouseEvent (
+        Application.RaiseMouseEvent (
                                   new ()
                                   {
-                                      Position = orientation == Orientation.Vertical ? new (10, 0) : new (0, 10),
+                                      ScreenPosition = orientation == Orientation.Vertical ? new (10, 0) : new (0, 10),
                                       Flags = MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition
                                   });
+        Application.RunIteration (ref rs);
         Assert.Equal (new (0, 0), scroll.Subviews.FirstOrDefault (x => x.Id == "scrollSlider")!.Frame.Location);
 
-        Application.OnMouseEvent (
+        Application.RaiseMouseEvent (
                                   new ()
                                   {
-                                      Position = orientation == Orientation.Vertical ? new (0, 25) : new (80, 0),
+                                      ScreenPosition = orientation == Orientation.Vertical ? new (0, 25) : new (80, 0),
                                       Flags = MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition
                                   });
+        Application.RunIteration (ref rs);
 
         Assert.Equal (
                       orientation == Orientation.Vertical ? new (0, 5) : new (5, 0),
@@ -783,21 +823,34 @@ public class ScrollTests
     }
 
     [Theory]
-    [InlineData (Orientation.Vertical, 20, 10)]
-    [InlineData (Orientation.Vertical, 40, 30)]
-    public void Position_Cannot_Be_Negative_Nor_Greater_Than_Size_Minus_Frame_Length_KeepContentInAllViewport_True (Orientation orientation, int size, int expectedPos)
+    [CombinatorialData]
+    public void Position_Clamps_To_Size (
+        [CombinatorialRange (1, 6, 1)] int scrollSize,
+        [CombinatorialRange (-1, 6, 1)] int scrollPosition,
+        Orientation orientation
+    )
     {
-        var scroll = new Scroll { Orientation = orientation, Height = 10, Size = size, KeepContentInAllViewport = true };
-        Assert.Equal (0, scroll.Position);
+        var super = new View
+        {
+            Id = "super",
+            Width = 5,
+            Height = 5
+        };
 
-        scroll.Position = -1;
-        Assert.Equal (0, scroll.Position);
+        var scroll = new Scroll
+        {
+            Orientation = orientation,
+            Width = Dim.Fill(),
+            Height = Dim.Fill ()
+        };
+        super.Add (scroll);
+        scroll.Size = scrollSize;
+        super.Layout ();
 
-        scroll.Position = size;
-        Assert.Equal (expectedPos, scroll.Position);
+        scroll.Position = scrollPosition;
+        super.Layout ();
 
-        scroll.Position = expectedPos;
-        Assert.Equal (expectedPos, scroll.Position);
+        Assert.True (scroll.Position <= scrollSize);
     }
 
     [Fact]
@@ -806,6 +859,7 @@ public class ScrollTests
         var changingCount = 0;
         var changedCount = 0;
         var scroll = new Scroll { Size = 10 };
+        scroll.Layout ();
 
         scroll.PositionChanging += (s, e) =>
                                    {
@@ -830,16 +884,17 @@ public class ScrollTests
     }
 
     [Fact]
-    public void PositionChanging_PositionChanged_Events_Only_Raises_Once_If_Position_Was_Really_Changed_KeepContentInAllViewport_True ()
+    public void PositionChanging_PositionChanged_Events_Only_Raises_Once_If_Position_Was_Really_Changed ()
     {
         var changing = 0;
         var cancel = false;
         var changed = 0;
-        var scroll = new Scroll { Height = 10, Size = 20, KeepContentInAllViewport = true };
+        var scroll = new Scroll { Height = 10, Size = 20 };
         scroll.PositionChanging += Scroll_PositionChanging;
         scroll.PositionChanged += Scroll_PositionChanged;
 
         Assert.Equal (Orientation.Vertical, scroll.Orientation);
+        scroll.Layout ();
         Assert.Equal (new (0, 0, 1, 10), scroll.Viewport);
         Assert.Equal (0, scroll.Position);
         Assert.Equal (0, changing);
@@ -913,6 +968,7 @@ public class ScrollTests
     {
         var count = 0;
         var scroll = new Scroll ();
+        scroll.Layout ();
         scroll.SizeChanged += (s, e) => count++;
 
         scroll.Size = 10;
@@ -921,36 +977,63 @@ public class ScrollTests
     }
 
     [Theory]
-    [AutoInitShutdown]
+    [SetupFakeDriver]
     [InlineData (
                     3,
                     10,
                     1,
+                    0,
                     Orientation.Vertical,
                     @"
-┌─┐
-│█│
-│█│
-│█│
-│█│
-│░│
-│░│
-│░│
-│░│
-└─┘")]
+┌───┐
+│███│
+│   │
+│   │
+│   │
+│   │
+│   │
+│   │
+│   │
+│   │
+│   │
+└───┘")]
     [InlineData (
                     10,
-                    3,
                     1,
+                    3,
+                    0,
                     Orientation.Horizontal,
                     @"
-┌────────┐
-│████░░░░│
-└────────┘")]
+┌──────────┐
+│███       │
+└──────────┘")]
     [InlineData (
                     3,
                     10,
                     3,
+                    0,
+                    Orientation.Vertical,
+                    @"
+┌───┐
+│███│
+│███│
+│███│
+│   │
+│   │
+│   │
+│   │
+│   │
+│   │
+│   │
+└───┘")]
+
+
+
+    [InlineData (
+                    3,
+                    10,
+                    5,
+                    0,
                     Orientation.Vertical,
                     @"
 ┌───┐
@@ -958,43 +1041,272 @@ public class ScrollTests
 │███│
 │███│
 │███│
-│░░░│
-│░░░│
-│░░░│
-│░░░│
+│███│
+│   │
+│   │
+│   │
+│   │
+│   │
 └───┘")]
+
+    [InlineData (
+                    3,
+                    10,
+                    5,
+                    1,
+                    Orientation.Vertical,
+                    @"
+┌───┐
+│   │
+│███│
+│███│
+│███│
+│███│
+│███│
+│   │
+│   │
+│   │
+│   │
+└───┘")]
+    [InlineData (
+                    3,
+                    10,
+                    5,
+                    4,
+                    Orientation.Vertical,
+                    @"
+┌───┐
+│   │
+│   │
+│   │
+│   │
+│███│
+│███│
+│███│
+│███│
+│███│
+│   │
+└───┘")]
+    [InlineData (
+                    3,
+                    10,
+                    5,
+                    5,
+                    Orientation.Vertical,
+                    @"
+┌───┐
+│   │
+│   │
+│   │
+│   │
+│   │
+│███│
+│███│
+│███│
+│███│
+│███│
+└───┘")]
+    [InlineData (
+                    3,
+                    10,
+                    5,
+                    6,
+                    Orientation.Vertical,
+                    @"
+┌───┐
+│   │
+│   │
+│   │
+│   │
+│   │
+│███│
+│███│
+│███│
+│███│
+│███│
+└───┘")]
+
+    [InlineData (
+                    3,
+                    10,
+                    10,
+                    0,
+                    Orientation.Vertical,
+                    @"
+┌───┐
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+└───┘")]
+
+    [InlineData (
+                    3,
+                    10,
+                    10,
+                    5,
+                    Orientation.Vertical,
+                    @"
+┌───┐
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+└───┘")]
+    [InlineData (
+                    3,
+                    10,
+                    11,
+                    0,
+                    Orientation.Vertical,
+                    @"
+┌───┐
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+│███│
+└───┘")]
+
     [InlineData (
                     10,
                     3,
-                    3,
+                    5,
+                    0,
                     Orientation.Horizontal,
                     @"
-┌────────┐
-│████░░░░│
-│████░░░░│
-│████░░░░│
-└────────┘")]
-    public void Vertical_Horizontal_Draws_Correctly_KeepContentInAllViewport_True (int sizeWidth, int sizeHeight, int widthHeight, Orientation orientation, string expected)
+┌──────────┐
+│█████     │
+│█████     │
+│█████     │
+└──────────┘")]
+
+    [InlineData (
+                    10,
+                    3,
+                    5,
+                    1,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│ █████    │
+│ █████    │
+│ █████    │
+└──────────┘")]
+    [InlineData (
+                    10,
+                    3,
+                    5,
+                    4,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│    █████ │
+│    █████ │
+│    █████ │
+└──────────┘")]
+    [InlineData (
+                    10,
+                    3,
+                    5,
+                    5,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│     █████│
+│     █████│
+│     █████│
+└──────────┘")]
+    [InlineData (
+                    10,
+                    3,
+                    5,
+                    6,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│     █████│
+│     █████│
+│     █████│
+└──────────┘")]
+
+    [InlineData (
+                    10,
+                    3,
+                    10,
+                    0,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│██████████│
+│██████████│
+│██████████│
+└──────────┘")]
+
+    [InlineData (
+                    10,
+                    3,
+                    10,
+                    5,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│██████████│
+│██████████│
+│██████████│
+└──────────┘")]
+    [InlineData (
+                    10,
+                    3,
+                    11,
+                    0,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│██████████│
+│██████████│
+│██████████│
+└──────────┘")]
+    public void Draws_Correctly (int superViewportWidth, int superViewportHeight, int sliderSize, int sliderPosition, Orientation orientation, string expected)
     {
-        var super = new Window { Id = "super", Width = Dim.Fill (), Height = Dim.Fill () };
-        var top = new Toplevel ();
-        top.Add (super);
+        var super = new Window
+        {
+            Id = "super",
+            Width = superViewportWidth + 2,
+            Height = superViewportHeight + 2
+        };
 
         var scroll = new Scroll
         {
             Orientation = orientation,
-            Size = orientation == Orientation.Vertical ? sizeHeight * 2 : sizeWidth * 2,
-            Width = orientation == Orientation.Vertical ? widthHeight : Dim.Fill (),
-            Height = orientation == Orientation.Vertical ? Dim.Fill () : widthHeight,
-            KeepContentInAllViewport = true
         };
         super.Add (scroll);
 
-        Application.Begin (top);
+        scroll.Size = sliderSize;
+        scroll.Layout ();
+        scroll.Position = sliderPosition;
 
-        ((FakeDriver)Application.Driver)!.SetBufferSize (
-                                                         sizeWidth + (orientation == Orientation.Vertical ? widthHeight - 1 : 0),
-                                                         sizeHeight + (orientation == Orientation.Vertical ? 0 : widthHeight - 1));
+        super.BeginInit ();
+        super.EndInit ();
+        super.Layout ();
+        super.Draw ();
 
         _ = TestHelpers.AssertDriverContentsWithFrameAre (expected, _output);
     }

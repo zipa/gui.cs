@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
 using System.Net.Http;
@@ -47,7 +46,7 @@ public class CharacterMap : Scenario
         {
             X = 0,
             Y = 0,
-            Width = Dim.Fill (),
+            Width = Dim.Fill (Dim.Func (() => _categoryList.Frame.Width)),
             Height = Dim.Fill ()
         };
         top.Add (_charMap);
@@ -80,6 +79,7 @@ public class CharacterMap : Scenario
 
         _categoryList = new () { X = Pos.Right (_charMap), Y = Pos.Bottom (jumpLabel), Height = Dim.Fill () };
         _categoryList.FullRowSelect = true;
+        _categoryList.MultiSelect = false;
 
         //jumpList.Style.ShowHeaders = false;
         //jumpList.Style.ShowHorizontalHeaderOverline = false;
@@ -135,9 +135,6 @@ public class CharacterMap : Scenario
                                              };
 
         top.Add (_categoryList);
-
-        // TODO: Replace this with Dim.Auto when that's ready
-        _categoryList.Initialized += _categoryList_Initialized;
 
         var menu = new MenuBar
         {
@@ -247,8 +244,6 @@ public class CharacterMap : Scenario
         }
     }
 
-    private void _categoryList_Initialized (object sender, EventArgs e) { _charMap.Width = Dim.Fill () - _categoryList.Width; }
-
     private EnumerableTableSource<UnicodeRange> CreateCategoryTable (int sortByColumn, bool descending)
     {
         Func<UnicodeRange, object> orderBy;
@@ -303,9 +298,35 @@ public class CharacterMap : Scenario
 
         return item;
     }
+
+    public override List<Key> GetDemoKeyStrokes ()
+    {
+        List<Key> keys = new List<Key> ();
+
+        for (var i = 0; i < 200; i++)
+        {
+            keys.Add (Key.CursorDown);
+        }
+
+        // Category table
+        keys.Add (Key.Tab.WithShift);
+
+        // Block elements
+        keys.Add (Key.B);
+        keys.Add (Key.L);
+
+        keys.Add (Key.Tab);
+
+        for (var i = 0; i < 200; i++)
+        {
+            keys.Add (Key.CursorLeft);
+        }
+
+        return keys;
+    }
 }
 
-internal class CharMap : View
+internal class CharMap : View, IDesignable
 {
     private const int COLUMN_WIDTH = 3;
 
@@ -471,9 +492,9 @@ internal class CharMap : View
             AutoHide = false,
             X = RowLabelWidth + 1,
             Y = Pos.AnchorEnd (),
+            Orientation = Orientation.Horizontal,
             Width = Dim.Fill (1),
-            Size = COLUMN_WIDTH * 15,
-            Orientation = Orientation.Horizontal
+            Size = COLUMN_WIDTH * 15
         };
 
         ScrollBar vScrollBar = new ()
@@ -482,31 +503,46 @@ internal class CharMap : View
             X = Pos.AnchorEnd (),
             Y = 1, // Header
             Height = Dim.Fill (Dim.Func (() => Padding.Thickness.Bottom)),
-            Orientation = Orientation.Vertical,
-            Size = GetContentSize ().Height,
+            Size = GetContentSize ().Height
         };
-        vScrollBar.PositionChanged += (sender, args) => { Viewport = Viewport with { Y = args.CurrentValue }; };
 
         Padding.Add (vScrollBar, hScrollBar);
-        hScrollBar.PositionChanged += (sender, args) => { Viewport = Viewport with { X = args.CurrentValue }; };
+
+        vScrollBar.PositionChanged += (sender, args) =>
+                                      {
+                                          if (Viewport.Height > 0)
+                                          {
+                                              Viewport = Viewport with { Y = args.CurrentValue };
+                                          }
+                                      };
+
+        hScrollBar.PositionChanged += (sender, args) =>
+                                      {
+                                          if (Viewport.Width > 0)
+                                          {
+                                              Viewport = Viewport with { X = args.CurrentValue };
+                                          }
+                                      };
 
         ViewportChanged += (sender, args) =>
-                           {
-                               if (Viewport.Width < GetContentSize ().Width)
-                               {
-                                   Padding.Thickness = Padding.Thickness with { Bottom = 1 };
-                               }
-                               else
-                               {
-                                   Padding.Thickness = Padding.Thickness with { Bottom = 0 };
-                               }
+                        {
+                            if (Viewport.Width < GetContentSize ().Width)
+                            {
+                                Padding.Thickness = Padding.Thickness with { Bottom = 1 };
+                                hScrollBar.Visible = true;
+                            }
+                            else
+                            {
+                                Padding.Thickness = Padding.Thickness with { Bottom = 0 };
+                                hScrollBar.Visible = false;
+                            }
 
-                               hScrollBar.Size = COLUMN_WIDTH * 15;
-                               hScrollBar.Position = Viewport.X;
+                            hScrollBar.Size = COLUMN_WIDTH * 15;
+                            hScrollBar.Position = Viewport.X;
 
-                               vScrollBar.Size = GetContentSize ().Height;
-                               vScrollBar.Position = Viewport.Y;
-                           };
+                            vScrollBar.Size = GetContentSize ().Height;
+                            vScrollBar.Position = Viewport.Y;
+                        };
     }
 
     private void Handle_MouseEvent (object sender, MouseEventArgs e)
@@ -604,7 +640,7 @@ internal class CharMap : View
                 }
             }
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
             SelectedCodePointChanged?.Invoke (this, new (SelectedCodePoint, null));
         }
     }
@@ -615,7 +651,7 @@ internal class CharMap : View
         set
         {
             _rowHeight = value ? 2 : 1;
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -631,7 +667,7 @@ internal class CharMap : View
             _start = value;
             SelectedCodePoint = value;
             Viewport = Viewport with { Y = SelectedCodePoint / 16 * _rowHeight };
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -639,21 +675,21 @@ internal class CharMap : View
     private static int RowWidth => RowLabelWidth + COLUMN_WIDTH * 16;
     public event EventHandler<ListViewItemEventArgs> Hover;
 
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
-        if (viewport.Height == 0 || viewport.Width == 0)
+        if (Viewport.Height == 0 || Viewport.Width == 0)
         {
-            return;
+            return true;
         }
 
-        Clear ();
+        ClearViewport ();
 
         int cursorCol = Cursor.X + Viewport.X - RowLabelWidth - 1;
         int cursorRow = Cursor.Y + Viewport.Y - 1;
 
-        Driver.SetAttribute (GetHotNormalColor ());
+        SetAttribute (GetHotNormalColor ());
         Move (0, 0);
-        Driver.AddStr (new (' ', RowLabelWidth + 1));
+        AddStr (new (' ', RowLabelWidth + 1));
 
         int firstColumnX = RowLabelWidth - Viewport.X;
 
@@ -665,12 +701,12 @@ internal class CharMap : View
             if (x > RowLabelWidth - 2)
             {
                 Move (x, 0);
-                Driver.SetAttribute (GetHotNormalColor ());
-                Driver.AddStr (" ");
-                Driver.SetAttribute (HasFocus && cursorCol + firstColumnX == x ? ColorScheme.HotFocus : GetHotNormalColor ());
-                Driver.AddStr ($"{hexDigit:x}");
-                Driver.SetAttribute (GetHotNormalColor ());
-                Driver.AddStr (" ");
+                SetAttribute (GetHotNormalColor ());
+                AddStr (" ");
+                SetAttribute (HasFocus && cursorCol + firstColumnX == x ? ColorScheme.HotFocus : GetHotNormalColor ());
+                AddStr ($"{hexDigit:x}");
+                SetAttribute (GetHotNormalColor ());
+                AddStr (" ");
             }
         }
 
@@ -689,7 +725,7 @@ internal class CharMap : View
             }
 
             Move (firstColumnX + COLUMN_WIDTH, y);
-            Driver.SetAttribute (GetNormalColor ());
+            SetAttribute (GetNormalColor ());
 
             for (var col = 0; col < 16; col++)
             {
@@ -705,7 +741,7 @@ internal class CharMap : View
                 // If we're at the cursor position, and we don't have focus, invert the colors.
                 if (row == cursorRow && x == cursorCol && !HasFocus)
                 {
-                    Driver.SetAttribute (GetFocusColor ());
+                    SetAttribute (GetFocusColor ());
                 }
 
                 int scalar = val + col;
@@ -723,7 +759,7 @@ internal class CharMap : View
                     // Draw the rune
                     if (width > 0)
                     {
-                        Driver.AddRune (rune);
+                        AddRune (rune);
                     }
                     else
                     {
@@ -744,11 +780,11 @@ internal class CharMap : View
 
                             if (normal.Length == 1)
                             {
-                                Driver.AddRune (normal [0]);
+                                AddRune ((Rune)normal [0]);
                             }
                             else
                             {
-                                Driver.AddRune (Rune.ReplacementChar);
+                                AddRune (Rune.ReplacementChar);
                             }
                         }
                     }
@@ -756,31 +792,33 @@ internal class CharMap : View
                 else
                 {
                     // Draw the width of the rune
-                    Driver.SetAttribute (ColorScheme.HotNormal);
-                    Driver.AddStr ($"{width}");
+                    SetAttribute (ColorScheme.HotNormal);
+                    AddStr ($"{width}");
                 }
 
                 // If we're at the cursor position, and we don't have focus, revert the colors to normal
                 if (row == cursorRow && x == cursorCol && !HasFocus)
                 {
-                    Driver.SetAttribute (GetNormalColor ());
+                    SetAttribute (GetNormalColor ());
                 }
             }
 
             // Draw row label (U+XXXX_)
             Move (0, y);
 
-            Driver.SetAttribute (HasFocus && y + Viewport.Y - 1 == cursorRow ? ColorScheme.HotFocus : ColorScheme.HotNormal);
+            SetAttribute (HasFocus && y + Viewport.Y - 1 == cursorRow ? ColorScheme.HotFocus : ColorScheme.HotNormal);
 
             if (!ShowGlyphWidths || (y + Viewport.Y) % _rowHeight > 0)
             {
-                Driver.AddStr ($"U+{val / 16:x5}_ ");
+                AddStr ($"U+{val / 16:x5}_ ");
             }
             else
             {
-                Driver.AddStr (new (' ', RowLabelWidth));
+                AddStr (new (' ', RowLabelWidth));
             }
         }
+
+        return true;
     }
 
     public override Point? PositionCursor ()
@@ -984,7 +1022,7 @@ internal class CharMap : View
                                                         document.RootElement,
                                                         new
                                                             JsonSerializerOptions
-                                                        { WriteIndented = true }
+                                                            { WriteIndented = true }
                                                        );
             }
 
@@ -997,16 +1035,16 @@ internal class CharMap : View
             var dlg = new Dialog { Title = title, Buttons = [copyGlyph, copyCP, cancel] };
 
             copyGlyph.Accepting += (s, a) =>
-                                {
-                                    CopyGlyph ();
-                                    dlg.RequestStop ();
-                                };
+                                   {
+                                       CopyGlyph ();
+                                       dlg.RequestStop ();
+                                   };
 
             copyCP.Accepting += (s, a) =>
-                             {
-                                 CopyCodePoint ();
-                                 dlg.RequestStop ();
-                             };
+                                {
+                                    CopyCodePoint ();
+                                    dlg.RequestStop ();
+                                };
             cancel.Accepting += (s, a) => dlg.RequestStop ();
 
             var rune = (Rune)SelectedCodePoint;
