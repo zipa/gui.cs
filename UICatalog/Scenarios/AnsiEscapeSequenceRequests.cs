@@ -13,11 +13,15 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
 
     private readonly object _lockAnswers = new ();
     private readonly Dictionary<DateTime, string> _answers = new ();
+    private readonly object _lockErrors = new ();
+    private readonly Dictionary<DateTime, string> _errors = new ();
+
     private GraphView _graphView;
 
     private ScatterSeries _sentSeries;
     private ScatterSeries _answeredSeries;
     private Label _lblSummary;
+    private Label _lblErrorSummary;
 
     public override void Main ()
     {
@@ -151,12 +155,19 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
             Y = Pos.Bottom (cbDar),
             X = Pos.Right (tv),
             Width = Dim.Fill (),
-            Height = Dim.Fill (1)
+            Height = Dim.Fill (2)
         };
 
         _lblSummary = new ()
         {
             Y = Pos.Bottom (_graphView),
+            X = Pos.Right (tv),
+            Width = Dim.Fill ()
+        };
+
+        _lblErrorSummary = new ()
+        {
+            Y = Pos.Bottom (_lblSummary),
             X = Pos.Right (tv),
             Width = Dim.Fill ()
         };
@@ -169,6 +180,7 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         w.Add (tv);
         w.Add (_graphView);
         w.Add (_lblSummary);
+        w.Add (_lblErrorSummary);
 
         return w;
     }
@@ -322,11 +334,34 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         return $"Last:{last} U:{unique} T:{total}";
     }
 
+    private string GetSummaryErrors ()
+    {
+        if (_errors.Count == 0)
+        {
+            return "No errors received yet";
+        }
+
+        string last = _errors.Last ().Value;
+
+        int unique = _errors.Values.Distinct ().Count ();
+        int total = _errors.Count;
+
+        return $"Last:{last} U:{unique} T:{total}";
+    }
+
     private void HandleResponse (string response)
     {
         lock (_lockAnswers)
         {
             _answers.Add (DateTime.Now, response);
+        }
+    }
+
+    private void HandleResponseError (string response)
+    {
+        lock (_lockAnswers)
+        {
+            _errors.Add (DateTime.Now, response);
         }
     }
 
@@ -336,7 +371,11 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         AnsiEscapeSequenceRequest ansiRequest = AnsiEscapeSequenceRequestUtils.CSI_SendDeviceAttributes;
         if (Application.Driver!.TryWriteAnsiRequest (ansiRequest))
         {
-            HandleResponse (ansiRequest.AnsiEscapeSequenceResponse.Response);
+            HandleResponse (ansiRequest.AnsiEscapeSequenceResponse?.Response);
+        }
+        else
+        {
+            HandleResponseError (ansiRequest.AnsiEscapeSequenceResponse?.Response);
         }
     }
 
@@ -383,5 +422,8 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
     {
         _lblSummary.Text = GetSummary ();
         _lblSummary.SetNeedsDisplay ();
+
+        _lblErrorSummary.Text = GetSummaryErrors ();
+        _lblErrorSummary.SetNeedsDisplay ();
     }
 }
