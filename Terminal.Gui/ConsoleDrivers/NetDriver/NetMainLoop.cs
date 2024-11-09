@@ -1,5 +1,4 @@
 ﻿#nullable enable
-using System.Collections.Concurrent;
 
 namespace Terminal.Gui;
 
@@ -16,9 +15,10 @@ internal class NetMainLoop : IMainLoopDriver
     internal Action<NetEvents.InputResult>? ProcessInput;
 
     private readonly ManualResetEventSlim _eventReady = new (false);
-    private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
-    private readonly BlockingCollection<NetEvents.InputResult> _resultQueue = new (new ConcurrentQueue<NetEvents.InputResult> ());
+    internal readonly ManualResetEventSlim _waitForProbe = new (false);
     private readonly CancellationTokenSource _eventReadyTokenSource = new ();
+    private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
+    private readonly Queue<NetEvents.InputResult> _resultQueue = new ();
     private MainLoop? _mainLoop;
 
     /// <summary>Initializes the class with the console driver.</summary>
@@ -48,6 +48,8 @@ internal class NetMainLoop : IMainLoopDriver
 
     bool IMainLoopDriver.EventsPending ()
     {
+        _waitForProbe.Set ();
+
         if (_resultQueue.Count > 0 || _mainLoop!.CheckTimersAndIdleHandlers (out int waitTimeout))
         {
             return true;
@@ -60,6 +62,13 @@ internal class NetMainLoop : IMainLoopDriver
                 // Note: ManualResetEventSlim.Wait will wait indefinitely if the timeout is -1. The timeout is -1 when there
                 // are no timers, but there IS an idle handler waiting.
                 _eventReady.Wait (waitTimeout, _eventReadyTokenSource.Token);
+
+                _eventReadyTokenSource.Token.ThrowIfCancellationRequested ();
+
+                if (!_eventReadyTokenSource.IsCancellationRequested)
+                {
+                    return _resultQueue.Count > 0 || _mainLoop.CheckTimersAndIdleHandlers (out _);
+                }
             }
         }
         catch (OperationCanceledException)
@@ -71,13 +80,6 @@ internal class NetMainLoop : IMainLoopDriver
             _eventReady.Reset ();
         }
 
-        _eventReadyTokenSource.Token.ThrowIfCancellationRequested ();
-
-        if (!_eventReadyTokenSource.IsCancellationRequested)
-        {
-            return _resultQueue.Count > 0 || _mainLoop.CheckTimersAndIdleHandlers (out _);
-        }
-
         // If cancellation was requested then always return true
         return true;
     }
@@ -86,10 +88,7 @@ internal class NetMainLoop : IMainLoopDriver
     {
         while (_resultQueue.Count > 0)
         {
-            if (_resultQueue.TryTake (out NetEvents.InputResult dequeueResult))
-            {
-                ProcessInput?.Invoke (dequeueResult);
-            }
+            ProcessInput?.Invoke (_resultQueue.Dequeue ());
         }
     }
 
@@ -101,8 +100,9 @@ internal class NetMainLoop : IMainLoopDriver
         _eventReadyTokenSource.Dispose ();
 
         _eventReady.Dispose ();
+        _waitForProbe.Dispose ();
 
-        _resultQueue.Dispose();
+        _resultQueue.Clear ();
         _netEvents?.Dispose ();
         _netEvents = null;
 
@@ -115,9 +115,9 @@ internal class NetMainLoop : IMainLoopDriver
         {
             try
             {
-                if (_inputHandlerTokenSource.IsCancellationRequested)
+                if (!_inputHandlerTokenSource.IsCancellationRequested && !_netEvents!._forceRead)
                 {
-                    return;
+                    _waitForProbe.Wait (_inputHandlerTokenSource.Token);
                 }
 
                 if (_resultQueue?.Count == 0 || _netEvents!._forceRead)
@@ -126,7 +126,7 @@ internal class NetMainLoop : IMainLoopDriver
 
                     if (result.HasValue)
                     {
-                        _resultQueue?.Add (result.Value);
+                        _resultQueue?.Enqueue (result.Value);
                     }
                 }
 
@@ -138,6 +138,13 @@ internal class NetMainLoop : IMainLoopDriver
             catch (OperationCanceledException)
             {
                 return;
+            }
+            finally
+            {
+                if (_inputHandlerTokenSource is { IsCancellationRequested: false })
+                {
+                    _waitForProbe.Reset ();
+                }
             }
         }
     }
