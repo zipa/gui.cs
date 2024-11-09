@@ -12,7 +12,7 @@ namespace Terminal.Gui;
 /// </summary>
 /// <remarks>
 ///     <para>
-///         <see cref="Position"/> indicates the number of rows or columns the Scroll has moved from 0.
+///         <see cref="SliderPosition"/> indicates the number of rows or columns the Scroll has moved from 0.
 ///     </para>
 /// </remarks>
 public class ScrollBar : View, IOrientation, IDesignable
@@ -27,8 +27,8 @@ public class ScrollBar : View, IOrientation, IDesignable
         CanFocus = false;
 
         _scroll = new ();
-        _scroll.PositionChanging += OnScrollOnPositionChanging;
-        _scroll.PositionChanged += OnScrollOnPositionChanged;
+        _scroll.SliderPositionChanging += OnScrollOnSliderPositionChanging;
+        _scroll.SliderPositionChanged += OnScrollOnSliderPositionChanged;
         _scroll.SizeChanged += OnScrollOnSizeChanged;
 
         _decreaseButton = new ()
@@ -64,13 +64,13 @@ public class ScrollBar : View, IOrientation, IDesignable
 
         void OnDecreaseButtonOnAccept (object? s, CommandEventArgs e)
         {
-            _scroll.Position--;
+            _scroll.ContentPosition--;
             e.Cancel = true;
         }
 
         void OnIncreaseButtonOnAccept (object? s, CommandEventArgs e)
         {
-            _scroll.Position++;
+            _scroll.ContentPosition++;
             e.Cancel = true;
         }
     }
@@ -180,25 +180,26 @@ public class ScrollBar : View, IOrientation, IDesignable
         set;
     }
 
-    /// <summary>Gets or sets the position, relative to <see cref="Size"/>, to set the scrollbar at.</summary>
+    /// <summary>Gets or sets the position of the slider within the ScrollBar's Viewport.</summary>
     /// <value>The position.</value>
-    public int Position
+    public int SliderPosition
     {
-        get => _scroll.Position;
-        set => _scroll.Position = value;
+        get => _scroll.SliderPosition;
+        set => _scroll.SliderPosition = value;
     }
 
-    private void OnScrollOnPositionChanged (object? sender, EventArgs<int> e) { PositionChanged?.Invoke (this, e); }
-    private void OnScrollOnPositionChanging (object? sender, CancelEventArgs<int> e) { PositionChanging?.Invoke (this, e); }
-
-    /// <summary>Raised when the <see cref="Position"/> has changed.</summary>
-    public event EventHandler<EventArgs<int>>? PositionChanged;
+    private void OnScrollOnSliderPositionChanged (object? sender, EventArgs<int> e) { SliderPositionChanged?.Invoke (this, e); }
+    private void OnScrollOnSliderPositionChanging (object? sender, CancelEventArgs<int> e) { SliderPositionChanging?.Invoke (this, e); }
 
     /// <summary>
-    ///     Raised when the <see cref="Position"/> is changing. Set <see cref="CancelEventArgs.Cancel"/> to
+    ///     Raised when the <see cref="SliderPosition"/> is changing. Set <see cref="CancelEventArgs.Cancel"/> to
     ///     <see langword="true"/> to prevent the position from being changed.
     /// </summary>
-    public event EventHandler<CancelEventArgs<int>>? PositionChanging;
+    public event EventHandler<CancelEventArgs<int>>? SliderPositionChanging;
+
+    /// <summary>Raised when the <see cref="SliderPosition"/> has changed.</summary>
+    public event EventHandler<EventArgs<int>>? SliderPositionChanged;
+
 
     /// <summary>
     ///     Gets or sets the size of the Scroll. This is the total size of the content that can be scrolled through.
@@ -207,6 +208,15 @@ public class ScrollBar : View, IOrientation, IDesignable
     {
         get => _scroll.Size;
         set => _scroll.Size = value;
+    }
+
+    /// <summary>
+    ///     Gets or sets the position of the ScrollSlider within the range of 0...<see cref="Size"/>.
+    /// </summary>
+    public int ContentPosition
+    {
+        get => _scroll.ContentPosition;
+        set => _scroll.ContentPosition = value;
     }
 
     /// <summary>Raised when <see cref="Size"/> has changed.</summary>
@@ -279,7 +289,7 @@ public class ScrollBar : View, IOrientation, IDesignable
         Width = 1;
         Height = Dim.Fill ();
         Size = 200;
-        Position = 10;
+        SliderPosition = 10;
         //ShowPercent = true;
         return true;
     }

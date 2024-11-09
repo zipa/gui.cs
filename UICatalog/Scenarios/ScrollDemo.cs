@@ -160,7 +160,7 @@ public class ScrollDemo : Scenario
 
         NumericUpDown<int> scrollPosition = new ()
         {
-            Value = scroll.Position,
+            Value = scroll.SliderPosition,
             X = Pos.Right (lblPosition) + 1,
             Y = Pos.Top (lblPosition)
         };
@@ -175,12 +175,12 @@ public class ScrollDemo : Scenario
                                                 return;
                                             }
 
-                                            if (scroll.Position != e.NewValue)
+                                            if (scroll.SliderPosition != e.NewValue)
                                             {
-                                                scroll.Position = e.NewValue;
+                                                scroll.SliderPosition = e.NewValue;
                                             }
 
-                                            if (scroll.Position != e.NewValue)
+                                            if (scroll.SliderPosition != e.NewValue)
                                             {
                                                 e.Cancel = true;
                                             }
@@ -216,7 +216,7 @@ public class ScrollDemo : Scenario
         };
         frameView.Add (lblPosChanging);
 
-        scroll.PositionChanging += (s, e) => { lblPosChanging.Text = $"PositionChanging event - CurrentValue: {e.CurrentValue}; NewValue: {e.NewValue}"; };
+        scroll.SliderPositionChanging += (s, e) => { lblPosChanging.Text = $"PositionChanging event - CurrentValue: {e.CurrentValue}; NewValue: {e.NewValue}"; };
 
         var lblPositionChanged = new Label
         {
@@ -224,7 +224,7 @@ public class ScrollDemo : Scenario
         };
         frameView.Add (lblPositionChanged);
 
-        scroll.PositionChanged += (s, e) =>
+        scroll.SliderPositionChanged += (s, e) =>
                                   {
                                       lblPositionChanged.Text = $"PositionChanged event - CurrentValue: {e.CurrentValue}";
                                       scrollPosition.Value = e.CurrentValue;

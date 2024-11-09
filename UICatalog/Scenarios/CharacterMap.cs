@@ -10,7 +10,9 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Unicode;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Terminal.Gui;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using static Terminal.Gui.SpinnerStyle;
 
 namespace UICatalog.Scenarios;
@@ -335,84 +337,50 @@ internal class CharMap : View, IDesignable
     private int _selected;
     private int _start;
 
+    private readonly ScrollBar _vScrollBar;
+    private readonly ScrollBar _hScrollBar;
+
     public CharMap ()
     {
         ColorScheme = Colors.ColorSchemes ["Dialog"];
         CanFocus = true;
         CursorVisibility = CursorVisibility.Default;
+        //ViewportSettings = ViewportSettings.AllowLocationGreaterThanContentSize;
 
-        SetContentSize (new (RowWidth, (_maxCodePoint / 16 + 1) * _rowHeight));
+        SetContentSize (new (COLUMN_WIDTH * 16, (_maxCodePoint / 16) * _rowHeight)); // +1 for Header
 
         AddCommand (
-                    Command.ScrollUp,
+                    Command.Up,
                     () =>
                     {
-                        if (SelectedCodePoint >= 16)
-                        {
-                            SelectedCodePoint -= 16;
-                        }
-
-                        ScrollVertical (-_rowHeight);
-
+                        SelectedCodePoint -= 16;
                         return true;
                     }
                    );
 
         AddCommand (
-                    Command.ScrollDown,
+                    Command.Down,
                     () =>
                     {
-                        if (SelectedCodePoint <= _maxCodePoint - 16)
-                        {
-                            SelectedCodePoint += 16;
-                        }
-
-                        if (Cursor.Y >= Viewport.Height)
-                        {
-                            ScrollVertical (_rowHeight);
-                        }
-
+                        SelectedCodePoint += 16;
                         return true;
                     }
                    );
 
         AddCommand (
-                    Command.ScrollLeft,
+                    Command.Left,
                     () =>
                     {
-                        if (SelectedCodePoint > 0)
-                        {
-                            SelectedCodePoint--;
-                        }
-
-                        if (Cursor.X > RowLabelWidth + 1)
-                        {
-                            ScrollHorizontal (-COLUMN_WIDTH);
-                        }
-
-                        if (Cursor.X >= Viewport.Width)
-                        {
-                            ScrollHorizontal (Cursor.X - Viewport.Width + 1);
-                        }
-
+                        SelectedCodePoint--;
                         return true;
                     }
                    );
 
         AddCommand (
-                    Command.ScrollRight,
+                    Command.Right,
                     () =>
                     {
-                        if (SelectedCodePoint < _maxCodePoint)
-                        {
-                            SelectedCodePoint++;
-                        }
-
-                        if (Cursor.X >= Viewport.Width)
-                        {
-                            ScrollHorizontal (COLUMN_WIDTH);
-                        }
-
+                       SelectedCodePoint++;
                         return true;
                     }
                    );
@@ -422,8 +390,7 @@ internal class CharMap : View, IDesignable
                     () =>
                     {
                         int page = (Viewport.Height - 1 / _rowHeight) * 16;
-                        SelectedCodePoint -= Math.Min (page, SelectedCodePoint);
-                        Viewport = Viewport with { Y = SelectedCodePoint / 16 * _rowHeight };
+                        SelectedCodePoint -= page;
 
                         return true;
                     }
@@ -434,8 +401,7 @@ internal class CharMap : View, IDesignable
                     () =>
                     {
                         int page = (Viewport.Height - 1 / _rowHeight) * 16;
-                        SelectedCodePoint += Math.Min (page, _maxCodePoint - SelectedCodePoint);
-                        Viewport = Viewport with { Y = SelectedCodePoint / 16 * _rowHeight };
+                        SelectedCodePoint += page;
 
                         return true;
                     }
@@ -456,7 +422,6 @@ internal class CharMap : View, IDesignable
                     () =>
                     {
                         SelectedCodePoint = _maxCodePoint;
-                        Viewport = Viewport with { Y = SelectedCodePoint / 16 * _rowHeight };
 
                         return true;
                     }
@@ -472,10 +437,10 @@ internal class CharMap : View, IDesignable
                     }
                    );
 
-        KeyBindings.Add (Key.CursorUp, Command.ScrollUp);
-        KeyBindings.Add (Key.CursorDown, Command.ScrollDown);
-        KeyBindings.Add (Key.CursorLeft, Command.ScrollLeft);
-        KeyBindings.Add (Key.CursorRight, Command.ScrollRight);
+        KeyBindings.Add (Key.CursorUp, Command.Up);
+        KeyBindings.Add (Key.CursorDown, Command.Down);
+        KeyBindings.Add (Key.CursorLeft, Command.Left);
+        KeyBindings.Add (Key.CursorRight, Command.Right);
         KeyBindings.Add (Key.PageUp, Command.PageUp);
         KeyBindings.Add (Key.PageDown, Command.PageDown);
         KeyBindings.Add (Key.Home, Command.Start);
@@ -487,17 +452,17 @@ internal class CharMap : View, IDesignable
         // Add scrollbars
         Padding.Thickness = new (0, 0, 1, 0);
 
-        ScrollBar hScrollBar = new ()
+        _hScrollBar = new ()
         {
             AutoHide = false,
             X = RowLabelWidth + 1,
             Y = Pos.AnchorEnd (),
             Orientation = Orientation.Horizontal,
             Width = Dim.Fill (1),
-            Size = COLUMN_WIDTH * 15
+            Size = GetContentSize ().Width
         };
 
-        ScrollBar vScrollBar = new ()
+        _vScrollBar = new ()
         {
             AutoHide = false,
             X = Pos.AnchorEnd (),
@@ -506,42 +471,37 @@ internal class CharMap : View, IDesignable
             Size = GetContentSize ().Height
         };
 
-        Padding.Add (vScrollBar, hScrollBar);
+        Padding.Add (_vScrollBar, _hScrollBar);
 
-        vScrollBar.PositionChanged += (sender, args) =>
+        _vScrollBar.SliderPositionChanged += (sender, args) =>
                                       {
                                           if (Viewport.Height > 0)
                                           {
-                                              Viewport = Viewport with { Y = args.CurrentValue };
+                                              Viewport = Viewport with { Y = _vScrollBar.ContentPosition };
                                           }
                                       };
 
-        hScrollBar.PositionChanged += (sender, args) =>
-                                      {
-                                          if (Viewport.Width > 0)
-                                          {
-                                              Viewport = Viewport with { X = args.CurrentValue };
-                                          }
-                                      };
+        _hScrollBar.SliderPositionChanged += (sender, args) =>
+                                             {
+                                                 if (Viewport.Width > 0)
+                                                 {
+                                                     Viewport = Viewport with { X = _hScrollBar.ContentPosition };
+                                                 }
+                                             };
 
-        ViewportChanged += (sender, args) =>
+        FrameChanged += (sender, args) =>
                         {
-                            if (Viewport.Width < GetContentSize ().Width)
+                            int width = Viewport.Width / COLUMN_WIDTH * COLUMN_WIDTH - RowLabelWidth;
+                            if (width < GetContentSize ().Width)
                             {
                                 Padding.Thickness = Padding.Thickness with { Bottom = 1 };
-                                hScrollBar.Visible = true;
                             }
                             else
                             {
                                 Padding.Thickness = Padding.Thickness with { Bottom = 0 };
-                                hScrollBar.Visible = false;
                             }
-
-                            hScrollBar.Size = COLUMN_WIDTH * 15;
-                            hScrollBar.Position = Viewport.X;
-
-                            vScrollBar.Size = GetContentSize ().Height;
-                            vScrollBar.Position = Viewport.Y;
+                            _hScrollBar.ContentPosition = Viewport.X;
+                            _vScrollBar.ContentPosition = Viewport.Y;
                         };
     }
 
@@ -550,6 +510,7 @@ internal class CharMap : View, IDesignable
         if (e.Flags == MouseFlags.WheeledDown)
         {
             ScrollVertical (1);
+            _vScrollBar.ContentPosition = Viewport.Y;
             e.Handled = true;
 
             return;
@@ -558,6 +519,7 @@ internal class CharMap : View, IDesignable
         if (e.Flags == MouseFlags.WheeledUp)
         {
             ScrollVertical (-1);
+            _vScrollBar.ContentPosition = Viewport.Y;
             e.Handled = true;
 
             return;
@@ -565,7 +527,7 @@ internal class CharMap : View, IDesignable
 
         if (e.Flags == MouseFlags.WheeledRight)
         {
-            ScrollHorizontal (1);
+            _hScrollBar.SliderPosition++;
             e.Handled = true;
 
             return;
@@ -573,18 +535,17 @@ internal class CharMap : View, IDesignable
 
         if (e.Flags == MouseFlags.WheeledLeft)
         {
-            ScrollHorizontal (-1);
+            _hScrollBar.SliderPosition--;
             e.Handled = true;
         }
     }
 
-    /// <summary>Gets the coordinates of the Cursor based on the SelectedCodePoint in screen coordinates</summary>
+    /// <summary>Gets or sets the coordinates of the Cursor based on the SelectedCodePoint in Viewport-relative coordinates</summary>
     public Point Cursor
     {
         get
         {
-            int row = SelectedCodePoint / 16 * _rowHeight - Viewport.Y + 1;
-
+            int row = SelectedCodePoint / 16 * _rowHeight - Viewport.Y + 1; // + 1 for header
             int col = SelectedCodePoint % 16 * COLUMN_WIDTH - Viewport.X + RowLabelWidth + 1; // + 1 for padding between label and first column
 
             return new (col, row);
@@ -595,8 +556,7 @@ internal class CharMap : View, IDesignable
     public static int _maxCodePoint = UnicodeRange.Ranges.Max (r => r.End);
 
     /// <summary>
-    ///     Specifies the starting offset for the character map. The default is 0x2500 which is the Box Drawing
-    ///     characters.
+    ///     Gets or sets the currently selected codepoint. Causes the Viewport to scroll to make the selected code point visible.
     /// </summary>
     public int SelectedCodePoint
     {
@@ -608,42 +568,60 @@ internal class CharMap : View, IDesignable
                 return;
             }
 
-            _selected = value;
+            Point prevCursor = Cursor;
+            int newSelectedCodePoint = Math.Clamp (value, 0, _maxCodePoint);
 
-            if (IsInitialized)
+            ScrollToMakeRowVisible (newSelectedCodePoint / 16 * _rowHeight, prevCursor.Y);
+            ScrollToMakeColumnVisible (newSelectedCodePoint % 16 * COLUMN_WIDTH, prevCursor.X);
+
+            if (_selected != newSelectedCodePoint)
             {
-                int row = SelectedCodePoint / 16 * _rowHeight;
-                int col = SelectedCodePoint % 16 * COLUMN_WIDTH;
-
-                if (row - Viewport.Y < 0)
-                {
-                    // Moving up.
-                    Viewport = Viewport with { Y = row };
-                }
-                else if (row - Viewport.Y >= Viewport.Height)
-                {
-                    // Moving down.
-                    Viewport = Viewport with { Y = row - Viewport.Height };
-                }
-
-                int width = Viewport.Width / COLUMN_WIDTH * COLUMN_WIDTH - RowLabelWidth;
-
-                if (col - Viewport.X < 0)
-                {
-                    // Moving left.
-                    Viewport = Viewport with { X = col };
-                }
-                else if (col - Viewport.X >= width)
-                {
-                    // Moving right.
-                    Viewport = Viewport with { X = col - width };
-                }
+                _selected = newSelectedCodePoint;
+                SetNeedsDraw ();
+                SelectedCodePointChanged?.Invoke (this, new (SelectedCodePoint, null));
             }
-
-            SetNeedsDraw ();
-            SelectedCodePointChanged?.Invoke (this, new (SelectedCodePoint, null));
         }
     }
+
+    private void ScrollToMakeRowVisible (int row, int prevCursorY)
+    {
+        int height = Viewport.Height - 1; // Header
+        int delta = row - (Viewport.Y + height);
+        int scroll = Viewport.Height - (prevCursorY - delta);
+
+        if (row - Viewport.Y < 0)
+        {
+            // Moving up.
+            Viewport = Viewport with { Y = Viewport.Y + (row - Viewport.Y) };
+        }
+        else if (row - Viewport.Y >= height)
+        {
+            // Moving down.
+            Viewport = Viewport with { Y = Math.Min (Viewport.Y + scroll, GetContentSize ().Height - height ) };
+        }
+        _vScrollBar.ContentPosition = row;
+    }
+
+    private void ScrollToMakeColumnVisible (int col, int prevCursorX)
+    {
+        int width = Viewport.Width - RowLabelWidth;
+        int delta = col - (Viewport.X + width);
+        int scroll = Viewport.Width - (prevCursorX - delta);
+
+        if (col - Viewport.X < 0)
+        {
+            // Moving left.
+            Viewport = Viewport with { X = Viewport.X + (col - Viewport.X) };
+            _hScrollBar.ContentPosition = col;
+        }
+        else if (col  - Viewport.X >= width)
+        {
+            // Moving right.
+            Viewport = Viewport with { X = Math.Min (Viewport.X + scroll, GetContentSize ().Width - width) };
+            _hScrollBar.ContentPosition = col;
+        }
+    }
+
 
     public bool ShowGlyphWidths
     {
@@ -682,8 +660,6 @@ internal class CharMap : View, IDesignable
             return true;
         }
 
-        ClearViewport ();
-
         int cursorCol = Cursor.X + Viewport.X - RowLabelWidth - 1;
         int cursorRow = Cursor.Y + Viewport.Y - 1;
 
@@ -710,8 +686,7 @@ internal class CharMap : View, IDesignable
             }
         }
 
-        // Even though the Clip is set to prevent us from drawing on the row potentially occupied by the horizontal
-        // scroll bar, we do the smart thing and not actually draw that row if not necessary.
+        // Start at 1 because Header.
         for (var y = 1; y < Viewport.Height; y++)
         {
             // What row is this?
@@ -1022,7 +997,7 @@ internal class CharMap : View, IDesignable
                                                         document.RootElement,
                                                         new
                                                             JsonSerializerOptions
-                                                            { WriteIndented = true }
+                                                        { WriteIndented = true }
                                                        );
             }
 

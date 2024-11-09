@@ -133,7 +133,7 @@ public class Scroll : View, IOrientation, IDesignable
     /// <summary>Raised when <see cref="Size"/> has changed.</summary>
     public event EventHandler<EventArgs<int>>? SizeChanged;
 
-    private int _position;
+    private int _sliderPosition;
 
     private void OnSliderOnFrameChanged (object? sender, EventArgs<Rectangle> args)
     {
@@ -142,52 +142,93 @@ public class Scroll : View, IOrientation, IDesignable
             return;
         }
         int framePos = Orientation == Orientation.Vertical ? args.CurrentValue.Y : args.CurrentValue.X;
-        double pos = ((double)ViewportDimension * ViewportDimension / (Size)) * framePos;
-        RaisePositionChangeEvents (_position, (int)pos);
+        RaisePositionChangeEvents (_sliderPosition, framePos);
     }
 
     /// <summary>
-    ///     Gets or sets the position of the start of the Scroll slider, relative to <see cref="Size"/>.
+    ///     Gets or sets the position of the start of the Scroll slider, within the Viewport.
     /// </summary>
-    public int Position
+    public int SliderPosition
     {
-        get => _position;
-        set => RaisePositionChangeEvents (_position, value);
+        get => _sliderPosition;
+        set => RaisePositionChangeEvents (_sliderPosition, value);
     }
 
-    private void RaisePositionChangeEvents (int current, int value)
+    /// <summary>
+    ///     Gets or sets the position of the ScrollSlider within the range of 0...<see cref="Size"/>.
+    /// </summary>
+    public int ContentPosition
     {
-        if (OnPositionChanging (current, value))
+        get
         {
-            _slider.Position = current;
+            if (ViewportDimension - _slider.Size == 0)
+            {
+                return 0;
+            }
+            return (int)Math.Round (GetCurrentContentPosition ());
+        }
+        set
+        {
+            if (Size - ViewportDimension == 0)
+            {
+                SliderPosition = 0;
+                return;
+            }
+
+            double newContentPos = (double)value / (ViewportDimension - _slider.Size) * (Size - ViewportDimension);
+            double newSliderPos = (double)value / (Size - ViewportDimension) * (ViewportDimension - _slider.Size);
+
+            int newSliderPosition = (int)Math.Ceiling (newSliderPos);
+            if (newContentPos >= GetCurrentContentPosition ())
+            {
+                newSliderPosition = (int)Math.Floor (newSliderPos);
+            }
+
+            if (SliderPosition != newSliderPosition)
+            {
+                SliderPosition = newSliderPosition;
+            }
+        }
+    }
+
+    private double GetCurrentContentPosition ()
+    {
+        return (double)SliderPosition / (ViewportDimension - _slider.Size) * (Size - ViewportDimension);
+    }
+
+    private void RaisePositionChangeEvents (int currentSliderPosition, int newSliderPosition)
+    {
+        if (OnPositionChanging (currentSliderPosition, newSliderPosition))
+        {
+            _slider.Position = currentSliderPosition;
             return;
         }
 
-        CancelEventArgs<int> args = new (ref current, ref value);
-        PositionChanging?.Invoke (this, args);
+        CancelEventArgs<int> args = new (ref currentSliderPosition, ref newSliderPosition);
+        SliderPositionChanging?.Invoke (this, args);
 
         if (args.Cancel)
         {
-            _slider.Position = current;
+            _slider.Position = currentSliderPosition;
             return;
         }
 
         // This sets the slider position and clamps the value
-        _slider.Position = value;
+        _slider.Position = newSliderPosition;
 
-        if (_slider.Position == _position)
+        if (_slider.Position == _sliderPosition)
         {
             return;
         }
 
-        _position = value;
+        _sliderPosition = newSliderPosition;
 
-        OnPositionChanged (_position);
-        PositionChanged?.Invoke (this, new (in value));
+        OnPositionChanged (_sliderPosition);
+        SliderPositionChanged?.Invoke (this, new (in newSliderPosition));
     }
 
     /// <summary>
-    ///     Called when <see cref="Position"/> is changing. Return true to cancel the change.
+    ///     Called when <see cref="SliderPosition"/> is changing. Return true to cancel the change.
     /// </summary>
     protected virtual bool OnPositionChanging (int currentPos, int newPos)
     {
@@ -195,16 +236,16 @@ public class Scroll : View, IOrientation, IDesignable
     }
 
     /// <summary>
-    ///     Raised when the <see cref="Position"/> is changing. Set <see cref="CancelEventArgs.Cancel"/> to
+    ///     Raised when the <see cref="SliderPosition"/> is changing. Set <see cref="CancelEventArgs.Cancel"/> to
     ///     <see langword="true"/> to prevent the position from being changed.
     /// </summary>
-    public event EventHandler<CancelEventArgs<int>>? PositionChanging;
+    public event EventHandler<CancelEventArgs<int>>? SliderPositionChanging;
 
-    /// <summary>Called when <see cref="Position"/> has changed.</summary>
+    /// <summary>Called when <see cref="SliderPosition"/> has changed.</summary>
     protected virtual void OnPositionChanged (int position) { }
 
-    /// <summary>Raised when the <see cref="Position"/> has changed.</summary>
-    public event EventHandler<EventArgs<int>>? PositionChanged;
+    /// <summary>Raised when the <see cref="SliderPosition"/> has changed.</summary>
+    public event EventHandler<EventArgs<int>>? SliderPositionChanged;
 
 
     /// <inheritdoc/>
@@ -215,6 +256,77 @@ public class Scroll : View, IOrientation, IDesignable
         return true;
     }
 
+    /// <inheritdoc />
+    protected override bool OnMouseClick (MouseEventArgs args)
+    {
+        if (!args.IsSingleClicked)
+        {
+            return false;
+        }
+
+        if (Orientation == Orientation.Vertical)
+        {
+            // If the position is w/in the slider frame ignore
+            if (args.Position.Y >= _slider.Frame.Y && args.Position.Y < _slider.Frame.Y + _slider.Frame.Height)
+            {
+                return false;
+            }
+
+            SliderPosition = args.Position.Y;
+        }
+        else
+        {
+            // If the position is w/in the slider frame ignore
+            if (args.Position.X >= _slider.Frame.X && args.Position.X < _slider.Frame.X + _slider.Frame.Width)
+            {
+                return false;
+            }
+
+            SliderPosition = args.Position.X;
+        }
+
+
+        return true;
+    }
+
+    /// <inheritdoc/>
+    protected override bool OnMouseEvent (MouseEventArgs mouseEvent)
+    {
+        if (SuperView is null)
+        {
+            return false;
+        }
+
+        if (!mouseEvent.IsWheel)
+        {
+            return false;
+        }
+
+        if (Orientation == Orientation.Vertical)
+        {
+            if (mouseEvent.Flags.HasFlag (MouseFlags.WheeledDown))
+            {
+                SliderPosition++;
+            }
+            if (mouseEvent.Flags.HasFlag (MouseFlags.WheeledUp))
+            {
+                SliderPosition--;
+            }
+        }
+        else
+        {
+            if (mouseEvent.Flags.HasFlag (MouseFlags.WheeledRight))
+            {
+                SliderPosition++;
+            }
+            if (mouseEvent.Flags.HasFlag (MouseFlags.WheeledLeft))
+            {
+                SliderPosition--;
+            }
+        }
+
+        return true;
+    }
 
     /// <inheritdoc />
     public bool EnableForDesign ()
@@ -236,7 +348,7 @@ public class Scroll : View, IOrientation, IDesignable
         Width = 1;
         Height = Dim.Fill ();
         Size = 1000;
-        Position = 10;
+        SliderPosition = 10;
 
 
 

@@ -91,11 +91,21 @@ public class ScrollSlider : View, IOrientation, IDesignable
         return true;
     }
 
+    private bool _showPercent;
+
     /// <summary>
     ///     Gets or sets whether the ScrollSlider will set <see cref="View.Text"/> to show the percentage the slider
     ///     takes up within the <see cref="View.SuperView"/>'s Viewport.
     /// </summary>
-    public bool ShowPercent { get; set; }
+    public bool ShowPercent
+    {
+        get => _showPercent;
+        set
+        {
+            _showPercent = value;
+            SetNeedsDraw();
+        }
+    }
 
     /// <summary>
     ///     Gets or sets the size of the ScrollSlider. This is a helper that simply gets or sets the Width or Height depending on the
@@ -138,7 +148,7 @@ public class ScrollSlider : View, IOrientation, IDesignable
     }
 
     /// <summary>
-    ///     Gets or sets the position of the ScrollSlider. This is a helper that simply gets or sets the X or Y depending on the
+    ///     Gets or sets the position of the ScrollSlider relative to the size of the ScrollSlider's Frame. This is a helper that simply gets or sets the X or Y depending on the
     ///     <see cref="Orientation"/>. The position will be constrained such that the ScrollSlider will not go outside the Viewport of
     ///     the <see cref="View.SuperView"/>.
     /// </summary>
@@ -175,6 +185,8 @@ public class ScrollSlider : View, IOrientation, IDesignable
     {
         if (!ShowPercent)
         {
+            Text = string.Empty;
+
             return false;
         }
 
@@ -246,38 +258,10 @@ public class ScrollSlider : View, IOrientation, IDesignable
                     Application.UngrabMouse ();
                 }
             }
+            return true;
         }
+        return false;
 
-        if (mouseEvent.IsWheel)
-        {
-            if (mouseEvent.Flags.HasFlag (MouseFlags.WheeledDown) || mouseEvent.Flags.HasFlag (MouseFlags.WheeledRight))
-            {
-                offset = 1;
-            }
-            else if (mouseEvent.Flags.HasFlag (MouseFlags.WheeledDown) || mouseEvent.Flags.HasFlag (MouseFlags.WheeledLeft))
-            {
-                offset = -1;
-            }
-
-            if (Orientation == Orientation.Vertical)
-            {
-                Y = Frame.Y + offset < 0
-                        ? 0
-                        : Frame.Y + offset + Frame.Height > superViewDimension
-                            ? Math.Max (superViewDimension - Frame.Height, 0)
-                            : Frame.Y + offset;
-            }
-            else
-            {
-                X = Frame.X + offset < 0
-                        ? 0
-                        : Frame.X + offset + Frame.Width > superViewDimension
-                            ? Math.Max (superViewDimension - Frame.Width, 0)
-                            : Frame.X + offset;
-            }
-        }
-
-        return true;
     }
 
     /// <inheritdoc />
