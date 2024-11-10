@@ -12,8 +12,8 @@ public class ViewTests (ITestOutputHelper output)
     public void Dispose_Works ()
     {
         var r = new View ();
-#if DEBUG_IDISPOSABLE
-        Assert.Single (View.Instances);
+#if DEBUG_IDISPOSABL
+        Assert.Equals (3, View.Instances.Count);
 #endif
 
         r.Dispose ();
