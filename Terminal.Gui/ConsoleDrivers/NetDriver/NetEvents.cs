@@ -77,11 +77,16 @@ internal class NetEvents : IDisposable
                 return Console.ReadKey (intercept);
             }
 
-            if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && AnsiEscapeSequenceRequests.Statuses.Count > 0)
+            // The delay must be here because it may have a request response after a while
+            // In WSL it takes longer for keys to be available.
+            Task.Delay (100, cancellationToken).Wait (cancellationToken);
+
+            if (!Console.KeyAvailable && AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && AnsiEscapeSequenceRequests.Statuses.Count > 0)
             {
                 if (_retries > 1)
                 {
-                    if (AnsiEscapeSequenceRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
+                    if (AnsiEscapeSequenceRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? seqReqStatus)
+                        && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
                     {
                         lock (seqReqStatus.AnsiRequest._responseLock)
                         {
@@ -101,11 +106,6 @@ internal class NetEvents : IDisposable
             else
             {
                 _retries = 0;
-            }
-
-            if (!_forceRead)
-            {
-                Task.Delay (100, cancellationToken).Wait (cancellationToken);
             }
         }
 
