@@ -353,17 +353,16 @@ internal class AnsiResponseParser<T> : AnsiResponseParserBase
         return output;
     }
 
-    public IEnumerable<Tuple<char, T>> Release ()
+    public Tuple<char, T>[] Release ()
     {
         // Lock in case Release is called from different Thread from parse
         lock (lockState)
         {
-            foreach (Tuple<char, T> h in HeldToEnumerable ())
-            {
-                yield return h;
-            }
+            Tuple<char, T> [] result = HeldToEnumerable ().ToArray ();
 
             ResetState ();
+
+            return result;
         }
     }
 
