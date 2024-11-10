@@ -48,7 +48,7 @@ public class Scroll : View, IOrientation, IDesignable
             return;
         }
 
-        _slider.Size = (int)Math.Clamp (Math.Floor ((double)ViewportDimension * ViewportDimension / (Size - 2)), 1, ViewportDimension);
+        _slider.Size = (int)Math.Clamp (Math.Floor ((double)ViewportDimension * ViewportDimension / (Size)), 1, ViewportDimension);
     }
 
     #region IOrientation members
@@ -124,6 +124,7 @@ public class Scroll : View, IOrientation, IDesignable
             _size = value;
             OnSizeChanged (_size);
             SizeChanged?.Invoke (this, new (in _size));
+            SetNeedsLayout ();
         }
     }
 
@@ -158,15 +159,13 @@ public class Scroll : View, IOrientation, IDesignable
     {
         int currentSliderPosition = CalculateSliderPosition (_contentPosition);
 
-        if (newSliderPosition > Size - ViewportDimension)
+        if (newSliderPosition > Size - ViewportDimension || currentSliderPosition == newSliderPosition)
         {
             return;
         }
 
         if (OnSliderPositionChanging (currentSliderPosition, newSliderPosition))
         {
-            _slider.Position = currentSliderPosition;
-
             return;
         }
 
@@ -175,18 +174,11 @@ public class Scroll : View, IOrientation, IDesignable
 
         if (args.Cancel)
         {
-            _slider.Position = currentSliderPosition;
-
             return;
         }
 
         // This sets the slider position and clamps the value
         _slider.Position = newSliderPosition;
-
-        if (_slider.Position == currentSliderPosition)
-        {
-            return;
-        }
 
         ContentPosition = (int)Math.Round ((double)newSliderPosition / (ViewportDimension - _slider.Size) * (Size - ViewportDimension));
 
@@ -247,7 +239,7 @@ public class Scroll : View, IOrientation, IDesignable
     private void RaiseContentPositionChangeEvents (int newContentPosition)
     {
         // Clamp the value between 0 and Size - ViewportDimension
-        newContentPosition = (int)Math.Clamp (newContentPosition, 0, Size - ViewportDimension);
+        newContentPosition = (int)Math.Clamp (newContentPosition, 0, Math.Max (0, Size - ViewportDimension));
 
         if (OnContentPositionChanging (_contentPosition, newContentPosition))
         {
@@ -329,6 +321,14 @@ public class Scroll : View, IOrientation, IDesignable
         return true;
     }
 
+    /// <summary>
+    ///     Gets or sets the amount each mouse hweel event will incremenet/decrement the <see cref="ContentPosition"/>.
+    /// </summary>
+    /// <remarks>
+    ///     The default is 1.
+    /// </remarks>
+    public int Increment { get; set; } = 1;
+
     /// <inheritdoc/>
     protected override bool OnMouseEvent (MouseEventArgs mouseEvent)
     {
@@ -346,24 +346,24 @@ public class Scroll : View, IOrientation, IDesignable
         {
             if (mouseEvent.Flags.HasFlag (MouseFlags.WheeledDown))
             {
-                ContentPosition++;
+                ContentPosition += Increment;
             }
 
             if (mouseEvent.Flags.HasFlag (MouseFlags.WheeledUp))
             {
-                ContentPosition--;
+                ContentPosition -= Increment;
             }
         }
         else
         {
             if (mouseEvent.Flags.HasFlag (MouseFlags.WheeledRight))
             {
-                ContentPosition++;
+                ContentPosition += Increment;
             }
 
             if (mouseEvent.Flags.HasFlag (MouseFlags.WheeledLeft))
             {
-                ContentPosition--;
+                ContentPosition -= Increment;
             }
         }
 

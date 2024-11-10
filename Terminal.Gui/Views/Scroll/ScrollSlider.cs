@@ -190,6 +190,11 @@ public class ScrollSlider : View, IOrientation, IDesignable
             return false;
         }
 
+        if (SuperView is null)
+        {
+            return false;
+        }
+
         if (Orientation == Orientation.Vertical)
         {
             Text = $"{(int)Math.Round ((double)Viewport.Height / SuperView!.GetContentSize ().Height * 100)}%";

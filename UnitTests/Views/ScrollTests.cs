@@ -258,568 +258,142 @@ public class ScrollTests
     //    top.Dispose ();
     //}
 
+
+    //[Theory]
+    //[AutoInitShutdown]
+    //[InlineData (Orientation.Vertical)]
+    //[InlineData (Orientation.Horizontal)]
+    //public void Moving_Mouse_Outside_Host_Ensures_Correct_Location_KeepContentInAllViewport_True (Orientation orientation)
+    //{
+    //    var scroll = new Scroll
+    //    {
+    //        X = 10, Y = 10, Width = orientation == Orientation.Vertical ? 1 : 10, Height = orientation == Orientation.Vertical ? 10 : 1, Size = 20,
+    //        SliderPosition = 5, Orientation = orientation
+    //    };
+    //    var top = new Toplevel ();
+    //    top.Add (scroll);
+    //    RunState rs = Application.Begin (top);
+
+    //    Rectangle scrollSliderFrame = scroll.Subviews.FirstOrDefault (x => x.Id == "scrollSlider")!.Frame;
+    //    Assert.Equal (scrollSliderFrame, orientation == Orientation.Vertical ? new (0, 2, 1, 5) : new (2, 0, 5, 1));
+
+    //    Application.RaiseMouseEvent (new () { ScreenPosition = orientation == Orientation.Vertical ? new (10, 12) : new (12, 10), Flags = MouseFlags.Button1Pressed });
+    //    Application.RunIteration (ref rs);
+
+    //    Application.RaiseMouseEvent (
+    //                              new ()
+    //                              {
+    //                                  ScreenPosition = orientation == Orientation.Vertical ? new (10, 0) : new (0, 10),
+    //                                  Flags = MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition
+    //                              });
+    //    Application.RunIteration (ref rs);
+    //    Assert.Equal (new (0, 0), scroll.Subviews.FirstOrDefault (x => x.Id == "scrollSlider")!.Frame.Location);
+
+    //    Application.RaiseMouseEvent (
+    //                              new ()
+    //                              {
+    //                                  ScreenPosition = orientation == Orientation.Vertical ? new (0, 25) : new (80, 0),
+    //                                  Flags = MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition
+    //                              });
+    //    Application.RunIteration (ref rs);
+
+    //    Assert.Equal (
+    //                  orientation == Orientation.Vertical ? new (0, 5) : new (5, 0),
+    //                  scroll.Subviews.FirstOrDefault (x => x.Id == "scrollSlider")!.Frame.Location);
+    //}
+
     [Theory]
+    [CombinatorialData]
     [AutoInitShutdown]
-    [InlineData (
-                    Orientation.Vertical,
-                    20,
-                    10,
-                    4,
-                    @"
-░
-░
-░
-░
-░
-█
-█
-█
-█
-█",
-                    0,
-                    @"
-█
-█
-█
-█
-█
-░
-░
-░
-░
-░")]
-    [InlineData (
-                    Orientation.Vertical,
-                    40,
-                    10,
-                    5,
-                    @"
-░
-░
-█
-█
-█
-░
-░
-░
-░
-░",
-                    20,
-                    @"
-░
-░
-░
-░
-░
-█
-█
-█
-░
-░")]
-    [InlineData (
-                    Orientation.Horizontal,
-                    20,
-                    10,
-                    4,
-                    @"
-░░░░░█████",
-                    0,
-                    @"
-█████░░░░░")]
-    [InlineData (
-                    Orientation.Horizontal,
-                    40,
-                    10,
-                    5,
-                    @"
-░░███░░░░░",
-                    20,
-                    @"
-░░░░░███░░")]
-    public void Mouse_On_The_Container (Orientation orientation, int size, int position, int location, string output, int expectedPos, string expectedOut)
+    public void Mouse_Wheel_Increments_Position ([CombinatorialRange (1, 3, 1)] int increment, Orientation orientation)
     {
-        var scroll = new Scroll
+        var top = new Toplevel ()
         {
-            Width = orientation == Orientation.Vertical ? 1 : 10,
-            Height = orientation == Orientation.Vertical ? 10 : 1,
-            Orientation = orientation, Size = size,
-            SliderPosition = position,
+            Id = "top",
+            Width = 10,
+            Height = 10
         };
-        var top = new Toplevel ();
-        top.Add (scroll);
-        RunState rs = Application.Begin (top);
-        Application.RunIteration (ref rs);
-
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (output, _output);
-
-        Application.RaiseMouseEvent (
-                                  new ()
-                                  {
-                                      ScreenPosition = orientation == Orientation.Vertical ? new (0, location) : new Point (location, 0),
-                                      Flags = MouseFlags.Button1Pressed
-                                  });
-        Assert.Equal (expectedPos, scroll.SliderPosition);
-
-        Application.RunIteration (ref rs);
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (expectedOut, _output);
-    }
-
-    [Theory]
-    [AutoInitShutdown]
-    [InlineData (
-                    Orientation.Vertical,
-                    20,
-                    10,
-                    5,
-                    5,
-                    @"
-░
-░
-░
-░
-░
-█
-█
-█
-█
-█",
-                    MouseFlags.Button1Pressed,
-                    10,
-                    @"
-░
-░
-░
-░
-░
-█
-█
-█
-█
-█")]
-    [InlineData (
-                    Orientation.Vertical,
-                    40,
-                    10,
-                    3,
-                    3,
-                    @"
-░
-░
-█
-█
-█
-░
-░
-░
-░
-░",
-                    MouseFlags.Button1Pressed,
-                    10,
-                    @"
-░
-░
-█
-█
-█
-░
-░
-░
-░
-░")]
-    [InlineData (
-                    Orientation.Horizontal,
-                    20,
-                    10,
-                    5,
-                    5,
-                    @"
-░░░░░█████",
-                    MouseFlags.Button1Pressed,
-                    10,
-                    @"
-░░░░░█████")]
-    [InlineData (
-                    Orientation.Horizontal,
-                    40,
-                    10,
-                    3,
-                    3,
-                    @"
-░░███░░░░░",
-                    MouseFlags.Button1Pressed,
-                    10,
-                    @"
-░░███░░░░░")]
-    [InlineData (
-                    Orientation.Vertical,
-                    20,
-                    10,
-                    5,
-                    4,
-                    @"
-░
-░
-░
-░
-░
-█
-█
-█
-█
-█",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    8,
-                    @"
-░
-░
-░
-░
-█
-█
-█
-█
-█
-░")]
-    [InlineData (
-                    Orientation.Horizontal,
-                    20,
-                    10,
-                    5,
-                    4,
-                    @"
-░░░░░█████",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    8,
-                    @"
-░░░░█████░")]
-    [InlineData (
-                    Orientation.Vertical,
-                    20,
-                    10,
-                    5,
-                    6,
-                    @"
-░
-░
-░
-░
-░
-█
-█
-█
-█
-█",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    10,
-                    @"
-░
-░
-░
-░
-░
-█
-█
-█
-█
-█")]
-    [InlineData (
-                    Orientation.Horizontal,
-                    20,
-                    10,
-                    5,
-                    6,
-                    @"
-░░░░░█████",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    10,
-                    @"
-░░░░░█████")]
-    [InlineData (
-                    Orientation.Vertical,
-                    40,
-                    10,
-                    2,
-                    1,
-                    @"
-░
-░
-█
-█
-█
-░
-░
-░
-░
-░",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    4,
-                    @"
-░
-█
-█
-█
-░
-░
-░
-░
-░
-░")]
-    [InlineData (
-                    Orientation.Horizontal,
-                    40,
-                    10,
-                    2,
-                    1,
-                    @"
-░░███░░░░░",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    4,
-                    @"
-░███░░░░░░")]
-    [InlineData (
-                    Orientation.Vertical,
-                    40,
-                    10,
-                    3,
-                    4,
-                    @"
-░
-░
-█
-█
-█
-░
-░
-░
-░
-░",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    12,
-                    @"
-░
-░
-░
-█
-█
-█
-░
-░
-░
-░")]
-    [InlineData (
-                    Orientation.Horizontal,
-                    40,
-                    10,
-                    3,
-                    4,
-                    @"
-░░███░░░░░",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    12,
-                    @"
-░░░███░░░░")]
-    [InlineData (
-                    Orientation.Vertical,
-                    40,
-                    10,
-                    2,
-                    3,
-                    @"
-░
-░
-█
-█
-█
-░
-░
-░
-░
-░",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    12,
-                    @"
-░
-░
-░
-█
-█
-█
-░
-░
-░
-░")]
-    [InlineData (
-                    Orientation.Horizontal,
-                    40,
-                    10,
-                    2,
-                    3,
-                    @"
-░░███░░░░░",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    12,
-                    @"
-░░░███░░░░")]
-    [InlineData (
-                    Orientation.Vertical,
-                    40,
-                    10,
-                    2,
-                    4,
-                    @"
-░
-░
-█
-█
-█
-░
-░
-░
-░
-░",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    16,
-                    @"
-░
-░
-░
-░
-█
-█
-█
-░
-░
-░")]
-    [InlineData (
-                    Orientation.Horizontal,
-                    40,
-                    10,
-                    2,
-                    4,
-                    @"
-░░███░░░░░",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    16,
-                    @"
-░░░░███░░░")]
-    public void Mouse_On_The_Slider (
-        Orientation orientation,
-        int size,
-        int position,
-        int startLocation,
-        int endLocation,
-        string output,
-        MouseFlags mouseFlags,
-        int expectedPos,
-        string expectedOut
-    )
-    {
         var scroll = new Scroll
         {
-            Width = orientation == Orientation.Vertical ? 1 : 10,
-            Height = orientation == Orientation.Vertical ? 10 : 1,
+            Id = "scroll",
             Orientation = orientation,
-            Size = size, SliderPosition = position,
+            Size = 20,
+            Increment = increment
         };
-        var top = new Toplevel ();
+
         top.Add (scroll);
         RunState rs = Application.Begin (top);
 
+        Assert.Equal (0, scroll.SliderPosition);
+        Assert.Equal (0, scroll.ContentPosition);
+
+        Application.RaiseMouseEvent (new ()
+        {
+            ScreenPosition = new (0, 0),
+            Flags = orientation == Orientation.Vertical ? MouseFlags.WheeledDown : MouseFlags.WheeledRight
+        });
         Application.RunIteration (ref rs);
 
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (output, _output);
+        Assert.Equal (increment, scroll.ContentPosition);
 
-        Assert.Null (Application.MouseGrabView);
-
-        if (mouseFlags.HasFlag (MouseFlags.ReportMousePosition))
+        Application.RaiseMouseEvent (new ()
         {
-            MouseFlags mf = mouseFlags & ~MouseFlags.ReportMousePosition;
-
-            Application.RaiseMouseEvent (
-                                      new ()
-                                      {
-                                          ScreenPosition = orientation == Orientation.Vertical ? new (0, startLocation) : new (startLocation, 0),
-                                          Flags = mf
-                                      });
-            Application.RunIteration (ref rs);
-
-            Application.RaiseMouseEvent (
-                                         new ()
-                                         {
-                                             ScreenPosition = orientation == Orientation.Vertical ? new (0, endLocation) : new (endLocation, 0),
-                                             Flags = mouseFlags
-                                         });
-            Application.RunIteration (ref rs);
-        }
-        else
-        {
-            Assert.Equal (startLocation, endLocation);
-
-            Application.RaiseMouseEvent (
-                                         new ()
-                                         {
-                                             ScreenPosition = orientation == Orientation.Vertical ? new (0, startLocation) : new (startLocation, 0),
-                                             Flags = mouseFlags
-                                         });
-            Application.RunIteration (ref rs);
-        }
-
-        Assert.Equal ("scrollSlider", Application.MouseGrabView?.Id);
-        Assert.Equal (expectedPos, scroll.SliderPosition);
-
+            ScreenPosition = new (0, 0),
+            Flags = orientation == Orientation.Vertical ? MouseFlags.WheeledDown : MouseFlags.WheeledRight
+        });
         Application.RunIteration (ref rs);
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (expectedOut, _output);
 
-        Application.RaiseMouseEvent (
-                                     new ()
-                                     {
-                                         ScreenPosition = orientation == Orientation.Vertical ? new (0, startLocation) : new (startLocation, 0),
-                                         Flags = MouseFlags.Button1Released
-                                     });
-        Assert.Null (Application.MouseGrabView);
+        Assert.Equal (increment * 2, scroll.ContentPosition);
+
+        Application.RaiseMouseEvent (new ()
+        {
+            ScreenPosition = new (0, 0),
+            Flags = orientation == Orientation.Vertical ? MouseFlags.WheeledUp : MouseFlags.WheeledLeft
+        });
+        Application.RunIteration (ref rs);
+
+        Assert.Equal (increment, scroll.ContentPosition);
+
+        Application.ResetState (true);
     }
 
     [Theory]
+    [CombinatorialData]
     [AutoInitShutdown]
-    [InlineData (Orientation.Vertical)]
-    [InlineData (Orientation.Horizontal)]
-    public void Moving_Mouse_Outside_Host_Ensures_Correct_Location_KeepContentInAllViewport_True (Orientation orientation)
+    public void Mouse_Click_Outside_Slider_Moves (Orientation orientation)
     {
+        var top = new Toplevel ()
+        {
+            Id = "top",
+            Width = 10,
+            Height = 10
+        };
         var scroll = new Scroll
         {
-            X = 10, Y = 10, Width = orientation == Orientation.Vertical ? 1 : 10, Height = orientation == Orientation.Vertical ? 10 : 1, Size = 20,
-            SliderPosition = 5, Orientation = orientation
+            Id = "scroll",
+            Orientation = orientation,
+            Size = 20,
         };
-        var top = new Toplevel ();
+
         top.Add (scroll);
         RunState rs = Application.Begin (top);
-
-        Rectangle scrollSliderFrame = scroll.Subviews.FirstOrDefault (x => x.Id == "scrollSlider")!.Frame;
-        Assert.Equal (scrollSliderFrame, orientation == Orientation.Vertical ? new (0, 2, 1, 5) : new (2, 0, 5, 1));
-
-        Application.RaiseMouseEvent (new () { ScreenPosition = orientation == Orientation.Vertical ? new (10, 12) : new (12, 10), Flags = MouseFlags.Button1Pressed });
+        scroll.SliderPosition = 5;
         Application.RunIteration (ref rs);
 
-        Application.RaiseMouseEvent (
-                                  new ()
-                                  {
-                                      ScreenPosition = orientation == Orientation.Vertical ? new (10, 0) : new (0, 10),
-                                      Flags = MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition
-                                  });
-        Application.RunIteration (ref rs);
-        Assert.Equal (new (0, 0), scroll.Subviews.FirstOrDefault (x => x.Id == "scrollSlider")!.Frame.Location);
+        Assert.Equal (5, scroll.SliderPosition);
+        Assert.Equal (10, scroll.ContentPosition);
 
-        Application.RaiseMouseEvent (
-                                  new ()
-                                  {
-                                      ScreenPosition = orientation == Orientation.Vertical ? new (0, 25) : new (80, 0),
-                                      Flags = MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition
-                                  });
+        Application.RaiseMouseEvent (new ()
+        {
+            ScreenPosition = new (0, 0),
+            Flags = MouseFlags.Button1Clicked
+        });
         Application.RunIteration (ref rs);
 
-        Assert.Equal (
-                      orientation == Orientation.Vertical ? new (0, 5) : new (5, 0),
-                      scroll.Subviews.FirstOrDefault (x => x.Id == "scrollSlider")!.Frame.Location);
+        Assert.Equal (0, scroll.SliderPosition);
+        Assert.Equal (0, scroll.ContentPosition);
+
+        Application.ResetState (true);
     }
 
     [Theory]
@@ -840,7 +414,7 @@ public class ScrollTests
         var scroll = new Scroll
         {
             Orientation = orientation,
-            Width = Dim.Fill(),
+            Width = Dim.Fill (),
             Height = Dim.Fill ()
         };
         super.Add (scroll);
@@ -854,11 +428,13 @@ public class ScrollTests
     }
 
     [Fact]
-    public void PositionChanging_Cancelable_And_PositionChanged_Events ()
+    public void SliderPosition_Event_Cancelables ()
     {
         var changingCount = 0;
         var changedCount = 0;
-        var scroll = new Scroll { Size = 10 };
+        var scroll = new Scroll { };
+        scroll.Layout ();
+        scroll.Size = scroll.Viewport.Height * 2;
         scroll.Layout ();
 
         scroll.SliderPositionChanging += (s, e) =>
@@ -919,13 +495,13 @@ public class ScrollTests
 
         Reset ();
         scroll.SliderPosition = 10;
-        Assert.Equal (10, scroll.SliderPosition);
+        Assert.Equal (5, scroll.SliderPosition);
         Assert.Equal (1, changing);
         Assert.Equal (1, changed);
 
         Reset ();
         scroll.SliderPosition = 11;
-        Assert.Equal (10, scroll.SliderPosition);
+        Assert.Equal (5, scroll.SliderPosition);
         Assert.Equal (0, changing);
         Assert.Equal (0, changed);
 
@@ -979,311 +555,50 @@ public class ScrollTests
     [Theory]
     [SetupFakeDriver]
     [InlineData (
-                    3,
                     10,
                     1,
-                    0,
-                    Orientation.Vertical,
-                    @"
-┌───┐
-│███│
-│   │
-│   │
-│   │
-│   │
-│   │
-│   │
-│   │
-│   │
-│   │
-└───┘")]
-    [InlineData (
-                    10,
-                    1,
-                    3,
+                    20,
                     0,
                     Orientation.Horizontal,
                     @"
 ┌──────────┐
-│███       │
-└──────────┘")]
-    [InlineData (
-                    3,
-                    10,
-                    3,
-                    0,
-                    Orientation.Vertical,
-                    @"
-┌───┐
-│███│
-│███│
-│███│
-│   │
-│   │
-│   │
-│   │
-│   │
-│   │
-│   │
-└───┘")]
-
-
-
-    [InlineData (
-                    3,
-                    10,
-                    5,
-                    0,
-                    Orientation.Vertical,
-                    @"
-┌───┐
-│███│
-│███│
-│███│
-│███│
-│███│
-│   │
-│   │
-│   │
-│   │
-│   │
-└───┘")]
-
-    [InlineData (
-                    3,
-                    10,
-                    5,
-                    1,
-                    Orientation.Vertical,
-                    @"
-┌───┐
-│   │
-│███│
-│███│
-│███│
-│███│
-│███│
-│   │
-│   │
-│   │
-│   │
-└───┘")]
-    [InlineData (
-                    3,
-                    10,
-                    5,
-                    4,
-                    Orientation.Vertical,
-                    @"
-┌───┐
-│   │
-│   │
-│   │
-│   │
-│███│
-│███│
-│███│
-│███│
-│███│
-│   │
-└───┘")]
-    [InlineData (
-                    3,
-                    10,
-                    5,
-                    5,
-                    Orientation.Vertical,
-                    @"
-┌───┐
-│   │
-│   │
-│   │
-│   │
-│   │
-│███│
-│███│
-│███│
-│███│
-│███│
-└───┘")]
-    [InlineData (
-                    3,
-                    10,
-                    5,
-                    6,
-                    Orientation.Vertical,
-                    @"
-┌───┐
-│   │
-│   │
-│   │
-│   │
-│   │
-│███│
-│███│
-│███│
-│███│
-│███│
-└───┘")]
-
-    [InlineData (
-                    3,
-                    10,
-                    10,
-                    0,
-                    Orientation.Vertical,
-                    @"
-┌───┐
-│███│
-│███│
-│███│
-│███│
-│███│
-│███│
-│███│
-│███│
-│███│
-│███│
-└───┘")]
-
-    [InlineData (
-                    3,
-                    10,
-                    10,
-                    5,
-                    Orientation.Vertical,
-                    @"
-┌───┐
-│███│
-│███│
-│███│
-│███│
-│███│
-│███│
-│███│
-│███│
-│███│
-│███│
-└───┘")]
-    [InlineData (
-                    3,
-                    10,
-                    11,
-                    0,
-                    Orientation.Vertical,
-                    @"
-┌───┐
-│███│
-│███│
-│███│
-│███│
-│███│
-│███│
-│███│
-│███│
-│███│
-│███│
-└───┘")]
-
-    [InlineData (
-                    10,
-                    3,
-                    5,
-                    0,
-                    Orientation.Horizontal,
-                    @"
-┌──────────┐
-│█████     │
-│█████     │
-│█████     │
+│█████░░░░░│
 └──────────┘")]
 
     [InlineData (
                     10,
                     3,
-                    5,
+                    20,
                     1,
                     Orientation.Horizontal,
                     @"
 ┌──────────┐
-│ █████    │
-│ █████    │
-│ █████    │
-└──────────┘")]
-    [InlineData (
-                    10,
-                    3,
-                    5,
-                    4,
-                    Orientation.Horizontal,
-                    @"
-┌──────────┐
-│    █████ │
-│    █████ │
-│    █████ │
-└──────────┘")]
-    [InlineData (
-                    10,
-                    3,
-                    5,
-                    5,
-                    Orientation.Horizontal,
-                    @"
-┌──────────┐
-│     █████│
-│     █████│
-│     █████│
-└──────────┘")]
-    [InlineData (
-                    10,
-                    3,
-                    5,
-                    6,
-                    Orientation.Horizontal,
-                    @"
-┌──────────┐
-│     █████│
-│     █████│
-│     █████│
+│░█████░░░░│
+│░█████░░░░│
+│░█████░░░░│
 └──────────┘")]
 
     [InlineData (
-                    10,
                     3,
                     10,
+                    20,
                     0,
-                    Orientation.Horizontal,
+                    Orientation.Vertical,
                     @"
-┌──────────┐
-│██████████│
-│██████████│
-│██████████│
-└──────────┘")]
+┌───┐
+│███│
+│███│
+│███│
+│███│
+│███│
+│░░░│
+│░░░│
+│░░░│
+│░░░│
+│░░░│
+└───┘")]
 
-    [InlineData (
-                    10,
-                    3,
-                    10,
-                    5,
-                    Orientation.Horizontal,
-                    @"
-┌──────────┐
-│██████████│
-│██████████│
-│██████████│
-└──────────┘")]
-    [InlineData (
-                    10,
-                    3,
-                    11,
-                    0,
-                    Orientation.Horizontal,
-                    @"
-┌──────────┐
-│██████████│
-│██████████│
-│██████████│
-└──────────┘")]
+
     public void Draws_Correctly (int superViewportWidth, int superViewportHeight, int sliderSize, int sliderPosition, Orientation orientation, string expected)
     {
         var super = new Window
@@ -1297,6 +612,15 @@ public class ScrollTests
         {
             Orientation = orientation,
         };
+
+        if (orientation == Orientation.Vertical)
+        {
+            scroll.Width = Dim.Fill ();
+        }
+        else
+        {
+            scroll.Height = Dim.Fill ();
+        }
         super.Add (scroll);
 
         scroll.Size = sliderSize;

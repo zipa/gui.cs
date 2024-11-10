@@ -1,4 +1,5 @@
 ﻿using Xunit.Abstractions;
+using static Unix.Terminal.Delegates;
 
 namespace Terminal.Gui.ViewsTests;
 
@@ -43,181 +44,6 @@ public class ScrollBarTests
         scrollBarSuperView.SuperView!.Dispose ();
     }
 
-    [Theory]
-    [AutoInitShutdown]
-    [InlineData (
-                    20,
-                    @"
-▲
-█
-█
-█
-█
-░
-░
-░
-░
-▼",
-                    @"
-▲
-░
-░
-█
-█
-█
-█
-░
-░
-▼",
-                    @"
-▲
-░
-░
-░
-░
-█
-█
-█
-█
-▼",
-                    @"
-▲
-░
-░
-█
-█
-░
-░
-░
-░
-▼",
-                    @"
-◄████░░░░►",
-                    @"
-◄░░████░░►",
-                    @"
-◄░░░░████►",
-                    @"
-◄░░██░░░░►")]
-    [InlineData (
-                    40,
-                    @"
-▲
-█
-█
-░
-░
-░
-░
-░
-░
-▼",
-                    @"
-▲
-░
-█
-█
-░
-░
-░
-░
-░
-▼",
-                    @"
-▲
-░
-░
-█
-█
-░
-░
-░
-░
-▼",
-                    @"
-▲
-░
-█
-░
-░
-░
-░
-░
-░
-▼",
-                    @"
-◄██░░░░░░►",
-                    @"
-◄░██░░░░░►",
-                    @"
-◄░░██░░░░►",
-                    @"
-◄░█░░░░░░►")]
-    public void Changing_Position_Size_Orientation_Draws_Correctly_KeepContentInAllViewport_True (
-        int size,
-        string firstVertExpected,
-        string middleVertExpected,
-        string endVertExpected,
-        string sizeVertExpected,
-        string firstHoriExpected,
-        string middleHoriExpected,
-        string endHoriExpected,
-        string sizeHoriExpected
-    )
-    {
-        var scrollBar = new ScrollBar
-        {
-            Orientation = Orientation.Vertical,
-            Size = size,
-            Height = 10,
-            KeepContentInAllViewport = true
-        };
-        var top = new Toplevel ();
-        top.Add (scrollBar);
-        RunState rs = Application.Begin (top);
-        Application.RunIteration (ref rs);
-
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (firstVertExpected, _output);
-
-        scrollBar.SliderPosition = 4;
-        Application.RunIteration (ref rs);
-
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (middleVertExpected, _output);
-
-        scrollBar.SliderPosition = 10;
-        Application.RunIteration (ref rs);
-
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (endVertExpected, _output);
-
-        scrollBar.Size = size * 2;
-        Application.RunIteration (ref rs);
-
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (sizeVertExpected, _output);
-
-        scrollBar.Orientation = Orientation.Horizontal;
-        scrollBar.Width = 10;
-        scrollBar.Height = 1;
-        scrollBar.SliderPosition = 0;
-        scrollBar.Size = size;
-        Application.RunIteration (ref rs);
-
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (firstHoriExpected, _output);
-
-        scrollBar.SliderPosition = 4;
-        Application.RunIteration (ref rs);
-
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (middleHoriExpected, _output);
-
-        scrollBar.SliderPosition = 10;
-        Application.RunIteration (ref rs);
-
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (endHoriExpected, _output);
-
-        scrollBar.Size = size * 2;
-        Application.RunIteration (ref rs);
-
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (sizeHoriExpected, _output);
-    }
 
     [Fact]
     public void Constructor_Defaults ()
@@ -227,13 +53,110 @@ public class ScrollBarTests
         Assert.Equal (Orientation.Vertical, scrollBar.Orientation);
         Assert.Equal (0, scrollBar.Size);
         Assert.Equal (0, scrollBar.SliderPosition);
-        Assert.Equal ("Auto(Content,Absolute(1),)", scrollBar.Width!.ToString ());
-        Assert.Equal ("Auto(Content,Absolute(1),)", scrollBar.Height!.ToString ());
-        //Assert.True (scrollBar.ShowScrollIndicator);
         Assert.True (scrollBar.AutoHide);
     }
 
+
     [Fact]
+    public void OnOrientationChanged_Keeps_Size ()
+    {
+        var scroll = new Scroll ();
+        scroll.Layout ();
+        scroll.Size = 1;
+
+        scroll.Orientation = Orientation.Horizontal;
+        Assert.Equal (1, scroll.Size);
+    }
+
+    [Fact]
+    public void OnOrientationChanged_Sets_Position_To_0 ()
+    {
+        View super = new View ()
+        {
+            Id = "super",
+            Width = 10,
+            Height = 10
+        };
+        var scrollBar = new ScrollBar ()
+        {
+        };
+        super.Add (scrollBar);
+        scrollBar.Layout ();
+        scrollBar.SliderPosition = 1;
+        scrollBar.Orientation = Orientation.Horizontal;
+
+        Assert.Equal (0, scrollBar.SliderPosition);
+    }
+
+
+    [Fact]
+    public void SliderPosition_Event_Cancelables ()
+    {
+        var changingCount = 0;
+        var changedCount = 0;
+        var scrollBar = new ScrollBar { };
+        scrollBar.Layout ();
+        scrollBar.Size = scrollBar.Viewport.Height * 2;
+        scrollBar.Layout ();
+
+        scrollBar.SliderPositionChanging += (s, e) =>
+                                         {
+                                             if (changingCount == 0)
+                                             {
+                                                 e.Cancel = true;
+                                             }
+
+                                             changingCount++;
+                                         };
+        scrollBar.SliderPositionChanged += (s, e) => changedCount++;
+
+        scrollBar.SliderPosition = 1;
+        Assert.Equal (0, scrollBar.SliderPosition);
+        Assert.Equal (1, changingCount);
+        Assert.Equal (0, changedCount);
+
+        scrollBar.SliderPosition = 1;
+        Assert.Equal (1, scrollBar.SliderPosition);
+        Assert.Equal (2, changingCount);
+        Assert.Equal (1, changedCount);
+    }
+
+
+    [Fact]
+    public void ContentPosition_Event_Cancelables ()
+    {
+        var changingCount = 0;
+        var changedCount = 0;
+        var scrollBar = new ScrollBar { };
+        scrollBar.Layout ();
+        scrollBar.Size = scrollBar.Viewport.Height * 2;
+        scrollBar.Layout ();
+
+        scrollBar.ContentPositionChanging += (s, e) =>
+                                            {
+                                                if (changingCount == 0)
+                                                {
+                                                    e.Cancel = true;
+                                                }
+
+                                                changingCount++;
+                                            };
+        scrollBar.ContentPositionChanged += (s, e) => changedCount++;
+
+        scrollBar.ContentPosition = 1;
+        Assert.Equal (0, scrollBar.ContentPosition);
+        Assert.Equal (1, changingCount);
+        Assert.Equal (0, changedCount);
+
+        scrollBar.ContentPosition = 1;
+        Assert.Equal (1, scrollBar.ContentPosition);
+        Assert.Equal (2, changingCount);
+        Assert.Equal (1, changedCount);
+    }
+
+
+
+    [Fact (Skip = "Disabled - Will put this feature in View")]
     [AutoInitShutdown]
     public void KeepContentInAllViewport_True_False ()
     {
@@ -265,594 +188,8 @@ public class ScrollBarTests
         top.Dispose ();
     }
 
-    [Theory]
-    [AutoInitShutdown]
-    [InlineData (
-                    Orientation.Vertical,
-                    20,
-                    10,
-                    4,
-                    @"
-▲
-░
-░
-░
-░
-█
-█
-█
-█
-▼",
-                    2,
-                    @"
-▲
-░
-█
-█
-█
-█
-░
-░
-░
-▼")]
-    [InlineData (
-                    Orientation.Vertical,
-                    40,
-                    10,
-                    5,
-                    @"
-▲
-░
-░
-█
-█
-░
-░
-░
-░
-▼",
-                    18,
-                    @"
-▲
-░
-░
-░
-░
-█
-█
-░
-░
-▼")]
-    [InlineData (
-                    Orientation.Horizontal,
-                    20,
-                    10,
-                    4,
-                    @"
-◄░░░░████►",
-                    2,
-                    @"
-◄░████░░░►")]
-    [InlineData (
-                    Orientation.Horizontal,
-                    40,
-                    10,
-                    5,
-                    @"
-◄░░██░░░░►",
-                    18,
-                    @"
-◄░░░░██░░►")]
-    public void Mouse_On_The_Container_KeepContentInAllViewport_True (Orientation orientation, int size, int position, int location, string output, int expectedPos, string expectedOut)
-    {
-        var scrollBar = new ScrollBar
-        {
-            Width = orientation == Orientation.Vertical ? 1 : 10,
-            Height = orientation == Orientation.Vertical ? 10 : 1,
-            Orientation = orientation, Size = size,
-            SliderPosition = position,
-            KeepContentInAllViewport = true
-        };
-        var top = new Toplevel ();
-        top.Add (scrollBar);
-        RunState rs = Application.Begin (top);
-        Application.RunIteration (ref rs);
 
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (output, _output);
-
-        Application.RaiseMouseEvent (
-                                  new ()
-                                  {
-                                      ScreenPosition = orientation == Orientation.Vertical ? new (0, location) : new Point (location, 0),
-                                      Flags = MouseFlags.Button1Pressed
-                                  });
-        Assert.Equal (expectedPos, scrollBar.SliderPosition);
-
-        Application.RunIteration (ref rs);
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (expectedOut, _output);
-    }
-
-    [Theory]
-    [AutoInitShutdown]
-    [InlineData (
-                    Orientation.Vertical,
-                    20,
-                    10,
-                    5,
-                    5,
-                    @"
-▲
-░
-░
-░
-░
-█
-█
-█
-█
-▼",
-                    MouseFlags.Button1Pressed,
-                    10,
-                    @"
-▲
-░
-░
-░
-░
-█
-█
-█
-█
-▼")]
-    [InlineData (
-                    Orientation.Vertical,
-                    40,
-                    10,
-                    3,
-                    3,
-                    @"
-▲
-░
-░
-█
-█
-░
-░
-░
-░
-▼",
-                    MouseFlags.Button1Pressed,
-                    10,
-                    @"
-▲
-░
-░
-█
-█
-░
-░
-░
-░
-▼")]
-    [InlineData (
-                    Orientation.Horizontal,
-                    20,
-                    10,
-                    5,
-                    5,
-                    @"
-◄░░░░████►",
-                    MouseFlags.Button1Pressed,
-                    10,
-                    @"
-◄░░░░████►")]
-    [InlineData (
-                    Orientation.Horizontal,
-                    40,
-                    10,
-                    3,
-                    3,
-                    @"
-◄░░██░░░░►",
-                    MouseFlags.Button1Pressed,
-                    10,
-                    @"
-◄░░██░░░░►")]
-    [InlineData (
-                    Orientation.Vertical,
-                    20,
-                    10,
-                    5,
-                    7,
-                    @"
-▲
-░
-░
-░
-░
-█
-█
-█
-█
-▼",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    10,
-                    @"
-▲
-░
-░
-░
-░
-█
-█
-█
-█
-▼")]
-    [InlineData (
-                    Orientation.Horizontal,
-                    20,
-                    10,
-                    5,
-                    4,
-                    @"
-◄░░░░████►",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    8,
-                    @"
-◄░░░████░►")]
-    [InlineData (
-                    Orientation.Vertical,
-                    20,
-                    10,
-                    5,
-                    6,
-                    @"
-▲
-░
-░
-░
-░
-█
-█
-█
-█
-▼",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    10,
-                    @"
-▲
-░
-░
-░
-░
-█
-█
-█
-█
-▼")]
-    [InlineData (
-                    Orientation.Horizontal,
-                    20,
-                    10,
-                    5,
-                    6,
-                    @"
-◄░░░░████►",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    10,
-                    @"
-◄░░░░████►")]
-    [InlineData (
-                    Orientation.Vertical,
-                    40,
-                    10,
-                    2,
-                    1,
-                    @"
-▲
-░
-░
-█
-█
-░
-░
-░
-░
-▼",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    2,
-                    @"
-▲
-█
-█
-░
-░
-░
-░
-░
-░
-▼")]
-    [InlineData (
-                    Orientation.Horizontal,
-                    40,
-                    10,
-                    2,
-                    1,
-                    @"
-◄░░██░░░░►",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    2,
-                    @"
-◄██░░░░░░►")]
-    [InlineData (
-                    Orientation.Vertical,
-                    40,
-                    10,
-                    3,
-                    4,
-                    @"
-▲
-░
-░
-█
-█
-░
-░
-░
-░
-▼",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    15,
-                    @"
-▲
-░
-░
-░
-█
-█
-░
-░
-░
-▼")]
-    [InlineData (
-                    Orientation.Horizontal,
-                    40,
-                    10,
-                    3,
-                    4,
-                    @"
-◄░░██░░░░►",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    15,
-                    @"
-◄░░░██░░░►")]
-    [InlineData (
-                    Orientation.Vertical,
-                    40,
-                    10,
-                    3,
-                    3,
-                    @"
-▲
-░
-░
-█
-█
-░
-░
-░
-░
-▼",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    10,
-                    @"
-▲
-░
-░
-█
-█
-░
-░
-░
-░
-▼")]
-    [InlineData (
-                    Orientation.Horizontal,
-                    40,
-                    10,
-                    3,
-                    3,
-                    @"
-◄░░██░░░░►",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    10,
-                    @"
-◄░░██░░░░►")]
-    [InlineData (
-                    Orientation.Vertical,
-                    40,
-                    10,
-                    3,
-                    5,
-                    @"
-▲
-░
-░
-█
-█
-░
-░
-░
-░
-▼",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    20,
-                    @"
-▲
-░
-░
-░
-░
-█
-█
-░
-░
-▼")]
-    [InlineData (
-                    Orientation.Horizontal,
-                    40,
-                    10,
-                    3,
-                    5,
-                    @"
-◄░░██░░░░►",
-                    MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition,
-                    20,
-                    @"
-◄░░░░██░░►")]
-    public void Mouse_On_The_Slider_KeepContentInAllViewport_True (
-        Orientation orientation,
-        int size,
-        int position,
-        int startLocation,
-        int endLocation,
-        string output,
-        MouseFlags mouseFlags,
-        int expectedPos,
-        string expectedOut
-    )
-    {
-        var scrollBar = new ScrollBar
-        {
-            Width = orientation == Orientation.Vertical ? 1 : 10,
-            Height = orientation == Orientation.Vertical ? 10 : 1,
-            Orientation = orientation,
-            Size = size, SliderPosition = position,
-            KeepContentInAllViewport = true
-        };
-        var top = new Toplevel ();
-        top.Add (scrollBar);
-        RunState rs = Application.Begin (top);
-        Application.RunIteration (ref rs);
-
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (output, _output);
-
-        Assert.Null (Application.MouseGrabView);
-
-        if (mouseFlags.HasFlag (MouseFlags.ReportMousePosition))
-        {
-            MouseFlags mf = mouseFlags & ~MouseFlags.ReportMousePosition;
-
-            Application.RaiseMouseEvent (
-                                      new ()
-                                      {
-                                          ScreenPosition = orientation == Orientation.Vertical ? new (0, startLocation) : new (startLocation, 0),
-                                          Flags = mf
-                                      });
-            Application.RunIteration (ref rs);
-
-            Application.RaiseMouseEvent (
-                                         new ()
-                                         {
-                                             ScreenPosition = orientation == Orientation.Vertical ? new (0, endLocation) : new (endLocation, 0),
-                                             Flags = mouseFlags
-                                         });
-            Application.RunIteration (ref rs);
-        }
-        else
-        {
-            Assert.Equal (startLocation, endLocation);
-
-            Application.RaiseMouseEvent (
-                                         new ()
-                                         {
-                                             ScreenPosition = orientation == Orientation.Vertical ? new (0, startLocation) : new (startLocation, 0),
-                                             Flags = mouseFlags
-                                         });
-            Application.RunIteration (ref rs);
-        }
-
-        Assert.Equal ("scrollSlider", Application.MouseGrabView?.Id);
-        Assert.IsType<ScrollSlider> (Application.MouseGrabView);
-        Assert.Equal (expectedPos, scrollBar.SliderPosition);
-
-        Application.RunIteration (ref rs);
-        _ = TestHelpers.AssertDriverContentsWithFrameAre (expectedOut, _output);
-
-        Application.RaiseMouseEvent (
-                                     new ()
-                                     {
-                                         ScreenPosition = orientation == Orientation.Vertical ? new (0, startLocation) : new (startLocation, 0),
-                                         Flags = MouseFlags.Button1Released
-                                     });
-        Assert.Null (Application.MouseGrabView);
-    }
-
-    [Theory]
-    [AutoInitShutdown]
-    [InlineData (Orientation.Vertical)]
-    [InlineData (Orientation.Horizontal)]
-    public void Mouse_Pressed_On_ScrollButton_Changes_Position_KeepContentInAllViewport_True (Orientation orientation)
-    {
-        var scrollBar = new ScrollBar
-        {
-            X = 10, Y = 10, Width = orientation == Orientation.Vertical ? 1 : 10, Height = orientation == Orientation.Vertical ? 10 : 1, Size = 20,
-            Orientation = orientation, KeepContentInAllViewport = true
-        };
-        var top = new Toplevel ();
-        top.Add (scrollBar);
-        RunState rs = Application.Begin (top);
-
-        var scroll = (Scroll)scrollBar.Subviews.FirstOrDefault (x => x is Scroll);
-        Rectangle scrollSliderFrame = scroll!.Subviews.FirstOrDefault (x => x is ScrollSlider)!.Frame;
-        Assert.Equal (scrollSliderFrame, orientation == Orientation.Vertical ? new (0, 0, 1, 4) : new (0, 0, 4, 1));
-        Assert.Equal (0, scrollBar.SliderPosition);
-
-        Application.RunIteration (ref rs);
-
-        // ScrollButton increase
-        for (var i = 0; i < 11; i++)
-        {
-            Application.RaiseMouseEvent (
-                                      new ()
-                                      {
-                                          ScreenPosition = orientation == Orientation.Vertical ? new (10, 19) : new (19, 10), Flags = MouseFlags.Button1Pressed
-                                      });
-            Application.RunIteration (ref rs);
-
-            if (i < 10)
-            {
-                Assert.Equal (i + 1, scrollBar.SliderPosition);
-            }
-            else
-            {
-                Assert.Equal (i, scrollBar.SliderPosition);
-
-                Assert.Equal (
-                              orientation == Orientation.Vertical ? new (0, 4) : new (4, 0),
-                              scroll.Subviews.FirstOrDefault (x => x is ScrollSlider)!.Frame.Location);
-            }
-        }
-
-        for (var i = 10; i > -1; i--)
-        {
-            Application.
-                RaiseMouseEvent (new () { ScreenPosition = new (10, 10), Flags = MouseFlags.Button1Pressed });
-            Application.RunIteration (ref rs);
-
-            if (i > 0)
-            {
-                Assert.Equal (i - 1, scrollBar.SliderPosition);
-            }
-            else
-            {
-                Assert.Equal (0, scrollBar.SliderPosition);
-                Assert.Equal (new (0, 0), scroll.Subviews.FirstOrDefault (x => x is ScrollSlider)!.Frame.Location);
-            }
-        }
-    }
-
-    [Theory]
+    [Theory (Skip = "Disabled - Will put this feature in View")]
     [AutoInitShutdown]
     [InlineData (Orientation.Vertical)]
     [InlineData (Orientation.Horizontal)]
@@ -896,171 +233,6 @@ public class ScrollBarTests
                       scroll.Subviews.FirstOrDefault (x => x is ScrollSlider)!.Frame.Location);
     }
 
-    [Theory]
-    [InlineData (Orientation.Vertical, 20, 10, 10)]
-    [InlineData (Orientation.Vertical, 40, 30, 30)]
-    public void Position_Cannot_Be_Negative_Nor_Greater_Than_Size_Minus_Frame_Length_KeepContentInAllViewport_True (Orientation orientation, int size, int expectedPos1, int expectedPos2)
-    {
-        var scrollBar = new ScrollBar { Orientation = orientation, Height = 10, Size = size, KeepContentInAllViewport = true };
-        Assert.Equal (0, scrollBar.SliderPosition);
-
-        scrollBar.SliderPosition = -1;
-        scrollBar.Layout ();
-        Assert.Equal (0, scrollBar.SliderPosition);
-
-        scrollBar.SliderPosition = size;
-        scrollBar.Layout ();
-        Assert.Equal (expectedPos1, scrollBar.SliderPosition);
-
-        scrollBar.SliderPosition = expectedPos2;
-        scrollBar.Layout ();
-        Assert.Equal (expectedPos2, scrollBar.SliderPosition);
-    }
-
-    [Fact]
-    public void PositionChanging_Cancelable_And_PositionChanged_Events ()
-    {
-        var changingCount = 0;
-        var changedCount = 0;
-        var scrollBar = new ScrollBar { Size = 10 };
-
-        scrollBar.SliderPositionChanging += (s, e) =>
-                                      {
-                                          if (changingCount == 0)
-                                          {
-                                              e.Cancel = true;
-                                          }
-
-                                          changingCount++;
-                                      };
-        scrollBar.SliderPositionChanged += (s, e) => changedCount++;
-
-        scrollBar.SliderPosition = 1;
-        Assert.Equal (0, scrollBar.SliderPosition);
-        Assert.Equal (1, changingCount);
-        Assert.Equal (0, changedCount);
-
-        scrollBar.SliderPosition = 1;
-        scrollBar.Layout ();
-        Assert.Equal (1, scrollBar.SliderPosition);
-        Assert.Equal (2, changingCount);
-        Assert.Equal (1, changedCount);
-    }
-
-    [Fact]
-    public void PositionChanging_PositionChanged_Events_Only_Raises_Once_If_Position_Was_Really_Changed_KeepContentInAllViewport_True ()
-    {
-        var changing = 0;
-        var cancel = false;
-        var changed = 0;
-        var scrollBar = new ScrollBar { Height = 10, Size = 20, KeepContentInAllViewport = true };
-        scrollBar.SliderPositionChanging += Scroll_PositionChanging;
-        scrollBar.SliderPositionChanged += Scroll_PositionChanged;
-
-        Assert.Equal (Orientation.Vertical, scrollBar.Orientation);
-        scrollBar.Layout ();
-        Assert.Equal (new (0, 0, 1, 10), scrollBar.Viewport);
-        Assert.Equal (0, scrollBar.SliderPosition);
-        Assert.Equal (0, changing);
-        Assert.Equal (0, changed);
-
-        scrollBar.SliderPosition = 0;
-        scrollBar.Layout ();
-        Assert.Equal (0, scrollBar.SliderPosition);
-        Assert.Equal (0, changing);
-        Assert.Equal (0, changed);
-
-        scrollBar.SliderPosition = 1;
-        scrollBar.Layout ();
-        Assert.Equal (1, scrollBar.SliderPosition);
-        Assert.Equal (1, changing);
-        Assert.Equal (1, changed);
-
-        Reset ();
-        cancel = true;
-        scrollBar.SliderPosition = 2;
-        scrollBar.Layout ();
-        Assert.Equal (1, scrollBar.SliderPosition);
-        Assert.Equal (1, changing);
-        Assert.Equal (0, changed);
-
-        Reset ();
-        scrollBar.SliderPosition = 10;
-        scrollBar.Layout ();
-        Assert.Equal (10, scrollBar.SliderPosition);
-        Assert.Equal (1, changing);
-        Assert.Equal (1, changed);
-
-        Reset ();
-        scrollBar.SliderPosition = 11;
-        scrollBar.Layout ();
-        Assert.Equal (10, scrollBar.SliderPosition);
-        Assert.Equal (0, changing);
-        Assert.Equal (0, changed);
-
-        Reset ();
-        scrollBar.SliderPosition = 12;
-        scrollBar.Layout ();
-        Assert.Equal (10, scrollBar.SliderPosition);
-        Assert.Equal (0, changing);
-        Assert.Equal (0, changed);
-
-        Reset ();
-        scrollBar.SliderPosition = 13;
-        scrollBar.Layout ();
-        Assert.Equal (10, scrollBar.SliderPosition);
-        Assert.Equal (0, changing);
-        Assert.Equal (0, changed);
-
-        Reset ();
-        scrollBar.SliderPosition = 0;
-        scrollBar.Layout ();
-        Assert.Equal (0, scrollBar.SliderPosition);
-        Assert.Equal (1, changing);
-        Assert.Equal (1, changed);
-
-        scrollBar.SliderPositionChanging -= Scroll_PositionChanging;
-        scrollBar.SliderPositionChanged -= Scroll_PositionChanged;
-
-        void Scroll_PositionChanging (object sender, CancelEventArgs<int> e)
-        {
-            changing++;
-            e.Cancel = cancel;
-        }
-
-        void Scroll_PositionChanged (object sender, EventArgs<int> e) { changed++; }
-
-        void Reset ()
-        {
-            changing = 0;
-            cancel = false;
-            changed = 0;
-        }
-    }
-
-    //[Fact]
-    //public void ShowScrollIndicator_CheckScrollBarVisibility ()
-    //{
-    //    var scrollBar = new ScrollBar { Width = 2, Height = Dim.Fill (), Size = 30 };
-    //    View scrollBarSuperView = ScrollBarSuperView ();
-    //    scrollBarSuperView.Add (scrollBar);
-    //    Application.Begin ((scrollBarSuperView.SuperView as Toplevel)!);
-
-    //    Assert.True (scrollBar.ShowScrollIndicator);
-    //    Assert.True (scrollBar.Visible);
-
-    //    scrollBar.ShowScrollIndicator = false;
-    //    Assert.True (scrollBar.AutoHide);
-    //    Assert.True (scrollBar.ShowScrollIndicator);
-    //    Assert.True (scrollBar.Visible);
-
-    //    scrollBar.AutoHide = false;
-    //    Assert.False (scrollBar.ShowScrollIndicator);
-    //    Assert.False (scrollBar.Visible);
-
-    //    scrollBarSuperView.SuperView!.Dispose ();
-    //}
-
     [Fact]
     public void Size_Cannot_Be_Negative ()
     {
@@ -1085,40 +257,42 @@ public class ScrollBarTests
     [Theory]
     [SetupFakeDriver]
     [InlineData (
-                    3,
                     10,
                     1,
-                    Orientation.Vertical,
+                    20,
+                    0,
+                    Orientation.Horizontal,
                     @"
-┌─┐
-│▲│
-│█│
-│█│
-│░│
-│░│
-│░│
-│░│
-│▼│
-└─┘")]
+┌──────────┐
+│◄███░░░░░►│
+└──────────┘")]
+
     [InlineData (
                     10,
                     3,
+                    20,
                     1,
                     Orientation.Horizontal,
                     @"
-┌────────┐
-│◄██░░░░►│
-└────────┘")]
+┌──────────┐
+│ ░███░░░░ │
+│◄░███░░░░►│
+│ ░███░░░░ │
+└──────────┘")]
+
     [InlineData (
                     3,
                     10,
-                    3,
+                    20,
+                    0,
                     Orientation.Vertical,
                     @"
 ┌───┐
 │ ▲ │
 │███│
 │███│
+│███│
+│░░░│
 │░░░│
 │░░░│
 │░░░│
@@ -1126,33 +300,54 @@ public class ScrollBarTests
 │ ▼ │
 └───┘")]
     [InlineData (
+                    6,
                     10,
-                    3,
-                    3,
-                    Orientation.Horizontal,
+                    20,
+                    1,
+                    Orientation.Vertical,
                     @"
-┌────────┐
-│ ██░░░░ │
-│◄██░░░░►│
-│ ██░░░░ │
-└────────┘")]
-    public void Vertical_Horizontal_Draws_Correctly (int sizeWidth, int sizeHeight, int widthHeight, Orientation orientation, string expected)
+┌──────┐
+│  ▲   │
+│░░░░░░│
+│██████│
+│██████│
+│██████│
+│░░░░░░│
+│░░░░░░│
+│░░░░░░│
+│░░░░░░│
+│  ▼   │
+└──────┘")]
+
+
+    public void Draws_Correctly (int superViewportWidth, int superViewportHeight, int sliderSize, int sliderPosition, Orientation orientation, string expected)
     {
         var super = new Window
         {
             Id = "super",
-            Width = sizeWidth + (orientation == Orientation.Vertical ? widthHeight - 1 : 0),
-            Height = sizeHeight + (orientation == Orientation.Vertical ? 0 : widthHeight - 1)
+            Width = superViewportWidth + 2,
+            Height = superViewportHeight + 2
         };
 
         var scrollBar = new ScrollBar
         {
             Orientation = orientation,
-            Size = orientation == Orientation.Vertical ? sizeHeight * 2 : sizeWidth * 2,
-            Width = orientation == Orientation.Vertical ? widthHeight : Dim.Fill (),
-            Height = orientation == Orientation.Vertical ? Dim.Fill () : widthHeight
         };
+
+        if (orientation == Orientation.Vertical)
+        {
+            scrollBar.Width = Dim.Fill ();
+        }
+        else
+        {
+            scrollBar.Height = Dim.Fill ();
+        }
         super.Add (scrollBar);
+
+        scrollBar.Size = sliderSize;
+        scrollBar.Layout ();
+        scrollBar.SliderPosition = sliderPosition;
+
         super.BeginInit ();
         super.EndInit ();
         super.Layout ();
@@ -1173,5 +368,87 @@ public class ScrollBarTests
         top.Add (view);
 
         return view;
+    }
+
+
+    [Theory]
+    [CombinatorialData]
+    [AutoInitShutdown]
+    public void Mouse_Click_DecrementButton_Decrements ([CombinatorialRange (1, 3, 1)] int increment, Orientation orientation)
+    {
+        var top = new Toplevel ()
+        {
+            Id = "top",
+            Width = 10,
+            Height = 10
+        };
+        var scrollBar = new ScrollBar
+        {
+            Id = "scrollBar",
+            Orientation = orientation,
+            Size = 20,
+            Increment = increment
+        };
+
+        top.Add (scrollBar);
+        RunState rs = Application.Begin (top);
+        scrollBar.SliderPosition = 5;
+        Application.RunIteration (ref rs);
+
+        Assert.Equal (5, scrollBar.SliderPosition);
+        Assert.Equal (12, scrollBar.ContentPosition);
+        int initialPos = scrollBar.ContentPosition;
+
+        Application.RaiseMouseEvent (new ()
+        {
+            ScreenPosition = new (0, 0),
+            Flags = MouseFlags.Button1Clicked
+        });
+        Application.RunIteration (ref rs);
+
+        Assert.Equal (initialPos - increment, scrollBar.ContentPosition);
+
+        Application.ResetState (true);
+    }
+
+
+    [Theory]
+    [CombinatorialData]
+    [AutoInitShutdown]
+    public void Mouse_Click_IncrementButton_Increments ([CombinatorialRange (1, 3, 1)] int increment, Orientation orientation)
+    {
+        var top = new Toplevel ()
+        {
+            Id = "top",
+            Width = 10,
+            Height = 10
+        };
+        var scrollBar = new ScrollBar
+        {
+            Id = "scrollBar",
+            Orientation = orientation,
+            Size = 20,
+            Increment = increment
+        };
+
+        top.Add (scrollBar);
+        RunState rs = Application.Begin (top);
+        scrollBar.SliderPosition = 0;
+        Application.RunIteration (ref rs);
+
+        Assert.Equal (0, scrollBar.SliderPosition);
+        Assert.Equal (0, scrollBar.ContentPosition);
+        int initialPos = scrollBar.ContentPosition;
+
+        Application.RaiseMouseEvent (new ()
+        {
+            ScreenPosition = orientation == Orientation.Vertical ? new (0, scrollBar.Frame.Height - 1) : new (scrollBar.Frame.Width - 1, 0),
+            Flags = MouseFlags.Button1Clicked
+        });
+        Application.RunIteration (ref rs);
+
+        Assert.Equal (initialPos + increment, scrollBar.ContentPosition);
+
+        Application.ResetState (true);
     }
 }

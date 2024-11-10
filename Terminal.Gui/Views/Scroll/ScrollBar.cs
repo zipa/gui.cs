@@ -243,12 +243,13 @@ public class ScrollBar : View, IOrientation, IDesignable
     }
 
     /// <summary>
-    ///     Gets or sets the amount each click of the increment/decrement buttons will incremenet/decrement the <see cref="ContentPosition"/>.
+    ///     Gets or sets the amount each click of the increment/decrement buttons and each
+    ///     mouse wheel event will incremenet/decrement the <see cref="ContentPosition"/>.
     /// </summary>
     /// <remarks>
     ///     The default is 1.
     /// </remarks>
-    public int Increment { get; set; } = 1;
+    public int Increment { get => _scroll.Increment; set => _scroll.Increment = value; }
 
     /// <inheritdoc/>
     protected override void OnSubviewLayout (LayoutEventArgs args) { PositionSubviews (); }
@@ -285,7 +286,7 @@ public class ScrollBar : View, IOrientation, IDesignable
             _increaseButton.Height = Dim.Fill ();
             _increaseButton.Title = Glyphs.RightArrow.ToString ();
             _scroll.Y = 0;
-            _scroll.X = Pos.Bottom (_decreaseButton);
+            _scroll.X = Pos.Right (_decreaseButton);
             _scroll.Width = Dim.Fill (1);
             _scroll.Height = Dim.Fill ();
         }
