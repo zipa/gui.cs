@@ -30,10 +30,6 @@ public abstract class ConsoleDriver
     /// <returns></returns>
     public virtual string GetVersionInfo () { return GetType ().Name; }
 
-    /// <summary>Suspends the application (e.g. on Linux via SIGTSTP) and upon resume, resets the console driver.</summary>
-    /// <remarks>This is only implemented in <see cref="CursesDriver"/>.</remarks>
-    public abstract void Suspend ();
-
     #region ANSI Esc Sequence Handling
 
     // QUESTION: Should this be virtual with a default implementation that does the common stuff?
@@ -93,9 +89,6 @@ public abstract class ConsoleDriver
             }
         }
     }
-
-    /// <summary>Updates the screen to reflect all the changes that have been done to the display buffer</summary>
-    public abstract void Refresh ();
 
     /// <summary>
     ///     Gets the column last set by <see cref="Move"/>. <see cref="Col"/> and <see cref="Row"/> are used by
@@ -180,28 +173,6 @@ public abstract class ConsoleDriver
 
     /// <summary>The topmost row in the terminal.</summary>
     internal virtual int Top { get; set; } = 0;
-
-    private Rectangle _clip;
-
-    /// <summary>
-    ///     Gets or sets the clip rectangle that <see cref="AddRune(Rune)"/> and <see cref="AddStr(string)"/> are subject
-    ///     to.
-    /// </summary>
-    /// <value>The rectangle describing the of <see cref="Clip"/> region.</value>
-    public Rectangle Clip
-    {
-        get => _clip;
-        set
-        {
-            if (_clip == value)
-            {
-                return;
-            }
-
-            // Don't ever let Clip be bigger than Screen
-            _clip = Rectangle.Intersect (Screen, value);
-        }
-    }
 
     /// <summary>Adds the specified rune to the display at the current cursor position.</summary>
     /// <remarks>
@@ -420,19 +391,23 @@ public abstract class ConsoleDriver
     /// </remarks>
     /// <param name="rect">The Screen-relative rectangle.</param>
     /// <param name="rune">The Rune used to fill the rectangle</param>
-    public void FillRect (Rectangle rect, Rune rune = default)
+    internal void FillRect (Rectangle rect, Rune rune = default)
     {
-        rect = Rectangle.Intersect (rect, Clip);
-
+        // BUGBUG: This should be a method on Region
+        rect = Rectangle.Intersect (rect, Clip?.GetBounds () ?? Screen);
         lock (Contents!)
         {
             for (int r = rect.Y; r < rect.Y + rect.Height; r++)
             {
                 for (int c = rect.X; c < rect.X + rect.Width; c++)
                 {
-                    Contents [r, c] = new ()
+                    if (!IsValidLocation (rune, c, r))
                     {
-                        Rune = rune != default (Rune) ? rune : (Rune)' ',
+                        continue;
+                    }
+                    Contents [r, c] = new Cell
+                    {
+                        Rune = (rune != default ? rune : (Rune)' '),
                         Attribute = CurrentAttribute, IsDirty = true
                     };
                     _dirtyLines! [r] = true;
@@ -498,41 +473,6 @@ public abstract class ConsoleDriver
         }
     }
 
-    /// <summary>Determines if the terminal cursor should be visible or not and sets it accordingly.</summary>
-    /// <returns><see langword="true"/> upon success</returns>
-    public abstract bool EnsureCursorVisibility ();
-
-    /// <summary>Fills the specified rectangle with the specified rune, using <see cref="CurrentAttribute"/></summary>
-    /// <remarks>
-    /// The value of <see cref="Clip"/> is honored. Any parts of the rectangle not in the clip will not be drawn.
-    /// </remarks>
-    /// <param name="rect">The Screen-relative rectangle.</param>
-    /// <param name="rune">The Rune used to fill the rectangle</param>
-    internal void FillRect (Rectangle rect, Rune rune = default)
-    {
-        // BUGBUG: This should be a method on Region
-        rect = Rectangle.Intersect (rect, Clip?.GetBounds () ?? Screen);
-        lock (Contents!)
-        {
-            for (int r = rect.Y; r < rect.Y + rect.Height; r++)
-            {
-                for (int c = rect.X; c < rect.X + rect.Width; c++)
-                {
-                    if (!IsValidLocation (rune, c, r))
-                    {
-                        continue;
-                    }
-                    Contents [r, c] = new Cell
-                    {
-                        Rune = (rune != default ? rune : (Rune)' '),
-                        Attribute = CurrentAttribute, IsDirty = true
-                    };
-                    _dirtyLines! [r] = true;
-                }
-            }
-        }
-    }
-
     /// <summary>
     ///     Fills the specified rectangle with the specified <see langword="char"/>. This method is a convenience method
     ///     that calls <see cref="FillRect(Rectangle, Rune)"/>.
@@ -554,17 +494,6 @@ public abstract class ConsoleDriver
     /// <returns><see langword="true"/> upon success</returns>
     public abstract bool GetCursorVisibility (out CursorVisibility visibility);
 
-    /// <summary>Sets the position of the terminal cursor to <see cref="Col"/> and <see cref="Row"/>.</summary>
-    public abstract void UpdateCursor ();
-
-    /// <summary>Tests if the specified rune is supported by the driver.</summary>
-    /// <param name="rune"></param>
-    /// <returns>
-    ///     <see langword="true"/> if the rune can be properly presented; <see langword="false"/> if the driver does not
-    ///     support displaying this rune.
-    /// </returns>
-    public virtual bool IsRuneSupported (Rune rune) { return Rune.IsValid (rune.Value); }
-
     /// <summary>Tests whether the specified coordinate are valid for drawing the specified Rune.</summary>
     /// <param name="rune">Used to determine if one or two columns are required.</param>
     /// <param name="col">The column.</param>
@@ -584,27 +513,6 @@ public abstract class ConsoleDriver
 
             return Clip!.Contains (col, row) || Clip!.Contains (col + 1, row);
         }
-    }
-
-    // TODO: Make internal once Menu is upgraded
-    /// <summary>
-    ///     Updates <see cref="Col"/> and <see cref="Row"/> to the specified column and row in <see cref="Contents"/>.
-    ///     Used by <see cref="AddRune(Rune)"/> and <see cref="AddStr"/> to determine where to add content.
-    /// </summary>
-    /// <remarks>
-    ///     <para>This does not move the cursor on the screen, it only updates the internal state of the driver.</para>
-    ///     <para>
-    ///         If <paramref name="col"/> or <paramref name="row"/> are negative or beyond  <see cref="Cols"/> and
-    ///         <see cref="Rows"/>, the method still sets those properties.
-    ///     </para>
-    /// </remarks>
-    /// <param name="col">Column to move to.</param>
-    /// <param name="row">Row to move to.</param>
-    public virtual void Move (int col, int row)
-    {
-        //Debug.Assert (col >= 0 && row >= 0 && col < Contents.GetLength(1) && row < Contents.GetLength(0));
-        Col = col;
-        Row = row;
     }
 
     /// <summary>Called when the terminal size changes. Fires the <see cref="SizeChanged"/> event.</summary>
@@ -629,6 +537,9 @@ public abstract class ConsoleDriver
     /// <param name="visibility">The wished <see cref="CursorVisibility"/></param>
     /// <returns><see langword="true"/> upon success</returns>
     public abstract bool SetCursorVisibility (CursorVisibility visibility);
+
+    /// <summary>The event fired when the terminal is resized.</summary>
+    public event EventHandler<SizeChangedEventArgs>? SizeChanged;
 
     #endregion Cursor Handling
 

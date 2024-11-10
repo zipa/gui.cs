@@ -70,22 +70,22 @@ internal class CursesDriver : ConsoleDriver
 
         if (consoleKey == ConsoleKey.Packet)
         {
-            var mod = new ConsoleModifiers ();
+            //var mod = new ConsoleModifiers ();
 
-            if (shift)
-            {
-                mod |= ConsoleModifiers.Shift;
-            }
+            //if (shift)
+            //{
+            //    mod |= ConsoleModifiers.Shift;
+            //}
 
-            if (alt)
-            {
-                mod |= ConsoleModifiers.Alt;
-            }
+            //if (alt)
+            //{
+            //    mod |= ConsoleModifiers.Alt;
+            //}
 
-            if (control)
-            {
-                mod |= ConsoleModifiers.Control;
-            }
+            //if (control)
+            //{
+            //    mod |= ConsoleModifiers.Control;
+            //}
 
             var cKeyInfo = new ConsoleKeyInfo (keyChar, consoleKey, shift, alt, control);
             cKeyInfo = ConsoleKeyMapping.DecodeVKPacketToKConsoleKeyInfo (cKeyInfo);
@@ -96,8 +96,8 @@ internal class CursesDriver : ConsoleDriver
             key = (KeyCode)keyChar;
         }
 
-        OnKeyDown (new Key (key));
-        OnKeyUp (new Key (key));
+        OnKeyDown (new (key));
+        OnKeyUp (new (key));
 
         //OnKeyPressed (new KeyEventArgsEventArgs (key));
     }
@@ -118,10 +118,10 @@ internal class CursesDriver : ConsoleDriver
         if (visibility != CursorVisibility.Invisible)
         {
             Console.Out.Write (
-                               EscSeqUtils.CSI_SetCursorStyle (
-                                                               (EscSeqUtils.DECSCUSR_Style)(((int)visibility >> 24)
-                                                                                            & 0xFF)
-                                                              )
+                               AnsiEscapeSequenceRequestUtils.CSI_SetCursorStyle (
+                                                                                  (AnsiEscapeSequenceRequestUtils.DECSCUSR_Style)(((int)visibility >> 24)
+                                                                                              & 0xFF)
+                                                                                 )
                               );
         }
 
@@ -134,7 +134,7 @@ internal class CursesDriver : ConsoleDriver
     {
         if (!RunningUnitTests)
         {
-            Console.Out.Write (EscSeqUtils.CSI_EnableMouseEvents);
+            Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_EnableMouseEvents);
         }
     }
 
@@ -142,7 +142,7 @@ internal class CursesDriver : ConsoleDriver
     {
         if (!RunningUnitTests)
         {
-            Console.Out.Write (EscSeqUtils.CSI_DisableMouseEvents);
+            Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_DisableMouseEvents);
         }
     }
 
@@ -170,13 +170,17 @@ internal class CursesDriver : ConsoleDriver
 
         if (!RunningUnitTests && Col >= 0 && Col < Cols && Row >= 0 && Row < Rows)
         {
-            Curses.move (Row, Col);
-
             if (Force16Colors)
             {
+                Curses.move (Row, Col);
+
                 Curses.raw ();
                 Curses.noecho ();
                 Curses.refresh ();
+            }
+            else
+            {
+                _mainLoopDriver?.WriteRaw (AnsiEscapeSequenceRequestUtils.CSI_SetCursorPosition (Row + 1, Col + 1));
             }
         }
     }
@@ -399,8 +403,6 @@ internal class CursesDriver : ConsoleDriver
         return updated;
     }
 
-    #endregion Screen and Contents
-
     #region Color Handling
 
     public override bool SupportsTrueColor => true;
@@ -531,8 +533,6 @@ internal class CursesDriver : ConsoleDriver
 
     #endregion
 
-    #region Cursor Support
-
     private CursorVisibility? _currentCursorVisibility;
     private CursorVisibility? _initialCursorVisibility;
 
@@ -567,118 +567,6 @@ internal class CursesDriver : ConsoleDriver
 
         return true;
     }
-
-    /// <inheritdoc/>
-    public override bool SetCursorVisibility (CursorVisibility visibility)
-    {
-        if (_initialCursorVisibility.HasValue == false)
-        {
-            return false;
-        }
-
-        if (!RunningUnitTests)
-        {
-            Curses.curs_set (((int)visibility >> 16) & 0x000000FF);
-        }
-
-        if (visibility != CursorVisibility.Invisible)
-        {
-            Console.Out.Write (
-                               AnsiEscapeSequenceRequestUtils.CSI_SetCursorStyle (
-                                                               (AnsiEscapeSequenceRequestUtils.DECSCUSR_Style)(((int)visibility >> 24)
-                                                                                            & 0xFF)
-                                                              )
-                              );
-        }
-
-        _currentCursorVisibility = visibility;
-
-        return true;
-    }
-
-    public override void UpdateCursor ()
-    {
-        EnsureCursorVisibility ();
-
-        if (!RunningUnitTests && Col >= 0 && Col < Cols && Row >= 0 && Row < Rows)
-        {
-            if (Force16Colors)
-            {
-                Curses.move (Row, Col);
-
-                Curses.raw ();
-                Curses.noecho ();
-                Curses.refresh ();
-            }
-            else
-            {
-                _mainLoopDriver?.WriteRaw (AnsiEscapeSequenceRequestUtils.CSI_SetCursorPosition (Row + 1, Col + 1));
-            }
-        }
-    }
-
-    #endregion Cursor Support
-
-    #region Keyboard Support
-
-    public override void SendKeys (char keyChar, ConsoleKey consoleKey, bool shift, bool alt, bool control)
-    {
-        KeyCode key;
-
-        if (consoleKey == ConsoleKey.Packet)
-        {
-            //var mod = new ConsoleModifiers ();
-
-            //if (shift)
-            //{
-            //    mod |= ConsoleModifiers.Shift;
-            //}
-
-            //if (alt)
-            //{
-            //    mod |= ConsoleModifiers.Alt;
-            //}
-
-            //if (control)
-            //{
-            //    mod |= ConsoleModifiers.Control;
-            //}
-
-            var cKeyInfo = new ConsoleKeyInfo (keyChar, consoleKey, shift, alt, control);
-            cKeyInfo = ConsoleKeyMapping.DecodeVKPacketToKConsoleKeyInfo (cKeyInfo);
-            key = ConsoleKeyMapping.MapConsoleKeyInfoToKeyCode (cKeyInfo);
-        }
-        else
-        {
-            key = (KeyCode)keyChar;
-        }
-
-        OnKeyDown (new (key));
-        OnKeyUp (new (key));
-
-        //OnKeyPressed (new KeyEventArgsEventArgs (key));
-    }
-
-    #endregion Keyboard Support
-
-    #region Mouse Support
-    public void StartReportingMouseMoves ()
-    {
-        if (!RunningUnitTests)
-        {
-            Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_EnableMouseEvents);
-        }
-    }
-
-    public void StopReportingMouseMoves ()
-    {
-        if (!RunningUnitTests)
-        {
-            Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_DisableMouseEvents);
-        }
-    }
-
-    #endregion Mouse Support
 
     private bool SetCursorPosition (int col, int row)
     {
@@ -875,8 +763,6 @@ internal class CursesDriver : ConsoleDriver
 
         return false;
     }
-    #region Low-Level Unix Stuff
-
 
     private readonly ManualResetEventSlim _waitAnsiResponse = new (false);
     private CancellationTokenSource? _ansiResponseTokenSource;
@@ -1029,5 +915,3 @@ internal static class Platform
     [DllImport ("libc")]
     private static extern int uname (nint buf);
 }
-
-#endregion Low-Level Unix Stuff

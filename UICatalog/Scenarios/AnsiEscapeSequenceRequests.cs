@@ -414,16 +414,16 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         //  _graphView.ScrollOffset  = new PointF(,0);
         if (_sentSeries.Points.Count > 0 || _answeredSeries.Points.Count > 0)
         {
-            _graphView.SetNeedsDisplay ();
+            _graphView.SetNeedsDraw ();
         }
     }
 
     private void UpdateResponses ()
     {
         _lblSummary.Text = GetSummary ();
-        _lblSummary.SetNeedsDisplay ();
+        _lblSummary.SetNeedsDraw ();
 
         _lblErrorSummary.Text = GetSummaryErrors ();
-        _lblErrorSummary.SetNeedsDisplay ();
+        _lblErrorSummary.SetNeedsDraw ();
     }
 }

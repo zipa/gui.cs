@@ -14,12 +14,6 @@ internal class NetDriver : ConsoleDriver
     public bool IsWinPlatform { get; private set; }
     public NetWinVTConsole? NetWinConsole { get; private set; }
 
-    public override void Refresh ()
-    {
-        UpdateScreen ();
-        UpdateCursor ();
-    }
-
     public override void Suspend ()
     {
         if (Environment.OSVersion.Platform != PlatformID.Unix)
@@ -52,17 +46,16 @@ internal class NetDriver : ConsoleDriver
         StartReportingMouseMoves ();
     }
 
-    #region Screen and Contents
-
-    public override void UpdateScreen ()
+    public override bool UpdateScreen ()
     {
+        bool updated = false;
         if (RunningUnitTests
             || _winSizeChanging
             || Console.WindowHeight < 1
             || Contents?.Length != Rows * Cols
             || Rows != Console.WindowHeight)
         {
-            return;
+            return updated;
         }
 
         var top = 0;
@@ -80,7 +73,7 @@ internal class NetDriver : ConsoleDriver
         {
             if (Console.WindowHeight < 1)
             {
-                return;
+                return updated;
             }
 
             if (!_dirtyLines! [row])
@@ -90,9 +83,10 @@ internal class NetDriver : ConsoleDriver
 
             if (!SetCursorPosition (0, row))
             {
-                return;
+                return updated;
             }
 
+            updated = true;
             _dirtyLines [row] = false;
             output.Clear ();
 
@@ -138,30 +132,33 @@ internal class NetDriver : ConsoleDriver
                         {
                             output.Append (
                                            AnsiEscapeSequenceRequestUtils.CSI_SetGraphicsRendition (
-                                                                                 MapColors (
-                                                                                            (ConsoleColor)attr.Background.GetClosestNamedColor16 (),
-                                                                                            false
-                                                                                           ),
-                                                                                 MapColors ((ConsoleColor)attr.Foreground.GetClosestNamedColor16 ())
-                                                                                )
+                                                                                                    MapColors (
+                                                                                                         (ConsoleColor)attr.Background
+                                                                                                             .GetClosestNamedColor16 (),
+                                                                                                         false
+                                                                                                        ),
+                                                                                                    MapColors (
+                                                                                                     (ConsoleColor)attr.Foreground
+                                                                                                         .GetClosestNamedColor16 ())
+                                                                                                   )
                                           );
                         }
                         else
                         {
                             output.Append (
                                            AnsiEscapeSequenceRequestUtils.CSI_SetForegroundColorRGB (
-                                                                                  attr.Foreground.R,
-                                                                                  attr.Foreground.G,
-                                                                                  attr.Foreground.B
-                                                                                 )
+                                                                                                     attr.Foreground.R,
+                                                                                                     attr.Foreground.G,
+                                                                                                     attr.Foreground.B
+                                                                                                    )
                                           );
 
                             output.Append (
                                            AnsiEscapeSequenceRequestUtils.CSI_SetBackgroundColorRGB (
-                                                                                  attr.Background.R,
-                                                                                  attr.Background.G,
-                                                                                  attr.Background.B
-                                                                                 )
+                                                                                                     attr.Background.R,
+                                                                                                     attr.Background.G,
+                                                                                                     attr.Background.B
+                                                                                                    )
                                           );
                         }
                     }
@@ -199,7 +196,7 @@ internal class NetDriver : ConsoleDriver
                 Console.Write (output);
             }
 
-            foreach (SixelToRender s in Application.Sixel)
+            foreach (var s in Application.Sixel)
             {
                 if (!string.IsNullOrWhiteSpace (s.SixelData))
                 {
@@ -221,9 +218,9 @@ internal class NetDriver : ConsoleDriver
             lastCol += outputWidth;
             outputWidth = 0;
         }
-    }
 
-    #endregion Screen and Contents
+        return updated;
+    }
 
     #region Init/End/MainLoop
 
@@ -821,7 +818,7 @@ internal class NetDriver : ConsoleDriver
         }
     }
 
-    private void ResizeScreen ()
+    public virtual void ResizeScreen ()
     {
         // Not supported on Unix.
         if (IsWinPlatform)
@@ -846,18 +843,17 @@ internal class NetDriver : ConsoleDriver
                 }
 #pragma warning restore CA1416
             }
-
             // INTENT: Why are these eating the exceptions?
             // Comments would be good here.
             catch (IOException)
             {
                 // CONCURRENCY: Unsynchronized access to Clip is not safe.
-                Clip = new (0, 0, Cols, Rows);
+                Clip = new (Screen);
             }
             catch (ArgumentOutOfRangeException)
             {
                 // CONCURRENCY: Unsynchronized access to Clip is not safe.
-                Clip = new (0, 0, Cols, Rows);
+                Clip = new (Screen);
             }
         }
         else
@@ -866,7 +862,7 @@ internal class NetDriver : ConsoleDriver
         }
 
         // CONCURRENCY: Unsynchronized access to Clip is not safe.
-        Clip = new (0, 0, Cols, Rows);
+        Clip = new (Screen);
     }
 
     #endregion Low-Level DotNet tuff

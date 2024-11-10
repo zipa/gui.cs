@@ -517,33 +517,33 @@ internal class WindowsConsole
         _inputReadyCancellationTokenSource = null;
     }
 
-    //internal Size GetConsoleBufferWindow (out Point position)
-    //{
-    //    if (_screenBuffer == nint.Zero)
-    //    {
-    //        position = Point.Empty;
+    internal Size GetConsoleBufferWindow (out Point position)
+    {
+        if (_outputHandle == nint.Zero)
+        {
+            position = Point.Empty;
 
-    //        return Size.Empty;
-    //    }
+            return Size.Empty;
+        }
 
-    //    var csbi = new CONSOLE_SCREEN_BUFFER_INFOEX ();
-    //    csbi.cbSize = (uint)Marshal.SizeOf (csbi);
+        var csbi = new CONSOLE_SCREEN_BUFFER_INFOEX ();
+        csbi.cbSize = (uint)Marshal.SizeOf (csbi);
 
-    //    if (!GetConsoleScreenBufferInfoEx (_screenBuffer, ref csbi))
-    //    {
-    //        //throw new System.ComponentModel.Win32Exception (Marshal.GetLastWin32Error ());
-    //        position = Point.Empty;
+        if (!GetConsoleScreenBufferInfoEx (_outputHandle, ref csbi))
+        {
+            //throw new System.ComponentModel.Win32Exception (Marshal.GetLastWin32Error ());
+            position = Point.Empty;
 
-    //        return Size.Empty;
-    //    }
+            return Size.Empty;
+        }
 
-    //    Size sz = new (
-    //                   csbi.srWindow.Right - csbi.srWindow.Left + 1,
-    //                   csbi.srWindow.Bottom - csbi.srWindow.Top + 1);
-    //    position = new (csbi.srWindow.Left, csbi.srWindow.Top);
+        Size sz = new (
+                       csbi.srWindow.Right - csbi.srWindow.Left + 1,
+                       csbi.srWindow.Bottom - csbi.srWindow.Top + 1);
+        position = new (csbi.srWindow.Left, csbi.srWindow.Top);
 
-    //    return sz;
-    //}
+        return sz;
+    }
 
     internal Size GetConsoleOutputWindow (out Point position)
     {

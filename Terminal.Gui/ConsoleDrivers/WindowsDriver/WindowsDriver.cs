@@ -117,16 +117,6 @@ internal class WindowsDriver : ConsoleDriver
 
     public override bool IsRuneSupported (Rune rune) { return base.IsRuneSupported (rune) && rune.IsBmp; }
 
-    public override void Refresh ()
-    {
-        if (!RunningUnitTests)
-        {
-            UpdateScreen ();
-            //WinConsole?.SetInitialCursorVisibility ();
-            UpdateCursor ();
-        }
-    }
-
     public override void SendKeys (char keyChar, ConsoleKey key, bool shift, bool alt, bool control)
     {
         var input = new WindowsConsole.InputRecord
@@ -289,6 +279,11 @@ internal class WindowsDriver : ConsoleDriver
 
     public override void UpdateCursor ()
     {
+        if (RunningUnitTests)
+        {
+            return;
+        }
+
         if (Col < 0 || Row < 0 || Col >= Cols || Row >= Rows)
         {
             GetCursorVisibility (out CursorVisibility cursorVisibility);
@@ -382,13 +377,14 @@ internal class WindowsDriver : ConsoleDriver
 
     #endregion Cursor Handling
 
-    public override void UpdateScreen ()
+    public override bool UpdateScreen ()
     {
-        Size windowSize = WinConsole?.GetConsoleOutputWindow (out Point _) ?? new Size (Cols, Rows);
+        bool updated = false;
+        Size windowSize = WinConsole?.GetConsoleBufferWindow (out Point _) ?? new Size (Cols, Rows);
 
         if (!windowSize.IsEmpty && (windowSize.Width != Cols || windowSize.Height != Rows))
         {
-            return;
+            return updated;
         }
 
         var bufferCoords = new WindowsConsole.Coord
@@ -405,6 +401,7 @@ internal class WindowsDriver : ConsoleDriver
             }
 
             _dirtyLines [row] = false;
+            updated = true;
 
             for (var col = 0; col < Cols; col++)
             {
@@ -463,6 +460,8 @@ internal class WindowsDriver : ConsoleDriver
         }
 
         WindowsConsole.SmallRect.MakeEmpty (ref _damageRegion);
+
+        return updated;
     }
 
     internal override void End ()
@@ -502,6 +501,7 @@ internal class WindowsDriver : ConsoleDriver
                     Size winSize = WinConsole.GetConsoleOutputWindow (out Point _);
                     Cols = winSize.Width;
                     Rows = winSize.Height;
+                    OnSizeChanged (new SizeChangedEventArgs (new (Cols, Rows)));
                 }
 
                 WindowsConsole.SmallRect.MakeEmpty (ref _damageRegion);
@@ -524,7 +524,7 @@ internal class WindowsDriver : ConsoleDriver
 
         _outputBuffer = new WindowsConsole.ExtendedCharInfo [Rows * Cols];
         // CONCURRENCY: Unsynchronized access to Clip is not safe.
-        Clip = new (0, 0, Cols, Rows);
+        Clip = new (Screen);
 
         _damageRegion = new WindowsConsole.SmallRect
         {
@@ -613,11 +613,12 @@ internal class WindowsDriver : ConsoleDriver
 
                 Cols = inputEvent.WindowBufferSizeEvent._size.X;
                 Rows = inputEvent.WindowBufferSizeEvent._size.Y;
+                Application.Screen = new (0, 0, Cols, Rows);
 
                 ResizeScreen ();
                 ClearContents ();
                 Application.Top?.SetNeedsLayout ();
-                Application.Refresh ();
+                Application.LayoutAndDraw ();
 
                 break;
 #endif
@@ -961,7 +962,7 @@ internal class WindowsDriver : ConsoleDriver
     {
         _outputBuffer = new WindowsConsole.ExtendedCharInfo [Rows * Cols];
         // CONCURRENCY: Unsynchronized access to Clip is not safe.
-        Clip = new (0, 0, Cols, Rows);
+        Clip = new (Screen);
 
         _damageRegion = new WindowsConsole.SmallRect
         {

@@ -29,19 +29,20 @@ internal class NetMainLoop : IMainLoopDriver
     {
         ArgumentNullException.ThrowIfNull (consoleDriver);
 
-        _netEvents = new (consoleDriver);
+        if (!ConsoleDriver.RunningUnitTests)
+        {
+            _netEvents = new (consoleDriver);
+        }
     }
 
     void IMainLoopDriver.Setup (MainLoop mainLoop)
     {
         _mainLoop = mainLoop;
 
-        if (ConsoleDriver.RunningUnitTests)
+        if (!ConsoleDriver.RunningUnitTests)
         {
-            return;
+            Task.Run (NetInputHandler, _inputHandlerTokenSource.Token);
         }
-
-        Task.Run (NetInputHandler, _inputHandlerTokenSource.Token);
     }
 
     void IMainLoopDriver.Wakeup () { _eventReady.Set (); }
