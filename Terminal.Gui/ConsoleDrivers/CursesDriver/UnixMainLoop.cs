@@ -182,6 +182,15 @@ internal class UnixMainLoop (ConsoleDriver consoleDriver) : IMainLoopDriver
             {
                 while (!_inputHandlerTokenSource.IsCancellationRequested)
                 {
+                    try
+                    {
+                        Task.Delay (100, _inputHandlerTokenSource.Token).Wait (_inputHandlerTokenSource.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return;
+                    }
+
                     int n = poll (_pollMap, (uint)_pollMap.Length, 0);
 
                     if (n > 0)
@@ -256,18 +265,6 @@ internal class UnixMainLoop (ConsoleDriver consoleDriver) : IMainLoopDriver
                     else
                     {
                         _retries = 0;
-                    }
-
-                    try
-                    {
-                        if (!_forceRead)
-                        {
-                            Task.Delay (100, _inputHandlerTokenSource.Token).Wait (_inputHandlerTokenSource.Token);
-                        }
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        return;
                     }
                 }
             }
@@ -437,8 +434,6 @@ internal class UnixMainLoop (ConsoleDriver consoleDriver) : IMainLoopDriver
     {
         // Write to stdout (fd 1)
         write (STDOUT_FILENO, ansiRequest, ansiRequest.Length);
-
-        Task.Delay (100, _inputHandlerTokenSource.Token).Wait (_inputHandlerTokenSource.Token);
     }
 
     [DllImport ("libc")]

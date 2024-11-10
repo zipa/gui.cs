@@ -102,34 +102,6 @@ internal class CursesDriver : ConsoleDriver
         //OnKeyPressed (new KeyEventArgsEventArgs (key));
     }
 
-    /// <inheritdoc/>
-    public override bool SetCursorVisibility (CursorVisibility visibility)
-    {
-        if (_initialCursorVisibility.HasValue == false)
-        {
-            return false;
-        }
-
-        if (!RunningUnitTests)
-        {
-            Curses.curs_set (((int)visibility >> 16) & 0x000000FF);
-        }
-
-        if (visibility != CursorVisibility.Invisible)
-        {
-            Console.Out.Write (
-                               AnsiEscapeSequenceRequestUtils.CSI_SetCursorStyle (
-                                                                                  (AnsiEscapeSequenceRequestUtils.DECSCUSR_Style)(((int)visibility >> 24)
-                                                                                              & 0xFF)
-                                                                                 )
-                              );
-        }
-
-        _currentCursorVisibility = visibility;
-
-        return true;
-    }
-
     public void StartReportingMouseMoves ()
     {
         if (!RunningUnitTests)
@@ -564,6 +536,35 @@ internal class CursesDriver : ConsoleDriver
         }
 
         visibility = _currentCursorVisibility.Value;
+
+        return true;
+    }
+
+    /// <inheritdoc/>
+    public override bool SetCursorVisibility (CursorVisibility visibility)
+    {
+        if (_initialCursorVisibility.HasValue == false)
+        {
+            return false;
+        }
+
+        if (!RunningUnitTests)
+        {
+            Curses.curs_set (((int)visibility >> 16) & 0x000000FF);
+        }
+
+        if (visibility != CursorVisibility.Invisible)
+        {
+            _mainLoopDriver?.WriteRaw (
+                                       AnsiEscapeSequenceRequestUtils.CSI_SetCursorStyle (
+                                                                                          (AnsiEscapeSequenceRequestUtils.DECSCUSR_Style)
+                                                                                          (((int)visibility >> 24)
+                                                                                           & 0xFF)
+                                                                                         )
+                                      );
+        }
+
+        _currentCursorVisibility = visibility;
 
         return true;
     }
