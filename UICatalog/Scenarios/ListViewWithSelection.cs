@@ -73,40 +73,40 @@ public class ListViewWithSelection : Scenario
         _listView.RowRender += ListView_RowRender;
         _appWindow.Add (_listView);
 
-        var scrollBar = new ScrollBarView (_listView, true);
+        //var scrollBar = new ScrollBarView (_listView, true);
 
-        scrollBar.ChangedPosition += (s, e) =>
-        {
-            _listView.TopItem = scrollBar.Position;
+        //scrollBar.ChangedPosition += (s, e) =>
+        //{
+        //    _listView.TopItem = scrollBar.Position;
 
-            if (_listView.TopItem != scrollBar.Position)
-            {
-                scrollBar.Position = _listView.TopItem;
-            }
+        //    if (_listView.TopItem != scrollBar.Position)
+        //    {
+        //        scrollBar.Position = _listView.TopItem;
+        //    }
 
-            _listView.SetNeedsDraw ();
-        };
+        //    _listView.SetNeedsDraw ();
+        //};
 
-        scrollBar.OtherScrollBarView.ChangedPosition += (s, e) =>
-        {
-            _listView.LeftItem = scrollBar.OtherScrollBarView.Position;
+        //scrollBar.OtherScrollBarView.ChangedPosition += (s, e) =>
+        //{
+        //    _listView.LeftItem = scrollBar.OtherScrollBarView.Position;
 
-            if (_listView.LeftItem != scrollBar.OtherScrollBarView.Position)
-            {
-                scrollBar.OtherScrollBarView.Position = _listView.LeftItem;
-            }
+        //    if (_listView.LeftItem != scrollBar.OtherScrollBarView.Position)
+        //    {
+        //        scrollBar.OtherScrollBarView.Position = _listView.LeftItem;
+        //    }
 
-            _listView.SetNeedsDraw ();
-        };
+        //    _listView.SetNeedsDraw ();
+        //};
 
-        _listView.DrawingContent += (s, e) =>
-        {
-            scrollBar.Size = _listView.Source.Count;
-            scrollBar.Position = _listView.TopItem;
-            scrollBar.OtherScrollBarView.Size = _listView.MaxLength;
-            scrollBar.OtherScrollBarView.Position = _listView.LeftItem;
-            scrollBar.Refresh ();
-        };
+        //_listView.DrawingContent += (s, e) =>
+        //{
+        //    scrollBar.Size = _listView.Source.Count;
+        //    scrollBar.Position = _listView.TopItem;
+        //    scrollBar.OtherScrollBarView.Size = _listView.MaxLength;
+        //    scrollBar.OtherScrollBarView.Position = _listView.LeftItem;
+        //    scrollBar.Refresh ();
+        //};
 
         _listView.SetSource (_scenarios);
 
@@ -117,9 +117,9 @@ public class ListViewWithSelection : Scenario
             X = Pos.Right(_allowMultipleCB) + 1,
             Y = 0, 
             Text = k, 
-            CheckedState = scrollBar.AutoHideScrollBars ? CheckState.Checked : CheckState.UnChecked
+            //CheckedState = scrollBar.AutoHideScrollBars ? CheckState.Checked : CheckState.UnChecked
         };
-        keepCheckBox.CheckedStateChanging += (s, e) => scrollBar.KeepContentAlwaysInViewport = e.NewValue == CheckState.Checked;
+        //keepCheckBox.CheckedStateChanging += (s, e) => scrollBar.KeepContentAlwaysInViewport = e.NewValue == CheckState.Checked;
         _appWindow.Add (keepCheckBox);
 
         _eventList = new ();

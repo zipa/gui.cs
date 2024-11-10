@@ -20,15 +20,15 @@ public class Clipping : Scenario
         };
         win.Add (label);
 
-        var scrollView = new ScrollView { X = 3, Y = 3, Width = 50, Height = 20 };
-        scrollView.ColorScheme = Colors.ColorSchemes ["Menu"];
-        // BUGBUG: set_ContentSize is supposed to be `protected`. 
-        scrollView.SetContentSize (new (200, 100));
+        //var scrollView = new ScrollView { X = 3, Y = 3, Width = 50, Height = 20 };
+        //scrollView.ColorScheme = Colors.ColorSchemes ["Menu"];
+        //// BUGBUG: set_ContentSize is supposed to be `protected`. 
+        //scrollView.SetContentSize (new (200, 100));
 
-        //ContentOffset = Point.Empty,
-        scrollView.AutoHideScrollBars = true;
-        scrollView.ShowVerticalScrollIndicator = true;
-        scrollView.ShowHorizontalScrollIndicator = true;
+        ////ContentOffset = Point.Empty,
+        //scrollView.AutoHideScrollBars = true;
+        //scrollView.ShowVerticalScrollIndicator = true;
+        //scrollView.ShowHorizontalScrollIndicator = true;
 
         var embedded1 = new View
         {
@@ -75,9 +75,9 @@ public class Clipping : Scenario
         embedded3.Add (testButton);
         embedded2.Add (embedded3);
 
-        scrollView.Add (embedded1);
+        //scrollView.Add (embedded1);
 
-        win.Add (scrollView);
+        //win.Add (scrollView);
 
         Application.Run (win);
         win.Dispose ();

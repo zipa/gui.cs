@@ -49,30 +49,6 @@ public class Responder : IDisposable
         }
     }
 
-    // TODO: v2 - nuke this
-    /// <summary>Utilty function to determine <paramref name="method"/> is overridden in the <paramref name="subclass"/>.</summary>
-    /// <param name="subclass">The view.</param>
-    /// <param name="method">The method name.</param>
-    /// <returns><see langword="true"/> if it's overridden, <see langword="false"/> otherwise.</returns>
-    internal static bool IsOverridden (Responder subclass, string method)
-    {
-        MethodInfo m = subclass.GetType ()
-                               .GetMethod (
-                                           method,
-                                           BindingFlags.Instance
-                                           | BindingFlags.Public
-                                           | BindingFlags.NonPublic
-                                           | BindingFlags.DeclaredOnly
-                                          );
-
-        if (m is null)
-        {
-            return false;
-        }
-
-        return m.GetBaseDefinition ().DeclaringType != m.DeclaringType;
-    }
-
 #if DEBUG_IDISPOSABLE
     /// <summary>For debug purposes to verify objects are being disposed properly</summary>
     public bool WasDisposed;
