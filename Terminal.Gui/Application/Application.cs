@@ -185,6 +185,8 @@ public static partial class Application
             Driver = null;
         }
 
+        _screen = null;
+
         // Don't reset ForceDriver; it needs to be set before Init is called.
         //ForceDriver = string.Empty;
         //Force16Colors = false;
@@ -194,7 +196,7 @@ public static partial class Application
         NotifyNewRunState = null;
         NotifyStopRunState = null;
         MouseGrabView = null;
-        IsInitialized = false;
+        Initialized = false;
 
         // Mouse
         _lastMousePosition = null;
