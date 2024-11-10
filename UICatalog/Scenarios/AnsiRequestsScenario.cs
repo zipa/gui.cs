@@ -322,7 +322,7 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
     private void UpdateResponses ()
     {
         _lblSummary.Text = GetSummary ();
-        _lblSummary.SetNeedsDisplay ();
+        _lblSummary.SetNeedsDraw();
     }
 
     private string GetSummary ()
@@ -371,7 +371,7 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
                                         .Select (g => new PointF (g.Key, g.Count ()))
                                         .ToList ();
         //  _graphView.ScrollOffset  = new PointF(,0);
-        _graphView.SetNeedsDisplay ();
+        _graphView.SetNeedsDraw();
 
     }
 

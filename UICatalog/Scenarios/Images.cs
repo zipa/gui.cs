@@ -117,7 +117,7 @@ public class Images : Scenario
                                    ? CheckState.Checked
                                    : CheckState.UnChecked;*/
 
-        cbSupportsSixel.CheckedStateChanging += (s, e) =>
+        _cbSupportsSixel.CheckedStateChanging += (s, e) =>
                                                 {
                                                     _sixelSupportResult.IsSupported = e.NewValue == CheckState.Checked;
                                                     SetupSixelSupported (e.NewValue == CheckState.Checked);
