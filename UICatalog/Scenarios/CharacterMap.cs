@@ -346,7 +346,7 @@ internal class CharMap : View, IDesignable
 
         //ViewportSettings = ViewportSettings.AllowLocationGreaterThanContentSize;
 
-        SetContentSize (new (COLUMN_WIDTH * 16 + RowLabelWidth, _maxCodePoint / 16 * _rowHeight)); // +1 for Header
+        SetContentSize (new (COLUMN_WIDTH * 16 + RowLabelWidth, _maxCodePoint / 16 * _rowHeight + 1)); // +1 for Header
 
         AddCommand (
                     Command.Up,
@@ -483,7 +483,7 @@ internal class CharMap : View, IDesignable
                                                   {
                                                       Viewport = Viewport with
                                                       {
-                                                          Y = Math.Min (args.CurrentValue, GetContentSize ().Height - (Viewport.Height - 2))
+                                                          Y = Math.Min (args.CurrentValue, GetContentSize ().Height - (Viewport.Height - 1))
                                                       };
                                                   }
                                               };

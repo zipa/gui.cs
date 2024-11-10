@@ -154,11 +154,11 @@ public class ScrollBar : View, IOrientation, IDesignable
 
         if (Orientation == Orientation.Vertical)
         {
-            Visible = Frame.Height - (_decreaseButton.Frame.Height + _increaseButton.Frame.Height) < Size;
+            Visible = Frame.Height < Size;
         }
         else
         {
-            Visible = Frame.Width - (_decreaseButton.Frame.Width + _increaseButton.Frame.Width) < Size;
+            Visible = Frame.Width < Size;
         }
     }
 
@@ -208,8 +208,16 @@ public class ScrollBar : View, IOrientation, IDesignable
     /// </summary>
     public int Size
     {
-        get => _scroll.Size;
-        set => _scroll.Size = value;
+        get
+        {
+            // Add two for increment/decrement buttons
+            return _scroll.Size + 2;
+        }
+        set
+        {
+            // Remove two for increment/decrement buttons
+            _scroll.Size = value - 2;
+        }
     }
 
     /// <summary>

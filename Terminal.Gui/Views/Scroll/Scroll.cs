@@ -143,7 +143,8 @@ public class Scroll : View, IOrientation, IDesignable
         }
 
         int framePos = Orientation == Orientation.Vertical ? args.CurrentValue.Y : args.CurrentValue.X;
-        SliderPosition = framePos;
+
+        RaiseSliderPositionChangeEvents (CalculateSliderPosition (_contentPosition), framePos);
     }
 
     /// <summary>
@@ -152,13 +153,11 @@ public class Scroll : View, IOrientation, IDesignable
     public int SliderPosition
     {
         get => CalculateSliderPosition (_contentPosition);
-        set => RaiseSliderPositionChangeEvents (value);
+        set => RaiseSliderPositionChangeEvents (_slider.Position, value);
     }
 
-    private void RaiseSliderPositionChangeEvents (int newSliderPosition)
+    private void RaiseSliderPositionChangeEvents (int currentSliderPosition, int newSliderPosition)
     {
-        int currentSliderPosition = CalculateSliderPosition (_contentPosition);
-
         if (/*newSliderPosition > Size - ViewportDimension ||*/ currentSliderPosition == newSliderPosition)
         {
             return;
