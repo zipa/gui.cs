@@ -1646,11 +1646,14 @@ internal class NetMainLoop : IMainLoopDriver
     /// <summary>Invoked when a Key is pressed.</summary>
     internal Action<InputResult> ProcessInput;
 
+    private readonly ManualResetEventSlim _eventReady = new (false);
+
     private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
     // Wrap ConcurrentQueue in a BlockingCollection to enable blocking with timeout
     private readonly BlockingCollection<InputResult> _resultQueue = new (new ConcurrentQueue<InputResult> ());
 
     private readonly ManualResetEventSlim _waitForProbe = new (false);
+    private readonly CancellationTokenSource _eventReadyTokenSource = new ();
     private MainLoop _mainLoop;
 
     /// <summary>Initializes the class with the console driver.</summary>
@@ -1673,16 +1676,24 @@ internal class NetMainLoop : IMainLoopDriver
         Task.Run (NetInputHandler, _inputHandlerTokenSource.Token);
     }
 
-    void IMainLoopDriver.Wakeup () {  }
+    void IMainLoopDriver.Wakeup ()
+    {
+        _eventReady.Set ();
+    }
 
     bool IMainLoopDriver.EventsPending ()
     {
         _waitForProbe.Set ();
 
-        if (_mainLoop.CheckTimersAndIdleHandlers (out _))
+        if (_mainLoop.CheckTimersAndIdleHandlers (out int waitTimeout))
         {
             return true;
         }
+
+        // Required otherwise CPU gets high
+        _eventReady.Wait (waitTimeout, _eventReadyTokenSource.Token);
+        _eventReady.Reset ();
+        _eventReadyTokenSource.Token.ThrowIfCancellationRequested ();
 
         return _resultQueue.Count > 0 || _mainLoop.CheckTimersAndIdleHandlers (out _);
     }
@@ -1699,6 +1710,11 @@ internal class NetMainLoop : IMainLoopDriver
     {
         _inputHandlerTokenSource?.Cancel ();
         _inputHandlerTokenSource?.Dispose ();
+        _eventReadyTokenSource?.Cancel ();
+        _eventReadyTokenSource?.Dispose ();
+
+
+        _eventReady?.Dispose ();
 
         _waitForProbe?.Dispose ();
         _netEvents?.Dispose ();
@@ -1742,6 +1758,7 @@ internal class NetMainLoop : IMainLoopDriver
             if (input.HasValue)
             {
                 _resultQueue.Add (input.Value);
+                _eventReady.Set ();
             }
         }
     }
