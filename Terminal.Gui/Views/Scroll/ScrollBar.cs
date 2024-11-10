@@ -29,6 +29,8 @@ public class ScrollBar : View, IOrientation, IDesignable
         _scroll = new ();
         _scroll.SliderPositionChanging += OnScrollOnSliderPositionChanging;
         _scroll.SliderPositionChanged += OnScrollOnSliderPositionChanged;
+        _scroll.ContentPositionChanging += OnScrollOnContentPositionChanging;
+        _scroll.ContentPositionChanged += OnScrollOnContentPositionChanged;
         _scroll.SizeChanged += OnScrollOnSizeChanged;
 
         _decreaseButton = new ()
@@ -64,13 +66,13 @@ public class ScrollBar : View, IOrientation, IDesignable
 
         void OnDecreaseButtonOnAccept (object? s, CommandEventArgs e)
         {
-            _scroll.ContentPosition--;
+            ContentPosition -= Increment;
             e.Cancel = true;
         }
 
         void OnIncreaseButtonOnAccept (object? s, CommandEventArgs e)
         {
-            _scroll.ContentPosition++;
+            ContentPosition += Increment;
             e.Cancel = true;
         }
     }
@@ -188,8 +190,8 @@ public class ScrollBar : View, IOrientation, IDesignable
         set => _scroll.SliderPosition = value;
     }
 
-    private void OnScrollOnSliderPositionChanged (object? sender, EventArgs<int> e) { SliderPositionChanged?.Invoke (this, e); }
     private void OnScrollOnSliderPositionChanging (object? sender, CancelEventArgs<int> e) { SliderPositionChanging?.Invoke (this, e); }
+    private void OnScrollOnSliderPositionChanged (object? sender, EventArgs<int> e) { SliderPositionChanged?.Invoke (this, e); }
 
     /// <summary>
     ///     Raised when the <see cref="SliderPosition"/> is changing. Set <see cref="CancelEventArgs.Cancel"/> to
@@ -219,6 +221,18 @@ public class ScrollBar : View, IOrientation, IDesignable
         set => _scroll.ContentPosition = value;
     }
 
+    private void OnScrollOnContentPositionChanging (object? sender, CancelEventArgs<int> e) { ContentPositionChanging?.Invoke (this, e); }
+    private void OnScrollOnContentPositionChanged (object? sender, EventArgs<int> e) { ContentPositionChanged?.Invoke (this, e); }
+
+    /// <summary>
+    ///     Raised when the <see cref="SliderPosition"/> is changing. Set <see cref="CancelEventArgs.Cancel"/> to
+    ///     <see langword="true"/> to prevent the position from being changed.
+    /// </summary>
+    public event EventHandler<CancelEventArgs<int>>? ContentPositionChanging;
+
+    /// <summary>Raised when the <see cref="SliderPosition"/> has changed.</summary>
+    public event EventHandler<EventArgs<int>>? ContentPositionChanged;
+
     /// <summary>Raised when <see cref="Size"/> has changed.</summary>
     public event EventHandler<EventArgs<int>>? SizeChanged;
 
@@ -227,6 +241,14 @@ public class ScrollBar : View, IOrientation, IDesignable
         ShowHide ();
         SizeChanged?.Invoke (this, e);
     }
+
+    /// <summary>
+    ///     Gets or sets the amount each click of the increment/decrement buttons will incremenet/decrement the <see cref="ContentPosition"/>.
+    /// </summary>
+    /// <remarks>
+    ///     The default is 1.
+    /// </remarks>
+    public int Increment { get; set; } = 1;
 
     /// <inheritdoc/>
     protected override void OnSubviewLayout (LayoutEventArgs args) { PositionSubviews (); }
