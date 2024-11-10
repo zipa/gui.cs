@@ -502,8 +502,8 @@ public class ScrollTests
         Reset ();
         scroll.SliderPosition = 11;
         Assert.Equal (5, scroll.SliderPosition);
-        Assert.Equal (0, changing);
-        Assert.Equal (0, changed);
+        Assert.Equal (1, changing);
+        Assert.Equal (1, changed);
 
         Reset ();
         scroll.SliderPosition = 0;
