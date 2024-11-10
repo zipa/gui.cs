@@ -596,6 +596,8 @@ public class ApplicationTests
         Assert.Equal (new (0, 0, 80, 25), Application.Screen);
         Application.Screen = new (0, 0, driver.Cols, driver.Rows);
         Assert.Equal (new (0, 0, 100, 30), driver.Screen);
+
+        Application.Shutdown ();
     }
 
     private void Init ()
