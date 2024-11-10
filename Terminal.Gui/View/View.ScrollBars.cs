@@ -43,10 +43,15 @@ public partial class View
                                                 Bottom = scrollBar.Visible ? Padding.Thickness.Bottom + 1 : 0
                                             };
 
-                                            scrollBar.SliderPositionChanged += (_, args) =>
-                                            {
-                                                Viewport = Viewport with { X = args.CurrentValue };
-                                            };
+                                            scrollBar.ContentPositionChanged += (_, args) =>
+                                                                                {
+                                                                                    Viewport = Viewport with
+                                                                                    {
+                                                                                        X = Math.Min (
+                                                                                                      args.CurrentValue,
+                                                                                                      GetContentSize ().Width - (Viewport.Width))
+                                                                                    };
+                                                                                };
 
                                             scrollBar.VisibleChanged += (_, _) =>
                                             {
@@ -96,18 +101,23 @@ public partial class View
                                                   Right = scrollBar.Visible ? Padding.Thickness.Right + 1 : 0
                                               };
 
-                                              scrollBar.SliderPositionChanged += (_, args) =>
-                                                                           {
-                                                                               Viewport = Viewport with { Y = args.CurrentValue };
-                                                                           };
+                                              scrollBar.ContentPositionChanged += (_, args) =>
+                                                                                  {
+                                                                                      Viewport = Viewport with
+                                                                                      {
+                                                                                          Y = Math.Min (
+                                                                                                        args.CurrentValue,
+                                                                                                        GetContentSize ().Height - (Viewport.Height))
+                                                                                      };
+                                                                                  };
 
                                               scrollBar.VisibleChanged += (_, _) =>
                                                                           {
                                                                               Padding.Thickness = Padding.Thickness with
                                                                               {
                                                                                   Right = scrollBar.Visible
-                                                                                      ? Padding.Thickness.Right + 1
-                                                                                      : Padding.Thickness.Right - 1
+                                                                                              ? Padding.Thickness.Right + 1
+                                                                                              : Padding.Thickness.Right - 1
                                                                               };
                                                                           };
                                           }
@@ -120,12 +130,12 @@ public partial class View
         {
             if (_verticalScrollBar.IsValueCreated)
             {
-                _verticalScrollBar.Value.SliderPosition = Viewport.Y;
+                _verticalScrollBar.Value.ContentPosition = Viewport.Y;
             }
 
             if (_horizontalScrollBar.IsValueCreated)
             {
-                _horizontalScrollBar.Value.SliderPosition = Viewport.X;
+                _horizontalScrollBar.Value.ContentPosition = Viewport.X;
             }
         };
 

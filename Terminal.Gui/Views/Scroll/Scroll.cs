@@ -159,7 +159,7 @@ public class Scroll : View, IOrientation, IDesignable
     {
         int currentSliderPosition = CalculateSliderPosition (_contentPosition);
 
-        if (newSliderPosition > Size - ViewportDimension || currentSliderPosition == newSliderPosition)
+        if (/*newSliderPosition > Size - ViewportDimension ||*/ currentSliderPosition == newSliderPosition)
         {
             return;
         }

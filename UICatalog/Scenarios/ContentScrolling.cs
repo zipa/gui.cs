@@ -125,7 +125,7 @@ public class ContentScrolling : Scenario
         app.Add (view);
 
         // Add Scroll Setting UI to Padding
-        view.Padding.Thickness = view.Padding.Thickness with { Top = view.Padding.Thickness.Top + 4 };
+        view.Padding.Thickness = view.Padding.Thickness with { Top = view.Padding.Thickness.Top + 6 };
         view.Padding.CanFocus = true;
 
         Label frameLabel = new ()
