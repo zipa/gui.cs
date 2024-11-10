@@ -43,7 +43,7 @@ public partial class View
                                                 Bottom = scrollBar.Visible ? Padding.Thickness.Bottom + 1 : 0
                                             };
 
-                                            scrollBar.PositionChanged += (_, args) =>
+                                            scrollBar.SliderPositionChanged += (_, args) =>
                                             {
                                                 Viewport = Viewport with { X = args.CurrentValue };
                                             };
@@ -96,7 +96,7 @@ public partial class View
                                                   Right = scrollBar.Visible ? Padding.Thickness.Right + 1 : 0
                                               };
 
-                                              scrollBar.PositionChanged += (_, args) =>
+                                              scrollBar.SliderPositionChanged += (_, args) =>
                                                                            {
                                                                                Viewport = Viewport with { Y = args.CurrentValue };
                                                                            };
@@ -120,12 +120,12 @@ public partial class View
         {
             if (_verticalScrollBar.IsValueCreated)
             {
-                _verticalScrollBar.Value.Position = Viewport.Y;
+                _verticalScrollBar.Value.SliderPosition = Viewport.Y;
             }
 
             if (_horizontalScrollBar.IsValueCreated)
             {
-                _horizontalScrollBar.Value.Position = Viewport.X;
+                _horizontalScrollBar.Value.SliderPosition = Viewport.X;
             }
         };
 
@@ -178,19 +178,15 @@ public partial class View
         else if (viewportSettings.HasFlag (ViewportSettings.AllowNegativeX))
         {
             _horizontalScrollBar.Value.AutoHide = false;
-            _horizontalScrollBar.Value.ShowScrollIndicator = false;
         }
         else if (viewportSettings.HasFlag (ViewportSettings.AllowNegativeY))
         {
             _verticalScrollBar.Value.AutoHide = false;
-            _verticalScrollBar.Value.ShowScrollIndicator = false;
         }
         else if (viewportSettings.HasFlag (ViewportSettings.AllowNegativeLocation))
         {
             _horizontalScrollBar.Value.AutoHide = false;
-            _horizontalScrollBar.Value.ShowScrollIndicator = false;
             _verticalScrollBar.Value.AutoHide = false;
-            _verticalScrollBar.Value.ShowScrollIndicator = false;
         }
         else if (viewportSettings.HasFlag (ViewportSettings.AllowXGreaterThanContentWidth))
         {

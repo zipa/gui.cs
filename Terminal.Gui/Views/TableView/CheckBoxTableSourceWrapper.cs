@@ -147,18 +147,18 @@ public abstract class CheckBoxTableSourceWrapperBase : ITableSource
         }
 
         e.Cancel = true;
-        tableView.SetNeedsDisplay ();
+        tableView.SetNeedsDraw ();
     }
 
-    private void TableView_MouseClick (object sender, MouseEventEventArgs e)
+    private void TableView_MouseClick (object sender, MouseEventArgs e)
     {
         // we only care about clicks (not movements)
-        if (!e.MouseEvent.Flags.HasFlag (MouseFlags.Button1Clicked))
+        if (!e.Flags.HasFlag (MouseFlags.Button1Clicked))
         {
             return;
         }
 
-        Point? hit = tableView.ScreenToCell (e.MouseEvent.Position.X, e.MouseEvent.Position.Y, out int? headerIfAny);
+        Point? hit = tableView.ScreenToCell (e.Position.X, e.Position.Y, out int? headerIfAny);
 
         if (headerIfAny.HasValue && headerIfAny.Value == 0)
         {
@@ -171,7 +171,7 @@ public abstract class CheckBoxTableSourceWrapperBase : ITableSource
             // otherwise it ticks all rows
             ToggleAllRows ();
             e.Handled = true;
-            tableView.SetNeedsDisplay ();
+            tableView.SetNeedsDraw ();
         }
         else if (hit.HasValue && hit.Value.X == 0)
         {
@@ -186,7 +186,7 @@ public abstract class CheckBoxTableSourceWrapperBase : ITableSource
             }
 
             e.Handled = true;
-            tableView.SetNeedsDisplay ();
+            tableView.SetNeedsDraw ();
         }
     }
 }

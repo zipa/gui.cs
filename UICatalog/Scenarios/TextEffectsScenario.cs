@@ -38,11 +38,11 @@ public class TextEffectsScenario : Scenario
 
         w.ColorScheme = new ()
         {
-            Normal = new (ColorName.White, ColorName.Black),
-            Focus = new (ColorName.Black, ColorName.White),
-            HotNormal = new (ColorName.White, ColorName.Black),
-            HotFocus = new (ColorName.White, ColorName.Black),
-            Disabled = new (ColorName.Gray, ColorName.Black)
+            Normal = new (ColorName16.White, ColorName16.Black),
+            Focus = new (ColorName16.Black, ColorName16.White),
+            HotNormal = new (ColorName16.White, ColorName16.Black),
+            HotFocus = new (ColorName16.White, ColorName16.Black),
+            Disabled = new (ColorName16.Gray, ColorName16.Black)
         };
 
         // Creates a window that occupies the entire terminal with a title.
@@ -74,7 +74,7 @@ public class TextEffectsScenario : Scenario
                             {
                                 LoopingGradient = e.NewValue == CheckState.Checked;
                                 SetupGradientLineCanvas (w, w.Frame.Size);
-                                _tabView.SetNeedsDisplay ();
+                                _tabView.SetNeedsDraw ();
                             };
 
         gradientsView.Add (cbLooping);
@@ -100,7 +100,7 @@ public class TextEffectsScenario : Scenario
                                      new (0, 0, size.Width, size.Height),
                                      g,
                                      GradientDirection.Diagonal);
-        var back = new SolidFill (new (ColorName.Black));
+        var back = new SolidFill (new (ColorName16.Black));
 
         w.LineCanvas.Fill = new (
                                  fore,
@@ -132,11 +132,9 @@ internal class GradientsView : View
     private const int LABEL_HEIGHT = 1;
     private const int GRADIENT_WITH_LABEL_HEIGHT = GRADIENT_HEIGHT + LABEL_HEIGHT + 1; // +1 for spacing
 
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
-        base.OnDrawContent (viewport);
-
-        DrawTopLineGradient (viewport);
+        DrawTopLineGradient (Viewport);
 
         var x = 2;
         var y = 3;
@@ -151,7 +149,7 @@ internal class GradientsView : View
 
         foreach ((string label, GradientDirection direction) in gradients)
         {
-            if (x + GRADIENT_WIDTH > viewport.Width)
+            if (x + GRADIENT_WIDTH > Viewport.Width)
             {
                 x = 2; // Reset to left margin
                 y += GRADIENT_WITH_LABEL_HEIGHT; // Move down to next row
@@ -160,6 +158,8 @@ internal class GradientsView : View
             DrawLabeledGradientArea (label, direction, x, y);
             x += GRADIENT_WIDTH + 2; // Move right for next gradient, +2 for spacing
         }
+
+        return true;
     }
 
     private void DrawLabeledGradientArea (string label, GradientDirection direction, int xOffset, int yOffset)
@@ -178,9 +178,9 @@ internal class GradientsView : View
 
         int width = text.Length;
         int x = xOffset + (GRADIENT_WIDTH - width) / 2; // Center the text within the gradient area width
-        Driver.SetAttribute (GetNormalColor ());
+        SetAttribute (GetNormalColor ());
         Move (x, yOffset + 1);
-        Driver.AddStr (text);
+        AddStr (text);
     }
 
     private void DrawGradientArea (GradientDirection direction, int xOffset, int yOffset)
@@ -260,5 +260,5 @@ internal class GradientsView : View
         }
     }
 
-    private static void SetColor (Color color) { Application.Driver?.SetAttribute (new (color, color)); }
+    private void SetColor (Color color) { SetAttribute (new (color, color)); }
 }

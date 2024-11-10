@@ -11,7 +11,6 @@ namespace UICatalog.Scenarios;
 [ScenarioCategory ("Controls")]
 [ScenarioCategory ("Dialogs")]
 [ScenarioCategory ("Text and Formatting")]
-[ScenarioCategory ("Overlapped")]
 [ScenarioCategory ("Scrolling")]
 public class ListColumns : Scenario
 {
@@ -211,8 +210,6 @@ public class ListColumns : Scenario
             ]
         };
 
-        top.Add (menu);
-
         var statusBar = new StatusBar (
                                        new Shortcut []
                                        {
@@ -222,8 +219,6 @@ public class ListColumns : Scenario
                                            new (Application.QuitKey, "Quit", Quit)
                                        }
                                       );
-        top.Add (statusBar);
-
         appWindow.Add (_listColView);
 
         var selectedCellLabel = new Label
@@ -252,11 +247,13 @@ public class ListColumns : Scenario
         };
 
         // if user clicks the mouse in TableView
-        _listColView.MouseClick += (s, e) => { _listColView.ScreenToCell (e.MouseEvent.Position, out int? clickedCol); };
+        _listColView.MouseClick += (s, e) => { _listColView.ScreenToCell (e.Position, out int? clickedCol); };
 
         _listColView.KeyBindings.ReplaceCommands (Key.Space, Command.Accept);
 
-        top.Add (appWindow);
+        top.Add (menu, appWindow, statusBar);
+        appWindow.Y = 1;
+        appWindow.Height = Dim.Fill(Dim.Func (() => statusBar.Frame.Height));
 
         // Run - Start the application.
         Application.Run (top);
@@ -275,13 +272,13 @@ public class ListColumns : Scenario
         var accepted = false;
         var ok = new Button { Text = "Ok", IsDefault = true };
 
-        ok.Accept += (s, e) =>
+        ok.Accepting += (s, e) =>
                      {
                          accepted = true;
                          Application.RequestStop ();
                      };
         var cancel = new Button { Text = "Cancel" };
-        cancel.Accept += (s, e) => { Application.RequestStop (); };
+        cancel.Accepting += (s, e) => { Application.RequestStop (); };
         var d = new Dialog { Title = prompt, Buttons = [ok, cancel] };
 
         var tf = new TextField { Text = getter (_listColView).ToString (), X = 0, Y = 0, Width = Dim.Fill () };
@@ -308,13 +305,13 @@ public class ListColumns : Scenario
     private void SetListMaxWidth ()
     {
         RunListWidthDialog ("MaxCellWidth", (s, v) => s.MaxCellWidth = v, s => s.MaxCellWidth);
-        _listColView.SetNeedsDisplay ();
+        _listColView.SetNeedsDraw ();
     }
 
     private void SetListMinWidth ()
     {
         RunListWidthDialog ("MinCellWidth", (s, v) => s.MinCellWidth = v, s => s.MinCellWidth);
-        _listColView.SetNeedsDisplay ();
+        _listColView.SetNeedsDraw ();
     }
 
     private void SetTable (IList list)
@@ -340,7 +337,7 @@ public class ListColumns : Scenario
                                              scrollBar.Position = _listColView.RowOffset;
                                          }
 
-                                         _listColView.SetNeedsDisplay ();
+                                         _listColView.SetNeedsDraw ();
                                      };
         /*
         scrollBar.OtherScrollBarView.ChangedPosition += (s,e) => {
@@ -348,11 +345,11 @@ public class ListColumns : Scenario
             if (listColView.ColumnOffset != scrollBar.OtherScrollBarView.Position) {
                 scrollBar.OtherScrollBarView.Position = listColView.ColumnOffset;
             }
-            listColView.SetNeedsDisplay ();
+            listColView.SetNeedsDraw ();
         };
         */
 
-        _listColView.DrawContent += (s, e) =>
+        _listColView.DrawingContent += (s, e) =>
                                     {
                                         scrollBar.Size = _listColView.Table?.Rows ?? 0;
                                         scrollBar.Position = _listColView.RowOffset;
@@ -392,7 +389,7 @@ public class ListColumns : Scenario
             _listColView.Style.RowColorGetter = null;
         }
 
-        _listColView.SetNeedsDisplay ();
+        _listColView.SetNeedsDraw ();
     }
 
     private void ToggleAlwaysUseNormalColorForVerticalCellLines ()
@@ -433,7 +430,7 @@ public class ListColumns : Scenario
         //toggle menu item
         _miCursor.Checked = !_miCursor.Checked;
         _listColView.Style.InvertSelectedCellFirstCharacter = (bool)_miCursor.Checked;
-        _listColView.SetNeedsDisplay ();
+        _listColView.SetNeedsDraw ();
     }
 
     private void ToggleScrollParallel ()
@@ -443,7 +440,7 @@ public class ListColumns : Scenario
         if ((ListTableSource)_listColView.Table != null)
         {
             ((ListTableSource)_listColView.Table).Style.ScrollParallel = (bool)_miScrollParallel.Checked;
-            _listColView.SetNeedsDisplay ();
+            _listColView.SetNeedsDraw ();
         }
     }
 
@@ -471,7 +468,7 @@ public class ListColumns : Scenario
             ((ListTableSource)_listColView.Table).Style.Orientation = (bool)_miOrientVertical.Checked
                                                                           ? Orientation.Vertical
                                                                           : Orientation.Horizontal;
-            _listColView.SetNeedsDisplay ();
+            _listColView.SetNeedsDraw ();
         }
     }
 }

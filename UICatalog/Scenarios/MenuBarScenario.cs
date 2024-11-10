@@ -107,18 +107,18 @@ public class MenuBarScenario : Scenario
                                };
 
         // There's no focus change event, so this is a bit of a hack.
-        menuBar.LayoutComplete += (s, e) => { _focusedView.Text = appWindow.MostFocused?.ToString () ?? "None"; };
+        menuBar.SubviewsLaidOut += (s, e) => { _focusedView.Text = appWindow.MostFocused?.ToString () ?? "None"; };
 
         var openBtn = new Button { X = Pos.Center (), Y = 4, Text = "_Open Menu", IsDefault = true };
-        openBtn.Accept += (s, e) => { menuBar.OpenMenu (); };
+        openBtn.Accepting += (s, e) => { menuBar.OpenMenu (); };
         appWindow.Add (openBtn);
 
         var hideBtn = new Button { X = Pos.Center (), Y = Pos.Bottom (openBtn), Text = "Toggle Menu._Visible" };
-        hideBtn.Accept += (s, e) => { menuBar.Visible = !menuBar.Visible; };
+        hideBtn.Accepting += (s, e) => { menuBar.Visible = !menuBar.Visible; };
         appWindow.Add (hideBtn);
 
         var enableBtn = new Button { X = Pos.Center (), Y = Pos.Bottom (hideBtn), Text = "_Toggle Menu.Enable" };
-        enableBtn.Accept += (s, e) => { menuBar.Enabled = !menuBar.Enabled; };
+        enableBtn.Accepting += (s, e) => { menuBar.Enabled = !menuBar.Enabled; };
         appWindow.Add (enableBtn);
 
         appWindow.Add (menuBar);

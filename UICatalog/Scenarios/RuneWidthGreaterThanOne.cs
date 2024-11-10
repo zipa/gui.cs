@@ -106,7 +106,7 @@ public class RuneWidthGreaterThanOne : Scenario
         _label.Text = "Enter your name 你:";
         _text.Text = "gui.cs 你:";
         _button.Text = "Say Hello 你";
-        _button.Accept += MixedMessage;
+        _button.Accepting += MixedMessage;
         _labelR.X = Pos.AnchorEnd (21);
         _labelR.Y = 18;
         _labelR.Text = "This is a test text 你";
@@ -115,7 +115,7 @@ public class RuneWidthGreaterThanOne : Scenario
         _labelV.Text = "This is a test text 你";
         _win.Title = "HACC Demo 你";
         _lastRunesUsed = "Mixed";
-        Application.Refresh ();
+        Application.LayoutAndDraw ();
     }
 
     private void NarrowMessage (object sender, EventArgs e) { MessageBox.Query ("Say Hello", $"Hello {_text.Text}", "Ok"); }
@@ -126,7 +126,7 @@ public class RuneWidthGreaterThanOne : Scenario
         _label.Text = "Enter your name:";
         _text.Text = "gui.cs";
         _button.Text = "Say Hello";
-        _button.Accept += NarrowMessage;
+        _button.Accepting += NarrowMessage;
         _labelR.X = Pos.AnchorEnd (19);
         _labelR.Y = 18;
         _labelR.Text = "This is a test text";
@@ -135,7 +135,7 @@ public class RuneWidthGreaterThanOne : Scenario
         _labelV.Text = "This is a test text";
         _win.Title = "HACC Demo";
         _lastRunesUsed = "Narrow";
-        Application.Refresh ();
+        Application.LayoutAndDraw ();
     }
 
     private void UnsetClickedEvent ()
@@ -143,15 +143,15 @@ public class RuneWidthGreaterThanOne : Scenario
         switch (_lastRunesUsed)
         {
             case "Narrow":
-                _button.Accept -= NarrowMessage;
+                _button.Accepting -= NarrowMessage;
 
                 break;
             case "Mixed":
-                _button.Accept -= MixedMessage;
+                _button.Accepting -= MixedMessage;
 
                 break;
             case "Wide":
-                _button.Accept -= WideMessage;
+                _button.Accepting -= WideMessage;
 
                 break;
         }
@@ -165,7 +165,7 @@ public class RuneWidthGreaterThanOne : Scenario
         _label.Text = "あなたの名前を入力してください：";
         _text.Text = "ティラミス";
         _button.Text = "こんにちはと言う";
-        _button.Accept += WideMessage;
+        _button.Accepting += WideMessage;
         _labelR.X = Pos.AnchorEnd (29);
         _labelR.Y = 18;
         _labelR.Text = "あなたの名前を入力してください";
@@ -174,6 +174,6 @@ public class RuneWidthGreaterThanOne : Scenario
         _labelV.Text = "あなたの名前を入力してください";
         _win.Title = "デモエムポンズ";
         _lastRunesUsed = "Wide";
-        Application.Refresh ();
+        Application.LayoutAndDraw ();
     }
 }

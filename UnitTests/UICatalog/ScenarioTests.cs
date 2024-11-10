@@ -30,6 +30,10 @@ public class ScenarioTests : TestsAllViews
         Assert.Null (_timeoutLock);
         _timeoutLock = new ();
 
+        // Disable any UIConfig settings
+        ConfigurationManager.ConfigLocations savedConfigLocations = ConfigurationManager.Locations;
+        ConfigurationManager.Locations = ConfigurationManager.ConfigLocations.DefaultOnly;
+
         // If a previous test failed, this will ensure that the Application is in a clean state
         Application.ResetState (true);
 
@@ -37,9 +41,9 @@ public class ScenarioTests : TestsAllViews
         var scenario = (Scenario)Activator.CreateInstance (scenarioType);
 
         uint abortTime = 1500;
+        object timeout = null;
         var initialized = false;
         var shutdown = false;
-        object timeout = null;
         int iterationCount = 0;
 
         Application.InitializedChanged += OnApplicationOnInitializedChanged;
@@ -72,6 +76,9 @@ public class ScenarioTests : TestsAllViews
             _timeoutLock = null;
         }
 
+        // Restore the configuration locations
+        ConfigurationManager.Locations = savedConfigLocations;
+        ConfigurationManager.Reset ();
         return;
 
         void OnApplicationOnInitializedChanged (object s, EventArgs<bool> a)
@@ -86,13 +93,13 @@ public class ScenarioTests : TestsAllViews
                     timeout = Application.AddTimeout (TimeSpan.FromMilliseconds (abortTime), ForceCloseCallback);
                 }
 
-                _output.WriteLine ($"Initialized '{Application.Driver}'");
             }
             else
             {
                 Application.Iteration -= OnApplicationOnIteration;
                 shutdown = true;
             }
+            _output.WriteLine ($"Initialized == {a.CurrentValue}");
         }
 
         // If the scenario doesn't close within 500ms, this will force it to quit
@@ -109,6 +116,10 @@ public class ScenarioTests : TestsAllViews
             Assert.Fail (
                          $"'{scenario.GetName ()}' failed to Quit with {Application.QuitKey} after {abortTime}ms and {iterationCount} iterations. Force quit.");
 
+            // Restore the configuration locations
+            ConfigurationManager.Locations = savedConfigLocations;
+            ConfigurationManager.Reset ();
+
             Application.ResetState (true);
 
             return false;
@@ -117,12 +128,170 @@ public class ScenarioTests : TestsAllViews
         void OnApplicationOnIteration (object s, IterationEventArgs a)
         {
             iterationCount++;
-            if (Application.IsInitialized)
+            if (Application.Initialized)
             {
                 // Press QuitKey 
-                //_output.WriteLine ($"Forcing Quit with {Application.QuitKey}");
-                Application.OnKeyDown (Application.QuitKey);
+                _output.WriteLine ($"Attempting to quit with {Application.QuitKey}");
+                Application.RaiseKeyDownEvent (Application.QuitKey);
             }
+        }
+    }
+
+    /// <summary>
+    ///     <para>This runs through all Scenarios defined in UI Catalog, calling Init, Setup, and Run and measuring the perf of each.</para>
+    /// </summary>
+    [Theory]
+    [MemberData (nameof (AllScenarioTypes))]
+    public void All_Scenarios_Benchmark (Type scenarioType)
+    {
+        Assert.Null (_timeoutLock);
+        _timeoutLock = new ();
+
+        // Disable any UIConfig settings
+        ConfigurationManager.ConfigLocations savedConfigLocations = ConfigurationManager.Locations;
+        ConfigurationManager.Locations = ConfigurationManager.ConfigLocations.DefaultOnly;
+
+        // If a previous test failed, this will ensure that the Application is in a clean state
+        Application.ResetState (true);
+
+        uint maxIterations = 1000;
+        uint abortTime = 2000;
+        object timeout = null;
+        var initialized = false;
+        var shutdown = false;
+
+        int iterationCount = 0;
+        int clearedContentCount = 0;
+        int refreshedCount = 0;
+        int updatedCount = 0;
+        int drawCompleteCount = 0;
+
+        int addedCount = 0;
+        int laidOutCount = 0;
+
+        _output.WriteLine ($"Running Scenario '{scenarioType}'");
+        var scenario = (Scenario)Activator.CreateInstance (scenarioType);
+
+        Stopwatch stopwatch = null;
+
+        Application.InitializedChanged += OnApplicationOnInitializedChanged;
+        Application.ForceDriver = "FakeDriver";
+        scenario!.Main ();
+        scenario.Dispose ();
+        scenario = null;
+        Application.ForceDriver = string.Empty;
+        Application.InitializedChanged -= OnApplicationOnInitializedChanged;
+
+        lock (_timeoutLock)
+        {
+            if (timeout is { })
+            {
+                timeout = null;
+            }
+        }
+
+        lock (_timeoutLock)
+        {
+            _timeoutLock = null;
+        }
+
+        _output.WriteLine ($"Scenario {scenarioType}");
+        _output.WriteLine ($"  took {stopwatch.ElapsedMilliseconds} ms to run.");
+        _output.WriteLine ($"  called Driver.ClearContents {clearedContentCount} times.");
+        _output.WriteLine ($"  called Driver.Refresh {refreshedCount} times.");
+        _output.WriteLine ($"    which updated the screen {updatedCount} times.");
+        _output.WriteLine ($"  called View.Draw {drawCompleteCount} times.");
+        _output.WriteLine ($"  added {addedCount} views.");
+        _output.WriteLine ($"  called View.LayoutComplete {laidOutCount} times.");
+
+        // Restore the configuration locations
+        ConfigurationManager.Locations = savedConfigLocations;
+        ConfigurationManager.Reset ();
+
+        return;
+
+        void OnApplicationOnInitializedChanged (object s, EventArgs<bool> a)
+        {
+            if (a.CurrentValue)
+            {
+                lock (_timeoutLock)
+                {
+                    timeout = Application.AddTimeout (TimeSpan.FromMilliseconds (abortTime), ForceCloseCallback);
+                }
+
+                initialized = true;
+                Application.Iteration += OnApplicationOnIteration;
+                Application.Driver!.ClearedContents += (sender, args) => clearedContentCount++;
+                Application.Driver!.Refreshed += (sender, args) =>
+                                                 {
+                                                     refreshedCount++;
+
+                                                     if (args.CurrentValue)
+                                                     {
+                                                         updatedCount++;
+                                                     }
+                                                 };
+                Application.NotifyNewRunState += OnApplicationNotifyNewRunState;
+
+                stopwatch = Stopwatch.StartNew ();
+            }
+            else
+            {
+                shutdown = true;
+                Application.NotifyNewRunState -= OnApplicationNotifyNewRunState;
+                Application.Iteration -= OnApplicationOnIteration;
+                stopwatch!.Stop ();
+            }
+            _output.WriteLine ($"Initialized == {a.CurrentValue}");
+        }
+
+        void OnApplicationOnIteration (object s, IterationEventArgs a)
+        {
+            iterationCount++;
+            if (iterationCount > maxIterations)
+            {
+                // Press QuitKey
+                _output.WriteLine ($"Attempting to quit scenario with RequestStop");
+                Application.RequestStop ();
+            }
+        }
+
+
+        void OnApplicationNotifyNewRunState (object sender, RunStateEventArgs e)
+        {
+            // Get a list of all subviews under Application.Top (and their subviews, etc.)
+            // and subscribe to their DrawComplete event
+            void SubscribeAllSubviews (View view)
+            {
+                view.DrawComplete += (s, a) => drawCompleteCount++;
+                view.SubviewsLaidOut += (s, a) => laidOutCount++;
+                view.Added += (s, a) => addedCount++;
+                foreach (View subview in view.Subviews)
+                {
+                    SubscribeAllSubviews (subview);
+                }
+            }
+
+            SubscribeAllSubviews (Application.Top);
+        }
+
+        // If the scenario doesn't close within the abort time, this will force it to quit
+        bool ForceCloseCallback ()
+        {
+            lock (_timeoutLock)
+            {
+                if (timeout is { })
+                {
+                    timeout = null;
+                }
+            }
+
+            _output.WriteLine(
+                         $"'{scenario.GetName ()}' failed to Quit with {Application.QuitKey} after {abortTime}ms and {iterationCount} iterations. Force quit.");
+
+            Application.RequestStop ();
+
+            return false;
         }
     }
 
@@ -135,6 +304,10 @@ public class ScenarioTests : TestsAllViews
     [Fact]
     public void Run_All_Views_Tester_Scenario ()
     {
+        // Disable any UIConfig settings
+        ConfigurationManager.ConfigLocations savedConfigLocations = ConfigurationManager.Locations;
+        ConfigurationManager.Locations = ConfigurationManager.ConfigLocations.DefaultOnly;
+
         Window _leftPane;
         ListView _classListView;
         FrameView _hostPane;
@@ -270,69 +443,69 @@ public class ScenarioTests : TestsAllViews
         _classListView.OpenSelectedItem += (s, a) => { _settingsPane.SetFocus (); };
 
         _classListView.SelectedItemChanged += (s, args) =>
-                                              {
-                                                  // Remove existing class, if any
-                                                  if (_curView != null)
-                                                  {
-                                                      _curView.LayoutComplete -= LayoutCompleteHandler;
-                                                      _hostPane.Remove (_curView);
-                                                      _curView.Dispose ();
-                                                      _curView = null;
-                                                      _hostPane.FillRect (_hostPane.Viewport);
-                                                  }
+        {
+            // Remove existing class, if any
+            if (_curView != null)
+            {
+                _curView.SubviewsLaidOut -= LayoutCompleteHandler;
+                _hostPane.Remove (_curView);
+                _curView.Dispose ();
+                _curView = null;
+                _hostPane.FillRect (_hostPane.Viewport);
+            }
 
-                                                  _curView = CreateClass (_viewClasses.Values.ToArray () [_classListView.SelectedItem]);
-                                              };
+            _curView = CreateClass (_viewClasses.Values.ToArray () [_classListView.SelectedItem]);
+        };
 
         _xRadioGroup.SelectedItemChanged += (s, selected) => DimPosChanged (_curView);
 
         _xText.TextChanged += (s, args) =>
-                              {
-                                  try
-                                  {
-                                      _xVal = int.Parse (_xText.Text);
-                                      DimPosChanged (_curView);
-                                  }
-                                  catch
-                                  { }
-                              };
+        {
+            try
+            {
+                _xVal = int.Parse (_xText.Text);
+                DimPosChanged (_curView);
+            }
+            catch
+            { }
+        };
 
         _yText.TextChanged += (s, e) =>
-                              {
-                                  try
-                                  {
-                                      _yVal = int.Parse (_yText.Text);
-                                      DimPosChanged (_curView);
-                                  }
-                                  catch
-                                  { }
-                              };
+        {
+            try
+            {
+                _yVal = int.Parse (_yText.Text);
+                DimPosChanged (_curView);
+            }
+            catch
+            { }
+        };
 
         _yRadioGroup.SelectedItemChanged += (s, selected) => DimPosChanged (_curView);
 
         _wRadioGroup.SelectedItemChanged += (s, selected) => DimPosChanged (_curView);
 
         _wText.TextChanged += (s, args) =>
-                              {
-                                  try
-                                  {
-                                      _wVal = int.Parse (_wText.Text);
-                                      DimPosChanged (_curView);
-                                  }
-                                  catch
-                                  { }
-                              };
+        {
+            try
+            {
+                _wVal = int.Parse (_wText.Text);
+                DimPosChanged (_curView);
+            }
+            catch
+            { }
+        };
 
         _hText.TextChanged += (s, args) =>
-                              {
-                                  try
-                                  {
-                                      _hVal = int.Parse (_hText.Text);
-                                      DimPosChanged (_curView);
-                                  }
-                                  catch
-                                  { }
-                              };
+        {
+            try
+            {
+                _hVal = int.Parse (_hText.Text);
+                DimPosChanged (_curView);
+            }
+            catch
+            { }
+        };
 
         _hRadioGroup.SelectedItemChanged += (s, selected) => DimPosChanged (_curView);
 
@@ -345,23 +518,23 @@ public class ScenarioTests : TestsAllViews
         var iterations = 0;
 
         Application.Iteration += (s, a) =>
-                                 {
-                                     iterations++;
+        {
+            iterations++;
 
-                                     if (iterations < _viewClasses.Count)
-                                     {
-                                         _classListView.MoveDown ();
+            if (iterations < _viewClasses.Count)
+            {
+                _classListView.MoveDown ();
 
-                                         Assert.Equal (
-                                                       _curView.GetType ().Name,
-                                                       _viewClasses.Values.ToArray () [_classListView.SelectedItem].Name
-                                                      );
-                                     }
-                                     else
-                                     {
-                                         Application.RequestStop ();
-                                     }
-                                 };
+                Assert.Equal (
+                              _curView.GetType ().Name,
+                              _viewClasses.Values.ToArray () [_classListView.SelectedItem].Name
+                             );
+            }
+            else
+            {
+                Application.RequestStop ();
+            }
+        };
 
         Application.Run (top);
 
@@ -369,6 +542,10 @@ public class ScenarioTests : TestsAllViews
 
         top.Dispose ();
         Application.Shutdown ();
+
+        // Restore the configuration locations
+        ConfigurationManager.Locations = savedConfigLocations;
+        ConfigurationManager.Reset ();
 
         void DimPosChanged (View view)
         {
@@ -570,12 +747,12 @@ public class ScenarioTests : TestsAllViews
 
             //DimPosChanged ();
             _hostPane.LayoutSubviews ();
-            _hostPane.Clear ();
-            _hostPane.SetNeedsDisplay ();
+            _hostPane.ClearViewport ();
+            _hostPane.SetNeedsDraw ();
             UpdateSettings (view);
             UpdateTitle (view);
 
-            view.LayoutComplete += LayoutCompleteHandler;
+            view.SubviewsLaidOut += LayoutCompleteHandler;
 
             return view;
         }
@@ -586,6 +763,10 @@ public class ScenarioTests : TestsAllViews
     [Fact]
     public void Run_Generic ()
     {
+        // Disable any UIConfig settings
+        ConfigurationManager.ConfigLocations savedConfigLocations = ConfigurationManager.Locations;
+        ConfigurationManager.Locations = ConfigurationManager.ConfigLocations.DefaultOnly;
+
         ObservableCollection<Scenario> scenarios = Scenario.GetScenarios ();
         Assert.NotEmpty (scenarios);
 
@@ -603,40 +784,40 @@ public class ScenarioTests : TestsAllViews
         var abortCount = 0;
 
         Func<bool> abortCallback = () =>
-                                   {
-                                       abortCount++;
-                                       _output.WriteLine ($"'Generic' abortCount {abortCount}");
-                                       Application.RequestStop ();
+        {
+            abortCount++;
+            _output.WriteLine ($"'Generic' abortCount {abortCount}");
+            Application.RequestStop ();
 
-                                       return false;
-                                   };
+            return false;
+        };
 
         var iterations = 0;
         object token = null;
 
         Application.Iteration += (s, a) =>
-                                 {
-                                     if (token == null)
-                                     {
-                                         // Timeout only must start at first iteration
-                                         token = Application.MainLoop.AddTimeout (TimeSpan.FromMilliseconds (ms), abortCallback);
-                                     }
+        {
+            if (token == null)
+            {
+                // Timeout only must start at first iteration
+                token = Application.MainLoop.AddTimeout (TimeSpan.FromMilliseconds (ms), abortCallback);
+            }
 
-                                     iterations++;
-                                     _output.WriteLine ($"'Generic' iteration {iterations}");
+            iterations++;
+            _output.WriteLine ($"'Generic' iteration {iterations}");
 
-                                     // Stop if we run out of control...
-                                     if (iterations == 10)
-                                     {
-                                         _output.WriteLine ("'Generic' had to be force quit!");
-                                         Application.RequestStop ();
-                                     }
-                                 };
+            // Stop if we run out of control...
+            if (iterations == 10)
+            {
+                _output.WriteLine ("'Generic' had to be force quit!");
+                Application.RequestStop ();
+            }
+        };
 
         Application.KeyDown += (sender, args) =>
-                               {
-                                   Assert.Equal (Application.QuitKey, args.KeyCode);
-                               };
+        {
+            Assert.Equal (Application.QuitKey, args.KeyCode);
+        };
 
         generic.Main ();
 
@@ -649,6 +830,10 @@ public class ScenarioTests : TestsAllViews
 
         // Shutdown must be called to safely clean up Application if Init has been called
         Application.Shutdown ();
+
+        // Restore the configuration locations
+        ConfigurationManager.Locations = savedConfigLocations;
+        ConfigurationManager.Reset ();
 
 #if DEBUG_IDISPOSABLE
         Assert.Empty (Responder.Instances);

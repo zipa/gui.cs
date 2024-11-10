@@ -65,7 +65,7 @@ public class ListsAndCombos : Scenario
                                              scrollBar.Position = listview.TopItem;
                                          }
 
-                                         listview.SetNeedsDisplay ();
+                                         listview.SetNeedsDraw ();
                                      };
 
         scrollBar.OtherScrollBarView.ChangedPosition += (s, e) =>
@@ -77,10 +77,10 @@ public class ListsAndCombos : Scenario
                                                                 scrollBar.OtherScrollBarView.Position = listview.LeftItem;
                                                             }
 
-                                                            listview.SetNeedsDisplay ();
+                                                            listview.SetNeedsDraw ();
                                                         };
 
-        listview.DrawContent += (s, e) =>
+        listview.DrawingContent += (s, e) =>
                                 {
                                     scrollBar.Size = listview.Source.Count - 1;
                                     scrollBar.Position = listview.TopItem;
@@ -122,7 +122,7 @@ public class ListsAndCombos : Scenario
                                                 scrollBarCbx.Position = ((ListView)comboBox.Subviews [1]).TopItem;
                                             }
 
-                                            comboBox.SetNeedsDisplay ();
+                                            comboBox.SetNeedsDraw ();
                                         };
 
         scrollBarCbx.OtherScrollBarView.ChangedPosition += (s, e) =>
@@ -134,10 +134,10 @@ public class ListsAndCombos : Scenario
                                                                    scrollBarCbx.OtherScrollBarView.Position = ((ListView)comboBox.Subviews [1]).LeftItem;
                                                                }
 
-                                                               comboBox.SetNeedsDisplay ();
+                                                               comboBox.SetNeedsDraw ();
                                                            };
 
-        comboBox.DrawContent += (s, e) =>
+        comboBox.DrawingContent += (s, e) =>
                                 {
                                     scrollBarCbx.Size = comboBox.Source.Count;
                                     scrollBarCbx.Position = ((ListView)comboBox.Subviews [1]).TopItem;
@@ -147,13 +147,13 @@ public class ListsAndCombos : Scenario
                                 };
 
         var btnMoveUp = new Button { X = 1, Y = Pos.Bottom (lbListView), Text = "Move _Up" };
-        btnMoveUp.Accept += (s, e) => { listview.MoveUp (); };
+        btnMoveUp.Accepting += (s, e) => { listview.MoveUp (); };
 
         var btnMoveDown = new Button
         {
             X = Pos.Right (btnMoveUp) + 1, Y = Pos.Bottom (lbListView), Text = "Move _Down"
         };
-        btnMoveDown.Accept += (s, e) => { listview.MoveDown (); };
+        btnMoveDown.Accepting += (s, e) => { listview.MoveDown (); };
 
         win.Add (btnMoveUp, btnMoveDown);
 

@@ -12,6 +12,9 @@ public partial class View
     /// </summary>
     /// <remarks>
     ///     <para>
+    ///         See the View Layout Deep Dive for more information: <see href="https://gui-cs.github.io/Terminal.GuiV2Docs/docs/layout.html"/>
+    ///     </para>
+    ///     <para>
     ///         Negative sizes are not supported.
     ///     </para>
     ///     <para>
@@ -55,6 +58,9 @@ public partial class View
     /// </summary>
     /// <remarks>a>
     ///     <para>
+    ///         See the View Layout Deep Dive for more information: <see href="https://gui-cs.github.io/Terminal.GuiV2Docs/docs/layout.html"/>
+    ///     </para>
+    ///     <para>
     ///         If the content size was not explicitly set by <see cref="SetContentSize"/>, and the View has no visible subviews, <see cref="GetContentSize ()"/> will return the
     ///         size of
     ///         <see cref="Viewport"/>.
@@ -85,6 +91,9 @@ public partial class View
     ///     size or not.
     /// </summary>
     /// <remarks>
+    ///     <para>
+    ///         See the View Layout Deep Dive for more information: <see href="https://gui-cs.github.io/Terminal.GuiV2Docs/docs/layout.html"/>
+    ///     </para>
     ///     <list type="bullet">
     ///         <listheader>
     ///             <term>Value</term> <description>Result</description>
@@ -142,10 +151,7 @@ public partial class View
 
         if (e.Cancel != true)
         {
-            OnResizeNeeded ();
-
-            //SetNeedsLayout ();
-            //SetNeedsDisplay ();
+            SetNeedsLayout ();
         }
 
         return e.Cancel;
@@ -164,7 +170,6 @@ public partial class View
     public Point ContentToScreen (in Point location)
     {
         // Subtract the ViewportOffsetFromFrame to get the Viewport-relative location.
-        Point viewportOffset = GetViewportOffsetFromFrame ();
         Point contentRelativeToViewport = location;
         contentRelativeToViewport.Offset (-Viewport.X, -Viewport.Y);
 
@@ -237,6 +242,9 @@ public partial class View
     /// </value>
     /// <remarks>
     ///     <para>
+    ///         See the View Layout Deep Dive for more information: <see href="https://gui-cs.github.io/Terminal.GuiV2Docs/docs/layout.html"/>
+    ///     </para>
+    ///     <para>
     ///         Positive values for the location indicate the visible area is offset into (down-and-right) the View's virtual
     ///         <see cref="GetContentSize ()"/>. This enables scrolling down and to the right (e.g. in a <see cref="ListView"/>
     ///         .
@@ -257,7 +265,7 @@ public partial class View
     ///     </para>
     ///     <para>
     ///         Altering the Viewport Size will eventually (when the view is next laid out) cause the
-    ///         <see cref="LayoutSubview(View, Size)"/> and <see cref="OnDrawContent(Rectangle)"/> methods to be called.
+    ///         <see cref="Layout()"/> and <see cref="OnDrawingContent"/> methods to be called.
     ///     </para>
     /// </remarks>
     public virtual Rectangle Viewport
@@ -301,6 +309,8 @@ public partial class View
             {
                 _viewportLocation = viewport.Location;
                 SetNeedsLayout ();
+                //SetNeedsDraw();
+                //SetSubViewNeedsDraw();
             }
 
             OnViewportChanged (new (IsInitialized ? Viewport : Rectangle.Empty, oldViewport));
@@ -315,6 +325,10 @@ public partial class View
         {
             Size = newSize
         };
+
+        OnViewportChanged (new (IsInitialized ? Viewport : Rectangle.Empty, oldViewport));
+
+        return;
 
         void ApplySettings (ref Rectangle newViewport)
         {

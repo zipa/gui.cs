@@ -10,7 +10,7 @@ using Terminal.Gui;
 namespace UICatalog.Scenarios;
 
 [ScenarioMetadata ("Dynamic StatusBar", "Demonstrates how to add and remove a StatusBar and change items dynamically.")]
-[ScenarioCategory ("Overlapped")]
+[ScenarioCategory ("Arrangement")]
 public class DynamicStatusBar : Scenario
 {
     public override void Main ()
@@ -134,7 +134,7 @@ public class DynamicStatusBar : Scenario
             {
                 X = Pos.X (_lblShortcut), Y = Pos.Bottom (TextShortcut) + 1, Text = "Clear Shortcut"
             };
-            _btnShortcut.Accept += (s, e) => { TextShortcut.Text = ""; };
+            _btnShortcut.Accepting += (s, e) => { TextShortcut.Text = ""; };
             Add (_btnShortcut);
         }
 
@@ -181,7 +181,7 @@ public class DynamicStatusBar : Scenario
 
             var btnOk = new Button { IsDefault = true, Text = "OK" };
 
-            btnOk.Accept += (s, e) =>
+            btnOk.Accepting += (s, e) =>
                               {
                                   if (string.IsNullOrEmpty (TextTitle.Text))
                                   {
@@ -196,12 +196,12 @@ public class DynamicStatusBar : Scenario
                               };
             var btnCancel = new Button { Text = "Cancel" };
 
-            btnCancel.Accept += (s, e) =>
+            btnCancel.Accepting += (s, e) =>
                                   {
                                       TextTitle.Text = string.Empty;
                                       Application.RequestStop ();
                                   };
-            var dialog = new Dialog { Title = "Enter the menu details.", Buttons = [btnOk, btnCancel], Height = Dim.Auto (DimAutoStyle.Content, 17, Driver.Rows) };
+            var dialog = new Dialog { Title = "Enter the menu details.", Buttons = [btnOk, btnCancel], Height = Dim.Auto (DimAutoStyle.Content, 17, Application.Screen.Height) };
 
             Width = Dim.Fill ();
             Height = Dim.Fill () - 1;
@@ -311,7 +311,7 @@ public class DynamicStatusBar : Scenario
             };
             Add (_frmStatusBarDetails);
 
-            _btnUp.Accept += (s, e) =>
+            _btnUp.Accepting += (s, e) =>
                               {
                                   int i = _lstItems.SelectedItem;
                                   Shortcut statusItem = DataContext.Items.Count > 0 ? DataContext.Items [i].Shortcut : null;
@@ -329,12 +329,12 @@ public class DynamicStatusBar : Scenario
                                           DataContext.Items [i - 1] =
                                               new DynamicStatusItemList (statusItem.Title, statusItem);
                                           _lstItems.SelectedItem = i - 1;
-                                          _statusBar.SetNeedsDisplay ();
+                                          _statusBar.SetNeedsDraw ();
                                       }
                                   }
                               };
 
-            _btnDown.Accept += (s, e) =>
+            _btnDown.Accepting += (s, e) =>
                                 {
                                     int i = _lstItems.SelectedItem;
                                     Shortcut statusItem = DataContext.Items.Count > 0 ? DataContext.Items [i].Shortcut : null;
@@ -352,7 +352,7 @@ public class DynamicStatusBar : Scenario
                                             DataContext.Items [i + 1] =
                                                 new DynamicStatusItemList (statusItem.Title, statusItem);
                                             _lstItems.SelectedItem = i + 1;
-                                            _statusBar.SetNeedsDisplay ();
+                                            _statusBar.SetNeedsDraw ();
                                         }
                                     }
                                 };
@@ -364,12 +364,12 @@ public class DynamicStatusBar : Scenario
             Add (_btnOk);
 
             var _btnCancel = new Button { X = Pos.Right (_btnOk) + 3, Y = Pos.Top (_btnOk), Text = "Cancel" };
-            _btnCancel.Accept += (s, e) => { SetFrameDetails (_currentEditStatusItem); };
+            _btnCancel.Accepting += (s, e) => { SetFrameDetails (_currentEditStatusItem); };
             Add (_btnCancel);
 
             _lstItems.SelectedItemChanged += (s, e) => { SetFrameDetails (); };
 
-            _btnOk.Accept += (s, e) =>
+            _btnOk.Accepting += (s, e) =>
                               {
                                   if (string.IsNullOrEmpty (_frmStatusBarDetails.TextTitle.Text) && _currentEditStatusItem != null)
                                   {
@@ -388,19 +388,19 @@ public class DynamicStatusBar : Scenario
                                   }
                               };
 
-            _btnAdd.Accept += (s, e) =>
+            _btnAdd.Accepting += (s, e) =>
                                {
-                                   if (StatusBar == null)
-                                   {
-                                       MessageBox.ErrorQuery (
-                                                              "StatusBar Bar Error",
-                                                              "Must add a StatusBar first!",
-                                                              "Ok"
-                                                             );
-                                       _btnAddStatusBar.SetFocus ();
+                                   //if (StatusBar == null)
+                                   //{
+                                   //    MessageBox.ErrorQuery (
+                                   //                           "StatusBar Bar Error",
+                                   //                           "Must add a StatusBar first!",
+                                   //                           "Ok"
+                                   //                          );
+                                   //    _btnAddStatusBar.SetFocus ();
 
-                                       return;
-                                   }
+                                   //    return;
+                                   //}
 
                                    var frameDetails = new DynamicStatusBarDetails ();
                                    DynamicStatusItem item = frameDetails.EnterStatusItem ();
@@ -418,7 +418,7 @@ public class DynamicStatusBar : Scenario
                                    SetFrameDetails ();
                                };
 
-            _btnRemove.Accept += (s, e) =>
+            _btnRemove.Accepting += (s, e) =>
                                   {
                                       Shortcut statusItem = DataContext.Items.Count > 0
                                                                   ? DataContext.Items [_lstItems.SelectedItem].Shortcut
@@ -435,7 +435,7 @@ public class DynamicStatusBar : Scenario
                                               _lstItems.SelectedItem = _lstItems.Source.Count - 1;
                                           }
 
-                                          _lstItems.SetNeedsDisplay ();
+                                          _lstItems.SetNeedsDraw ();
                                           SetFrameDetails ();
                                       }
                                   };
@@ -448,7 +448,7 @@ public class DynamicStatusBar : Scenario
                                    SetFrameDetails (statusItem);
                                };
 
-            _btnAddStatusBar.Accept += (s, e) =>
+            _btnAddStatusBar.Accepting += (s, e) =>
                                         {
                                             if (_statusBar != null)
                                             {
@@ -459,7 +459,7 @@ public class DynamicStatusBar : Scenario
                                             Add (_statusBar);
                                         };
 
-            _btnRemoveStatusBar.Accept += (s, e) =>
+            _btnRemoveStatusBar.Accepting += (s, e) =>
                                            {
                                                if (_statusBar == null)
                                                {

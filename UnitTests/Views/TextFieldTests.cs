@@ -1,5 +1,4 @@
-﻿using System.ComponentModel;
-using System.Globalization;
+﻿using System.Globalization;
 using System.Reflection;
 using System.Text;
 using Xunit.Abstractions;
@@ -15,6 +14,7 @@ public class TextFieldTests (ITestOutputHelper output)
     public void Accented_Letter_With_Three_Combining_Unicode_Chars ()
     {
         var tf = new TextField { Width = 3, Text = "ắ" };
+        tf.Layout ();
         tf.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -24,6 +24,7 @@ public class TextFieldTests (ITestOutputHelper output)
                                                      );
 
         tf.Text = "\u1eaf";
+        tf.Layout ();
         tf.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -33,6 +34,7 @@ public class TextFieldTests (ITestOutputHelper output)
                                                      );
 
         tf.Text = "\u0103\u0301";
+        tf.Layout ();
         tf.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -42,6 +44,7 @@ public class TextFieldTests (ITestOutputHelper output)
                                                      );
 
         tf.Text = "\u0061\u0306\u0301";
+        tf.Layout ();
         tf.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -189,7 +192,6 @@ public class TextFieldTests (ITestOutputHelper output)
         tf.Draw ();
         TestHelpers.AssertDriverContentsAre ("Misérables", output);
         Application.Top.Dispose ();
-
     }
 
     [Theory]
@@ -208,11 +210,13 @@ public class TextFieldTests (ITestOutputHelper output)
 
         // Caption should appear when not focused and no text
         Assert.False (tf.HasFocus);
+        View.SetClipToScreen ();
         tf.Draw ();
         TestHelpers.AssertDriverContentsAre ("Enter txt", output);
 
         // but disapear when text is added
         tf.Text = content;
+        View.SetClipToScreen ();
         tf.Draw ();
         TestHelpers.AssertDriverContentsAre (content, output);
         Application.Top.Dispose ();
@@ -230,12 +234,14 @@ public class TextFieldTests (ITestOutputHelper output)
         // Caption has no effect when focused
         tf.Caption = "Enter txt";
         Assert.True (tf.HasFocus);
+        View.SetClipToScreen ();
         tf.Draw ();
         TestHelpers.AssertDriverContentsAre ("", output);
 
         Application.Driver?.SendKeys ('\t', ConsoleKey.Tab, false, false, false);
 
         Assert.False (tf.HasFocus);
+        View.SetClipToScreen ();
         tf.Draw ();
         TestHelpers.AssertDriverContentsAre ("Enter txt", output);
         Application.Top.Dispose ();
@@ -517,6 +523,60 @@ public class TextFieldTests (ITestOutputHelper output)
     }
 
     [Fact]
+    public void Space_Does_Not_Raise_Selected ()
+    {
+        TextField tf = new ();
+
+        tf.Selecting += (sender, args) => Assert.Fail ("Selected should not be raied.");
+
+        Application.Top = new ();
+        Application.Top.Add (tf);
+        tf.SetFocus ();
+        Application.RaiseKeyDownEvent (Key.Space);
+
+        Application.Top.Dispose ();
+        Application.ResetState (true);
+    }
+
+    [Fact]
+    public void Enter_Does_Not_Raise_Selected ()
+    {
+        TextField tf = new ();
+
+        var selectingCount = 0;
+        tf.Selecting += (sender, args) => selectingCount++;
+
+        Application.Top = new ();
+        Application.Top.Add (tf);
+        tf.SetFocus ();
+        Application.RaiseKeyDownEvent (Key.Enter);
+
+        Assert.Equal (0, selectingCount);
+
+        Application.Top.Dispose ();
+        Application.ResetState (true);
+    }
+
+    [Fact]
+    public void Enter_Raises_Accepted ()
+    {
+        TextField tf = new ();
+
+        var acceptedCount = 0;
+        tf.Accepting += (sender, args) => acceptedCount++;
+
+        Application.Top = new ();
+        Application.Top.Add (tf);
+        tf.SetFocus ();
+        Application.RaiseKeyDownEvent (Key.Enter);
+
+        Assert.Equal (1, acceptedCount);
+
+        Application.Top.Dispose ();
+        Application.ResetState (true);
+    }
+
+    [Fact]
     [AutoInitShutdown (useFakeClipboard: true)]
     public void KeyBindings_Command ()
     {
@@ -766,50 +826,59 @@ public class TextFieldTests (ITestOutputHelper output)
     {
         var view = new TextField ();
         var accepted = false;
-        view.Accept += OnAccept;
+        view.Accepting += OnAccept;
         view.InvokeCommand (Command.HotKey);
 
         Assert.False (accepted);
 
         return;
 
-        void OnAccept (object sender, HandledEventArgs e) { accepted = true; }
+        void OnAccept (object sender, CommandEventArgs e) { accepted = true; }
     }
 
     [Fact]
-    public void Accept_Command_Fires_Accept ()
+    public void Accepted_Command_Fires_Accept ()
     {
         var view = new TextField ();
 
         var accepted = false;
-        view.Accept += Accept;
+        view.Accepting += Accept;
         view.InvokeCommand (Command.Accept);
         Assert.True (accepted);
 
         return;
 
-        void Accept (object sender, HandledEventArgs e) { accepted = true; }
+        void Accept (object sender, CommandEventArgs e) { accepted = true; }
     }
 
     [Theory]
-    [InlineData (false, 0)]
-    [InlineData (true, 1)]
-    public void Accept_Handler_Handled_Prevents_Default_Button_Accept (bool handleAccept, int expectedButtonAccepts)
+    [InlineData (false, 1)]
+    [InlineData (true, 0)]
+    public void Accepted_Handler_Handled_Prevents_Default_Button_Accept (bool handleAccept, int expectedButtonAccepts)
     {
-        var superView = new Window ();
-        var tf = new TextField ();
-        var button = new Button ()
+        var superView = new Window
         {
-            IsDefault = true,
+            Id = "superView"
+        };
+
+        var tf = new TextField
+        {
+            Id = "tf"
+        };
+
+        var button = new Button
+        {
+            Id = "button",
+            IsDefault = true
         };
 
         superView.Add (tf, button);
 
         var buttonAccept = 0;
-        button.Accept += ButtonAccept;
+        button.Accepting += ButtonAccept;
 
         var textFieldAccept = 0;
-        tf.Accept += TextFieldAccept;
+        tf.Accepting += TextFieldAccept;
 
         tf.SetFocus ();
         Assert.True (tf.HasFocus);
@@ -825,32 +894,38 @@ public class TextFieldTests (ITestOutputHelper output)
 
         return;
 
-        void TextFieldAccept (object sender, HandledEventArgs e)
+        void TextFieldAccept (object sender, CommandEventArgs e)
         {
             textFieldAccept++;
-            e.Handled = handleAccept;
+            e.Cancel = handleAccept;
         }
 
-        void ButtonAccept (object sender, HandledEventArgs e)
-        {
-            buttonAccept++;
-        }
+        void ButtonAccept (object sender, CommandEventArgs e) { buttonAccept++; }
     }
 
     [Fact]
-    public void Accept_No_Handler_Enables_Default_Button_Accept ()
+    public void Accepted_No_Handler_Enables_Default_Button_Accept ()
     {
-        var superView = new Window ();
-        var tf = new TextField ();
-        var button = new Button ()
+        var superView = new Window
         {
-            IsDefault = true,
+            Id = "superView"
+        };
+
+        var tf = new TextField
+        {
+            Id = "tf"
+        };
+
+        var button = new Button
+        {
+            Id = "button",
+            IsDefault = true
         };
 
         superView.Add (tf, button);
 
         var buttonAccept = 0;
-        button.Accept += ButtonAccept;
+        button.Accepting += ButtonAccept;
 
         tf.SetFocus ();
         Assert.True (tf.HasFocus);
@@ -864,14 +939,11 @@ public class TextFieldTests (ITestOutputHelper output)
 
         return;
 
-        void ButtonAccept (object sender, HandledEventArgs e)
-        {
-            buttonAccept++;
-        }
+        void ButtonAccept (object sender, CommandEventArgs e) { buttonAccept++; }
     }
 
     [Fact]
-    public void Accept_Cancel_Event_HandlesCommand ()
+    public void Accepted_Cancel_Event_HandlesCommand ()
     {
         //var super = new View ();
         var view = new TextField ();
@@ -882,22 +954,22 @@ public class TextFieldTests (ITestOutputHelper output)
 
         var tfAcceptedInvoked = false;
         var handle = false;
-        view.Accept += TextViewAccept;
-        Assert.True (view.InvokeCommand (Command.Accept));
+        view.Accepting += TextViewAccept;
+        Assert.False (view.InvokeCommand (Command.Accept));
         Assert.True (tfAcceptedInvoked);
 
         tfAcceptedInvoked = false;
         handle = true;
-        view.Accept += TextViewAccept;
-        Assert.False (view.InvokeCommand (Command.Accept));
+        view.Accepting += TextViewAccept;
+        Assert.True (view.InvokeCommand (Command.Accept));
         Assert.True (tfAcceptedInvoked);
 
         return;
 
-        void TextViewAccept (object sender, HandledEventArgs e)
+        void TextViewAccept (object sender, CommandEventArgs e)
         {
             tfAcceptedInvoked = true;
-            e.Handled = handle;
+            e.Cancel = handle;
         }
     }
 
@@ -1010,19 +1082,18 @@ public class TextFieldTests (ITestOutputHelper output)
         };
 
         //                                             TAB to jump between text fields.
-        TestHelpers.AssertDriverAttributesAre ("0000000", Application.Driver, attributes);
+        TestHelpers.AssertDriverAttributesAre ("0000000", output, Application.Driver, attributes);
 
         // Cursor is at the end
         Assert.Equal (32, _textField.CursorPosition);
         _textField.CursorPosition = 0;
         _textField.NewKeyDownEvent (Key.CursorRight.WithCtrl.WithShift);
 
-        var first = true;
-        Application.RunIteration (ref rs, ref first);
+        Application.RunIteration (ref rs);
         Assert.Equal (4, _textField.CursorPosition);
 
         //                                             TAB to jump between text fields.
-        TestHelpers.AssertDriverAttributesAre ("1111000", Application.Driver, attributes);
+        TestHelpers.AssertDriverAttributesAre ("1111000", output, Application.Driver, attributes);
         top.Dispose ();
     }
 
@@ -1114,15 +1185,15 @@ public class TextFieldTests (ITestOutputHelper output)
         top.Add (tf);
         Application.Begin (top);
 
-        var mouseEvent = new MouseEvent { Flags = MouseFlags.Button1Clicked, View = tf };
+        var mouseEvent = new MouseEventArgs { Flags = MouseFlags.Button1Clicked, View = tf };
 
-        Application.OnMouseEvent (mouseEvent);
+        Application.RaiseMouseEvent (mouseEvent);
         Assert.Equal (1, clickCounter);
 
         // Get a fresh instance that represents a right click.
         // Should be ignored because of SuppressRightClick callback
         mouseEvent = new () { Flags = MouseFlags.Button3Clicked, View = tf };
-        Application.OnMouseEvent (mouseEvent);
+        Application.RaiseMouseEvent (mouseEvent);
         Assert.Equal (1, clickCounter);
 
         Application.MouseEvent -= HandleRightClick;
@@ -1135,13 +1206,13 @@ public class TextFieldTests (ITestOutputHelper output)
         // This call causes the context menu to pop, and MouseEvent() returns true.
         // Thus, the clickCounter is NOT incremented.
         // Which is correct, because the user did NOT click with the left mouse button.
-        Application.OnMouseEvent (mouseEvent);
+        Application.RaiseMouseEvent (mouseEvent);
         Assert.Equal (1, clickCounter);
         top.Dispose ();
 
         return;
 
-        void HandleRightClick (object sender, MouseEvent arg)
+        void HandleRightClick (object sender, MouseEventArgs arg)
         {
             if (arg.Flags.HasFlag (MouseFlags.Button3Clicked))
             {
@@ -1193,13 +1264,12 @@ public class TextFieldTests (ITestOutputHelper output)
     [TextFieldTestsAutoInitShutdown]
     public void TextChanged_Event ()
     {
-        bool eventFired = false;
+        var eventFired = false;
         _textField.TextChanged += (s, e) => eventFired = true;
 
         _textField.Text = "changed";
         Assert.True (eventFired);
         Assert.Equal ("changed", _textField.Text);
-
     }
 
     [Fact]
@@ -1230,7 +1300,7 @@ public class TextFieldTests (ITestOutputHelper output)
     {
         var tf = new TextField { Width = 10, Text = " " };
 
-        var ev = new MouseEvent { Position = new (0, 0), Flags = MouseFlags.Button1DoubleClicked };
+        var ev = new MouseEventArgs { Position = new (0, 0), Flags = MouseFlags.Button1DoubleClicked };
 
         tf.NewMouseEvent (ev);
         Assert.Equal (1, tf.SelectedLength);
@@ -1907,7 +1977,7 @@ public class TextFieldTests (ITestOutputHelper output)
     public void Words_With_Accents_Incorrect_Order_Will_Result_With_Wrong_Accent_Place ()
     {
         var tf = new TextField { Width = 30, Text = "Les Misérables" };
-        tf.SetRelativeLayout (new Size (100, 100));
+        tf.SetRelativeLayout (new (100, 100));
         tf.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -1927,6 +1997,7 @@ Les Misérables",
 
         // incorrect order will result with a wrong accent place
         tf.Text = "Les Mis" + char.ConvertFromUtf32 (int.Parse ("0301", NumberStyles.HexNumber)) + "erables";
+        View.SetClipToScreen ();
         tf.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -1989,7 +2060,7 @@ Les Miśerables",
     {
         View superView = new ()
         {
-            CanFocus = true,
+            CanFocus = true
         };
 
         TextField t = new ();
@@ -2003,14 +2074,13 @@ Les Miśerables",
         Assert.Equal (2, superView.Subviews.Count);
     }
 
-
     [Fact]
     public void Autocomplete__Added_To_SuperView_On_Add ()
     {
         View superView = new ()
         {
             CanFocus = true,
-            Id = "superView",
+            Id = "superView"
         };
 
         superView.BeginInit ();
@@ -2027,13 +2097,59 @@ Les Miśerables",
         Assert.Equal (2, superView.Subviews.Count);
     }
 
+    [Fact]
+    public void Right_CursorAtEnd_WithSelection_ShouldClearSelection ()
+    {
+        var tf = new TextField
+        {
+            Text = "Hello",
+        };
+        tf.SetFocus ();
+        tf.SelectAll ();
+        tf.CursorPosition = 5;
 
+        // When there is selected text and the cursor is at the end of the text field
+        Assert.Equal ("Hello",tf.SelectedText);
+
+        // Pressing right should not move focus, instead it should clear selection
+        Assert.True(tf.NewKeyDownEvent (Key.CursorRight));
+        Assert.Null (tf.SelectedText);
+
+        // Now that the selection is cleared another right keypress should move focus
+        Assert.False (tf.NewKeyDownEvent (Key.CursorRight));
+    }
+    [Fact]
+    public void Left_CursorAtStart_WithSelection_ShouldClearSelection ()
+    {
+        var tf = new TextField
+        {
+            Text = "Hello",
+        };
+        tf.SetFocus ();
+
+        tf.CursorPosition = 2;
+        Assert.True (tf.NewKeyDownEvent (Key.CursorLeft.WithShift));
+        Assert.True (tf.NewKeyDownEvent (Key.CursorLeft.WithShift));
+
+        // When there is selected text and the cursor is at the start of the text field
+        Assert.Equal ("He", tf.SelectedText);
+
+        // Pressing left should not move focus, instead it should clear selection
+        Assert.True (tf.NewKeyDownEvent (Key.CursorLeft));
+        Assert.Null (tf.SelectedText);
+
+        // When clearing selected text with left the cursor should be at the start of the selection
+        Assert.Equal (0,tf.CursorPosition);
+
+        // Now that the selection is cleared another left keypress should move focus
+        Assert.False (tf.NewKeyDownEvent (Key.CursorLeft));
+    }
     [Fact]
     public void Autocomplete_Visible_False_By_Default ()
     {
         View superView = new ()
         {
-            CanFocus = true,
+            CanFocus = true
         };
 
         TextField t = new ();
@@ -2046,5 +2162,19 @@ Les Miśerables",
 
         Assert.True (t.Visible);
         Assert.False (t.Autocomplete.Visible);
+    }
+
+    [Fact]
+    [AutoInitShutdown]
+    public void Draw_Esc_Rune ()
+    {
+        var tf = new TextField { Width = 5, Text = "\u001b" };
+        tf.BeginInit ();
+        tf.EndInit ();
+        tf.Draw ();
+
+        TestHelpers.AssertDriverContentsWithFrameAre ("\u241b", output);
+
+        tf.Dispose ();
     }
 }

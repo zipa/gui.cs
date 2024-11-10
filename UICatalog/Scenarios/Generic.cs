@@ -1,10 +1,11 @@
+#nullable enable
 using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
 [ScenarioMetadata ("Generic", "Generic sample - A template for creating new Scenarios")]
 [ScenarioCategory ("Controls")]
-public sealed class MyScenario : Scenario
+public sealed class Generic : Scenario
 {
     public override void Main ()
     {
@@ -17,8 +18,9 @@ public sealed class MyScenario : Scenario
             Title = GetQuitKeyAndName (),
         };
 
-        var button = new Button { X = Pos.Center (), Y = Pos.Center (), Text = "Press me!" };
-        button.Accept += (s, e) => MessageBox.ErrorQuery ("Error", "You pressed the button!", "Ok");
+        var button = new Button { Id = "button", X = Pos.Center (), Y = 1, Text = "_Press me!" };
+
+        button.Accepting += (s, e) => MessageBox.ErrorQuery ("Error", "You pressed the button!", "_Ok");
         appWindow.Add (button);
 
         // Run - Start the application.

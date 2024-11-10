@@ -1,11 +1,47 @@
 #nullable enable
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Terminal.Gui;
 
 public static partial class Application // Run (Begin, Run, End, Stop)
 {
+    private static Key _quitKey = Key.Esc; // Resources/config.json overrides
+
+    /// <summary>Gets or sets the key to quit the application.</summary>
+    [SerializableConfigurationProperty (Scope = typeof (SettingsScope))]
+    public static Key QuitKey
+    {
+        get => _quitKey;
+        set
+        {
+            if (_quitKey != value)
+            {
+                ReplaceKey (_quitKey, value);
+                _quitKey = value;
+            }
+        }
+    }
+
+    private static Key _arrangeKey = Key.F5.WithCtrl; // Resources/config.json overrides
+
+
+    /// <summary>Gets or sets the key to activate arranging views using the keyboard.</summary>
+    [SerializableConfigurationProperty (Scope = typeof (SettingsScope))]
+    public static Key ArrangeKey
+    {
+        get => _arrangeKey;
+        set
+        {
+            if (_arrangeKey != value)
+            {
+                ReplaceKey (_arrangeKey, value);
+                _arrangeKey = value;
+            }
+        }
+    }
+
     // When `End ()` is called, it is possible `RunState.Toplevel` is a different object than `Top`.
     // This variable is set in `End` in this case so that `Begin` correctly sets `Top`.
     private static Toplevel? _cachedRunStateToplevel;
@@ -45,31 +81,19 @@ public static partial class Application // Run (Begin, Run, End, Stop)
     {
         ArgumentNullException.ThrowIfNull (toplevel);
 
-#if DEBUG_IDISPOSABLE
-        Debug.Assert (!toplevel.WasDisposed);
+        //#if DEBUG_IDISPOSABLE
+        //        Debug.Assert (!toplevel.WasDisposed);
 
-        if (_cachedRunStateToplevel is { } && _cachedRunStateToplevel != toplevel)
-        {
-            Debug.Assert (_cachedRunStateToplevel.WasDisposed);
-        }
-#endif
-
-        if (toplevel.IsOverlappedContainer && ApplicationOverlapped.OverlappedTop != toplevel && ApplicationOverlapped.OverlappedTop is { })
-        {
-            throw new InvalidOperationException ("Only one Overlapped Container is allowed.");
-        }
+        //        if (_cachedRunStateToplevel is { } && _cachedRunStateToplevel != toplevel)
+        //        {
+        //            Debug.Assert (_cachedRunStateToplevel.WasDisposed);
+        //        }
+        //#endif
 
         // Ensure the mouse is ungrabbed.
         MouseGrabView = null;
 
         var rs = new RunState (toplevel);
-
-        // View implements ISupportInitializeNotification which is derived from ISupportInitialize
-        if (!toplevel.IsInitialized)
-        {
-            toplevel.BeginInit ();
-            toplevel.EndInit ();
-        }
 
 #if DEBUG_IDISPOSABLE
         if (Top is { } && toplevel != Top && !TopLevels.Contains (Top))
@@ -95,11 +119,6 @@ public static partial class Application // Run (Begin, Run, End, Stop)
                     // Probably this will never hit
                     throw new ObjectDisposedException (Top.GetType ().FullName);
                 }
-            }
-            else if (ApplicationOverlapped.OverlappedTop is { } && toplevel != Top && TopLevels.Contains (Top!))
-            {
-                // BUGBUG: Don't call OnLeave/OnEnter directly! Set HasFocus to false and let the system handle it.
-                //Top!.OnLeave (toplevel);
             }
 
             // BUGBUG: We should not depend on `Id` internally.
@@ -135,122 +154,88 @@ public static partial class Application // Run (Begin, Run, End, Stop)
             }
         }
 
-        if (Top is null || toplevel.IsOverlappedContainer)
+        if (Top is null)
         {
             Top = toplevel;
         }
 
-        var refreshDriver = true;
-
-        if (ApplicationOverlapped.OverlappedTop is null
-            || toplevel.IsOverlappedContainer
-            || (Current?.Modal == false && toplevel.Modal)
-            || (Current?.Modal == false && !toplevel.Modal)
-            || (Current?.Modal == true && toplevel.Modal))
+        if ((Top?.Modal == false && toplevel.Modal)
+            || (Top?.Modal == false && !toplevel.Modal)
+            || (Top?.Modal == true && toplevel.Modal))
         {
             if (toplevel.Visible)
             {
-                if (Current is { HasFocus: true })
+                if (Top is { HasFocus: true })
                 {
-                    Current.HasFocus = false;
+                    Top.HasFocus = false;
                 }
 
-                Current?.OnDeactivate (toplevel);
-                Toplevel previousCurrent = Current!;
+                // Force leave events for any entered views in the old Top
+                if (GetLastMousePosition () is { })
+                {
+                    RaiseMouseEnterLeaveEvents (GetLastMousePosition ()!.Value, new List<View?> ());
+                }
 
-                Current = toplevel;
-                Current.OnActivate (previousCurrent);
+                Top?.OnDeactivate (toplevel);
+                Toplevel previousTop = Top!;
 
-                ApplicationOverlapped.SetCurrentOverlappedAsTop ();
+                Top = toplevel;
+                Top.OnActivate (previousTop);
             }
-            else
-            {
-                refreshDriver = false;
-            }
         }
-        else if ((toplevel != ApplicationOverlapped.OverlappedTop
-                  && Current?.Modal == true
-                  && !TopLevels.Peek ().Modal)
-                 || (toplevel != ApplicationOverlapped.OverlappedTop && Current?.Running == false))
+
+        // View implements ISupportInitializeNotification which is derived from ISupportInitialize
+        if (!toplevel.IsInitialized)
         {
-            refreshDriver = false;
-            ApplicationOverlapped.MoveCurrent (toplevel);
-        }
-        else
-        {
-            refreshDriver = false;
-            ApplicationOverlapped.MoveCurrent (Current!);
+            toplevel.BeginInit ();
+            toplevel.EndInit (); // Calls Layout
         }
 
-        toplevel.SetRelativeLayout (Driver!.Screen.Size);
-
-        toplevel.LayoutSubviews ();
-        toplevel.PositionToplevels ();
-
-        // TODO: Should this use FindDeepestFocusableView instead?
         // Try to set initial focus to any TabStop
         if (!toplevel.HasFocus)
         {
             toplevel.SetFocus ();
         }
 
-        ApplicationOverlapped.BringOverlappedTopToFront ();
+        toplevel.OnLoaded ();
 
-        if (refreshDriver)
+        if (PositionCursor ())
         {
-            ApplicationOverlapped.OverlappedTop?.OnChildLoaded (toplevel);
-            toplevel.OnLoaded ();
-            toplevel.SetNeedsDisplay ();
-            toplevel.Draw ();
-            Driver.UpdateScreen ();
-
-            if (PositionCursor (toplevel))
-            {
-                Driver.UpdateCursor ();
-            }
+            Driver?.UpdateCursor ();
         }
 
         NotifyNewRunState?.Invoke (toplevel, new (rs));
+
+        // Force an Idle event so that an Iteration (and Refresh) happen.
+        Application.Invoke (() => { });
 
         return rs;
     }
 
     /// <summary>
-    ///     Calls <see cref="View.PositionCursor"/> on the most focused view in the view starting with <paramref name="view"/>.
+    ///     Calls <see cref="View.PositionCursor"/> on the most focused view.
     /// </summary>
     /// <remarks>
-    ///     Does nothing if <paramref name="view"/> is <see langword="null"/> or if the most focused view is not visible or
-    ///     enabled.
+    ///     Does nothing if there is no most focused view.
     ///     <para>
     ///         If the most focused view is not visible within it's superview, the cursor will be hidden.
     ///     </para>
     /// </remarks>
     /// <returns><see langword="true"/> if a view positioned the cursor and the position is visible.</returns>
-    internal static bool PositionCursor (View view)
+    internal static bool PositionCursor ()
     {
         // Find the most focused view and position the cursor there.
-        View? mostFocused = view?.MostFocused;
-
-        if (mostFocused is null)
-        {
-            if (view is { HasFocus: true })
-            {
-                mostFocused = view;
-            }
-            else
-            {
-                return false;
-            }
-        }
+        View? mostFocused = Navigation?.GetFocused ();
 
         // If the view is not visible or enabled, don't position the cursor
-        if (!mostFocused.Visible || !mostFocused.Enabled)
+        if (mostFocused is null || !mostFocused.Visible || !mostFocused.Enabled)
         {
-            Driver!.GetCursorVisibility (out CursorVisibility current);
+            CursorVisibility current = CursorVisibility.Invisible;
+            Driver?.GetCursorVisibility (out current);
 
             if (current != CursorVisibility.Invisible)
             {
-                Driver.SetCursorVisibility (CursorVisibility.Invisible);
+                Driver?.SetCursorVisibility (CursorVisibility.Invisible);
             }
 
             return false;
@@ -347,7 +332,7 @@ public static partial class Application // Run (Begin, Run, End, Stop)
     public static T Run<T> (Func<Exception, bool>? errorHandler = null, ConsoleDriver? driver = null)
         where T : Toplevel, new()
     {
-        if (!IsInitialized)
+        if (!Initialized)
         {
             // Init() has NOT been called.
             InternalInit (driver, null, true);
@@ -402,7 +387,7 @@ public static partial class Application // Run (Begin, Run, End, Stop)
     {
         ArgumentNullException.ThrowIfNull (view);
 
-        if (IsInitialized)
+        if (Initialized)
         {
             if (Driver is null)
             {
@@ -473,7 +458,10 @@ public static partial class Application // Run (Begin, Run, End, Stop)
     ///     reset, repeating the invocation. If it returns false, the timeout will stop and be removed. The returned value is a
     ///     token that can be used to stop the timeout by calling <see cref="RemoveTimeout(object)"/>.
     /// </remarks>
-    public static object AddTimeout (TimeSpan time, Func<bool> callback) { return MainLoop!.AddTimeout (time, callback); }
+    public static object? AddTimeout (TimeSpan time, Func<bool> callback)
+    {
+        return MainLoop?.AddTimeout (time, callback) ?? null;
+    }
 
     /// <summary>Removes a previously scheduled timeout</summary>
     /// <remarks>The token parameter is the value returned by <see cref="AddTimeout"/>.</remarks>
@@ -507,23 +495,25 @@ public static partial class Application // Run (Begin, Run, End, Stop)
     /// <summary>Wakes up the running application that might be waiting on input.</summary>
     public static void Wakeup () { MainLoop?.Wakeup (); }
 
-    /// <summary>Triggers a refresh of the entire display.</summary>
-    public static void Refresh ()
+    /// <summary>
+    /// Causes any Toplevels that need layout to be laid out. Then draws any Toplevels that need display. Only Views that need to be laid out (see <see cref="View.NeedsLayout"/>) will be laid out.
+    /// Only Views that need to be drawn (see <see cref="View.NeedsDraw"/>) will be drawn.
+    /// </summary>
+    /// <param name="forceDraw">If <see langword="true"/> the entire View hierarchy will be redrawn. The default is <see langword="false"/> and should only be overriden for testing.</param>
+    public static void LayoutAndDraw (bool forceDraw = false)
     {
-        // TODO: Figure out how to remove this call to ClearContents. Refresh should just repaint damaged areas, not clear
-        Driver!.ClearContents ();
+        bool neededLayout = View.Layout (TopLevels.Reverse (), Screen.Size);
 
-        foreach (Toplevel v in TopLevels.Reverse ())
+        if (forceDraw)
         {
-            if (v.Visible)
-            {
-                v.SetNeedsDisplay ();
-                v.SetSubViewNeedsDisplay ();
-                v.Draw ();
-            }
+            Driver?.ClearContents ();
         }
 
-        Driver.Refresh ();
+        View.SetClipToScreen ();
+        View.Draw (TopLevels, neededLayout || forceDraw);
+        View.SetClipToScreen ();
+
+        Driver?.Refresh ();
     }
 
     /// <summary>This event is raised on each iteration of the main loop.</summary>
@@ -558,24 +548,25 @@ public static partial class Application // Run (Begin, Run, End, Stop)
                 return;
             }
 
-            RunIteration (ref state, ref firstIteration);
+            firstIteration = RunIteration (ref state, firstIteration);
         }
 
         MainLoop!.Running = false;
 
         // Run one last iteration to consume any outstanding input events from Driver
         // This is important for remaining OnKeyUp events.
-        RunIteration (ref state, ref firstIteration);
+        RunIteration (ref state, firstIteration);
     }
 
     /// <summary>Run one application iteration.</summary>
     /// <param name="state">The state returned by <see cref="Begin(Toplevel)"/>.</param>
     /// <param name="firstIteration">
-    ///     Set to <see langword="true"/> if this is the first run loop iteration. Upon return, it
-    ///     will be set to <see langword="false"/> if at least one iteration happened.
+    ///     Set to <see langword="true"/> if this is the first run loop iteration.
     /// </param>
-    public static void RunIteration (ref RunState state, ref bool firstIteration)
+    /// <returns><see langword="false"/> if at least one iteration happened.</returns>
+    public static bool RunIteration (ref RunState state, bool firstIteration = false)
     {
+        // If the driver has events pending do an iteration of the driver MainLoop
         if (MainLoop!.Running && MainLoop.EventsPending ())
         {
             // Notify Toplevel it's ready
@@ -585,81 +576,25 @@ public static partial class Application // Run (Begin, Run, End, Stop)
             }
 
             MainLoop.RunIteration ();
-            Iteration?.Invoke (null, new ());
-            EnsureModalOrVisibleAlwaysOnTop (state.Toplevel);
 
-            // TODO: Overlapped - Move elsewhere
-            if (state.Toplevel != Current)
-            {
-                ApplicationOverlapped.OverlappedTop?.OnDeactivate (state.Toplevel);
-                state.Toplevel = Current;
-                ApplicationOverlapped.OverlappedTop?.OnActivate (state.Toplevel!);
-                Top!.SetSubViewNeedsDisplay ();
-                Refresh ();
-            }
+            Iteration?.Invoke (null, new ());
         }
 
         firstIteration = false;
 
-        if (Current == null)
+        if (Top is null)
         {
-            return;
+            return firstIteration;
         }
 
-        if (state.Toplevel != Top && (Top!.NeedsDisplay || Top.SubViewNeedsDisplay || Top.LayoutNeeded))
-        {
-            state.Toplevel!.SetNeedsDisplay (state.Toplevel.Frame);
-            Top.Draw ();
+        LayoutAndDraw ();
 
-            foreach (Toplevel top in TopLevels.Reverse ())
-            {
-                if (top != Top && top != state.Toplevel)
-                {
-                    top.SetNeedsDisplay ();
-                    top.SetSubViewNeedsDisplay ();
-                    top.Draw ();
-                }
-            }
-        }
-
-        if (TopLevels.Count == 1
-            && state.Toplevel == Top
-            && (Driver!.Cols != state.Toplevel!.Frame.Width
-                || Driver!.Rows != state.Toplevel.Frame.Height)
-            && (state.Toplevel.NeedsDisplay
-                || state.Toplevel.SubViewNeedsDisplay
-                || state.Toplevel.LayoutNeeded))
-        {
-            Driver.ClearContents ();
-        }
-
-        if (state.Toplevel!.NeedsDisplay || state.Toplevel.SubViewNeedsDisplay || state.Toplevel.LayoutNeeded || ApplicationOverlapped.OverlappedChildNeedsDisplay ())
-        {
-            state.Toplevel.SetNeedsDisplay ();
-            state.Toplevel.Draw ();
-            Driver!.UpdateScreen ();
-
-            //Driver.UpdateCursor ();
-        }
-
-        if (PositionCursor (state.Toplevel))
+        if (PositionCursor ())
         {
             Driver!.UpdateCursor ();
         }
 
-        //        else
-        {
-            //if (PositionCursor (state.Toplevel))
-            //{
-            //    Driver.Refresh ();
-            //}
-            //Driver.UpdateCursor ();
-        }
-
-        if (state.Toplevel != Top && !state.Toplevel.Modal && (Top!.NeedsDisplay || Top.SubViewNeedsDisplay || Top.LayoutNeeded))
-        {
-            Top.Draw ();
-        }
+        return firstIteration;
     }
 
     /// <summary>Stops the provided <see cref="Toplevel"/>, causing or the <paramref name="top"/> if provided.</summary>
@@ -673,112 +608,26 @@ public static partial class Application // Run (Begin, Run, End, Stop)
     /// </remarks>
     public static void RequestStop (Toplevel? top = null)
     {
-        if (ApplicationOverlapped.OverlappedTop is null || top is null)
+        if (top is null)
         {
-            top = Current;
+            top = Top;
         }
 
-        if (ApplicationOverlapped.OverlappedTop != null
-            && top!.IsOverlappedContainer
-            && top?.Running == true
-            && (Current?.Modal == false || Current is { Modal: true, Running: false }))
+        if (!top!.Running)
         {
-            ApplicationOverlapped.OverlappedTop.RequestStop ();
+            return;
         }
-        else if (ApplicationOverlapped.OverlappedTop != null
-                 && top != Current
-                 && Current is { Running: true, Modal: true }
-                 && top!.Modal
-                 && top.Running)
+
+        var ev = new ToplevelClosingEventArgs (top);
+        top.OnClosing (ev);
+
+        if (ev.Cancel)
         {
-            var ev = new ToplevelClosingEventArgs (Current);
-            Current.OnClosing (ev);
-
-            if (ev.Cancel)
-            {
-                return;
-            }
-
-            ev = new (top);
-            top.OnClosing (ev);
-
-            if (ev.Cancel)
-            {
-                return;
-            }
-
-            Current.Running = false;
-            OnNotifyStopRunState (Current);
-            top.Running = false;
-            OnNotifyStopRunState (top);
+            return;
         }
-        else if ((ApplicationOverlapped.OverlappedTop != null
-                  && top != ApplicationOverlapped.OverlappedTop
-                  && top != Current
-                  && Current is { Modal: false, Running: true }
-                  && !top!.Running)
-                 || (ApplicationOverlapped.OverlappedTop != null
-                     && top != ApplicationOverlapped.OverlappedTop
-                     && top != Current
-                     && Current is { Modal: false, Running: false }
-                     && !top!.Running
-                     && TopLevels.ToArray () [1].Running))
-        {
-            ApplicationOverlapped.MoveCurrent (top);
-        }
-        else if (ApplicationOverlapped.OverlappedTop != null
-                 && Current != top
-                 && Current?.Running == true
-                 && !top!.Running
-                 && Current?.Modal == true
-                 && top.Modal)
-        {
-            // The Current and the top are both modal so needed to set the Current.Running to false too.
-            Current.Running = false;
-            OnNotifyStopRunState (Current);
-        }
-        else if (ApplicationOverlapped.OverlappedTop != null
-                 && Current == top
-                 && ApplicationOverlapped.OverlappedTop?.Running == true
-                 && Current?.Running == true
-                 && top!.Running
-                 && Current?.Modal == true
-                 && top!.Modal)
-        {
-            // The OverlappedTop was requested to stop inside a modal Toplevel which is the Current and top,
-            // both are the same, so needed to set the Current.Running to false too.
-            Current.Running = false;
-            OnNotifyStopRunState (Current);
-        }
-        else
-        {
-            Toplevel currentTop;
 
-            if (top == Current || (Current?.Modal == true && !top!.Modal))
-            {
-                currentTop = Current!;
-            }
-            else
-            {
-                currentTop = top!;
-            }
-
-            if (!currentTop.Running)
-            {
-                return;
-            }
-
-            var ev = new ToplevelClosingEventArgs (currentTop);
-            currentTop.OnClosing (ev);
-
-            if (ev.Cancel)
-            {
-                return;
-            }
-
-            currentTop.Running = false;
-            OnNotifyStopRunState (currentTop);
-        }
+        top.Running = false;
+        OnNotifyStopRunState (top);
     }
 
     private static void OnNotifyStopRunState (Toplevel top)
@@ -798,14 +647,7 @@ public static partial class Application // Run (Begin, Run, End, Stop)
     {
         ArgumentNullException.ThrowIfNull (runState);
 
-        if (ApplicationOverlapped.OverlappedTop is { })
-        {
-            ApplicationOverlapped.OverlappedTop.OnChildUnloaded (runState.Toplevel);
-        }
-        else
-        {
-            runState.Toplevel.OnUnloaded ();
-        }
+        runState.Toplevel.OnUnloaded ();
 
         // End the RunState.Toplevel
         // First, take it off the Toplevel Stack
@@ -824,66 +666,27 @@ public static partial class Application // Run (Begin, Run, End, Stop)
         // Notify that it is closing
         runState.Toplevel?.OnClosed (runState.Toplevel);
 
-        // If there is a OverlappedTop that is not the RunState.Toplevel then RunState.Toplevel
-        // is a child of MidTop, and we should notify the OverlappedTop that it is closing
-        if (ApplicationOverlapped.OverlappedTop is { } && !runState.Toplevel!.Modal && runState.Toplevel != ApplicationOverlapped.OverlappedTop)
+        if (TopLevels.Count > 0)
         {
-            ApplicationOverlapped.OverlappedTop.OnChildClosed (runState.Toplevel);
+            Top = TopLevels.Peek ();
+            Top.SetNeedsDraw ();
         }
 
-        // Set Current and Top to the next TopLevel on the stack
-        if (TopLevels.Count == 0)
+        if (runState.Toplevel is { HasFocus: true })
         {
-            if (Current is { HasFocus: true })
-            {
-                Current.HasFocus = false;
-            }
-            Current = null;
-        }
-        else
-        {
-            if (TopLevels.Count > 1 && TopLevels.Peek () == ApplicationOverlapped.OverlappedTop && ApplicationOverlapped.OverlappedChildren?.Any (t => t.Visible) != null)
-            {
-                ApplicationOverlapped.OverlappedMoveNext ();
-            }
-
-            Current = TopLevels.Peek ();
-
-            if (TopLevels.Count == 1 && Current == ApplicationOverlapped.OverlappedTop)
-            {
-                ApplicationOverlapped.OverlappedTop.OnAllChildClosed ();
-            }
-            else
-            {
-                ApplicationOverlapped.SetCurrentOverlappedAsTop ();
-                // BUGBUG: We should not call OnEnter/OnLeave directly; they should only be called by SetHasFocus
-                if (runState.Toplevel is { HasFocus: true })
-                {
-                    runState.Toplevel.HasFocus = false;
-                }
-
-                if (Current is { HasFocus: false })
-                {
-                    Current.SetFocus ();
-                }
-            }
-
-            Refresh ();
+            runState.Toplevel.HasFocus = false;
         }
 
-        // Don't dispose runState.Toplevel. It's up to caller dispose it
-        // If it's not the same as the current in the RunIteration,
-        // it will be fixed later in the next RunIteration.
-        if (ApplicationOverlapped.OverlappedTop is { } && !TopLevels.Contains (ApplicationOverlapped.OverlappedTop))
+        if (Top is { HasFocus: false })
         {
-            _cachedRunStateToplevel = ApplicationOverlapped.OverlappedTop;
+            Top.SetFocus ();
         }
-        else
-        {
-            _cachedRunStateToplevel = runState.Toplevel;
-        }
+
+        _cachedRunStateToplevel = runState.Toplevel;
 
         runState.Toplevel = null;
         runState.Dispose ();
+
+        LayoutAndDraw ();
     }
 }

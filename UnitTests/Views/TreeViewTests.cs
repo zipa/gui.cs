@@ -113,7 +113,7 @@ public class TreeViewTests
 
         tv.SelectAll ();
         tv.CursorVisibility = CursorVisibility.Default;
-        Application.PositionCursor (top);
+        Application.PositionCursor ();
         Application.Driver!.GetCursorVisibility (out CursorVisibility visibility);
         Assert.Equal (CursorVisibility.Default, tv.CursorVisibility);
         Assert.Equal (CursorVisibility.Default, visibility);
@@ -438,7 +438,7 @@ public class TreeViewTests
         Assert.False (called);
 
         // double click triggers activation
-        tree.NewMouseEvent (new MouseEvent { Flags = MouseFlags.Button1DoubleClicked });
+        tree.NewMouseEvent (new MouseEventArgs { Flags = MouseFlags.Button1DoubleClicked });
 
         Assert.True (called);
         Assert.Same (f, activated);
@@ -467,12 +467,12 @@ public class TreeViewTests
         Assert.False (called);
 
         // double click does nothing because we changed button binding to right click
-        tree.NewMouseEvent (new MouseEvent { Position = new (0, 1), Flags = MouseFlags.Button1DoubleClicked });
+        tree.NewMouseEvent (new MouseEventArgs { Position = new (0, 1), Flags = MouseFlags.Button1DoubleClicked });
 
         Assert.Null (activated);
         Assert.False (called);
 
-        tree.NewMouseEvent (new MouseEvent { Position = new (0, 1), Flags = MouseFlags.Button2Clicked });
+        tree.NewMouseEvent (new MouseEventArgs { Position = new (0, 1), Flags = MouseFlags.Button2Clicked });
 
         Assert.True (called);
         Assert.Same (car1, activated);
@@ -506,7 +506,7 @@ public class TreeViewTests
 
 
         // double click does nothing because we changed button to null
-        tree.NewMouseEvent (new MouseEvent { Flags = MouseFlags.Button1DoubleClicked });
+        tree.NewMouseEvent (new MouseEventArgs { Flags = MouseFlags.Button1DoubleClicked });
 
         Assert.False (called);
         Assert.Null (activated);
@@ -721,6 +721,7 @@ public class TreeViewTests
                                             );
         tv.MaxDepth = 3;
         tv.ExpandAll ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         // Normal drawing of the tree view
@@ -759,6 +760,7 @@ public class TreeViewTests
                                             );
         tv.MaxDepth = 5;
         tv.ExpandAll ();
+        View.SetClipToScreen ();
 
         tv.Draw ();
 
@@ -786,6 +788,7 @@ public class TreeViewTests
 
         Assert.True (tv.CanExpand ("5"));
         Assert.False (tv.IsExpanded ("5"));
+        View.SetClipToScreen ();
 
         tv.Draw ();
 
@@ -840,6 +843,7 @@ public class TreeViewTests
         Assert.Null (tv.GetObjectOnRow (4));
 
         tv.Collapse (n1);
+        View.SetClipToScreen ();
 
         tv.Draw ();
 
@@ -876,6 +880,7 @@ public class TreeViewTests
 
         tv.ColorScheme = new ColorScheme ();
         tv.LayoutSubviews ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsAre (
@@ -895,6 +900,7 @@ public class TreeViewTests
         tv.Collapse (n1);
 
         tv.LayoutSubviews ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsAre (
@@ -912,6 +918,7 @@ public class TreeViewTests
         tv.ScrollOffsetVertical = 1;
 
         tv.LayoutSubviews ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsAre (
@@ -948,6 +955,7 @@ public class TreeViewTests
 
         tv.ColorScheme = new ColorScheme ();
         tv.LayoutSubviews ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         // Normal drawing of the tree view
@@ -970,10 +978,10 @@ public class TreeViewTests
         Assert.All (eventArgs, ea => Assert.Equal (ea.Tree, tv));
         Assert.All (eventArgs, ea => Assert.False (ea.Handled));
 
-        Assert.Equal ("├-root one", eventArgs [0].RuneCells.Aggregate ("", (s, n) => s += n.Rune).TrimEnd ());
-        Assert.Equal ("│ ├─leaf 1", eventArgs [1].RuneCells.Aggregate ("", (s, n) => s += n.Rune).TrimEnd ());
-        Assert.Equal ("│ └─leaf 2", eventArgs [2].RuneCells.Aggregate ("", (s, n) => s += n.Rune).TrimEnd ());
-        Assert.Equal ("└─root two", eventArgs [3].RuneCells.Aggregate ("", (s, n) => s += n.Rune).TrimEnd ());
+        Assert.Equal ("├-root one", eventArgs [0].Cells.Aggregate ("", (s, n) => s += n.Rune).TrimEnd ());
+        Assert.Equal ("│ ├─leaf 1", eventArgs [1].Cells.Aggregate ("", (s, n) => s += n.Rune).TrimEnd ());
+        Assert.Equal ("│ └─leaf 2", eventArgs [2].Cells.Aggregate ("", (s, n) => s += n.Rune).TrimEnd ());
+        Assert.Equal ("└─root two", eventArgs [3].Cells.Aggregate ("", (s, n) => s += n.Rune).TrimEnd ());
 
         Assert.Equal (1, eventArgs [0].IndexOfExpandCollapseSymbol);
         Assert.Equal (3, eventArgs [1].IndexOfExpandCollapseSymbol);
@@ -1083,9 +1091,9 @@ oot two
         Assert.All (eventArgs, ea => Assert.Equal (ea.Tree, tv));
         Assert.All (eventArgs, ea => Assert.False (ea.Handled));
 
-        Assert.Equal ("─leaf 1", eventArgs [0].RuneCells.Aggregate ("", (s, n) => s += n.Rune).TrimEnd ());
-        Assert.Equal ("─leaf 2", eventArgs [1].RuneCells.Aggregate ("", (s, n) => s += n.Rune).TrimEnd ());
-        Assert.Equal ("oot two", eventArgs [2].RuneCells.Aggregate ("", (s, n) => s += n.Rune).TrimEnd ());
+        Assert.Equal ("─leaf 1", eventArgs [0].Cells.Aggregate ("", (s, n) => s += n.Rune).TrimEnd ());
+        Assert.Equal ("─leaf 2", eventArgs [1].Cells.Aggregate ("", (s, n) => s += n.Rune).TrimEnd ());
+        Assert.Equal ("oot two", eventArgs [2].Cells.Aggregate ("", (s, n) => s += n.Rune).TrimEnd ());
 
         Assert.Equal (0, eventArgs [0].IndexOfExpandCollapseSymbol);
         Assert.Equal (0, eventArgs [1].IndexOfExpandCollapseSymbol);
@@ -1136,6 +1144,7 @@ oot two
 
         // matches nothing
         filter.Text = "asdfjhasdf";
+        View.SetClipToScreen ();
         tv.Draw ();
 
         // Normal drawing of the tree view
@@ -1146,6 +1155,7 @@ oot two
 
         // Matches everything
         filter.Text = "root";
+        View.SetClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsAre (
@@ -1160,6 +1170,7 @@ oot two
 
         // Matches 2 leaf nodes
         filter.Text = "leaf";
+        View.SetClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsAre (
@@ -1173,6 +1184,7 @@ oot two
 
         // Matches 1 leaf nodes
         filter.Text = "leaf 1";
+        View.SetClipToScreen ();
         tv.Draw ();
 
         TestHelpers.AssertDriverContentsAre (
@@ -1229,6 +1241,7 @@ oot two
 0000000000
 0000000000
 ",
+                                               _output,
                                                Application.Driver,
                                                tv.ColorScheme.Normal,
                                                pink
@@ -1242,6 +1255,8 @@ oot two
 
         // redraw now that the custom color
         // delegate is registered
+        tv.SetNeedsDraw ();
+        View.SetClipToScreen ();
         tv.Draw ();
 
         // Same text
@@ -1264,6 +1279,7 @@ oot two
 0000000000
 001111
 ",
+                                               _output,
                                                Application.Driver,
                                                tv.ColorScheme.Normal,
                                                pink
@@ -1343,13 +1359,13 @@ oot two
         var treeView = new TreeView ();
         var accepted = false;
 
-        treeView.Accept += OnAccept;
+        treeView.Accepting += OnAccept;
         treeView.InvokeCommand (Command.HotKey);
 
         Assert.False (accepted);
 
         return;
-        void OnAccept (object sender, HandledEventArgs e) { accepted = true; }
+        void OnAccept (object sender, CommandEventArgs e) { accepted = true; }
     }
 
 
@@ -1364,7 +1380,7 @@ oot two
         var activated = false;
         object selectedObject = null;
 
-        treeView.Accept += Accept;
+        treeView.Accepting += Accept;
         treeView.ObjectActivated += ObjectActivated;
 
         treeView.InvokeCommand (Command.Accept);
@@ -1380,7 +1396,7 @@ oot two
             activated = true;
             selectedObject = e.ActivatedObject;
         }
-        void Accept (object sender, HandledEventArgs e) { accepted = true; }
+        void Accept (object sender, CommandEventArgs e) { accepted = true; }
     }
 
     [Fact]
@@ -1392,7 +1408,7 @@ oot two
         var activated = false;
         object selectedObject = null;
 
-        treeView.Accept += Accept;
+        treeView.Accepting += Accept;
         treeView.ObjectActivated += ObjectActivated;
 
         treeView.InvokeCommand (Command.Accept);
@@ -1409,10 +1425,10 @@ oot two
             selectedObject = e.ActivatedObject;
         }
 
-        void Accept (object sender, HandledEventArgs e)
+        void Accept (object sender, CommandEventArgs e)
         {
             accepted = true;
-            e.Handled = true;
+            e.Cancel = true;
         }
     }
 }

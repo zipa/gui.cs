@@ -54,7 +54,7 @@ public class ASCIICustomButtonTest : Scenario
             ]
         };
 
-        _scrollViewTestWindow = new ScrollViewTestWindow ();
+        _scrollViewTestWindow = new ScrollViewTestWindow { Y = Pos.Bottom (menu) };
 
         top.Add (menu, _scrollViewTestWindow);
         Application.Run (top);
@@ -111,7 +111,7 @@ public class ASCIICustomButtonTest : Scenario
             Add (_border, _fill, title);
         }
 
-        protected override void OnHasFocusChanged (bool newHasFocus, [CanBeNull] View previousFocusedView, [CanBeNull] View focusedVew)
+        protected override void OnHasFocusChanged (bool newHasFocus, [CanBeNull] View previousFocusedView, [CanBeNull] View focusedView)
         {
             if (newHasFocus)
             {
@@ -127,7 +127,7 @@ public class ASCIICustomButtonTest : Scenario
         }
 
         public event Action<ASCIICustomButton> PointerEnter;
-        private void This_MouseClick (object sender, MouseEventEventArgs obj) { NewMouseEvent (obj.MouseEvent); }
+        private void This_MouseClick (object sender, MouseEventArgs obj) { NewMouseEvent (obj); }
     }
 
     public class ScrollViewTestWindow : Window
@@ -198,7 +198,7 @@ public class ASCIICustomButtonTest : Scenario
                     Height = BUTTON_HEIGHT
                 };
                 button.Initialized += Button_Initialized;
-                button.Accept += Button_Clicked;
+                button.Accepting += Button_Clicked;
                 button.PointerEnter += Button_PointerEnter;
                 button.MouseClick += Button_MouseClick;
                 button.KeyDown += Button_KeyPress;
@@ -216,7 +216,7 @@ public class ASCIICustomButtonTest : Scenario
                 Height = BUTTON_HEIGHT
             };
             closeButton.Initialized += Button_Initialized;
-            closeButton.Accept += Button_Clicked;
+            closeButton.Accepting += Button_Clicked;
             closeButton.PointerEnter += Button_PointerEnter;
             closeButton.MouseClick += Button_MouseClick;
             closeButton.KeyDown += Button_KeyPress;
@@ -241,6 +241,8 @@ public class ASCIICustomButtonTest : Scenario
             {
                 Add (titleLabel, _scrollView);
             }
+
+            Y = 1;
         }
         private void Button_Initialized (object sender, EventArgs e)
         {
@@ -308,9 +310,9 @@ public class ASCIICustomButtonTest : Scenario
             }
         }
 
-        private void Button_MouseClick (object sender, MouseEventEventArgs obj)
+        private void Button_MouseClick (object sender, MouseEventArgs obj)
         {
-            if (obj.MouseEvent.Flags == MouseFlags.WheeledDown)
+            if (obj.Flags == MouseFlags.WheeledDown)
             {
                 _scrollView.ContentOffset = new Point (
                                                        _scrollView.ContentOffset.X,
@@ -318,7 +320,7 @@ public class ASCIICustomButtonTest : Scenario
                                                       );
                 obj.Handled = true;
             }
-            else if (obj.MouseEvent.Flags == MouseFlags.WheeledUp)
+            else if (obj.Flags == MouseFlags.WheeledUp)
             {
                 _scrollView.ContentOffset = new Point (
                                                        _scrollView.ContentOffset.X,

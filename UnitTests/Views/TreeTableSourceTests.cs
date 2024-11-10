@@ -54,6 +54,7 @@ public class TreeTableSourceTests : IDisposable
         // when pressing right we should expand the top route
         tv.NewKeyDownEvent (Key.CursorRight);
 
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -71,6 +72,7 @@ public class TreeTableSourceTests : IDisposable
         // when pressing left we should collapse the top route again
         tv.NewKeyDownEvent (Key.CursorLeft);
 
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -94,6 +96,7 @@ public class TreeTableSourceTests : IDisposable
 
         tv.Style.GetOrCreateColumnStyle (1).MinAcceptableWidth = 1;
 
+        View.SetClipToScreen ();
         tv.Draw ();
 
         var expected =
@@ -111,8 +114,9 @@ public class TreeTableSourceTests : IDisposable
         Assert.Equal (0, tv.SelectedRow);
         Assert.Equal (0, tv.SelectedColumn);
 
-        Assert.True (tv.NewMouseEvent (new MouseEvent { Position = new (2, 2), Flags = MouseFlags.Button1Clicked }));
+        Assert.True (tv.NewMouseEvent (new MouseEventArgs { Position = new (2, 2), Flags = MouseFlags.Button1Clicked }));
 
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -128,15 +132,16 @@ public class TreeTableSourceTests : IDisposable
         TestHelpers.AssertDriverContentsAre (expected, _output);
 
         // Clicking to the right/left of the expand/collapse does nothing
-        tv.NewMouseEvent (new MouseEvent { Position = new (3, 2), Flags = MouseFlags.Button1Clicked });
+        tv.NewMouseEvent (new MouseEventArgs { Position = new (3, 2), Flags = MouseFlags.Button1Clicked });
         tv.Draw ();
         TestHelpers.AssertDriverContentsAre (expected, _output);
-        tv.NewMouseEvent (new MouseEvent { Position = new (1, 2), Flags = MouseFlags.Button1Clicked });
+        tv.NewMouseEvent (new MouseEventArgs { Position = new (1, 2), Flags = MouseFlags.Button1Clicked });
         tv.Draw ();
         TestHelpers.AssertDriverContentsAre (expected, _output);
 
         // Clicking on the + again should collapse
-        tv.NewMouseEvent (new MouseEvent { Position = new (2, 2), Flags = MouseFlags.Button1Clicked });
+        tv.NewMouseEvent (new MouseEventArgs { Position = new (2, 2), Flags = MouseFlags.Button1Clicked });
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -150,7 +155,7 @@ public class TreeTableSourceTests : IDisposable
     }
 
     [Fact]
-    [AutoInitShutdown]
+    [AutoInitShutdown (configLocation:ConfigurationManager.ConfigLocations.DefaultOnly)]
     public void TestTreeTableSource_CombinedWithCheckboxes ()
     {
         Toplevel top = new ();
@@ -187,8 +192,9 @@ public class TreeTableSourceTests : IDisposable
         Assert.Equal (0, tv.SelectedRow);
         Assert.Equal (1, tv.SelectedColumn);
 
-        Application.OnKeyDown (Key.CursorRight);
+        Application.RaiseKeyDownEvent (Key.CursorRight);
 
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =
@@ -206,6 +212,7 @@ public class TreeTableSourceTests : IDisposable
 
         tv.NewKeyDownEvent (Key.CursorDown);
         tv.NewKeyDownEvent (Key.Space);
+        View.SetClipToScreen ();
         tv.Draw ();
 
         expected =

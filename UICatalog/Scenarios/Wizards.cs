@@ -6,7 +6,6 @@ namespace UICatalog.Scenarios;
 
 [ScenarioMetadata ("Wizards", "Demonstrates the Wizard class")]
 [ScenarioCategory ("Dialogs")]
-[ScenarioCategory ("Overlapped")]
 [ScenarioCategory ("Wizards")]
 [ScenarioCategory ("Runnable")]
 
@@ -109,7 +108,7 @@ public class Wizards : Scenario
             X = Pos.Center (), Y = Pos.Bottom (frame) + 2, IsDefault = true, Text = "_Show Wizard"
         };
 
-        showWizardButton.Accept += (s, e) =>
+        showWizardButton.Accepting += (s, e) =>
                                    {
                                        try
                                        {
@@ -193,7 +192,7 @@ public class Wizards : Scenario
                                            };
                                            secondStep.Add (radioGroup2);
 
-                                           button.Accept += (s, e) =>
+                                           button.Accepting += (s, e) =>
                                                             {
                                                                 secondStep.Title = "2nd Step";
 
@@ -299,7 +298,7 @@ public class Wizards : Scenario
                                                Y = Pos.AnchorEnd ()
                                            };
 
-                                           hideHelpBtn.Accept += (s, e) =>
+                                           hideHelpBtn.Accepting += (s, e) =>
                                                                  {
                                                                      if (fourthStep.HelpText.Length > 0)
                                                                      {
@@ -323,10 +322,10 @@ public class Wizards : Scenario
                                                                                 scrollBar.Position = someText.TopRow;
                                                                             }
 
-                                                                            someText.SetNeedsDisplay ();
+                                                                            someText.SetNeedsDraw ();
                                                                         };
 
-                                           someText.DrawContent += (s, e) =>
+                                           someText.DrawingContent += (s, e) =>
                                                                    {
                                                                        scrollBar.Size = someText.Lines;
                                                                        scrollBar.Position = someText.TopRow;
@@ -336,9 +335,6 @@ public class Wizards : Scenario
                                                                            scrollBar.OtherScrollBarView.Size = someText.Maxlength;
                                                                            scrollBar.OtherScrollBarView.Position = someText.LeftColumn;
                                                                        }
-
-                                                                       scrollBar.LayoutSubviews ();
-                                                                       scrollBar.Refresh ();
                                                                    };
                                            fourthStep.Add (scrollBar);
 

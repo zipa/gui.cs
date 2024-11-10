@@ -47,8 +47,12 @@ public partial class View // SuperView/SubView hierarchy management (SuperView, 
     /// </remarks>
     /// <param name="view">The view to add.</param>
     /// <returns>The view that was added.</returns>
-    public virtual View Add (View view)
+    public virtual View? Add (View? view)
     {
+        if (view is null)
+        {
+            return null;
+        }
         if (_subviews is null)
         {
             _subviews = [];
@@ -73,7 +77,6 @@ public partial class View // SuperView/SubView hierarchy management (SuperView, 
 
         if (view.Enabled && !Enabled)
         {
-            view._oldEnabled = true;
             view.Enabled = false;
         }
 
@@ -85,9 +88,8 @@ public partial class View // SuperView/SubView hierarchy management (SuperView, 
             view.EndInit ();
         }
 
-        CheckDimAuto ();
+        SetNeedsDraw ();
         SetNeedsLayout ();
-        SetNeedsDisplay ();
 
         return view;
     }
@@ -126,7 +128,6 @@ public partial class View // SuperView/SubView hierarchy management (SuperView, 
     {
         View view = e.SubView;
         view.IsAdded = true;
-        view.OnResizeNeeded ();
         view.Added?.Invoke (this, e);
     }
 
@@ -150,8 +151,13 @@ public partial class View // SuperView/SubView hierarchy management (SuperView, 
     /// <returns>
     ///     The removed View. <see langword="null"/> if the View could not be removed.
     /// </returns>
-    public virtual View? Remove (View view)
+    public virtual View? Remove (View? view)
     {
+        if (view is null)
+        {
+            return null;
+        }
+
         if (_subviews is null)
         {
             return view;
@@ -159,29 +165,41 @@ public partial class View // SuperView/SubView hierarchy management (SuperView, 
 
         Rectangle touched = view.Frame;
 
-        // If a view being removed is focused, it should lose focus.
-        if (view.HasFocus)
+        bool hadFocus = view.HasFocus;
+        bool couldFocus = view.CanFocus;
+
+        if (hadFocus)
         {
-            view.HasFocus = false;
+            view.CanFocus = false; // If view had focus, this will ensure it doesn't and it stays that way
         }
+        Debug.Assert (!view.HasFocus);
 
         _subviews.Remove (view);
-        view._superView = null; // Null this AFTER removing focus
+
+        // Clean up focus stuff
+        _previouslyFocused = null;
+        if (view._superView is { } && view._superView._previouslyFocused == this)
+        {
+            view._superView._previouslyFocused = null;
+        }
+        view._superView = null;
 
         SetNeedsLayout ();
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
 
         foreach (View v in _subviews)
         {
             if (v.Frame.IntersectsWith (touched))
             {
-                view.SetNeedsDisplay ();
+                view.SetNeedsDraw ();
             }
         }
 
-        if (HasFocus)
+        view.CanFocus = couldFocus; // Restore to previous value
+
+        if (_previouslyFocused == view)
         {
-            FocusDeepest (NavigationDirection.Forward, TabStop);
+            _previouslyFocused = null;
         }
 
         OnRemoved (new (this, view));
@@ -327,8 +345,8 @@ public partial class View // SuperView/SubView hierarchy management (SuperView, 
         }
 
         // BUGBUG: this is odd. Why is this needed?
-        SetNeedsDisplay ();
-        subview.SetNeedsDisplay ();
+        SetNeedsDraw ();
+        subview.SetNeedsDraw ();
     }
 
     #endregion SubViewOrdering

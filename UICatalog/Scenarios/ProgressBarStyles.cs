@@ -35,7 +35,9 @@ public class ProgressBarStyles : Scenario
 
         var editor = new AdornmentsEditor ()
         {
-            AutoSelectViewToEdit = true
+            AutoSelectViewToEdit = false,
+            ShowViewIdentifier = true
+
         };
         app.Add (editor);
 
@@ -72,7 +74,7 @@ public class ProgressBarStyles : Scenario
         };
         container.Add (fgColorPickerBtn);
 
-        fgColorPickerBtn.Accept += (s, e) =>
+        fgColorPickerBtn.Accepting += (s, e) =>
                                     {
                                         if (!LineDrawing.PromptForColor (
                                                                          fgColorPickerBtn.Text,
@@ -102,7 +104,7 @@ public class ProgressBarStyles : Scenario
         };
         container.Add (bgColorPickerBtn);
 
-        bgColorPickerBtn.Accept += (s, e) =>
+        bgColorPickerBtn.Accepting += (s, e) =>
                                     {
                                         if (!LineDrawing.PromptForColor (
                                                                          fgColorPickerBtn.Text,
@@ -172,7 +174,7 @@ public class ProgressBarStyles : Scenario
         };
         container.Add (continuousPB);
 
-        button.Accept += (s, e) =>
+        button.Accepting += (s, e) =>
                           {
                               if (_fractionTimer == null)
                               {
@@ -264,7 +266,6 @@ public class ProgressBarStyles : Scenario
 
         ckbBidirectional.CheckedStateChanging += (s, e) =>
                                    {
-                                       ckbBidirectional.CheckedState = e.NewValue;
                                        marqueesBlocksPB.BidirectionalMarquee =
                                                                   marqueesContinuousPB.BidirectionalMarquee = e.NewValue == CheckState.Checked;
                                    };

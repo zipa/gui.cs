@@ -3920,6 +3920,8 @@ public class TextFormatterTests
     public void Draw_Vertical_Throws_IndexOutOfRangeException_With_Negative_Bounds ()
     {
         Application.Init (new FakeDriver ());
+        Dialog.DefaultShadow = ShadowStyle.None;
+        Button.DefaultShadow = ShadowStyle.None;
 
         Toplevel top = new ();
 
@@ -4141,8 +4143,8 @@ ssb
 
         tf.Draw (
                  new (0, 0, width, height),
-                 new (ColorName.White, ColorName.Black),
-                 new (ColorName.Blue, ColorName.Black),
+                 new (ColorName16.White, ColorName16.Black),
+                 new (ColorName16.Blue, ColorName16.Black),
                  default (Rectangle),
                  driver
                 );
@@ -4159,8 +4161,8 @@ ssb
 
         Attribute [] attrs =
         {
-            Attribute.Default, new (ColorName.Green, ColorName.BrightMagenta),
-            new (ColorName.Blue, ColorName.Cyan)
+            Attribute.Default, new (ColorName16.Green, ColorName16.BrightMagenta),
+            new (ColorName16.Blue, ColorName16.Cyan)
         };
         var tf = new TextFormatter { ConstrainToSize = new (14, 3), Text = "Test\nTest long\nTest long long\n", MultiLine = true };
 
@@ -4185,6 +4187,7 @@ ssb
 011111111100000000000
 011111111111111000000
 000000000000000000000",
+                                               _output,
                                                null,
                                                attrs);
 
@@ -4202,6 +4205,7 @@ ssb
 011111111111111111110
 011111111111111111110
 000000000000000000000",
+                                               _output,
                                                null,
                                                attrs);
     }
@@ -5963,8 +5967,8 @@ ek")]
 
         tf.Draw (
                  new (0, 0, width, height),
-                 new (ColorName.White, ColorName.Black),
-                 new (ColorName.Blue, ColorName.Black),
+                 new (ColorName16.White, ColorName16.Black),
+                 new (ColorName16.Blue, ColorName16.Black),
                  default (Rectangle),
                  driver
                 );
@@ -6003,8 +6007,8 @@ ek")]
 
         tf.Draw (
                  new (0, 0, width, height),
-                 new (ColorName.White, ColorName.Black),
-                 new (ColorName.Blue, ColorName.Black),
+                 new (ColorName16.White, ColorName16.Black),
+                 new (ColorName16.Blue, ColorName16.Black),
                  default (Rectangle),
                  driver
                 );
@@ -6043,8 +6047,8 @@ ek")]
 
         tf.Draw (
                  new (0, 0, width, height),
-                 new (ColorName.White, ColorName.Black),
-                 new (ColorName.Blue, ColorName.Black),
+                 new (ColorName16.White, ColorName16.Black),
+                 new (ColorName16.Blue, ColorName16.Black),
                  default (Rectangle),
                  driver
                 );

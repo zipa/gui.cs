@@ -16,7 +16,7 @@ namespace UICatalog.Scenarios;
 [ScenarioCategory ("Controls")]
 [ScenarioCategory ("Dialogs")]
 [ScenarioCategory ("Text and Formatting")]
-[ScenarioCategory ("Overlapped")]
+[ScenarioCategory ("Arrangement")]
 [ScenarioCategory ("Files and IO")]
 [ScenarioCategory ("TextView")]
 [ScenarioCategory ("Menus")]
@@ -202,7 +202,15 @@ public class Editor : Scenario
                          CreateWrapChecked (),
                          CreateAutocomplete (),
                          CreateAllowsTabChecked (),
-                         CreateReadOnlyChecked ()
+                         CreateReadOnlyChecked (),
+                         new MenuItem (
+                                       "Colors",
+                                       "",
+                                       () => _textView.PromptForColors (),
+                                       null,
+                                       null,
+                                       KeyCode.CtrlMask | KeyCode.L
+                                      )
                      }
                     ),
                 new (
@@ -273,7 +281,7 @@ public class Editor : Scenario
                                               _scrollBar.Position = _textView.TopRow;
                                           }
 
-                                          _textView.SetNeedsDisplay ();
+                                          _textView.SetNeedsDraw ();
                                       };
 
         _scrollBar.OtherScrollBarView.ChangedPosition += (s, e) =>
@@ -285,10 +293,10 @@ public class Editor : Scenario
                                                                  _scrollBar.OtherScrollBarView.Position = _textView.LeftColumn;
                                                              }
 
-                                                             _textView.SetNeedsDisplay ();
+                                                             _textView.SetNeedsDraw ();
                                                          };
 
-        _textView.DrawContent += (s, e) =>
+        _textView.DrawingContent += (s, e) =>
                                  {
                                      _scrollBar.Size = _textView.Lines;
                                      _scrollBar.Position = _textView.TopRow;
@@ -298,9 +306,6 @@ public class Editor : Scenario
                                          _scrollBar.OtherScrollBarView.Size = _textView.Maxlength;
                                          _scrollBar.OtherScrollBarView.Position = _textView.LeftColumn;
                                      }
-
-                                     _scrollBar.LayoutSubviews ();
-                                     _scrollBar.Refresh ();
                                  };
 
 
@@ -872,7 +877,7 @@ public class Editor : Scenario
 
             Text = "Find _Next"
         };
-        btnFindNext.Accept += (s, e) => FindNext ();
+        btnFindNext.Accepting += (s, e) => FindNext ();
         d.Add (btnFindNext);
 
         var btnFindPrevious = new Button
@@ -882,7 +887,7 @@ public class Editor : Scenario
             Enabled = !string.IsNullOrEmpty (txtToFind.Text),
             Text = "Find _Previous"
         };
-        btnFindPrevious.Accept += (s, e) => FindPrevious ();
+        btnFindPrevious.Accepting += (s, e) => FindPrevious ();
         d.Add (btnFindPrevious);
 
         txtToFind.TextChanged += (s, e) =>
@@ -1099,7 +1104,7 @@ public class Editor : Scenario
             IsDefault = true,
             Text = "Replace _Next"
         };
-        btnFindNext.Accept += (s, e) => ReplaceNext ();
+        btnFindNext.Accepting += (s, e) => ReplaceNext ();
         d.Add (btnFindNext);
 
         label = new ()
@@ -1129,7 +1134,7 @@ public class Editor : Scenario
             Enabled = !string.IsNullOrEmpty (txtToFind.Text),
             Text = "Replace _Previous"
         };
-        btnFindPrevious.Accept += (s, e) => ReplacePrevious ();
+        btnFindPrevious.Accepting += (s, e) => ReplacePrevious ();
         d.Add (btnFindPrevious);
 
         var btnReplaceAll = new Button
@@ -1139,7 +1144,7 @@ public class Editor : Scenario
             Enabled = !string.IsNullOrEmpty (txtToFind.Text),
             Text = "Replace _All"
         };
-        btnReplaceAll.Accept += (s, e) => ReplaceAll ();
+        btnReplaceAll.Accepting += (s, e) => ReplaceAll ();
         d.Add (btnReplaceAll);
 
         txtToFind.TextChanged += (s, e) =>

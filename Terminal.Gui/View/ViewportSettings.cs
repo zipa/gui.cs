@@ -3,6 +3,9 @@
 /// <summary>
 ///     Settings for how the <see cref="View.Viewport"/> behaves relative to the View's Content area.
 /// </summary>
+/// <remarks>
+///     See the Layout Deep Dive for more information: <see href="https://gui-cs.github.io/Terminal.GuiV2Docs/docs/layout.html"/>
+/// </remarks>
 [Flags]
 public enum ViewportSettings
 {
@@ -91,7 +94,7 @@ public enum ViewportSettings
     ClipContentOnly = 16,
 
     /// <summary>
-    ///     If set <see cref="View.Clear()"/> will clear only the portion of the content
+    ///     If set <see cref="View.ClearViewport"/> will clear only the portion of the content
     ///     area that is visible within the <see cref="View.Viewport"/>. This is useful for views that have a
     ///     content area larger than the Viewport and want the area outside the content to be visually distinct.
     ///     <see cref="ClipContentOnly"/> must be set for this setting to work (clipping beyond the visible area must be

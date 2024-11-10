@@ -93,7 +93,7 @@ public class FakeDriver : ConsoleDriver
         FakeConsole.Clear ();
         ResizeScreen ();
         CurrentAttribute = new Attribute (Color.White, Color.Black);
-        ClearContents ();
+        //ClearContents ();
 
         _mainLoopDriver = new FakeMainLoop (this);
         _mainLoopDriver.MockKeyPressed = MockKeyPressedHandler;
@@ -101,8 +101,10 @@ public class FakeDriver : ConsoleDriver
         return new MainLoop (_mainLoopDriver);
     }
 
-    public override void UpdateScreen ()
+    public override bool UpdateScreen ()
     {
+        bool updated = false;
+
         int savedRow = FakeConsole.CursorTop;
         int savedCol = FakeConsole.CursorLeft;
         bool savedCursorVisible = FakeConsole.CursorVisible;
@@ -121,6 +123,8 @@ public class FakeDriver : ConsoleDriver
             {
                 continue;
             }
+
+            updated = true;
 
             FakeConsole.CursorTop = row;
             FakeConsole.CursorLeft = 0;
@@ -165,8 +169,8 @@ public class FakeDriver : ConsoleDriver
                     if (attr != redrawAttr)
                     {
                         redrawAttr = attr;
-                        FakeConsole.ForegroundColor = (ConsoleColor)attr.Foreground.GetClosestNamedColor ();
-                        FakeConsole.BackgroundColor = (ConsoleColor)attr.Background.GetClosestNamedColor ();
+                        FakeConsole.ForegroundColor = (ConsoleColor)attr.Foreground.GetClosestNamedColor16 ();
+                        FakeConsole.BackgroundColor = (ConsoleColor)attr.Background.GetClosestNamedColor16 ();
                     }
 
                     outputWidth++;
@@ -218,13 +222,9 @@ public class FakeDriver : ConsoleDriver
         FakeConsole.CursorTop = savedRow;
         FakeConsole.CursorLeft = savedCol;
         FakeConsole.CursorVisible = savedCursorVisible;
+        return updated;
     }
 
-    public override void Refresh ()
-    {
-        UpdateScreen ();
-        UpdateCursor ();
-    }
 
     #region Color Handling
 
@@ -456,7 +456,7 @@ public class FakeDriver : ConsoleDriver
         }
 
         // CONCURRENCY: Unsynchronized access to Clip is not safe.
-        Clip = new (0, 0, Cols, Rows);
+        Clip = new (Screen);
     }
 
     public override void UpdateCursor ()

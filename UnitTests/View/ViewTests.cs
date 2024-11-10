@@ -12,10 +12,9 @@ public class ViewTests (ITestOutputHelper output)
     {
         var view = new FrameView { Width = Dim.Fill (), Height = Dim.Fill () };
 
-        view.DrawContent += (s, e) =>
+        view.DrawingContent += (s, e) =>
                             {
-                                Rectangle savedClip = Application.Driver!.Clip;
-                                Application.Driver!.Clip = new (1, 1, view.Viewport.Width, view.Viewport.Height);
+                                Region savedClip = view.ClipViewport ();
 
                                 for (var row = 0; row < view.Viewport.Height; row++)
                                 {
@@ -27,7 +26,7 @@ public class ViewTests (ITestOutputHelper output)
                                     }
                                 }
 
-                                Application.Driver!.Clip = savedClip;
+                                View.SetClip (savedClip);
                                 e.Cancel = true;
                             };
         var top = new Toplevel ();
@@ -76,24 +75,23 @@ public class ViewTests (ITestOutputHelper output)
     {
         var view = new FrameView { Width = Dim.Fill (), Height = Dim.Fill () };
 
-        view.DrawContent += (s, e) =>
-                            {
-                                Rectangle savedClip = Application.Driver!.Clip;
-                                Application.Driver!.Clip = new (1, 1, view.Viewport.Width, view.Viewport.Height);
+        view.DrawingContent += (s, e) =>
+                               {
+                                   Region savedClip = view.ClipViewport ();
 
-                                for (var row = 0; row < view.Viewport.Height; row++)
-                                {
-                                    Application.Driver?.Move (1, row + 1);
+                                   for (var row = 0; row < view.Viewport.Height; row++)
+                                   {
+                                       Application.Driver?.Move (1, row + 1);
 
-                                    for (var col = 0; col < view.Viewport.Width; col++)
-                                    {
-                                        Application.Driver?.AddStr ($"{col}");
-                                    }
-                                }
+                                       for (var col = 0; col < view.Viewport.Width; col++)
+                                       {
+                                           Application.Driver?.AddStr ($"{col}");
+                                       }
+                                   }
 
-                                Application.Driver!.Clip = savedClip;
-                                e.Cancel = true;
-                            };
+                                   View.SetClip (savedClip);
+                                   e.Cancel = true;
+                               };
         var top = new Toplevel ();
         top.Add (view);
         Application.Begin (top);
@@ -136,7 +134,7 @@ public class ViewTests (ITestOutputHelper output)
     }
 
     [Theory]
-    [AutoInitShutdown]
+    [AutoInitShutdown (configLocation: ConfigurationManager.ConfigLocations.DefaultOnly)]
     [InlineData (true)]
     [InlineData (false)]
     public void Clear_Does_Not_Spillover_Its_Parent (bool label)
@@ -156,11 +154,12 @@ public class ViewTests (ITestOutputHelper output)
         var top = new Toplevel ();
         top.Add (root);
         RunState runState = Application.Begin (top);
+        Application.RunIteration (ref runState);
 
         if (label)
         {
             Assert.False (v.CanFocus);
-            Assert.Equal (new  (0, 0, text.Length, 1), v.Frame);
+            Assert.Equal (new (0, 0, text.Length, 1), v.Frame);
         }
         else
         {
@@ -187,6 +186,7 @@ cccccccccccccccccccc",
                                                    @"
 111111111111111111110
 111111111111111111110",
+                                                   output,
                                                    Application.Driver,
                                                    attributes
                                                   );
@@ -197,6 +197,7 @@ cccccccccccccccccccc",
                                                    @"
 222222222222222222220
 111111111111111111110",
+                                                   output,
                                                    Application.Driver,
                                                    attributes
                                                   );
@@ -209,12 +210,13 @@ cccccccccccccccccccc",
             Assert.True (v.HasFocus);
             v.SetFocus ();
             Assert.True (v.HasFocus);
-            Application.Refresh ();
+            Application.LayoutAndDraw ();
 
             TestHelpers.AssertDriverAttributesAre (
                                                    @"
 222222222222222222220
 111111111111111111110",
+                                                   output,
                                                    Application.Driver,
                                                    attributes
                                                   );
@@ -241,6 +243,7 @@ cccccccccccccccccccc",
         Toplevel top = new ();
         top.Add (label, view);
         RunState runState = Application.Begin (top);
+        Application.RunIteration (ref runState);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -254,7 +257,8 @@ At 0,0
         view.Frame = new (3, 3, 10, 1);
         Assert.Equal (new (3, 3, 10, 1), view.Frame);
         Assert.Equal (new (0, 0, 10, 1), view.Viewport);
-        Assert.Equal (new (0, 0, 10, 1), view._needsDisplayRect);
+        Assert.Equal (new (0, 0, 10, 1), view._needsDrawRect);
+        //Application.Refresh();
         top.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -304,7 +308,8 @@ At 0,0
         view.Height = 1;
         Assert.Equal (new (3, 3, 10, 1), view.Frame);
         Assert.Equal (new (0, 0, 10, 1), view.Viewport);
-        Assert.Equal (new (0, 0, 30, 2), view._needsDisplayRect);
+        Assert.Equal (new (0, 0, 10, 1), view._needsDrawRect);
+        View.SetClipToScreen ();
         top.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -336,8 +341,7 @@ At 0,0
         Toplevel top = new ();
         top.Add (label, view);
         RunState runState = Application.Begin (top);
-
-        top.Draw ();
+        Application.RunIteration (ref runState);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -351,7 +355,7 @@ At 0,0
         view.Frame = new (1, 1, 10, 1);
         Assert.Equal (new (1, 1, 10, 1), view.Frame);
         Assert.Equal (new (0, 0, 10, 1), view.Viewport);
-        Assert.Equal (new (0, 0, 10, 1), view._needsDisplayRect);
+        Assert.Equal (new (0, 0, 10, 1), view._needsDrawRect);
         top.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -399,7 +403,9 @@ At 0,0
         view.Height = 1;
         Assert.Equal (new (1, 1, 10, 1), view.Frame);
         Assert.Equal (new (0, 0, 10, 1), view.Viewport);
-        Assert.Equal (new (0, 0, 30, 2), view._needsDisplayRect);
+        Assert.Equal (new (0, 0, 10, 1), view._needsDrawRect);
+        View.SetClipToScreen ();
+
         top.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -439,13 +445,14 @@ At 0,0
         var tvCalled = false;
 
         var view = new View { Width = 10, Height = 10, Text = "View" };
-        view.DrawContentComplete += (s, e) => viewCalled = true;
+        view.DrawComplete += (s, e) => viewCalled = true;
         var tv = new TextView { Y = 11, Width = 10, Height = 10 };
-        tv.DrawContentComplete += (s, e) => tvCalled = true;
+        tv.DrawComplete += (s, e) => tvCalled = true;
 
         var top = new Toplevel ();
         top.Add (view, tv);
-        Application.Begin (top);
+        RunState runState = Application.Begin (top);
+        Application.RunIteration (ref runState);
 
         Assert.True (viewCalled);
         Assert.True (tvCalled);
@@ -468,7 +475,7 @@ At 0,0
             X = 0, // don't overcomplicate unit tests
             Y = 1,
             Height = Dim.Auto (DimAutoStyle.Text),
-            Width = Dim.Auto(DimAutoStyle.Text),
+            Width = Dim.Auto (DimAutoStyle.Text),
             Text = "Press me!"
         };
 
@@ -485,13 +492,13 @@ At 0,0
 
         RunState runState = Application.Begin (top);
 
-        top.LayoutComplete += (s, e) => { Assert.Equal (new (0, 0, 80, 25), top._needsDisplayRect); };
+        top.SubviewsLaidOut += (s, e) => { Assert.Equal (new (0, 0, 80, 25), top._needsDrawRect); };
 
-        frame.LayoutComplete += (s, e) => { Assert.Equal (new (0, 0, 40, 8), frame._needsDisplayRect); };
+        frame.SubviewsLaidOut += (s, e) => { Assert.Equal (new (0, 0, 40, 8), frame._needsDrawRect); };
 
-        label.LayoutComplete += (s, e) => { Assert.Equal (new (0, 0, 38, 1), label._needsDisplayRect); };
+        label.SubviewsLaidOut += (s, e) => { Assert.Equal (new (0, 0, 38, 1), label._needsDrawRect); };
 
-        view.LayoutComplete += (s, e) => { Assert.Equal (new (0, 0, 13, 1), view._needsDisplayRect); };
+        view.SubviewsLaidOut += (s, e) => { Assert.Equal (new (0, 0, 13, 1), view._needsDrawRect); };
 
         Assert.Equal (new (0, 0, 80, 25), top.Frame);
         Assert.Equal (new (20, 8, 40, 8), frame.Frame);
@@ -552,8 +559,7 @@ At 0,0
         Toplevel top = new ();
         top.Add (label, view);
         RunState runState = Application.Begin (top);
-
-        view.Draw ();
+        Application.RunIteration (ref runState);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -566,7 +572,7 @@ At 0,0
 
         view.Frame = new (3, 3, 10, 1);
         Assert.Equal (new (0, 0, 10, 1), view.Viewport);
-        Assert.Equal (new (0, 0, 10, 1), view._needsDisplayRect);
+        Assert.Equal (new (0, 0, 10, 1), view._needsDrawRect);
         view.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -598,8 +604,7 @@ At 0,0
         Toplevel top = new ();
         top.Add (label, view);
         RunState runState = Application.Begin (top);
-
-        view.Draw ();
+        Application.RunIteration (ref runState);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -616,7 +621,7 @@ At 0,0
         view.Height = 1;
         Assert.Equal (new (3, 3, 10, 1), view.Frame);
         Assert.Equal (new (0, 0, 10, 1), view.Viewport);
-        Assert.Equal (new (0, 0, 30, 2), view._needsDisplayRect);
+        Assert.Equal (new (0, 0, 10, 1), view._needsDrawRect);
         view.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -648,8 +653,7 @@ At 0,0
         Toplevel top = new ();
         top.Add (label, view);
         RunState runState = Application.Begin (top);
-
-        view.Draw ();
+        Application.RunIteration (ref runState);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -663,7 +667,7 @@ At 0,0
         view.Frame = new (1, 1, 10, 1);
         Assert.Equal (new (1, 1, 10, 1), view.Frame);
         Assert.Equal (new (0, 0, 10, 1), view.Viewport);
-        Assert.Equal (new (0, 0, 10, 1), view._needsDisplayRect);
+        Assert.Equal (new (0, 0, 10, 1), view._needsDrawRect);
         view.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -695,8 +699,7 @@ At 0,0
         Toplevel top = new ();
         top.Add (label, view);
         RunState runState = Application.Begin (top);
-
-        view.Draw ();
+        Application.RunIteration (ref runState);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -713,7 +716,7 @@ At 0,0
         view.Height = 1;
         Assert.Equal (new (1, 1, 10, 1), view.Frame);
         Assert.Equal (new (0, 0, 10, 1), view.Viewport);
-        Assert.Equal (new (0, 0, 30, 2), view._needsDisplayRect);
+        Assert.Equal (new (0, 0, 10, 1), view._needsDrawRect);
         view.Draw ();
 
         TestHelpers.AssertDriverContentsWithFrameAre (
@@ -782,7 +785,7 @@ At 0,0
         r.Dispose ();
 
         // Empty Rect
-        r = new() { Frame = Rectangle.Empty };
+        r = new () { Frame = Rectangle.Empty };
         Assert.NotNull (r);
         Assert.Equal ($"View(){r.Viewport}", r.ToString ());
         Assert.False (r.CanFocus);
@@ -806,7 +809,7 @@ At 0,0
         r.Dispose ();
 
         // Rect with values
-        r = new() { Frame = new (1, 2, 3, 4) };
+        r = new () { Frame = new (1, 2, 3, 4) };
         Assert.NotNull (r);
         Assert.Equal ($"View(){r.Frame}", r.ToString ());
         Assert.False (r.CanFocus);
@@ -830,7 +833,7 @@ At 0,0
         r.Dispose ();
 
         // Initializes a view with a vertical direction
-        r = new()
+        r = new ()
         {
             Text = "Vertical View",
             TextDirection = TextDirection.TopBottom_LeftRight,
@@ -869,13 +872,11 @@ At 0,0
     {
         var r = new View ();
 
-        Assert.False (r.OnKeyDown (new() { KeyCode = KeyCode.Null }));
+        Assert.False (r.NewKeyDownEvent (Key.Empty));
 
         //Assert.False (r.OnKeyDown (new KeyEventArgs () { Key = Key.Unknown }));
-        Assert.False (r.OnKeyUp (new() { KeyCode = KeyCode.Null }));
-        Assert.False (r.NewMouseEvent (new() { Flags = MouseFlags.AllEvents }));
-        Assert.False (r.NewMouseEnterEvent (new() { Flags = MouseFlags.AllEvents }));
-        Assert.False (r.NewMouseLeaveEvent (new() { Flags = MouseFlags.AllEvents }));
+        Assert.False (r.NewKeyUpEvent (Key.Empty));
+        Assert.False (r.NewMouseEvent (new () { Flags = MouseFlags.AllEvents }));
 
         r.Dispose ();
 
@@ -961,7 +962,7 @@ At 0,0
         view.Dispose ();
 
         // Object Initializer
-        view = new() { X = 1, Y = 2, Text = "" };
+        view = new () { X = 1, Y = 2, Text = "" };
         Assert.Equal (1, view.X);
         Assert.Equal (2, view.Y);
         Assert.Equal (0, view.Width);
@@ -976,7 +977,7 @@ At 0,0
         view.Y = 2;
         view.Width = 3;
         view.Height = 4;
-        super = new() { Frame = new (0, 0, 10, 10) };
+        super = new () { Frame = new (0, 0, 10, 10) };
         super.Add (view);
         super.BeginInit ();
         super.EndInit ();
@@ -1008,6 +1009,7 @@ At 0,0
 
         view.Width = Dim.Auto ();
         view.Height = Dim.Auto ();
+        Application.RunIteration (ref rs);
         Assert.Equal ("Testing visibility.".Length, view.Frame.Width);
         Assert.True (view.Visible);
         ((FakeDriver)Application.Driver!).SetBufferSize (30, 5);
@@ -1026,7 +1028,7 @@ At 0,0
         view.Visible = false;
 
         var firstIteration = false;
-        Application.RunIteration (ref rs, ref firstIteration);
+        Application.RunIteration (ref rs, firstIteration);
 
         TestHelpers.AssertDriverContentsWithFrameAre (
                                                       @"
@@ -1101,7 +1103,7 @@ At 0,0
         public bool IsKeyUp { get; set; }
         public override string Text { get; set; }
 
-        public override void OnDrawContent (Rectangle viewport)
+        protected override bool OnDrawingContent ()
         {
             var idx = 0;
 
@@ -1129,11 +1131,12 @@ At 0,0
                 }
             }
 
-            ClearLayoutNeeded ();
-            ClearNeedsDisplay ();
+            ClearNeedsDraw ();
+
+            return true;
         }
 
-        public override bool OnKeyDown (Key keyEvent)
+        protected override bool OnKeyDown (Key keyEvent)
         {
             IsKeyDown = true;
 
@@ -1147,76 +1150,11 @@ At 0,0
             return true;
         }
 
-        public override bool OnProcessKeyDown (Key keyEvent)
+        protected override bool OnKeyDownNotHandled (Key keyEvent)
         {
             IsKeyPress = true;
 
             return true;
         }
-    }
-
-    // OnAccept/Accept tests
-    [Fact]
-    public void OnAccept_Fires_Accept ()
-    {
-        var view = new View ();
-        var accepted = false;
-
-        view.Accept += ViewOnAccept;
-
-        view.InvokeCommand (Command.Accept);
-        Assert.True (accepted);
-
-        return;
-
-        void ViewOnAccept (object sender, HandledEventArgs e) { accepted = true; }
-    }
-
-    [Fact]
-    public void Accept_Cancel_Event_OnAccept_Returns_True ()
-    {
-        var view = new View ();
-        var acceptInvoked = false;
-
-        view.Accept += ViewOnAccept;
-
-        bool? ret = view.InvokeCommand (Command.Accept);
-        Assert.True (ret);
-        Assert.True (acceptInvoked);
-
-        return;
-
-        void ViewOnAccept (object sender, HandledEventArgs e)
-        {
-            acceptInvoked = true;
-            e.Handled = true;
-        }
-    }
-
-    [Fact]
-    public void Accept_Command_Invokes_Accept_Event ()
-    {
-        var view = new View ();
-        var accepted = false;
-
-        view.Accept += ViewOnAccept;
-
-        view.InvokeCommand (Command.Accept);
-        Assert.True (accepted);
-
-        return;
-
-        void ViewOnAccept (object sender, HandledEventArgs e) { accepted = true; }
-    }
-
-    [Fact]
-    public void HotKey_Command_SetsFocus ()
-    {
-        var view = new View ();
-
-        view.CanFocus = true;
-        Assert.False (view.HasFocus);
-        view.InvokeCommand (Command.HotKey);
-        Assert.True (view.HasFocus);
     }
 }

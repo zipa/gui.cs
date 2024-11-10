@@ -11,6 +11,8 @@
 // - Raise events
 // - Perhaps allow an option to not display the scrollbar arrow indicators?
 
+using System.ComponentModel;
+
 namespace Terminal.Gui;
 
 /// <summary>
@@ -88,9 +90,9 @@ public class ScrollView : View
         AddCommand (Command.PageDown, () => ScrollDown (Viewport.Height));
         AddCommand (Command.PageLeft, () => ScrollLeft (Viewport.Width));
         AddCommand (Command.PageRight, () => ScrollRight (Viewport.Width));
-        AddCommand (Command.TopHome, () => ScrollUp (GetContentSize ().Height));
-        AddCommand (Command.BottomEnd, () => ScrollDown (GetContentSize ().Height));
-        AddCommand (Command.LeftHome, () => ScrollLeft (GetContentSize ().Width));
+        AddCommand (Command.Start, () => ScrollUp (GetContentSize ().Height));
+        AddCommand (Command.End, () => ScrollDown (GetContentSize ().Height));
+        AddCommand (Command.LeftStart, () => ScrollLeft (GetContentSize ().Width));
         AddCommand (Command.RightEnd, () => ScrollRight (GetContentSize ().Width));
 
         // Default keybindings for this view
@@ -107,9 +109,9 @@ public class ScrollView : View
 
         KeyBindings.Add (Key.PageUp.WithCtrl, Command.PageLeft);
         KeyBindings.Add (Key.PageDown.WithCtrl, Command.PageRight);
-        KeyBindings.Add (Key.Home, Command.TopHome);
-        KeyBindings.Add (Key.End, Command.BottomEnd);
-        KeyBindings.Add (Key.Home.WithCtrl, Command.LeftHome);
+        KeyBindings.Add (Key.Home, Command.Start);
+        KeyBindings.Add (Key.End, Command.End);
+        KeyBindings.Add (Key.Home.WithCtrl, Command.LeftStart);
         KeyBindings.Add (Key.End.WithCtrl, Command.RightEnd);
 
         Initialized += (s, e) =>
@@ -189,7 +191,7 @@ public class ScrollView : View
                     _horizontal.AutoHideScrollBars = value;
                 }
 
-                SetNeedsDisplay ();
+                SetNeedsDraw ();
             }
         }
     }
@@ -226,7 +228,7 @@ public class ScrollView : View
     //            _contentView.Frame = new Rectangle (_contentOffset, value);
     //            _vertical.Size = GetContentSize ().Height;
     //            _horizontal.Size = GetContentSize ().Width;
-    //            SetNeedsDisplay ();
+    //            SetNeedsDraw ();
     //        }
     //    }
     //}
@@ -370,30 +372,34 @@ public class ScrollView : View
     }
 
     /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
-        SetViewsNeedsDisplay ();
+        SetViewsNeedsDraw ();
 
         // TODO: It's bad practice for views to always clear a view. It negates clipping.
-        Clear ();
+        ClearViewport ();
 
         if (!string.IsNullOrEmpty (_contentView.Text) || _contentView.Subviews.Count > 0)
         {
+            Region? saved = ClipFrame();
             _contentView.Draw ();
+            View.SetClip (saved);
         }
 
         DrawScrollBars ();
+
+        return true;
     }
 
     /// <inheritdoc/>
-    public override bool OnKeyDown (Key a)
+    protected override bool OnKeyDown (Key a)
     {
         if (base.OnKeyDown (a))
         {
             return true;
         }
 
-        bool? result = InvokeKeyBindings (a, KeyBindingScope.HotKey | KeyBindingScope.Focused);
+        bool? result = InvokeCommands (a, KeyBindingScope.HotKey | KeyBindingScope.Focused);
 
         if (result is { })
         {
@@ -404,7 +410,7 @@ public class ScrollView : View
     }
 
     /// <inheritdoc/>
-    protected internal override bool OnMouseEvent (MouseEvent me)
+    protected override bool OnMouseEvent (MouseEventArgs me)
     {
         if (!Enabled)
         {
@@ -414,19 +420,19 @@ public class ScrollView : View
 
         if (me.Flags == MouseFlags.WheeledDown && ShowVerticalScrollIndicator)
         {
-            ScrollDown (1);
+            return ScrollDown (1);
         }
         else if (me.Flags == MouseFlags.WheeledUp && ShowVerticalScrollIndicator)
         {
-            ScrollUp (1);
+            return ScrollUp (1);
         }
         else if (me.Flags == MouseFlags.WheeledRight && _showHorizontalScrollIndicator)
         {
-            ScrollRight (1);
+            return ScrollRight (1);
         }
         else if (me.Flags == MouseFlags.WheeledLeft && ShowVerticalScrollIndicator)
         {
-            ScrollLeft (1);
+            return ScrollLeft (1);
         }
         else if (me.Position.X == _vertical.Frame.X && ShowVerticalScrollIndicator)
         {
@@ -441,7 +447,7 @@ public class ScrollView : View
             Application.UngrabMouse ();
         }
 
-        return base.OnMouseEvent (me);
+        return me.Handled;
     }
 
     /// <inheritdoc/>
@@ -465,7 +471,7 @@ public class ScrollView : View
             return view;
         }
 
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
         View container = view?.SuperView;
 
         if (container == this)
@@ -578,18 +584,24 @@ public class ScrollView : View
         {
             if (ShowVerticalScrollIndicator)
             {
+                Region? saved = View.SetClipToScreen ();
                 _vertical.Draw ();
+                View.SetClip (saved);
             }
 
             if (ShowHorizontalScrollIndicator)
             {
+                Region? saved = View.SetClipToScreen ();
                 _horizontal.Draw ();
+                View.SetClip (saved);
             }
 
             if (ShowVerticalScrollIndicator && ShowHorizontalScrollIndicator)
             {
                 SetContentBottomRightCornerVisibility ();
+                Region? saved = View.SetClipToScreen ();
                 _contentBottomRightCorner.Draw ();
+                View.SetClip (saved);
             }
         }
     }
@@ -624,14 +636,14 @@ public class ScrollView : View
         {
             _horizontal.Position = Math.Max (0, -_contentOffset.X);
         }
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
-    private void SetViewsNeedsDisplay ()
+    private void SetViewsNeedsDraw ()
     {
         foreach (View view in _contentView.Subviews)
         {
-            view.SetNeedsDisplay ();
+            view.SetNeedsDraw ();
         }
     }
 
@@ -743,9 +755,9 @@ public class ScrollView : View
         }
     }
 
-    private void View_MouseEnter (object sender, MouseEventEventArgs e) { Application.GrabMouse (this); }
+    private void View_MouseEnter (object sender, CancelEventArgs e) { Application.GrabMouse (this); }
 
-    private void View_MouseLeave (object sender, MouseEventEventArgs e)
+    private void View_MouseLeave (object sender, EventArgs e)
     {
         if (Application.MouseGrabView is { } && Application.MouseGrabView != this && Application.MouseGrabView != _vertical && Application.MouseGrabView != _horizontal)
         {

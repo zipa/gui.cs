@@ -31,7 +31,8 @@ public class Bar : View, IOrientation, IDesignable
         _orientationHelper.OrientationChanging += (sender, e) => OrientationChanging?.Invoke (this, e);
         _orientationHelper.OrientationChanged += (sender, e) => OrientationChanged?.Invoke (this, e);
 
-        Initialized += Bar_Initialized;
+        // Initialized += Bar_Initialized;
+        MouseEvent += OnMouseEvent;
 
         if (shortcuts is null)
         {
@@ -44,13 +45,53 @@ public class Bar : View, IOrientation, IDesignable
         }
     }
 
-    private void Bar_Initialized (object? sender, EventArgs e) { ColorScheme = Colors.ColorSchemes ["Menu"]; }
+    private void OnMouseEvent (object? sender, MouseEventArgs e)
+    {
+        NavigationDirection direction = NavigationDirection.Backward;
+
+        if (e.Flags == MouseFlags.WheeledDown)
+        {
+            e.Handled = true;
+        }
+
+        if (e.Flags == MouseFlags.WheeledUp)
+        {
+            direction = NavigationDirection.Forward;
+            e.Handled = true;
+        }
+
+        if (e.Flags == MouseFlags.WheeledRight)
+        {
+            e.Handled = true;
+        }
+
+        if (e.Flags == MouseFlags.WheeledLeft)
+        {
+            direction = NavigationDirection.Forward;
+            e.Handled = true;
+        }
+
+        if (e.Handled)
+        {
+            e.Handled = AdvanceFocus (direction, TabBehavior.TabStop);
+        }
+    }
+
+    /// <inheritdoc />
+    public override void EndInit ()
+    {
+        base.EndInit ();
+        ColorScheme = Colors.ColorSchemes ["Menu"];
+    }
 
     /// <inheritdoc/>
     public override void SetBorderStyle (LineStyle value)
     {
-        // The default changes the thickness. We don't want that. We just set the style.
-        Border.LineStyle = value;
+        if (Border is { })
+        {
+            // The default changes the thickness. We don't want that. We just set the style.
+            Border.LineStyle = value;
+        }
     }
 
     #region IOrientation members
@@ -82,7 +123,8 @@ public class Bar : View, IOrientation, IDesignable
     /// <param name="newOrientation"></param>
     public void OnOrientationChanged (Orientation newOrientation)
     {
-        SetNeedsLayout ();
+        // BUGBUG: this should not be SuperView.GetContentSize
+        LayoutBarItems (SuperView?.GetContentSize () ?? Application.Screen.Size);
     }
     #endregion
 
@@ -98,6 +140,7 @@ public class Bar : View, IOrientation, IDesignable
         set
         {
             _alignmentModes = value;
+            //SetNeedsDraw ();
             SetNeedsLayout ();
         }
     }
@@ -125,7 +168,8 @@ public class Bar : View, IOrientation, IDesignable
             }
         }
 
-        SetNeedsDisplay ();
+        //SetNeedsDraw ();
+        SetNeedsLayout ();
     }
 
     // TODO: Move this to View
@@ -148,17 +192,21 @@ public class Bar : View, IOrientation, IDesignable
         if (toRemove is { })
         {
             Remove (toRemove);
-            SetNeedsDisplay ();
+            //SetNeedsDraw ();
+            SetNeedsLayout ();
         }
 
         return toRemove as Shortcut;
     }
 
     /// <inheritdoc />
-    internal override void OnLayoutStarted (LayoutEventArgs args)
+    protected override void OnSubviewLayout (LayoutEventArgs args)
     {
-        base.OnLayoutStarted (args);
+        LayoutBarItems (args.OldContentSize);
+    }
 
+    private void LayoutBarItems (Size contentSize)
+    {
         View? prevBarItem = null;
 
         switch (Orientation)
@@ -171,73 +219,75 @@ public class Bar : View, IOrientation, IDesignable
                     barItem.ColorScheme = ColorScheme;
                     barItem.X = Pos.Align (Alignment.Start, AlignmentModes);
                     barItem.Y = 0; //Pos.Center ();
-                    // HACK: This should not be needed
-                    barItem.SetRelativeLayout (GetContentSize ());
                 }
                 break;
 
             case Orientation.Vertical:
-                // Set the overall size of the Bar and arrange the views vertically
-
-                var minKeyWidth = 0;
-
-                List<Shortcut> shortcuts = Subviews.Where (s => s is Shortcut && s.Visible).Cast<Shortcut> ().ToList ();
-                foreach (Shortcut shortcut in shortcuts)
+                if (Width!.Has<DimAuto> (out _))
                 {
-                    // Let DimAuto do its thing to get the minimum width of each CommandView and HelpView
-                    //shortcut.CommandView.SetRelativeLayout (new Size (int.MaxValue, int.MaxValue));
-                    minKeyWidth = int.Max (minKeyWidth, shortcut.KeyView.Text.GetColumns ());
+                    // Set the overall size of the Bar and arrange the views vertically
+
+                    var minKeyWidth = 0;
+
+                    List<Shortcut> shortcuts = Subviews.Where (s => s is Shortcut && s.Visible).Cast<Shortcut> ().ToList ();
+
+                    foreach (Shortcut shortcut in shortcuts)
+                    {
+                        // Get the largest width of all KeyView's
+                        minKeyWidth = int.Max (minKeyWidth, shortcut.KeyView.Text.GetColumns ());
+                    }
+
+                    var _maxBarItemWidth = 0;
+
+                    for (var index = 0; index < Subviews.Count; index++)
+                    {
+                        View barItem = Subviews [index];
+
+                        barItem.X = 0;
+
+                        barItem.ColorScheme = ColorScheme;
+
+                        if (!barItem.Visible)
+                        {
+                            continue;
+                        }
+
+                        if (barItem is Shortcut scBarItem)
+                        {
+                            scBarItem.MinimumKeyTextSize = minKeyWidth;
+                            scBarItem.Width = scBarItem.GetWidthDimAuto ();
+                            barItem.Layout (Application.Screen.Size);
+                            _maxBarItemWidth = Math.Max (_maxBarItemWidth, barItem.Frame.Width);
+                        }
+
+                        if (prevBarItem == null)
+                        {
+                            // TODO: Just use Pos.Align!
+                            barItem.Y = 0;
+                        }
+                        else
+                        {
+                            // TODO: Just use Pos.Align!
+                            // Align the view to the bottom of the previous view
+                            barItem.Y = Pos.Bottom (prevBarItem);
+                        }
+
+                        prevBarItem = barItem;
+
+                    }
+
+                    foreach (var subView in Subviews)
+                    {
+                        subView.Width = Dim.Auto (DimAutoStyle.Auto, minimumContentDim: _maxBarItemWidth);
+                    }
                 }
-
-                var maxBarItemWidth = 0;
-                var totalHeight = 0;
-
-                for (var index = 0; index < Subviews.Count; index++)
+                else
                 {
-                    View barItem = Subviews [index];
-
-                    barItem.ColorScheme = ColorScheme;
-
-                    if (!barItem.Visible)
+                    foreach (var subView in Subviews)
                     {
-                        continue;
-                    }
-
-                    if (barItem is Shortcut scBarItem)
-                    {
-                        scBarItem.MinimumKeyTextSize = minKeyWidth;
-                        // HACK: This should not be needed
-                        scBarItem.SetRelativeLayout (GetContentSize ());
-                        maxBarItemWidth = Math.Max (maxBarItemWidth, scBarItem.Frame.Width);
-                    }
-
-                    if (prevBarItem == null)
-                    {
-                        barItem.Y = 0;
-                    }
-                    else
-                    {
-                        // Align the view to the bottom of the previous view
-                        barItem.Y = Pos.Bottom (prevBarItem);
-                    }
-
-                    prevBarItem = barItem;
-
-                    barItem.X = 0;
-                    totalHeight += barItem.Frame.Height;
-                }
-
-
-                foreach (View barItem in Subviews)
-                {
-                    barItem.Width = maxBarItemWidth;
-
-                    if (barItem is Line line)
-                    {
+                        subView.Width = Dim.Fill();
                     }
                 }
-
-                Height = Dim.Auto (DimAutoStyle.Content, totalHeight);
 
                 break;
         }
@@ -260,6 +310,19 @@ public class Bar : View, IOrientation, IDesignable
             Text = "Help Text",
             Title = "Help",
             Key = Key.F1,
+        };
+
+        Add (shortcut);
+
+        shortcut = new Shortcut
+        {
+            Text = "Czech",
+            CommandView = new CheckBox ()
+            {
+                Title = "_Check"
+            },
+            Key = Key.F9,
+            CanFocus = false
         };
 
         Add (shortcut);

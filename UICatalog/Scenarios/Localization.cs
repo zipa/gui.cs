@@ -38,7 +38,7 @@ public class Localization : Scenario
 
         CurrentCulture = culture;
         Thread.CurrentThread.CurrentUICulture = culture;
-        Application.Refresh ();
+        Application.LayoutAndDraw ();
     }
 
     public override void Main ()
@@ -152,14 +152,14 @@ public class Localization : Scenario
         {
             X = Pos.Right (_allowAnyCheckBox) + 1, Y = Pos.Bottom (textAndFileDialogLabel) + 1, Text = "Open"
         };
-        openDialogButton.Accept += (sender, e) => ShowFileDialog (false);
+        openDialogButton.Accepting += (sender, e) => ShowFileDialog (false);
         win.Add (openDialogButton);
 
         var saveDialogButton = new Button
         {
             X = Pos.Right (openDialogButton) + 1, Y = Pos.Bottom (textAndFileDialogLabel) + 1, Text = "Save"
         };
-        saveDialogButton.Accept += (sender, e) => ShowFileDialog (true);
+        saveDialogButton.Accepting += (sender, e) => ShowFileDialog (true);
         win.Add (saveDialogButton);
 
         var wizardLabel = new Label
@@ -173,10 +173,12 @@ public class Localization : Scenario
         win.Add (wizardLabel);
 
         var wizardButton = new Button { X = 2, Y = Pos.Bottom (wizardLabel) + 1, Text = "Open _wizard" };
-        wizardButton.Accept += (sender, e) => ShowWizard ();
+        wizardButton.Accepting += (sender, e) => ShowWizard ();
         win.Add (wizardButton);
 
         win.Unloaded += (sender, e) => Quit ();
+
+        win.Y = Pos.Bottom (menu);
         top.Add (win);
 
         Application.Run (top);

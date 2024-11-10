@@ -1,6 +1,8 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using Terminal.Gui;
 
@@ -20,26 +22,20 @@ namespace UICatalog;
 ///             <item>
 ///                 <description>
 ///                     Annotate the <see cref="Scenario"/> derived class with a
-///                     <see cref="Scenario.ScenarioMetadata"/> attribute specifying the scenario's name and description.
+///                     <see cref="ScenarioMetadata"/> attribute specifying the scenario's name and description.
 ///                 </description>
 ///             </item>
 ///             <item>
 ///                 <description>
-///                     Add one or more <see cref="Scenario.ScenarioCategory"/> attributes to the class specifying
+///                     Add one or more <see cref="ScenarioCategory"/> attributes to the class specifying
 ///                     which categories the scenario belongs to. If you don't specify a category the scenario will show up
 ///                     in "_All".
 ///                 </description>
 ///             </item>
 ///             <item>
 ///                 <description>
-///                     Implement the <see cref="Setup"/> override which will be called when a user selects the
+///                     Implement the <see cref="Main"/> override which will be called when a user selects the
 ///                     scenario to run.
-///                 </description>
-///             </item>
-///             <item>
-///                 <description>
-///                     Optionally, implement the <see cref="Init()"/> and/or <see cref="Run"/> overrides to
-///                     provide a custom implementation.
 ///                 </description>
 ///             </item>
 ///         </list>
@@ -54,28 +50,47 @@ namespace UICatalog;
 ///     <code>
 /// using Terminal.Gui;
 /// 
-/// namespace UICatalog {
-/// 	[ScenarioMetadata (Name: "Generic", Description: "Generic sample - A template for creating new Scenarios")]
-/// 	[ScenarioCategory ("Controls")]
-/// 	class MyScenario : Scenario {
-/// 		public override void Setup ()
-/// 		{
-/// 			// Put your scenario code here, e.g.
-/// 			Win.Add (new Button () { Text = "Press me!", 
-/// 				X = Pos.Center (),
-/// 				Y = Pos.Center (),
-/// 				Clicked = () => MessageBox.Query (20, 7, "Hi", "Neat?", "Yes", "No")
-/// 			});
-/// 		}
-/// 	}
+/// namespace UICatalog.Scenarios;
+/// 
+/// [ScenarioMetadata ("Generic", "Generic sample - A template for creating new Scenarios")]
+/// [ScenarioCategory ("Controls")]
+/// public sealed class MyScenario : Scenario
+/// {
+///     public override void Main ()
+///     {
+///         // Init
+///         Application.Init ();
+/// 
+///         // Setup - Create a top-level application window and configure it.
+///         Window appWindow = new ()
+///         {
+///             Title = GetQuitKeyAndName (),
+///         };
+/// 
+///         var button = new Button { X = Pos.Center (), Y = Pos.Center (), Text = "Press me!" };
+///         button.Accept += (s, e) => MessageBox.ErrorQuery ("Error", "You pressed the button!", "Ok");
+///         appWindow.Add (button);
+/// 
+///         // Run - Start the application.
+///         Application.Run (appWindow);
+///         appWindow.Dispose ();
+/// 
+///         // Shutdown - Calling Application.Shutdown is required.
+///         Application.Shutdown ();
+///     }
 /// }
-/// </code>
+///  </code>
 /// </example>
 public class Scenario : IDisposable
 {
     private static int _maxScenarioNameLen = 30;
-    public string Theme = "Default";
-    public string TopLevelColorScheme = "Base";
+    public string TopLevelColorScheme { get; set; } = "Base";
+
+    public BenchmarkResults BenchmarkResults
+    {
+        get { return _benchmarkResults; }
+    }
+
     private bool _disposedValue;
 
     /// <summary>
@@ -93,7 +108,10 @@ public class Scenario : IDisposable
     /// <returns></returns>
     public string GetName () { return ScenarioMetadata.GetName (GetType ()); }
 
-    /// <summary>Helper to get the <see cref="Application.QuitKey"/> and the <see cref="Scenario"/> Name (defined in <see cref="ScenarioMetadata"/>)</summary>
+    /// <summary>
+    ///     Helper to get the <see cref="Application.QuitKey"/> and the <see cref="Scenario"/> Name (defined in
+    ///     <see cref="ScenarioMetadata"/>)
+    /// </summary>
     /// <returns></returns>
     public string GetQuitKeyAndName () { return $"{Application.QuitKey} to Quit - Scenario: {GetName ()}"; }
 
@@ -104,16 +122,19 @@ public class Scenario : IDisposable
     /// </summary>
     public static ObservableCollection<Scenario> GetScenarios ()
     {
-        List<Scenario> objects = new ();
+        List<Scenario> objects = [];
 
         foreach (Type type in typeof (Scenario).Assembly.ExportedTypes
                                                .Where (
-                                                       myType => myType.IsClass
-                                                                 && !myType.IsAbstract
+                                                       myType => myType is { IsClass: true, IsAbstract: false }
                                                                  && myType.IsSubclassOf (typeof (Scenario))
                                                       ))
         {
-            var scenario = (Scenario)Activator.CreateInstance (type);
+            if (Activator.CreateInstance (type) is not Scenario { } scenario)
+            {
+                continue;
+            }
+
             objects.Add (scenario);
             _maxScenarioNameLen = Math.Max (_maxScenarioNameLen, scenario.GetName ().Length + 1);
         }
@@ -125,17 +146,136 @@ public class Scenario : IDisposable
     ///     Called by UI Catalog to run the <see cref="Scenario"/>. This is the main entry point for the <see cref="Scenario"/>
     ///     .
     /// </summary>
-    /// <remarks>
-    ///     <para>
-    ///         Scenario developers are encouraged to override this method as the primary way of authoring a new
-    ///         scenario.
-    ///     </para>
-    ///     <para>
-    ///         The base implementation calls <see cref="Init"/>, <see cref="Setup"/>, and <see cref="Run"/>.
-    ///     </para>
-    /// </remarks>
-    public virtual void Main ()
+    public virtual void Main () { }
+
+    private const uint MAX_NATURAL_ITERATIONS = 500; // not including needed for demo keys
+    private const uint ABORT_TIMEOUT_MS = 2500;
+    private const int DEMO_KEY_PACING_MS = 1; // Must be non-zero
+
+    private readonly object _timeoutLock = new ();
+    private object? _timeout;
+    private Stopwatch? _stopwatch;
+    private readonly BenchmarkResults _benchmarkResults = new BenchmarkResults ();
+
+    public void StartBenchmark ()
     {
+        BenchmarkResults.Scenario = GetName ();
+        Application.InitializedChanged += OnApplicationOnInitializedChanged;
+    }
+
+    public BenchmarkResults EndBenchmark ()
+    {
+        Application.InitializedChanged -= OnApplicationOnInitializedChanged;
+
+        lock (_timeoutLock)
+        {
+            if (_timeout is { })
+            {
+                _timeout = null;
+            }
+        }
+
+        return _benchmarkResults;
+    }
+
+    private List<Key> _demoKeys;
+    private int _currentDemoKey = 0;
+
+    private void OnApplicationOnInitializedChanged (object? s, EventArgs<bool> a)
+    {
+        if (a.CurrentValue)
+        {
+            lock (_timeoutLock!)
+            {
+                _timeout = Application.AddTimeout (TimeSpan.FromMilliseconds (ABORT_TIMEOUT_MS), ForceCloseCallback);
+            }
+
+            Application.Iteration += OnApplicationOnIteration;
+            Application.Driver!.ClearedContents += (sender, args) => BenchmarkResults.ClearedContentCount++;
+            Application.Driver!.Refreshed += (sender, args) =>
+            {
+                BenchmarkResults.RefreshedCount++;
+
+                if (args.CurrentValue)
+                {
+                    BenchmarkResults.UpdatedCount++;
+                }
+            };
+            Application.NotifyNewRunState += OnApplicationNotifyNewRunState;
+
+
+            _stopwatch = Stopwatch.StartNew ();
+        }
+        else
+        {
+            Application.NotifyNewRunState -= OnApplicationNotifyNewRunState;
+            Application.Iteration -= OnApplicationOnIteration;
+            BenchmarkResults.Duration = _stopwatch!.Elapsed;
+            _stopwatch?.Stop ();
+        }
+    }
+
+    private void OnApplicationOnIteration (object? s, IterationEventArgs a)
+    {
+        BenchmarkResults.IterationCount++;
+        if (BenchmarkResults.IterationCount > MAX_NATURAL_ITERATIONS + (_demoKeys.Count* DEMO_KEY_PACING_MS))
+        {
+            Application.RequestStop ();
+        }
+    }
+
+    private void OnApplicationNotifyNewRunState (object? sender, RunStateEventArgs e)
+    {
+        SubscribeAllSubviews (Application.Top!);
+
+        _currentDemoKey = 0;
+        _demoKeys = GetDemoKeyStrokes ();
+
+        Application.AddTimeout (
+                                new TimeSpan (0, 0, 0, 0, DEMO_KEY_PACING_MS),
+                                () =>
+                                {
+                                    if (_currentDemoKey >= _demoKeys.Count)
+                                    {
+                                        return false;
+                                    }
+
+                                    Application.RaiseKeyDownEvent (_demoKeys [_currentDemoKey++]);
+
+                                    return true;
+                                });
+
+        return;
+
+        // Get a list of all subviews under Application.Top (and their subviews, etc.)
+        // and subscribe to their DrawComplete event
+        void SubscribeAllSubviews (View view)
+        {
+            view.DrawComplete += (s, a) => BenchmarkResults.DrawCompleteCount++;
+            view.SubviewsLaidOut += (s, a) => BenchmarkResults.LaidOutCount++;
+            foreach (View subview in view.Subviews)
+            {
+                SubscribeAllSubviews (subview);
+            }
+        }
+    }
+
+    // If the scenario doesn't close within the abort time, this will force it to quit
+    private bool ForceCloseCallback ()
+    {
+        lock (_timeoutLock)
+        {
+            if (_timeout is { })
+            {
+                _timeout = null;
+            }
+        }
+
+        Debug.WriteLine ($@"  Failed to Quit with {Application.QuitKey} after {ABORT_TIMEOUT_MS}ms and {BenchmarkResults.IterationCount} iterations. Force quit.");
+
+        Application.RequestStop ();
+
+        return false;
     }
 
     /// <summary>Gets the Scenario Name + Description with the Description padded based on the longest known Scenario name.</summary>
@@ -156,8 +296,7 @@ public class Scenario : IDisposable
         if (!_disposedValue)
         {
             if (disposing)
-            {
-            }
+            { }
 
             _disposedValue = true;
         }
@@ -172,8 +311,7 @@ public class Scenario : IDisposable
 
         aCategories = typeof (Scenario).Assembly.GetTypes ()
                                        .Where (
-                                               myType => myType.IsClass
-                                                         && !myType.IsAbstract
+                                               myType => myType is { IsClass: true, IsAbstract: false }
                                                          && myType.IsSubclassOf (typeof (Scenario)))
                                        .Select (type => System.Attribute.GetCustomAttributes (type).ToList ())
                                        .Aggregate (
@@ -191,51 +329,9 @@ public class Scenario : IDisposable
         categories.Insert (0, "All Scenarios");
 
         return categories;
+
     }
 
-    /// <summary>Defines the category names used to categorize a <see cref="Scenario"/></summary>
-    [AttributeUsage (AttributeTargets.Class, AllowMultiple = true)]
-    public class ScenarioCategory (string name) : System.Attribute
-    {
-        /// <summary>Static helper function to get the <see cref="Scenario"/> Categories given a Type</summary>
-        /// <param name="t"></param>
-        /// <returns>list of category names</returns>
-        public static List<string> GetCategories (Type t)
-        {
-            return GetCustomAttributes (t)
-                   .ToList ()
-                   .Where (a => a is ScenarioCategory)
-                   .Select (a => ((ScenarioCategory)a).Name)
-                   .ToList ();
-        }
+    public virtual List<Key> GetDemoKeyStrokes () => new List<Key> ();
 
-        /// <summary>Static helper function to get the <see cref="Scenario"/> Name given a Type</summary>
-        /// <param name="t"></param>
-        /// <returns>Name of the category</returns>
-        public static string GetName (Type t) { return ((ScenarioCategory)GetCustomAttributes (t) [0]).Name; }
-
-        /// <summary>Category Name</summary>
-        public string Name { get; set; } = name;
-    }
-
-    /// <summary>Defines the metadata (Name and Description) for a <see cref="Scenario"/></summary>
-    [AttributeUsage (AttributeTargets.Class)]
-    public class ScenarioMetadata (string name, string description) : System.Attribute
-    {
-        /// <summary><see cref="Scenario"/> Description</summary>
-        public string Description { get; set; } = description;
-
-        /// <summary>Static helper function to get the <see cref="Scenario"/> Description given a Type</summary>
-        /// <param name="t"></param>
-        /// <returns></returns>
-        public static string GetDescription (Type t) { return ((ScenarioMetadata)GetCustomAttributes (t) [0]).Description; }
-
-        /// <summary>Static helper function to get the <see cref="Scenario"/> Name given a Type</summary>
-        /// <param name="t"></param>
-        /// <returns></returns>
-        public static string GetName (Type t) { return ((ScenarioMetadata)GetCustomAttributes (t) [0]).Name; }
-
-        /// <summary><see cref="Scenario"/> Name</summary>
-        public string Name { get; set; } = name;
-    }
 }

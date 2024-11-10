@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -37,221 +38,301 @@ public class Shortcuts : Scenario
 
         var eventLog = new ListView
         {
+            Id = "eventLog",
             X = Pos.AnchorEnd (),
-            Width = 40,
+            Y = 0,
             Height = Dim.Fill (4),
             ColorScheme = Colors.ColorSchemes ["Toplevel"],
             Source = new ListWrapper<string> (eventSource),
             BorderStyle = LineStyle.Double,
             Title = "E_vents"
         };
+        eventLog.Width = Dim.Func (() => Math.Min (eventLog.SuperView!.Viewport.Width / 2, eventLog?.MaxLength + eventLog.GetAdornmentsThickness ().Horizontal ?? 0));
         Application.Top.Add (eventLog);
 
-        var vShortcut1 = new Shortcut
+        var alignKeysShortcut = new Shortcut
         {
-            Orientation = Orientation.Vertical,
+            Id = "alignKeysShortcut",
             X = 0,
-            Width = 35,
-            Title = "A_pp Shortcut",
-            Key = Key.F1,
-            Text = "Width is 35",
-            KeyBindingScope = KeyBindingScope.Application,
-        };
-        Application.Top.Add (vShortcut1);
-
-        var vShortcut2 = new Shortcut
-        {
-            Orientation = Orientation.Vertical,
-            X = 0,
-            Y = Pos.Bottom (vShortcut1),
-            Width = 35,
-            Key = Key.F2,
-            Text = "Width is 35",
-            KeyBindingScope = KeyBindingScope.HotKey,
-            CommandView = new RadioGroup
+            Y = 0,
+            Width = Dim.Fill () - Dim.Width (eventLog),
+            HelpText = "Fill to log",
+            CommandView = new CheckBox
             {
-                Orientation = Orientation.Vertical,
-                RadioLabels = ["O_ne", "T_wo", "Th_ree", "Fo_ur"]
+                Text = "_Align Keys",
+                CanFocus = false,
+                HighlightStyle = HighlightStyle.None,
+            },
+            Key = Key.F5.WithCtrl.WithAlt.WithShift,
+            KeyBindingScope = KeyBindingScope.HotKey,
+        };
+
+        ((CheckBox)alignKeysShortcut.CommandView).CheckedStateChanging += (s, e) =>
+        {
+            if (alignKeysShortcut.CommandView is CheckBox cb)
+            {
+                eventSource.Add ($"{alignKeysShortcut.Id}.CommandView.CheckedStateChanging: {cb.Text}");
+                eventLog.MoveDown ();
+
+                var max = 0;
+                IEnumerable<View> toAlign = Application.Top.Subviews.Where (v => v is Shortcut { Width: not DimAbsolute });
+                IEnumerable<View> enumerable = toAlign as View [] ?? toAlign.ToArray ();
+
+                if (e.NewValue == CheckState.Checked)
+                {
+                    foreach (var view in enumerable)
+                    {
+                        var peer = (Shortcut)view;
+                        max = Math.Max (max, peer.KeyView.Text.GetColumns ());
+                    }
+                }
+
+                foreach (var view in enumerable)
+                {
+                    var peer = (Shortcut)view;
+                    peer.MinimumKeyTextSize = max;
+                }
             }
         };
+        Application.Top.Add (alignKeysShortcut);
 
-        ((RadioGroup)vShortcut2.CommandView).SelectedItemChanged += (o, args) =>
-                                                                   {
-                                                                       eventSource.Add ($"SelectedItemChanged: {o.GetType ().Name} - {args.SelectedItem}");
-                                                                       eventLog.MoveDown ();
-                                                                   };
-
-        vShortcut2.Accept += (o, args) =>
-                            {
-                                // Cycle to next item. If at end, set 0
-                                if (((RadioGroup)vShortcut2.CommandView).SelectedItem < ((RadioGroup)vShortcut2.CommandView).RadioLabels.Length - 1)
-                                {
-                                    ((RadioGroup)vShortcut2.CommandView).SelectedItem++;
-                                }
-                                else
-                                {
-                                    ((RadioGroup)vShortcut2.CommandView).SelectedItem = 0;
-                                }
-                            };
-        Application.Top.Add (vShortcut2);
-
-        var vShortcut3 = new Shortcut
+        var commandFirstShortcut = new Shortcut
         {
-            Orientation = Orientation.Vertical,
+            Id = "commandFirstShortcut",
             X = 0,
-            Y = Pos.Bottom (vShortcut2),
-            CommandView = new CheckBox { Text = "_Align" },
-            Key = Key.F5.WithCtrl.WithAlt.WithShift,
-            HelpText = "Width is Fill",
+            Y = Pos.Bottom (alignKeysShortcut),
             Width = Dim.Fill () - Dim.Width (eventLog),
-            KeyBindingScope = KeyBindingScope.HotKey,
-        };
-
-        ((CheckBox)vShortcut3.CommandView).CheckedStateChanging += (s, e) =>
-                                                      {
-                                                          if (vShortcut3.CommandView is CheckBox cb)
-                                                          {
-                                                              eventSource.Add ($"Toggle: {cb.Text}");
-                                                              eventLog.MoveDown ();
-
-                                                              var max = 0;
-                                                              var toAlign = Application.Top.Subviews.Where (v => v is Shortcut { Orientation: Orientation.Vertical, Width: not DimAbsolute });
-
-                                                              if (e.NewValue == CheckState.Checked)
-                                                              {
-                                                                  foreach (Shortcut peer in toAlign)
-                                                                  {
-                                                                      // DANGER: KeyView is internal so we can't access it. So we assume this is how it works.
-                                                                      max = Math.Max (max, peer.Key.ToString ().GetColumns ());
-                                                                  }
-                                                              }
-
-                                                              foreach (Shortcut peer in toAlign)
-                                                              {
-                                                                  peer.MinimumKeyTextSize = max;
-                                                              }
-                                                          }
-                                                      };
-        Application.Top.Add (vShortcut3);
-
-        var vShortcut4 = new Shortcut
-        {
-            Orientation = Orientation.Vertical,
-            X = 0,
-            Y = Pos.Bottom (vShortcut3),
-            Width = Dim.Width (vShortcut3),
-            CommandView = new Button
+            HelpText = "Show Command first",
+            CommandView = new CheckBox
             {
-                Title = "_Button",
+                Text = "Command _First",
+                CanFocus = false,
+                HighlightStyle = HighlightStyle.None,
             },
-            HelpText = "Width is Fill",
-            Key = Key.K,
+            Key = Key.F.WithCtrl,
             KeyBindingScope = KeyBindingScope.HotKey,
         };
-        Button button = (Button)vShortcut4.CommandView;
-        vShortcut4.CommandView.Accept += Button_Clicked;
+        ((CheckBox)commandFirstShortcut.CommandView).CheckedState =
+            commandFirstShortcut.AlignmentModes.HasFlag (AlignmentModes.EndToStart) ? CheckState.UnChecked : CheckState.Checked;
 
-        Application.Top.Add (vShortcut4);
+        ((CheckBox)commandFirstShortcut.CommandView).CheckedStateChanging += (s, e) =>
+                                                                         {
+                                                                             if (commandFirstShortcut.CommandView is CheckBox cb)
+                                                                             {
+                                                                                 eventSource.Add ($"{commandFirstShortcut.Id}.CommandView.CheckedStateChanging: {cb.Text}");
+                                                                                 eventLog.MoveDown ();
 
-        var vShortcut5 = new Shortcut
+                                                                                 var max = 0;
+                                                                                 IEnumerable<View> toAlign = Application.Top.Subviews.Where (v => v is Shortcut { Width: not DimAbsolute });
+                                                                                 IEnumerable<View> enumerable = toAlign as View [] ?? toAlign.ToArray ();
+
+                                                                                 foreach (var view in enumerable)
+                                                                                 {
+                                                                                     var peer = (Shortcut)view;
+                                                                                     if (e.NewValue == CheckState.Checked)
+                                                                                     {
+                                                                                         peer.AlignmentModes &= ~AlignmentModes.EndToStart;
+                                                                                     }
+                                                                                     else
+                                                                                     {
+                                                                                         peer.AlignmentModes |= AlignmentModes.EndToStart;
+                                                                                     }
+                                                                                 }
+                                                                             }
+                                                                         };
+
+        Application.Top.Add (commandFirstShortcut);
+
+        var canFocusShortcut = new Shortcut
         {
-            Orientation = Orientation.Vertical,
+            Id = "canFocusShortcut",
             X = 0,
-            Y = Pos.Bottom (vShortcut4),
-            Width = Dim.Width (vShortcut4),
-
+            Y = Pos.Bottom (commandFirstShortcut),
+            Width = Dim.Fill () - Dim.Width (eventLog),
             Key = Key.F4,
-            HelpText = "CommandView.CanFocus",
+            HelpText = "Changes all Command.CanFocus",
             KeyBindingScope = KeyBindingScope.HotKey,
             CommandView = new CheckBox { Text = "_CanFocus" },
         };
 
-        ((CheckBox)vShortcut5.CommandView).CheckedStateChanging += (s, e) =>
-                                                     {
-                                                         if (vShortcut5.CommandView is CheckBox cb)
-                                                         {
-                                                             eventSource.Add ($"Toggle: {cb.Text}");
-                                                             eventLog.MoveDown ();
-
-                                                             foreach (Shortcut peer in Application.Top.Subviews.Where (v => v is Shortcut)!)
-                                                             {
-                                                                 if (peer.CanFocus)
-                                                                 {
-                                                                     peer.CommandView.CanFocus = e.NewValue == CheckState.Checked;
-                                                                 }
-                                                             }
-                                                         }
-                                                     };
-        Application.Top.Add (vShortcut5);
-
-        var vShortcutSlider = new Shortcut
+        ((CheckBox)canFocusShortcut.CommandView).CheckedStateChanging += (s, e) =>
         {
-            Orientation = Orientation.Vertical,
-            X = 0,
-            Y = Pos.Bottom (vShortcut5),
-            HelpText = "Width is Fill",
-            Width = Dim.Width (vShortcut5),
+            if (canFocusShortcut.CommandView is CheckBox cb)
+            {
+                eventSource.Add ($"Toggle: {cb.Text}");
+                eventLog.MoveDown ();
+                //cb.CanFocus = e.NewValue == CheckState.Checked;
 
+                foreach (Shortcut peer in Application.Top.Subviews.Where (v => v is Shortcut)!)
+                {
+                    if (peer.CanFocus)
+                    {
+                        peer.CommandView.CanFocus = e.NewValue == CheckState.Checked;
+                    }
+                }
+            }
+        };
+        Application.Top.Add (canFocusShortcut);
+
+        var appShortcut = new Shortcut
+        {
+            Id = "appShortcut",
+            X = 0,
+            Y = Pos.Bottom (canFocusShortcut),
+            Width = Dim.Fill (Dim.Func (() => eventLog.Frame.Width)),
+            Title = "A_pp Shortcut",
+            Key = Key.F1,
+            Text = "Width is DimFill",
+            KeyBindingScope = KeyBindingScope.Application,
+        };
+
+        Application.Top.Add (appShortcut);
+
+
+        var buttonShortcut = new Shortcut
+        {
+            Id = "buttonShortcut",
+            X = 0,
+            Y = Pos.Bottom (appShortcut),
+            Width = Dim.Fill () - Dim.Width (eventLog),
+            HelpText = "Accepting pops MB",
+            CommandView = new Button
+            {
+                Title = "_Button",
+                ShadowStyle = ShadowStyle.None,
+                HighlightStyle = HighlightStyle.None
+            },
+            Key = Key.K,
             KeyBindingScope = KeyBindingScope.HotKey,
-            CommandView = new Slider<string>
+        };
+        var button = (Button)buttonShortcut.CommandView;
+        buttonShortcut.Accepting += Button_Clicked;
+
+        Application.Top.Add (buttonShortcut);
+
+
+        var radioGroupShortcut = new Shortcut
+        {
+            Id = "radioGroupShortcut",
+            X = 0,
+            Y = Pos.Bottom (buttonShortcut),
+            Key = Key.F2,
+            Width = Dim.Fill () - Dim.Width (eventLog),
+            KeyBindingScope = KeyBindingScope.HotKey,
+            CommandView = new RadioGroup
             {
                 Orientation = Orientation.Vertical,
+                RadioLabels = ["O_ne", "T_wo", "Th_ree", "Fo_ur"],
+            },
+        };
+
+        ((RadioGroup)radioGroupShortcut.CommandView).SelectedItemChanged += (o, args) =>
+                                                                            {
+                                                                                eventSource.Add ($"SelectedItemChanged: {o.GetType ().Name} - {args.SelectedItem}");
+                                                                                eventLog.MoveDown ();
+                                                                            };
+
+        Application.Top.Add (radioGroupShortcut);
+
+        var sliderShortcut = new Shortcut
+        {
+            Id = "sliderShortcut",
+            X = 0,
+            Y = Pos.Bottom (radioGroupShortcut),
+            Width = Dim.Fill () - Dim.Width (eventLog),
+            KeyBindingScope = KeyBindingScope.HotKey,
+            HelpText = "Sliders work!",
+            CommandView = new Slider<string>
+            {
+                Orientation = Orientation.Horizontal,
                 AllowEmpty = true
             },
             Key = Key.F5,
         };
 
-        ((Slider<string>)vShortcutSlider.CommandView).Options = new () { new () { Legend = "A" }, new () { Legend = "B" }, new () { Legend = "C" } };
-        ((Slider<string>)vShortcutSlider.CommandView).SetOption (0);
+        ((Slider<string>)sliderShortcut.CommandView).Options = new () { new () { Legend = "A" }, new () { Legend = "B" }, new () { Legend = "C" } };
+        ((Slider<string>)sliderShortcut.CommandView).SetOption (0);
 
-        ((Slider<string>)vShortcutSlider.CommandView).OptionsChanged += (o, args) =>
-                                                                       {
-                                                                           eventSource.Add ($"OptionsChanged: {o.GetType ().Name} - {string.Join (",", ((Slider<string>)o).GetSetOptions ())}");
-                                                                           eventLog.MoveDown ();
-                                                                       };
-
-        Application.Top.Add (vShortcutSlider);
-
-        var vShortcut6 = new Shortcut
+        ((Slider<string>)sliderShortcut.CommandView).OptionsChanged += (o, args) =>
         {
-            Orientation = Orientation.Vertical,
-            X = 0,
-            Y = Pos.Bottom (vShortcutSlider),
-            Width = Dim.Width (vShortcutSlider),
+            eventSource.Add ($"OptionsChanged: {o.GetType ().Name} - {string.Join (",", ((Slider<string>)o).GetSetOptions ())}");
+            eventLog.MoveDown ();
+        };
 
-            Title = "_No Key",
+        Application.Top.Add (sliderShortcut);
+
+
+        var noCommandShortcut = new Shortcut
+        {
+            Id = "noCommandShortcut",
+            X = 0,
+            Y = Pos.Bottom (sliderShortcut),
+            Width = Dim.Width (sliderShortcut),
+            HelpText = "No Command",
+            Key = Key.D0
+        };
+
+        Application.Top.Add (noCommandShortcut);
+
+        var noKeyShortcut = new Shortcut
+        {
+            Id = "noKeyShortcut",
+            X = 0,
+            Y = Pos.Bottom (noCommandShortcut),
+            Width = Dim.Width (noCommandShortcut),
+
+            Title = "No Ke_y",
             HelpText = "Keyless",
         };
 
-        Application.Top.Add (vShortcut6);
+        Application.Top.Add (noKeyShortcut);
 
 
-        var vShortcut7 = new Shortcut
+        var noHelpShortcut = new Shortcut
         {
-            Orientation = Orientation.Vertical,
+            Id = "noHelpShortcut",
             X = 0,
-            Y = Pos.Bottom (vShortcut6),
-            Width = Dim.Width (vShortcutSlider),
+            Y = Pos.Bottom (noKeyShortcut),
+            Width = Dim.Width (noKeyShortcut),
             Key = Key.F6,
             Title = "Not _very much help",
             HelpText = "",
         };
 
-        Application.Top.Add (vShortcut7);
-        vShortcut7.SetFocus ();
+        Application.Top.Add (noHelpShortcut);
+        noHelpShortcut.SetFocus ();
 
+        var framedShortcut = new Shortcut
+        {
+            Id = "framedShortcut",
+            X = 0,
+            Y = Pos.Bottom (noHelpShortcut) + 1,
+            Title = "Framed",
+            Key = Key.K.WithCtrl,
+            Text = "Resize frame",
+            BorderStyle = LineStyle.Dotted,
+            Arrangement = ViewArrangement.RightResizable | ViewArrangement.BottomResizable,
+        };
+        framedShortcut.Orientation = Orientation.Horizontal;
+        framedShortcut.Padding.Thickness = new (0, 1, 0, 0);
+        framedShortcut.Padding.Diagnostics = ViewDiagnosticFlags.Ruler;
+        framedShortcut.CommandView.Margin.ColorScheme = framedShortcut.CommandView.ColorScheme = Colors.ColorSchemes ["Error"];
+        framedShortcut.HelpView.Margin.ColorScheme = framedShortcut.HelpView.ColorScheme = Colors.ColorSchemes ["Dialog"];
+        framedShortcut.KeyView.Margin.ColorScheme = framedShortcut.KeyView.ColorScheme = Colors.ColorSchemes ["Menu"];
+        framedShortcut.ColorScheme = Colors.ColorSchemes ["Toplevel"];
+        Application.Top.Add (framedShortcut);
 
         // Horizontal
-        var hShortcut1 = new Shortcut
+        var progressShortcut = new Shortcut
         {
+            Id = "progressShortcut",
             X = Pos.Align (Alignment.Start, AlignmentModes.IgnoreFirstOrLast, 1),
-            Y = Pos.Bottom (eventLog) + 1,
+            Y = Pos.AnchorEnd () - 1,
             Key = Key.F7,
             HelpText = "Horizontal",
-            CanFocus = false
         };
 
-        hShortcut1.CommandView = new ProgressBar
+        progressShortcut.CommandView = new ProgressBar
         {
             Text = "Progress",
             Title = "P",
@@ -260,124 +341,163 @@ public class Shortcuts : Scenario
             Height = 1,
             ProgressBarStyle = ProgressBarStyle.Continuous
         };
-        hShortcut1.CommandView.Width = 10;
-        hShortcut1.CommandView.Height = 1;
-        hShortcut1.CommandView.CanFocus = false;
+        progressShortcut.CommandView.Width = 10;
+        progressShortcut.CommandView.Height = 1;
+        progressShortcut.CommandView.CanFocus = false;
 
         Timer timer = new (10)
         {
             AutoReset = true,
         };
         timer.Elapsed += (o, args) =>
-                         {
-                             if (hShortcut1.CommandView is ProgressBar pb)
-                             {
-                                 if (pb.Fraction == 1.0)
-                                 {
-                                     pb.Fraction = 0;
-                                 }
-                                 pb.Fraction += 0.01f;
+        {
+            if (progressShortcut.CommandView is ProgressBar pb)
+            {
+                if (pb.Fraction == 1.0)
+                {
+                    pb.Fraction = 0;
+                }
+                pb.Fraction += 0.01f;
 
-                                 Application.Wakeup ();
+                Application.Wakeup ();
 
-                                 pb.SetNeedsDisplay ();
-                             }
-                         };
+                pb.SetNeedsDraw ();
+            }
+        };
         timer.Start ();
 
-        Application.Top.Add (hShortcut1);
+        Application.Top.Add (progressShortcut);
 
         var textField = new TextField ()
         {
             Text = "Edit me",
             Width = 10,
             Height = 1,
-            CanFocus = true
         };
 
-        var hShortcut2 = new Shortcut
+        var textFieldShortcut = new Shortcut
         {
-            Orientation = Orientation.Horizontal,
+            Id = "textFieldShortcut",
             X = Pos.Align (Alignment.Start, AlignmentModes.IgnoreFirstOrLast, 1),
-            Y = Pos.Top (hShortcut1),
+            Y = Pos.AnchorEnd () - 1,
             Key = Key.F8,
             HelpText = "TextField",
             CanFocus = true,
             CommandView = textField,
         };
+        textField.CanFocus = true;
 
-        Application.Top.Add (hShortcut2);
+        Application.Top.Add (textFieldShortcut);
 
-        var hShortcutBG = new Shortcut
+        var bgColorShortcut = new Shortcut
         {
-            Orientation = Orientation.Horizontal,
-            X = Pos.Align (Alignment.Start, AlignmentModes.IgnoreFirstOrLast, 1) - 1,
-            Y = Pos.Top (hShortcut2),
+            Id = "bgColorShortcut",
+            X = Pos.Align (Alignment.Start, AlignmentModes.IgnoreFirstOrLast, 1),
+            Y = Pos.AnchorEnd (),
             Key = Key.F9,
-            HelpText = "BG Color",
-            CanFocus = false
+            HelpText = "Cycles BG Color",
         };
 
         var bgColor = new ColorPicker16 ()
         {
             BoxHeight = 1,
             BoxWidth = 1,
-            CanFocus = false
         };
+
+        bgColorShortcut.Selecting += (o, args) =>
+                                     {
+                                         //args.Cancel = true;
+                                     };
+
+        bgColorShortcut.Accepting += (o, args) =>
+                                     {
+                                         if (bgColor.SelectedColor == ColorName16.White)
+                                         {
+                                             bgColor.SelectedColor = ColorName16.Black;
+
+                                             return;
+                                         }
+                                         bgColor.SelectedColor++;
+                                         args.Cancel = true;
+                                     };
+
         bgColor.ColorChanged += (o, args) =>
-                                {
-                                    Application.Top.ColorScheme = new ColorScheme (Application.Top.ColorScheme)
-                                    {
-                                        Normal = new Attribute (Application.Top.ColorScheme.Normal.Foreground, args.CurrentValue),
-                                    };
-                                };
-        hShortcutBG.CommandView = bgColor;
-
-        Application.Top.Add (hShortcutBG);
-
-        var hShortcut3 = new Shortcut
         {
-            Orientation = Orientation.Horizontal,
+            eventSource.Add ($"ColorChanged: {o.GetType ().Name} - {args.CurrentValue}");
+            eventLog.MoveDown ();
+
+            Application.Top.ColorScheme = new ColorScheme (Application.Top.ColorScheme)
+            {
+                Normal = new Attribute (Application.Top.ColorScheme.Normal.Foreground, args.CurrentValue),
+            };
+        };
+        bgColorShortcut.CommandView = bgColor;
+
+        Application.Top.Add (bgColorShortcut);
+
+        var appQuitShortcut = new Shortcut
+        {
+            Id = "appQuitShortcut",
             X = Pos.Align (Alignment.Start, AlignmentModes.IgnoreFirstOrLast, 1),
-            Y = Pos.Top (hShortcut2),
+            Y = Pos.AnchorEnd () - 1,
             Key = Key.Esc,
             KeyBindingScope = KeyBindingScope.Application,
             Title = "Quit",
             HelpText = "App Scope",
-            CanFocus = false
         };
-        hShortcut3.Accept += (o, args) =>
-                            {
-                                Application.RequestStop ();
-                            };
+        appQuitShortcut.Accepting += (o, args) =>
+        {
+            Application.RequestStop ();
+        };
 
-        Application.Top.Add (hShortcut3);
+        Application.Top.Add (appQuitShortcut);
 
         foreach (View sh in Application.Top.Subviews.Where (v => v is Shortcut)!)
         {
             if (sh is Shortcut shortcut)
             {
-                shortcut.Accept += (o, args) =>
-                                   {
-                                       eventSource.Add ($"Accept: {shortcut!.CommandView.Text}");
-                                       eventLog.MoveDown ();
-                                       args.Handled = true;
-                                   };
+                shortcut.Selecting += (o, args) =>
+                {
+                    if (args.Cancel)
+                    {
+                        return;
+                    }
+                    eventSource.Add ($"{shortcut!.Id}.Selecting: {shortcut!.CommandView.Text} {shortcut!.CommandView.GetType ().Name}");
+                    eventLog.MoveDown ();
+                };
 
-                shortcut.CommandView.Accept += (o, args) =>
-                                               {
-                                                   eventSource.Add ($"CommandView.Accept: {shortcut!.CommandView.Text}");
-                                                   eventLog.MoveDown ();
-                                               };
+                shortcut.CommandView.Selecting += (o, args) =>
+                {
+                    if (args.Cancel)
+                    {
+                        return;
+                    }
+                    eventSource.Add ($"{shortcut!.Id}.CommandView.Selecting: {shortcut!.CommandView.Text} {shortcut!.CommandView.GetType ().Name}");
+                    eventLog.MoveDown ();
+                    args.Cancel = true;
+                };
+
+                shortcut.Accepting += (o, args) =>
+                {
+                    eventSource.Add ($"{shortcut!.Id}.Accepting: {shortcut!.CommandView.Text} {shortcut!.CommandView.GetType ().Name}");
+                    eventLog.MoveDown ();
+                    // We don't want this to exit the Scenario
+                    args.Cancel = true;
+                };
+
+                shortcut.CommandView.Accepting += (o, args) =>
+                {
+                    eventSource.Add ($"{shortcut!.Id}.CommandView.Accepting: {shortcut!.CommandView.Text} {shortcut!.CommandView.GetType ().Name}");
+                    eventLog.MoveDown ();
+                };
             }
         }
-
-        //((CheckBox)vShortcut5.CommandView).OnToggle ();
     }
 
-    private void Button_Clicked (object sender, HandledEventArgs e)
+    private void Button_Clicked (object sender, CommandEventArgs e)
     {
-        //e.Cancel = true;
-        MessageBox.Query ("Hi", $"You clicked {sender}"); 
+        e.Cancel = true;
+        View view = sender as View;
+        MessageBox.Query ("Hi", $"You clicked {view!.Text}", "_Ok");
     }
 }

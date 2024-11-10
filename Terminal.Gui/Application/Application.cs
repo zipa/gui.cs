@@ -149,7 +149,6 @@ public static partial class Application
         }
 
         TopLevels.Clear ();
-        Current = null;
 #if DEBUG_IDISPOSABLE
 
         // Don't dispose the Top. It's up to caller dispose it
@@ -186,6 +185,8 @@ public static partial class Application
             Driver = null;
         }
 
+        _screen = null;
+
         // Don't reset ForceDriver; it needs to be set before Init is called.
         //ForceDriver = string.Empty;
         //Force16Colors = false;
@@ -195,10 +196,11 @@ public static partial class Application
         NotifyNewRunState = null;
         NotifyStopRunState = null;
         MouseGrabView = null;
-        IsInitialized = false;
+        Initialized = false;
 
         // Mouse
-        MouseEnteredView = null;
+        _lastMousePosition = null;
+        _cachedViewsUnderMouse.Clear ();
         WantContinuousButtonPressedView = null;
         MouseEvent = null;
         GrabbedMouse = null;
@@ -214,8 +216,6 @@ public static partial class Application
         Navigation = null;
 
         AddApplicationKeyBindings ();
-
-        Colors.Reset ();
 
         // Reset synchronization context to allow the user to run async/await,
         // as the main loop has been ended, the synchronization context from

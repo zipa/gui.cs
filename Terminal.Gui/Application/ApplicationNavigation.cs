@@ -1,5 +1,7 @@
 #nullable enable
 
+using System.Diagnostics;
+
 namespace Terminal.Gui;
 
 /// <summary>
@@ -25,7 +27,10 @@ public class ApplicationNavigation
     /// <summary>
     ///     Gets the most focused <see cref="View"/> in the application, if there is one.
     /// </summary>
-    public View? GetFocused () { return _focused; }
+    public View? GetFocused ()
+    {
+        return _focused;
+    }
 
     /// <summary>
     ///     Gets whether <paramref name="view"/> is in the Subview hierarchy of <paramref name="start"/>.
@@ -75,6 +80,7 @@ public class ApplicationNavigation
         {
             return;
         }
+        Debug.Assert (value is null or { CanFocus: true, HasFocus: true });
 
         _focused = value;
 
@@ -98,6 +104,6 @@ public class ApplicationNavigation
     /// </returns>
     public bool AdvanceFocus (NavigationDirection direction, TabBehavior? behavior)
     {
-        return Application.Current is { } && Application.Current.AdvanceFocus (direction, behavior);
+        return Application.Top is { } && Application.Top.AdvanceFocus (direction, behavior);
     }
 }

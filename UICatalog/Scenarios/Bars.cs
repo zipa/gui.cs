@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using Terminal.Gui;
@@ -28,7 +29,7 @@ public class Bars : Scenario
     // QuitKey and it only sticks if changed after init
     private void App_Loaded (object sender, EventArgs e)
     {
-        Application.Top.Title = GetQuitKeyAndName ();
+        Application.Top!.Title = GetQuitKeyAndName ();
 
         ObservableCollection<string> eventSource = new ();
         ListView eventLog = new ListView ()
@@ -116,7 +117,7 @@ public class Bars : Scenario
             //Width = Dim.Percent (40),
             Orientation = Orientation.Vertical,
         };
-            ConfigureMenu (bar);
+        ConfigureMenu (bar);
 
         menuLikeExamples.Add (bar);
 
@@ -135,8 +136,74 @@ public class Bars : Scenario
             Y = Pos.Bottom (label),
         };
         ConfigureMenu (bar);
+        bar.Arrangement = ViewArrangement.RightResizable;
 
         menuLikeExamples.Add (bar);
+
+        label = new Label ()
+        {
+            Title = "PopOver Menu (Right click to show):",
+            X = Pos.Right (bar) + 1,
+            Y = Pos.Top (label),
+        };
+        menuLikeExamples.Add (label);
+
+        Menuv2 popOverMenu  = new Menuv2
+        {
+            Id = "popupMenu",
+            X = Pos.Left (label),
+            Y = Pos.Bottom (label),
+        };
+        ConfigureMenu (popOverMenu);
+
+        popOverMenu.Arrangement = ViewArrangement.Overlapped;
+        popOverMenu.Visible = false;
+        //popOverMenu.Enabled = false;
+
+        var toggleShortcut = new Shortcut
+        {
+            Title = "Toggle Hide",
+            Text = "App",
+            KeyBindingScope = KeyBindingScope.Application,
+            Key = Key.F4.WithCtrl,
+        };
+        popOverMenu.Add (toggleShortcut);
+
+        popOverMenu.Accepting += PopOverMenuOnAccept;
+
+        void PopOverMenuOnAccept (object o, CommandEventArgs args)
+        {
+            if (popOverMenu.Visible)
+            {
+                popOverMenu.Visible = false;
+            }
+            else
+            {
+                popOverMenu.Visible = true;
+                popOverMenu.SetFocus ();
+            }
+        }
+
+        menuLikeExamples.Add (popOverMenu);
+
+        menuLikeExamples.MouseClick += MenuLikeExamplesMouseClick;
+
+        void MenuLikeExamplesMouseClick (object sender, MouseEventArgs e)
+        {
+            if (e.Flags.HasFlag (MouseFlags.Button3Clicked))
+            {
+                popOverMenu.X = e.Position.X;
+                popOverMenu.Y = e.Position.Y;
+                popOverMenu.Visible = true;
+                //popOverMenu.Enabled = popOverMenu.Visible;
+                popOverMenu.SetFocus ();
+            }
+            else
+            {
+                popOverMenu.Visible = false;
+                //popOverMenu.Enabled = popOverMenu.Visible;
+            }
+        }
 
         FrameView statusBarLikeExamples = new ()
         {
@@ -189,11 +256,11 @@ public class Bars : Scenario
             {
                 foreach (Shortcut sh in barView.Subviews.Where (s => s is Shortcut)!)
                 {
-                    sh.Accept += (o, args) =>
+                    sh.Accepting += (o, args) =>
                                  {
                                      eventSource.Add ($"Accept: {sh!.SuperView.Id} {sh!.CommandView.Text}");
                                      eventLog.MoveDown ();
-                                     args.Handled = true;
+                                     //args.Handled = true;
                                  };
                 }
             }
@@ -209,7 +276,7 @@ public class Bars : Scenario
 
     //private void ShowContextMenu (object s, MouseEventEventArgs e)
     //{
-    //    if (e.MouseEvent.Flags != MouseFlags.Button3Clicked)
+    //    if (e.Flags != MouseFlags.Button3Clicked)
     //    {
     //        return;
     //    }
@@ -217,8 +284,8 @@ public class Bars : Scenario
     //    var contextMenu = new Bar
     //    {
     //        Id = "contextMenu",
-    //        X = e.MouseEvent.Position.X,
-    //        Y = e.MouseEvent.Position.Y,
+    //        X = e.Position.X,
+    //        Y = e.Position.Y,
     //        Width = Dim.Auto (DimAutoStyle.Content),
     //        Height = Dim.Auto (DimAutoStyle.Content),
     //        Orientation = Orientation.Vertical,
@@ -321,7 +388,7 @@ public class Bars : Scenario
 
     //    contextMenu.Initialized += Menu_Initialized;
 
-    //    void Application_MouseEvent (object sender, MouseEvent e)
+    //    void Application_MouseEvent (object sender, MouseEventArgs e)
     //    {
     //        // If user clicks outside of the menuWindow, close it
     //        if (!contextMenu.Frame.Contains (e.Position.X, e.Position.Y))
@@ -349,20 +416,23 @@ public class Bars : Scenario
             Title = "_File",
             HelpText = "File Menu",
             Key = Key.D0.WithAlt,
+            HighlightStyle = HighlightStyle.Hover
         };
 
         var editMenuBarItem = new Shortcut
         {
             Title = "_Edit",
             HelpText = "Edit Menu",
-            Key = Key.D1.WithAlt
+            Key = Key.D1.WithAlt,
+            HighlightStyle = HighlightStyle.Hover
         };
 
         var helpMenuBarItem = new Shortcut
         {
             Title = "_Help",
             HelpText = "Halp Menu",
-            Key = Key.D2.WithAlt
+            Key = Key.D2.WithAlt,
+            HighlightStyle = HighlightStyle.Hover
         };
 
         bar.Add (fileMenuBarItem, editMenuBarItem, helpMenuBarItem);
@@ -376,6 +446,7 @@ public class Bars : Scenario
             Title = "Z_igzag",
             Key = Key.I.WithCtrl,
             Text = "Gonna zig zag",
+            HighlightStyle = HighlightStyle.Hover
         };
 
         var shortcut2 = new Shortcut
@@ -383,6 +454,15 @@ public class Bars : Scenario
             Title = "Za_G",
             Text = "Gonna zag",
             Key = Key.G.WithAlt,
+            HighlightStyle = HighlightStyle.Hover
+        };
+
+        var shortcut3 = new Shortcut
+        {
+            Title = "_Three",
+            Text = "The 3rd item",
+            Key = Key.D3.WithAlt,
+            HighlightStyle = HighlightStyle.Hover
         };
 
         var line = new Line ()
@@ -391,15 +471,18 @@ public class Bars : Scenario
             Orientation = Orientation.Horizontal,
             CanFocus = false,
         };
+        // HACK: Bug in Line
+        line.Orientation = Orientation.Vertical;
+        line.Orientation = Orientation.Horizontal;
 
-        var shortcut3 = new Shortcut
+        var shortcut4 = new Shortcut
         {
-            Title = "_Three",
-            Text = "The 3rd item",
+            Title = "_Four",
+            Text = "Below the line",
             Key = Key.D3.WithAlt,
+            HighlightStyle = HighlightStyle.Hover
         };
-
-        bar.Add (shortcut1, shortcut2, line, shortcut3);
+        bar.Add (shortcut1, shortcut2, shortcut3, line, shortcut4);
     }
 
     public void ConfigStatusBar (Bar bar)
@@ -440,14 +523,14 @@ public class Bars : Scenario
             Text = "I'll Hide",
             // Visible = false
         };
-        button1.Accept += Button_Clicked;
+        button1.Accepting += Button_Clicked;
         bar.Add (button1);
 
-        shortcut.Accept += (s, e) =>
+        shortcut.Accepting += (s, e) =>
                                                     {
                                                         button1.Visible = !button1.Visible;
                                                         button1.Enabled = button1.Visible;
-                                                        e.Handled = false;
+                                                        e.Cancel = false;
                                                     };
 
         bar.Add (new Label
@@ -461,7 +544,7 @@ public class Bars : Scenario
         {
             Text = "Or me!",
         };
-        button2.Accept += (s, e) => Application.RequestStop ();
+        button2.Accepting += (s, e) => Application.RequestStop ();
 
         bar.Add (button2);
 

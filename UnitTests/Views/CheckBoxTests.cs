@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Xunit.Abstractions;
+// ReSharper disable AccessToModifiedClosure
 
 namespace Terminal.Gui.ViewsTests;
 
@@ -35,6 +36,7 @@ public class CheckBoxTests (ITestOutputHelper output)
             Height = height,
             Text = text
         };
+        checkBox.Layout ();
 
         Assert.Equal (new (expectedWidth, expectedHeight), checkBox.Frame.Size);
         Assert.Equal (new (expectedWidth, expectedHeight), checkBox.Viewport.Size);
@@ -93,44 +95,12 @@ public class CheckBoxTests (ITestOutputHelper output)
     }
 
     [Fact]
-    [SetupFakeDriver]
-    public void AllowNoneChecked_Get_Set ()
-    {
-        var checkBox = new CheckBox { Text = "Check this out 你" };
-
-        Assert.Equal (CheckState.UnChecked, checkBox.CheckedState);
-        Assert.True (checkBox.NewKeyDownEvent (Key.Space));
-        Assert.Equal (CheckState.Checked, checkBox.CheckedState);
-        Assert.True (checkBox.NewMouseEvent (new () { Position = new (0, 0), Flags = MouseFlags.Button1Clicked }));
-        Assert.Equal (CheckState.UnChecked, checkBox.CheckedState);
-
-        checkBox.AllowCheckStateNone = true;
-        Assert.True (checkBox.NewKeyDownEvent (Key.Space));
-        Assert.Equal (CheckState.None, checkBox.CheckedState);
-        checkBox.Draw ();
-
-        TestHelpers.AssertDriverContentsWithFrameAre (
-                                                      @$"
-{CM.Glyphs.CheckStateNone} Check this out 你",
-                                                      output
-                                                     );
-        Assert.True (checkBox.NewMouseEvent (new () { Position = new (0, 0), Flags = MouseFlags.Button1Clicked }));
-        Assert.Equal (CheckState.Checked, checkBox.CheckedState);
-        Assert.True (checkBox.NewKeyDownEvent (Key.Space));
-        Assert.Equal (CheckState.UnChecked, checkBox.CheckedState);
-        Assert.True (checkBox.NewMouseEvent (new () { Position = new (0, 0), Flags = MouseFlags.Button1Clicked }));
-        Assert.Equal (CheckState.None, checkBox.CheckedState);
-
-        checkBox.AllowCheckStateNone = false;
-        Assert.Equal (CheckState.UnChecked, checkBox.CheckedState);
-    }
-
-    [Fact]
     public void Constructors_Defaults ()
     {
         var ckb = new CheckBox ();
         Assert.True (ckb.Width is DimAuto);
         Assert.True (ckb.Height is DimAuto);
+        ckb.Layout ();
         Assert.Equal (CheckState.UnChecked, ckb.CheckedState);
         Assert.False (ckb.AllowCheckStateNone);
         Assert.Equal (string.Empty, ckb.Text);
@@ -141,6 +111,7 @@ public class CheckBoxTests (ITestOutputHelper output)
         ckb = new () { Text = "Test", CheckedState = CheckState.Checked };
         Assert.True (ckb.Width is DimAuto);
         Assert.True (ckb.Height is DimAuto);
+        ckb.Layout ();
         Assert.Equal (CheckState.Checked, ckb.CheckedState);
         Assert.False (ckb.AllowCheckStateNone);
         Assert.Equal ("Test", ckb.Text);
@@ -151,6 +122,7 @@ public class CheckBoxTests (ITestOutputHelper output)
         ckb = new () { Text = "Test", X = 1, Y = 2 };
         Assert.True (ckb.Width is DimAuto);
         Assert.True (ckb.Height is DimAuto);
+        ckb.Layout ();
         Assert.Equal (CheckState.UnChecked, ckb.CheckedState);
         Assert.False (ckb.AllowCheckStateNone);
         Assert.Equal ("Test", ckb.Text);
@@ -161,6 +133,7 @@ public class CheckBoxTests (ITestOutputHelper output)
         ckb = new () { Text = "Test", X = 3, Y = 4, CheckedState = CheckState.Checked };
         Assert.True (ckb.Width is DimAuto);
         Assert.True (ckb.Height is DimAuto);
+        ckb.Layout ();
         Assert.Equal (CheckState.Checked, ckb.CheckedState);
         Assert.False (ckb.AllowCheckStateNone);
         Assert.Equal ("Test", ckb.Text);
@@ -169,50 +142,89 @@ public class CheckBoxTests (ITestOutputHelper output)
         Assert.Equal (new (3, 4, 6, 1), ckb.Frame);
     }
 
+
+
     [Fact]
-    public void KeyBindings_Command ()
+    [SetupFakeDriver]
+    public void AllowCheckStateNone_Get_Set ()
     {
-        var toggled = false;
+        var checkBox = new CheckBox { Text = "Check this out 你" };
+
+        checkBox.HasFocus = true;
+        Assert.True (checkBox.HasFocus);
+        Assert.Equal (CheckState.UnChecked, checkBox.CheckedState);
+
+        // Select with keyboard
+        Assert.True (checkBox.NewKeyDownEvent (Key.Space));
+        Assert.Equal (CheckState.Checked, checkBox.CheckedState);
+
+        // Select with mouse
+        Assert.True (checkBox.NewMouseEvent (new () { Position = new (0, 0), Flags = MouseFlags.Button1Clicked }));
+        Assert.Equal (CheckState.UnChecked, checkBox.CheckedState);
+
+        checkBox.AllowCheckStateNone = true;
+        Assert.True (checkBox.NewKeyDownEvent (Key.Space));
+        Assert.Equal (CheckState.None, checkBox.CheckedState);
+        checkBox.Draw ();
+
+        checkBox.AllowCheckStateNone = false;
+        Assert.Equal (CheckState.UnChecked, checkBox.CheckedState);
+    }
+
+    [Fact]
+    public void Commands_Select ()
+    {
+        Application.Navigation = new ApplicationNavigation ();
+        Application.Top = new Toplevel ();
+        View otherView = new () { CanFocus = true };
         var ckb = new CheckBox ();
-        ckb.CheckedStateChanging += (s, e) => toggled = true;
+        Application.Top.Add (ckb, otherView);
+        Application.Top.SetFocus ();
+        Assert.True (ckb.HasFocus);
+
+        int checkedStateChangingCount = 0;
+        ckb.CheckedStateChanging += (s, e) => checkedStateChangingCount++;
+
+        int selectCount = 0;
+        ckb.Selecting += (s, e) => selectCount++;
+
+        int acceptCount = 0;
+        ckb.Accepting += (s, e) => acceptCount++;
 
         Assert.Equal (CheckState.UnChecked, ckb.CheckedState);
-        Assert.False (toggled);
+        Assert.Equal (0, checkedStateChangingCount);
+        Assert.Equal (0, selectCount);
+        Assert.Equal (0, acceptCount);
         Assert.Equal (Key.Empty, ckb.HotKey);
 
+        // Test while focused
         ckb.Text = "_Test";
         Assert.Equal (Key.T, ckb.HotKey);
-        Assert.True (ckb.NewKeyDownEvent (Key.T));
+        ckb.NewKeyDownEvent (Key.T);
         Assert.Equal (CheckState.Checked, ckb.CheckedState);
-        Assert.True (toggled);
+        Assert.Equal (1, checkedStateChangingCount);
+        Assert.Equal (1, selectCount);
+        Assert.Equal (0, acceptCount);
 
         ckb.Text = "T_est";
-        toggled = false;
         Assert.Equal (Key.E, ckb.HotKey);
-        Assert.True (ckb.NewKeyDownEvent (Key.E.WithAlt));
-        Assert.True (toggled);
-        Assert.Equal (CheckState.UnChecked, ckb.CheckedState);
+        ckb.NewKeyDownEvent (Key.E.WithAlt);
+        Assert.Equal (2, checkedStateChangingCount);
+        Assert.Equal (2, selectCount);
+        Assert.Equal (0, acceptCount);
 
-        toggled = false;
-        Assert.Equal (Key.E, ckb.HotKey);
-        Assert.True (ckb.NewKeyDownEvent (Key.E));
-        Assert.True (toggled);
-        Assert.Equal (CheckState.Checked, ckb.CheckedState);
+        ckb.NewKeyDownEvent (Key.Space);
+        Assert.Equal (3, checkedStateChangingCount);
+        Assert.Equal (3, selectCount);
+        Assert.Equal (0, acceptCount);
 
-        toggled = false;
-        Assert.True (ckb.NewKeyDownEvent (Key.Space));
-        Assert.True (toggled);
-        Assert.Equal (CheckState.UnChecked, ckb.CheckedState);
+        ckb.NewKeyDownEvent (Key.Enter);
+        Assert.Equal (3, checkedStateChangingCount);
+        Assert.Equal (3, selectCount);
+        Assert.Equal (1, acceptCount);
 
-        toggled = false;
-        Assert.True (ckb.NewKeyDownEvent (Key.Space));
-        Assert.True (toggled);
-        Assert.Equal (CheckState.Checked, ckb.CheckedState);
-
-        toggled = false;
-        Assert.False (ckb.NewKeyDownEvent (Key.Enter));
-        Assert.False (toggled);
-        Assert.Equal (CheckState.Checked, ckb.CheckedState);
+        Application.Top.Dispose ();
+        Application.ResetState (false);
     }
 
     [Fact]
@@ -221,7 +233,7 @@ public class CheckBoxTests (ITestOutputHelper output)
         var ckb = new CheckBox ();
         var acceptInvoked = false;
 
-        ckb.Accept += ViewOnAccept;
+        ckb.Accepting += ViewOnAccept;
 
         bool? ret = ckb.InvokeCommand (Command.Accept);
         Assert.True (ret);
@@ -229,12 +241,87 @@ public class CheckBoxTests (ITestOutputHelper output)
 
         return;
 
-        void ViewOnAccept (object sender, HandledEventArgs e)
+        void ViewOnAccept (object sender, CommandEventArgs e)
         {
             acceptInvoked = true;
-            e.Handled = true;
+            e.Cancel = true;
         }
     }
+
+    #region Mouse Tests
+
+    [Fact]
+    [SetupFakeDriver]
+    public void Mouse_Click ()
+    {
+        var checkBox = new CheckBox { Text = "_Checkbox" };
+        Assert.True (checkBox.CanFocus);
+
+        int checkedStateChangingCount = 0;
+        checkBox.CheckedStateChanging += (s, e) => checkedStateChangingCount++;
+
+        int selectCount = 0;
+        checkBox.Selecting += (s, e) => selectCount++;
+
+        int acceptCount = 0;
+        checkBox.Accepting += (s, e) => acceptCount++;
+
+        checkBox.HasFocus = true;
+        Assert.True (checkBox.HasFocus);
+        Assert.Equal (CheckState.UnChecked, checkBox.CheckedState);
+        Assert.Equal (0, checkedStateChangingCount);
+        Assert.Equal (0, selectCount);
+        Assert.Equal (0, acceptCount);
+
+        Assert.True (checkBox.NewMouseEvent (new () { Position = new (0, 0), Flags = MouseFlags.Button1Clicked }));
+        Assert.Equal (CheckState.Checked, checkBox.CheckedState);
+        Assert.Equal (1, checkedStateChangingCount);
+        Assert.Equal (1, selectCount);
+        Assert.Equal (0, acceptCount);
+
+        Assert.True (checkBox.NewMouseEvent (new () { Position = new (0, 0), Flags = MouseFlags.Button1Clicked }));
+        Assert.Equal (CheckState.UnChecked, checkBox.CheckedState);
+        Assert.Equal (2, checkedStateChangingCount);
+        Assert.Equal (2, selectCount);
+        Assert.Equal (0, acceptCount);
+
+        checkBox.AllowCheckStateNone = true;
+        Assert.True (checkBox.NewMouseEvent (new () { Position = new (0, 0), Flags = MouseFlags.Button1Clicked }));
+        Assert.Equal (CheckState.None, checkBox.CheckedState);
+        Assert.Equal (3, checkedStateChangingCount);
+        Assert.Equal (3, selectCount);
+        Assert.Equal (0, acceptCount);
+    }
+
+
+    [Fact]
+    [SetupFakeDriver]
+    public void Mouse_DoubleClick ()
+    {
+        var checkBox = new CheckBox { Text = "_Checkbox" };
+        Assert.True (checkBox.CanFocus);
+
+        int checkedStateChangingCount = 0;
+        checkBox.CheckedStateChanging += (s, e) => checkedStateChangingCount++;
+
+        int selectCount = 0;
+        checkBox.Selecting += (s, e) => selectCount++;
+
+        int acceptCount = 0;
+        checkBox.Accepting += (s, e) => acceptCount++;
+
+        checkBox.HasFocus = true;
+        Assert.True (checkBox.HasFocus);
+        Assert.Equal (CheckState.UnChecked, checkBox.CheckedState);
+        Assert.Equal (0, checkedStateChangingCount);
+        Assert.Equal (0, selectCount);
+        Assert.Equal (0, acceptCount);
+
+        Assert.True (checkBox.NewMouseEvent (new () { Position = new (0, 0), Flags = MouseFlags.Button1DoubleClicked }));
+
+    }
+
+#endregion Mouse Tests
 
     [Fact]
     [AutoInitShutdown]
@@ -272,7 +359,7 @@ public class CheckBoxTests (ITestOutputHelper output)
         Assert.Equal (new (0, 0, 30, 5), pos);
 
         checkBox.CheckedState = CheckState.Checked;
-        Application.Refresh ();
+        Application.LayoutAndDraw ();
 
         expected = @$"
 ┌┤Test Demo 你├──────────────┐
@@ -313,7 +400,7 @@ public class CheckBoxTests (ITestOutputHelper output)
         var top = new Toplevel ();
         top.Add (win);
 
-        Application.Begin (top);
+        RunState rs = Application.Begin (top);
         ((FakeDriver)Application.Driver!).SetBufferSize (30, 6);
 
         Assert.Equal (Alignment.Fill, checkBox1.TextAlignment);
@@ -334,12 +421,15 @@ public class CheckBoxTests (ITestOutputHelper output)
         Assert.Equal (new (0, 0, 30, 6), pos);
 
         checkBox1.CheckedState = CheckState.Checked;
+        Application.RunIteration (ref rs);
         Assert.Equal (new (1, 1, 25, 1), checkBox1.Frame);
         Assert.Equal (_size25x1, checkBox1.TextFormatter.ConstrainToSize);
+
         checkBox2.CheckedState = CheckState.Checked;
+        Application.RunIteration (ref rs);
         Assert.Equal (new (1, 2, 25, 1), checkBox2.Frame);
         Assert.Equal (_size25x1, checkBox2.TextFormatter.ConstrainToSize);
-        Application.Refresh ();
+        Application.LayoutAndDraw ();
 
         expected = @$"
 ┌┤Test Demo 你├──────────────┐
@@ -390,7 +480,7 @@ public class CheckBoxTests (ITestOutputHelper output)
         Assert.Equal (new (0, 0, 30, 5), pos);
 
         checkBox.CheckedState = CheckState.Checked;
-        Application.Refresh ();
+        Application.LayoutAndDraw ();
 
         expected = @$"
 ┌┤Test Demo 你├──────────────┐
@@ -441,7 +531,7 @@ public class CheckBoxTests (ITestOutputHelper output)
         Assert.Equal (new (0, 0, 30, 5), pos);
 
         checkBox.CheckedState = CheckState.Checked;
-        Application.Refresh ();
+        Application.LayoutAndDraw ();
 
         expected = @$"
 ┌┤Test Demo 你├──────────────┐
@@ -457,34 +547,65 @@ public class CheckBoxTests (ITestOutputHelper output)
     }
 
     [Fact]
-    public void HotKey_Command_Fires_Accept ()
+    public void HotKey_Command_Does_Not_Fire_Accept ()
     {
         var cb = new CheckBox ();
         var accepted = false;
 
-        cb.Accept += CheckBoxOnAccept;
+        cb.Accepting += CheckBoxOnAccept;
         cb.InvokeCommand (Command.HotKey);
 
-        Assert.True (accepted);
+        Assert.False (accepted);
 
         return;
 
-        void CheckBoxOnAccept (object sender, HandledEventArgs e) { accepted = true; }
+        void CheckBoxOnAccept (object sender, CommandEventArgs e) { accepted = true; }
+    }
+
+
+    [Theory]
+    [InlineData (CheckState.Checked)]
+    [InlineData (CheckState.UnChecked)]
+    [InlineData (CheckState.None)]
+    public void Selected_Handle_Event_Does_Not_Prevent_Change (CheckState initialState)
+    {
+        var ckb = new CheckBox { AllowCheckStateNone = true };
+        var checkedInvoked = false;
+
+        ckb.CheckedState = initialState;
+
+        ckb.Selecting += OnSelecting;
+
+        Assert.Equal (initialState, ckb.CheckedState);
+        bool? ret = ckb.InvokeCommand (Command.Select);
+        Assert.True (ret);
+        Assert.True (checkedInvoked);
+        Assert.NotEqual (initialState, ckb.CheckedState);
+
+        return;
+
+        void OnSelecting (object sender, CommandEventArgs e)
+        {
+            checkedInvoked = true;
+            e.Cancel = true;
+        }
     }
 
     [Theory]
     [InlineData (CheckState.Checked)]
     [InlineData (CheckState.UnChecked)]
     [InlineData (CheckState.None)]
-    public void Toggled_Cancel_Event_Prevents_Toggle (CheckState initialState)
+    public void CheckedStateChanging_Cancel_Event_Prevents_Change (CheckState initialState)
     {
         var ckb = new CheckBox { AllowCheckStateNone = true };
         var checkedInvoked = false;
 
-        ckb.CheckedStateChanging += CheckBoxToggle;
-
         ckb.CheckedState = initialState;
+
+        ckb.CheckedStateChanging += OnCheckedStateChanging;
+
         Assert.Equal (initialState, ckb.CheckedState);
+        // AdvanceCheckState returns false if the state was changed, true if it was cancelled, null if it was not changed
         bool? ret = ckb.AdvanceCheckState ();
         Assert.True (ret);
         Assert.True (checkedInvoked);
@@ -492,7 +613,7 @@ public class CheckBoxTests (ITestOutputHelper output)
 
         return;
 
-        void CheckBoxToggle (object sender, CancelEventArgs e)
+        void OnCheckedStateChanging (object sender, CancelEventArgs e)
         {
             checkedInvoked = true;
             e.Cancel = true;

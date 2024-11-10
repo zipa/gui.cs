@@ -40,7 +40,7 @@ public class Snake : Scenario
                           if (state.AdvanceState ())
                           {
                               // When updating from a Thread/Task always use Invoke
-                              Application.Invoke (() => { snakeView.SetNeedsDisplay (); });
+                              Application.Invoke (() => { snakeView.SetNeedsDraw (); });
                           }
 
                           long wait = state.SleepAfterAdvancingState - sw.ElapsedMilliseconds;
@@ -314,12 +314,10 @@ public class Snake : Scenario
 
         public SnakeState State { get; }
 
-        public override void OnDrawContent (Rectangle viewport)
+        protected override bool OnDrawingContent ()
         {
-            base.OnDrawContent (viewport);
-
-            Driver.SetAttribute (white);
-            Clear ();
+            SetAttribute (white);
+            ClearViewport ();
 
             var canvas = new LineCanvas ();
 
@@ -351,36 +349,38 @@ public class Snake : Scenario
                 AddRune (p.Key.X, p.Key.Y, p.Value);
             }
 
-            Driver.SetAttribute (red);
+            SetAttribute (red);
             AddRune (State.Apple.X, State.Apple.Y, _appleRune);
-            Driver.SetAttribute (white);
+            SetAttribute (white);
+
+            return true;
         }
 
         // BUGBUG: Should (can) this use key bindings instead.
-        public override bool OnKeyDown (Key keyEvent)
+        protected override bool OnKeyDown (Key key)
         {
-            if (keyEvent.KeyCode == KeyCode.CursorUp)
+            if (key.KeyCode == KeyCode.CursorUp)
             {
                 State.PlannedDirection = Direction.Up;
 
                 return true;
             }
 
-            if (keyEvent.KeyCode == KeyCode.CursorDown)
+            if (key.KeyCode == KeyCode.CursorDown)
             {
                 State.PlannedDirection = Direction.Down;
 
                 return true;
             }
 
-            if (keyEvent.KeyCode == KeyCode.CursorLeft)
+            if (key.KeyCode == KeyCode.CursorLeft)
             {
                 State.PlannedDirection = Direction.Left;
 
                 return true;
             }
 
-            if (keyEvent.KeyCode == KeyCode.CursorRight)
+            if (key.KeyCode == KeyCode.CursorRight)
             {
                 State.PlannedDirection = Direction.Right;
 

@@ -74,14 +74,14 @@ public class LabelTests (ITestOutputHelper output)
         var label = new Label ();
         var accepted = false;
 
-        label.Accept += LabelOnAccept;
+        label.Accepting += LabelOnAccept;
         label.InvokeCommand (Command.HotKey);
 
         Assert.False (accepted);
 
         return;
 
-        void LabelOnAccept (object sender, HandledEventArgs e) { accepted = true; }
+        void LabelOnAccept (object sender, CommandEventArgs e) { accepted = true; }
     }
 
     [Fact]
@@ -111,7 +111,7 @@ public class LabelTests (ITestOutputHelper output)
 
         label.Text = "Say Hello 你 changed";
 
-        Application.Refresh ();
+        Application.LayoutAndDraw ();
 
         expected = @"
 ┌────────────────────────────┐
@@ -151,7 +151,7 @@ public class LabelTests (ITestOutputHelper output)
 
         label.Text = "Say Hello 你 changed";
 
-        Application.Refresh ();
+        Application.LayoutAndDraw ();
 
         expected = @"
 ┌────────────────────────────┐
@@ -192,7 +192,8 @@ public class LabelTests (ITestOutputHelper output)
 
         var top = new Toplevel ();
         top.Add (label);
-        Application.Begin (top);
+        RunState runState = Application.Begin (top);
+        Application.RunIteration (ref runState);
 
         Assert.False (label.TextFormatter.FillRemaining);
         Assert.False (tf1.FillRemaining);
@@ -210,13 +211,13 @@ This TextFormatter (tf2) with fill will be cleared on rewritten.       ",
                                                       output
                                                      );
 
-        Assert.False (label.NeedsDisplay);
-        Assert.False (label.LayoutNeeded);
-        Assert.False (label.SubViewNeedsDisplay);
+        Assert.False (label.NeedsDraw);
+        Assert.False (label.NeedsLayout);
+        Assert.False (label.SubViewNeedsDraw);
         label.Text = "This label is rewritten.";
-        Assert.True (label.NeedsDisplay);
-        Assert.True (label.LayoutNeeded);
-        //Assert.False (label.SubViewNeedsDisplay);
+        Assert.True (label.NeedsDraw);
+        Assert.True (label.NeedsLayout);
+        //Assert.False (label.SubViewNeedsDraw);
         label.Draw ();
 
         tf1.Text = "This TextFormatter (tf1) is rewritten.";
@@ -243,6 +244,7 @@ This TextFormatter (tf2) is rewritten.                                 ",
         var top = new Toplevel ();
         top.Add (label);
         Application.Begin (top);
+        Application.LayoutAndDraw ();
 
         Assert.Equal (new (0, 0, 16, 1), label.Frame);
 
@@ -263,7 +265,7 @@ Demo Simple Rune
         var top = new Toplevel ();
         top.Add (label);
         Application.Begin (top);
-
+        Application.LayoutAndDraw ();
         Assert.NotNull (label.Width);
         Assert.NotNull (label.Height);
 
@@ -299,6 +301,7 @@ e
         var top = new Toplevel ();
         top.Add (label);
         Application.Begin (top);
+        Application.LayoutAndDraw ();
 
         var expected = @"
 デ
@@ -469,6 +472,7 @@ e
         var top = new Toplevel ();
         top.Add (label);
         Application.Begin (top);
+        Application.LayoutAndDraw ();
 
         Assert.Equal (new (0, 0, 6, 3), label.Frame);
         Assert.Equal (new (0, 0, 4, 1), label.Viewport);
@@ -492,7 +496,7 @@ e
         var top = new Toplevel ();
         top.Add (label);
         Application.Begin (top);
-
+        Application.LayoutAndDraw ();
         Assert.Equal (new (0, 0, 6, 2), label.Frame);
         Assert.Equal (new (0, 0, 4, 1), label.Viewport);
         Application.Begin (top);
@@ -1073,7 +1077,7 @@ e
         Assert.Equal (10, text.Length);
         label.Width = Dim.Fill () - text.Length;
         win.LayoutSubviews ();
-        win.Clear ();
+        win.ClearViewport ();
         win.Draw ();
 
         Assert.Equal (Rectangle.Empty, label.Frame);
@@ -1220,7 +1224,7 @@ e
         Assert.Equal (10, text.Length);
 
         //label.Width = Dim.Fill () - text.Length;
-        Application.Refresh ();
+        Application.LayoutAndDraw ();
 
         Assert.Equal (new (0, 0, 5, 1), label.Frame);
         Assert.Equal (new (5, 1), label.TextFormatter.ConstrainToSize);
@@ -1279,7 +1283,7 @@ e
         Assert.Equal (10, text.Length);
 
         //label.Width = Dim.Fill () - text.Length;
-        Application.Refresh ();
+        Application.LayoutAndDraw ();
 
         Assert.Equal (new (0, 0, 5, 1), label.Frame);
         Assert.Equal (new (5, 1), label.TextFormatter.ConstrainToSize);
@@ -1316,56 +1320,108 @@ e
         super.Dispose ();
     }
 
+
     [Fact]
-    public void Label_CanFocus_True_Get_Focus_By_Keyboard ()
+    public void CanFocus_False_HotKey_SetsFocus_Next ()
     {
-        Label label = new () { Text = "label" };
-        View view = new () { Text = "view", CanFocus = true };
+        View otherView = new ()
+        {
+            Text = "otherView",
+            CanFocus = true
+        };
+        Label label = new ()
+        {
+            Text = "_label"
+        };
+        View nextView = new ()
+        {
+            Text = "nextView",
+            CanFocus = true
+        };
         Application.Navigation = new ();
-        Application.Current = new ();
-        Application.Current.Add (label, view);
+        Application.Top = new ();
+        Application.Top.Add (otherView, label, nextView);
 
-        Application.Current.SetFocus ();
-        Assert.Equal (view, Application.Current.MostFocused);
-        Assert.False (label.CanFocus);
+        Application.Top.SetFocus ();
+        Assert.True (otherView.HasFocus);
+
+        Assert.True (Application.RaiseKeyDownEvent (label.HotKey));
+        Assert.False (otherView.HasFocus);
         Assert.False (label.HasFocus);
-        Assert.True (view.CanFocus);
-        Assert.True (view.HasFocus);
+        Assert.True (nextView.HasFocus);
 
-        // No focused view accepts Tab, and there's no other view to focus, so OnKeyDown returns false
-        Assert.False (Application.OnKeyDown (Key.Tab));
-        Assert.False (label.HasFocus);
-        Assert.True (view.HasFocus);
-
-        // Set label CanFocus to true
-        label.CanFocus = true;
-        Assert.False (label.HasFocus);
-        Assert.True (view.HasFocus);
-
-        // No focused view accepts Tab, but label can now be focused, so focus should move to it.
-        Assert.True (Application.OnKeyDown (Key.Tab));
-        Assert.True (label.HasFocus);
-        Assert.False (view.HasFocus);
-
-        Assert.True (Application.OnKeyDown (Key.Tab));
-        Assert.False (label.HasFocus);
-        Assert.True (view.HasFocus);
-
-        Application.Current.Dispose ();
+        Application.Top.Dispose ();
         Application.ResetState ();
     }
 
 
     [Fact]
-    public void Label_CanFocus_True_Get_Focus_By_Mouse ()
+    public void CanFocus_False_MouseClick_SetsFocus_Next ()
     {
+        View otherView = new () { X = 0, Y = 0, Width = 1, Height = 1, Id = "otherView", CanFocus = true };
+        Label label = new () { X = 0, Y = 1, Text = "_label" };
+        View nextView = new () { X = Pos.Right (label), Y = Pos.Top (label), Width = 1, Height = 1, Id = "nextView", CanFocus = true };
+        Application.Navigation = new ();
+        Application.Top = new ();
+        Application.Top.Add (otherView, label, nextView);
+        Application.Top.Layout ();
+
+        Application.Top.SetFocus ();
+
+        // click on label
+        Application.RaiseMouseEvent (new () { ScreenPosition = label.Frame.Location, Flags = MouseFlags.Button1Clicked });
+        Assert.False (label.HasFocus);
+        Assert.True (nextView.HasFocus);
+
+        Application.Top.Dispose ();
+        Application.ResetState ();
+    }
+
+    [Fact]
+    public void CanFocus_True_HotKey_SetsFocus ()
+    {
+        Label label = new ()
+        {
+            Text = "_label",
+            CanFocus = true
+        };
+        View view = new ()
+        {
+            Text = "view",
+            CanFocus = true
+        };
+        Application.Navigation = new ();
+        Application.Top = new ();
+        Application.Top.Add (label, view);
+
+        view.SetFocus ();
+        Assert.True (label.CanFocus);
+        Assert.False (label.HasFocus);
+        Assert.True (view.CanFocus);
+        Assert.True (view.HasFocus);
+
+        // No focused view accepts Tab, and there's no other view to focus, so OnKeyDown returns false
+        Assert.True (Application.RaiseKeyDownEvent (label.HotKey));
+        Assert.True (label.HasFocus);
+        Assert.False (view.HasFocus);
+
+        Application.Top.Dispose ();
+        Application.ResetState ();
+    }
+
+
+    [Fact]
+    public void CanFocus_True_MouseClick_Focuses ()
+    {
+        Application.Navigation = new ();
         Label label = new ()
         {
             Text = "label",
             X = 0,
-            Y = 0
+            Y = 0,
+            CanFocus = true
         };
-        View view = new ()
+        View otherView = new ()
         {
             Text = "view",
             X = 0,
@@ -1374,41 +1430,34 @@ e
             Height = 1,
             CanFocus = true
         };
-        Application.Current = new ()
+        Application.Top = new ()
         {
             Width = 10,
             Height = 10
         };
-        Application.Current.Add (label, view);
+        Application.Top.Add (label, otherView);
+        Application.Top.SetFocus ();
+        Application.Top.Layout ();
 
-        Application.Current.SetFocus ();
-        Assert.Equal (view, Application.Current.MostFocused);
-        Assert.False (label.CanFocus);
-        Assert.False (label.HasFocus);
-        Assert.True (view.CanFocus);
-        Assert.True (view.HasFocus);
+        Assert.True (label.CanFocus);
+        Assert.True (label.HasFocus);
+        Assert.True (otherView.CanFocus);
+        Assert.False (otherView.HasFocus);
 
-        // label can't focus so clicking on it has no effect
-        Application.OnMouseEvent (new () { Position = new (0, 0), Flags = MouseFlags.Button1Clicked });
-        Assert.False (label.HasFocus);
-        Assert.True (view.HasFocus);
-
-        // Set label CanFocus to true
-        label.CanFocus = true;
-        Assert.False (label.HasFocus);
-        Assert.True (view.HasFocus);
+        otherView.SetFocus ();
+        Assert.True (otherView.HasFocus);
 
         // label can focus, so clicking on it set focus
-        Application.OnMouseEvent (new () { Position = new (0, 0), Flags = MouseFlags.Button1Clicked });
+        Application.RaiseMouseEvent (new () { ScreenPosition = new (0, 0), Flags = MouseFlags.Button1Clicked });
         Assert.True (label.HasFocus);
-        Assert.False (view.HasFocus);
+        Assert.False (otherView.HasFocus);
 
         // click on view
-        Application.OnMouseEvent (new () { Position = new (0, 1), Flags = MouseFlags.Button1Clicked });
+        Application.RaiseMouseEvent (new () { ScreenPosition = new (0, 1), Flags = MouseFlags.Button1Clicked });
         Assert.False (label.HasFocus);
-        Assert.True (view.HasFocus);
+        Assert.True (otherView.HasFocus);
 
-        Application.Current.Dispose ();
+        Application.Top.Dispose ();
         Application.ResetState ();
     }
 }

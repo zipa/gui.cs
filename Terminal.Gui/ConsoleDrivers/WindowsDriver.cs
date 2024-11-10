@@ -37,6 +37,7 @@ internal class WindowsConsole
     private CursorVisibility? _currentCursorVisibility;
     private CursorVisibility? _pendingCursorVisibility;
     private readonly StringBuilder _stringBuilder = new (256 * 1024);
+    private string _lastWrite = string.Empty;
 
     public WindowsConsole ()
     {
@@ -54,6 +55,8 @@ internal class WindowsConsole
 
     public bool WriteToConsole (Size size, ExtendedCharInfo [] charInfoBuffer, Coord bufferSize, SmallRect window, bool force16Colors)
     {
+        //Debug.WriteLine ("WriteToConsole");
+
         if (_screenBuffer == nint.Zero)
         {
             ReadFromConsoleOutput (size, bufferSize, ref window);
@@ -72,7 +75,7 @@ internal class WindowsConsole
                 {
                     Char = new CharUnion { UnicodeChar = info.Char },
                     Attributes =
-                        (ushort)((int)info.Attribute.Foreground.GetClosestNamedColor () | ((int)info.Attribute.Background.GetClosestNamedColor () << 4))
+                        (ushort)((int)info.Attribute.Foreground.GetClosestNamedColor16 () | ((int)info.Attribute.Background.GetClosestNamedColor16 () << 4))
                 };
             }
 
@@ -116,7 +119,21 @@ internal class WindowsConsole
 
             var s = _stringBuilder.ToString ();
 
-            result = WriteConsole (_screenBuffer, s, (uint)s.Length, out uint _, nint.Zero);
+            // TODO: requires extensive testing if we go down this route
+            // If console output has changed
+            if (s != _lastWrite)
+            {
+                // supply console with the new content
+                result = WriteConsole (_screenBuffer, s, (uint)s.Length, out uint _, nint.Zero);
+            }
+
+            _lastWrite = s;
+
+            foreach (var sixel in Application.Sixel)
+            {
+                SetCursorPosition (new Coord ((short)sixel.ScreenPosition.X, (short)sixel.ScreenPosition.Y));
+                WriteConsole (_screenBuffer, sixel.SixelData, (uint)sixel.SixelData.Length, out uint _, nint.Zero);
+            }
         }
 
         if (!result)
@@ -1083,13 +1100,6 @@ internal class WindowsDriver : ConsoleDriver
 
     public override bool IsRuneSupported (Rune rune) { return base.IsRuneSupported (rune) && rune.IsBmp; }
 
-    public override void Refresh ()
-    {
-        UpdateScreen ();
-        //WinConsole?.SetInitialCursorVisibility ();
-        UpdateCursor ();
-    }
-
     public override void SendKeys (char keyChar, ConsoleKey key, bool shift, bool alt, bool control)
     {
         var input = new WindowsConsole.InputRecord
@@ -1282,13 +1292,14 @@ internal class WindowsDriver : ConsoleDriver
 
     #endregion Cursor Handling
 
-    public override void UpdateScreen ()
+    public override bool UpdateScreen ()
     {
+        bool updated = false;
         Size windowSize = WinConsole?.GetConsoleBufferWindow (out Point _) ?? new Size (Cols, Rows);
 
         if (!windowSize.IsEmpty && (windowSize.Width != Cols || windowSize.Height != Rows))
         {
-            return;
+            return updated;
         }
 
         var bufferCoords = new WindowsConsole.Coord
@@ -1305,6 +1316,7 @@ internal class WindowsDriver : ConsoleDriver
             }
 
             _dirtyLines [row] = false;
+            updated = true;
 
             for (var col = 0; col < Cols; col++)
             {
@@ -1363,6 +1375,8 @@ internal class WindowsDriver : ConsoleDriver
         }
 
         WindowsConsole.SmallRect.MakeEmpty (ref _damageRegion);
+
+        return updated;
     }
 
     internal override void End ()
@@ -1402,6 +1416,7 @@ internal class WindowsDriver : ConsoleDriver
                     Size winSize = WinConsole.GetConsoleOutputWindow (out Point pos);
                     Cols = winSize.Width;
                     Rows = winSize.Height;
+                    OnSizeChanged (new SizeChangedEventArgs (new (Cols, Rows)));
                 }
 
                 WindowsConsole.SmallRect.MakeEmpty (ref _damageRegion);
@@ -1424,7 +1439,7 @@ internal class WindowsDriver : ConsoleDriver
 
         _outputBuffer = new WindowsConsole.ExtendedCharInfo [Rows * Cols];
         // CONCURRENCY: Unsynchronized access to Clip is not safe.
-        Clip = new (0, 0, Cols, Rows);
+        Clip = new (Screen);
 
         _damageRegion = new WindowsConsole.SmallRect
         {
@@ -1481,7 +1496,7 @@ internal class WindowsDriver : ConsoleDriver
                 break;
 
             case WindowsConsole.EventType.Mouse:
-                MouseEvent me = ToDriverMouse (inputEvent.MouseEvent);
+                MouseEventArgs me = ToDriverMouse (inputEvent.MouseEvent);
 
                 if (me is null || me.Flags == MouseFlags.None)
                 {
@@ -1825,9 +1840,9 @@ internal class WindowsDriver : ConsoleDriver
             }
             await Task.Delay (delay);
 
-            var me = new MouseEvent
+            var me = new MouseEventArgs
             {
-                Position = _pointMove,
+                ScreenPosition = _pointMove,
                 Flags = mouseFlag
             };
 
@@ -1844,7 +1859,7 @@ internal class WindowsDriver : ConsoleDriver
     {
         _outputBuffer = new WindowsConsole.ExtendedCharInfo [Rows * Cols];
         // CONCURRENCY: Unsynchronized access to Clip is not safe.
-        Clip = new (0, 0, Cols, Rows);
+        Clip = new (Screen);
 
         _damageRegion = new WindowsConsole.SmallRect
         {
@@ -1881,7 +1896,7 @@ internal class WindowsDriver : ConsoleDriver
     }
 
     [CanBeNull]
-    private MouseEvent ToDriverMouse (WindowsConsole.MouseEventRecord mouseEvent)
+    private MouseEventArgs ToDriverMouse (WindowsConsole.MouseEventRecord mouseEvent)
     {
         var mouseFlag = MouseFlags.AllEvents;
 
@@ -2125,7 +2140,7 @@ internal class WindowsDriver : ConsoleDriver
         //System.Diagnostics.Debug.WriteLine (
         //	$"point.X:{(point is { } ? ((Point)point).X : -1)};point.Y:{(point is { } ? ((Point)point).Y : -1)}");
 
-        return new MouseEvent
+        return new MouseEventArgs
         {
             Position = new (mouseEvent.MousePosition.X, mouseEvent.MousePosition.Y),
             Flags = mouseFlag
@@ -2193,15 +2208,18 @@ internal class WindowsMainLoop : IMainLoopDriver
                 // Note: ManualResetEventSlim.Wait will wait indefinitely if the timeout is -1. The timeout is -1 when there
                 // are no timers, but there IS an idle handler waiting.
                 _eventReady.Wait (waitTimeout, _eventReadyTokenSource.Token);
+                //
             }
+            _eventReady.Reset ();
         }
         catch (OperationCanceledException)
         {
+            _eventReady.Reset ();
             return true;
         }
         finally
         {
-            _eventReady.Reset ();
+            //_eventReady.Reset ();
         }
 
         if (!_eventReadyTokenSource.IsCancellationRequested)
@@ -2299,10 +2317,18 @@ internal class WindowsMainLoop : IMainLoopDriver
 
             if (_resultQueue?.Count == 0)
             {
-                _resultQueue.Enqueue (_winConsole.ReadConsoleInput ());
+                var input = _winConsole.ReadConsoleInput ();
+
+                //if (input [0].EventType != WindowsConsole.EventType.Focus)
+                {
+                    _resultQueue.Enqueue (input);
+                }
             }
 
-            _eventReady.Set ();
+            if (_resultQueue?.Count > 0)
+            {
+                _eventReady.Set ();
+            }
         }
     }
 

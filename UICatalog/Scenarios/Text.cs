@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -71,7 +72,7 @@ public class Text : Scenario
             Height = Dim.Percent (20)
         };
         textView.Text = "TextView with some more test text. Unicode shouldn't 𝔹Aℝ𝔽!";
-        textView.DrawContent += TextView_DrawContent;
+        textView.DrawingContent += TextView_DrawContent;
 
         // This shows how to enable autocomplete in TextView.
         void TextView_DrawContent (object sender, DrawEventArgs e)
@@ -176,7 +177,7 @@ public class Text : Scenario
                          new MemoryStream (Encoding.UTF8.GetBytes ("HexEditor Unicode that shouldn't 𝔹Aℝ𝔽!"))
                         )
             {
-                X = Pos.Right (label) + 1, Y = Pos.Bottom (chxMultiline) + 1, Width = Dim.Percent (50) - 1, Height = Dim.Percent (30)
+                X = Pos.Right (label) + 1, Y = Pos.Bottom (chxMultiline) + 1, Width = Dim.Percent (50) - 1, Height = Dim.Percent (30),
             };
         win.Add (hexEditor);
 
@@ -433,10 +434,37 @@ public class Text : Scenario
         win.Add (labelAppendAutocomplete);
         win.Add (appendAutocompleteTextField);
 
+        Label acceptView = new ()
+        {
+            X = Pos.Center (),
+            Y = Pos.AnchorEnd (),
+        };
+
+        win.Add (acceptView);
+
+        win.Accepting += WinOnAccept;
+
         Application.Run (win);
         win.Dispose ();
         Application.Shutdown ();
+
+        return;
+
+        void WinOnAccept (object sender, CommandEventArgs e)
+        {
+            e.Cancel = true; // Don't let it close
+
+            acceptView.Text = $"Accept was Invoked via {win.Focused.GetType().Name}";
+
+            // Start a task that will set acceptView.Text to an empty string after 1 second
+            System.Threading.Tasks.Task.Run (async () =>
+            {
+                await System.Threading.Tasks.Task.Delay (1000);
+                Application.Invoke (() => acceptView.Text = "");
+            });
+        }
     }
+
 
     private void TimeChanged (object sender, DateTimeEventArgs<TimeSpan> e) { _labelMirroringTimeField.Text = _timeField.Text; }
 }

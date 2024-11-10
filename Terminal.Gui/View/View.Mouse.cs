@@ -5,48 +5,206 @@ namespace Terminal.Gui;
 
 public partial class View // Mouse APIs
 {
-    private ColorScheme? _savedHighlightColorScheme;
+    #region MouseEnterLeave
+
+    private bool _hovering;
+    private ColorScheme? _savedNonHoverColorScheme;
 
     /// <summary>
-    ///     Fired when the view is highlighted. Set <see cref="CancelEventArgs.Cancel"/> to <see langword="true"/>
-    ///     to implement a custom highlight scheme or prevent the view from being highlighted.
+    ///     INTERNAL Called by <see cref="Application.RaiseMouseEvent"/> when the mouse moves over the View's <see cref="Frame"/>.
+    ///     <see cref="MouseLeave"/> will
+    ///     be raised when the mouse is no longer over the <see cref="Frame"/>. If another View occludes this View, the
+    ///     that View will also receive MouseEnter/Leave events.
     /// </summary>
-    public event EventHandler<CancelEventArgs<HighlightStyle>>? Highlight;
+    /// <param name="eventArgs"></param>
+    /// <returns>
+    ///     <see langword="true"/> if the event was canceled, <see langword="false"/> if not, <see langword="null"/> if the
+    ///     view is not visible. Cancelling the event
+    ///     prevents Views higher in the visible hierarchy from receiving Enter/Leave events.
+    /// </returns>
+    internal bool? NewMouseEnterEvent (CancelEventArgs eventArgs)
+    {
+        // Pre-conditions
+        if (!CanBeVisible (this))
+        {
+            return null;
+        }
+
+        // Cancellable event
+        if (OnMouseEnter (eventArgs))
+        {
+            return true;
+        }
+
+        MouseEnter?.Invoke (this, eventArgs);
+
+        _hovering = !eventArgs.Cancel;
+
+        if (eventArgs.Cancel)
+        {
+            return true;
+        }
+
+        // Post-conditions
+        if (HighlightStyle.HasFlag (HighlightStyle.Hover) || Diagnostics.HasFlag (ViewDiagnosticFlags.Hover))
+        {
+            HighlightStyle copy = HighlightStyle;
+            var hover = HighlightStyle.Hover;
+            CancelEventArgs<HighlightStyle> args = new (ref copy, ref hover);
+
+            if (RaiseHighlight (args) || args.Cancel)
+            {
+                return args.Cancel;
+            }
+
+            ColorScheme? cs = ColorScheme;
+
+            if (cs is null)
+            {
+                cs = new ();
+            }
+
+            _savedNonHoverColorScheme = cs;
+
+            ColorScheme = ColorScheme?.GetHighlightColorScheme ();
+        }
+
+        return false;
+    }
 
     /// <summary>
-    ///     Gets or sets whether the <see cref="View"/> will be highlighted visually while the mouse button is
-    ///     pressed.
+    ///     Called when the mouse moves over the View's <see cref="Frame"/> and no other non-Subview occludes it.
+    ///     <see cref="MouseLeave"/> will
+    ///     be raised when the mouse is no longer over the <see cref="Frame"/>.
     /// </summary>
-    public HighlightStyle HighlightStyle { get; set; }
-
-    /// <summary>Event fired when a mouse click occurs.</summary>
     /// <remarks>
     ///     <para>
-    ///         Fired when the mouse is either clicked or double-clicked. Check
-    ///         <see cref="MouseEvent.Flags"/> to see which button was clicked.
+    ///         A view must be visible to receive Enter events (Leave events are always received).
     ///     </para>
     ///     <para>
-    ///         The coordinates are relative to <see cref="View.Viewport"/>.
+    ///         If the event is cancelled, the mouse event will not be propagated to other views and <see cref="MouseEnter"/>
+    ///         will not be raised.
     ///     </para>
-    /// </remarks>
-    public event EventHandler<MouseEventEventArgs>? MouseClick;
-
-    /// <summary>Event fired when the mouse moves into the View's <see cref="Viewport"/>.</summary>
-    public event EventHandler<MouseEventEventArgs>? MouseEnter;
-
-    /// <summary>Event fired when a mouse event occurs.</summary>
-    /// <remarks>
     ///     <para>
-    ///         The coordinates are relative to <see cref="View.Viewport"/>.
+    ///         Adornments receive MouseEnter/Leave events when the mouse is over the Adornment's <see cref="Thickness"/>.
+    ///     </para>
+    ///     <para>
+    ///         See <see cref="SetPressedHighlight"/> for more information.
     ///     </para>
     /// </remarks>
-    public event EventHandler<MouseEventEventArgs>? MouseEvent;
-
-    /// <summary>Event fired when the mouse leaves the View's <see cref="Viewport"/>.</summary>
-    public event EventHandler<MouseEventEventArgs>? MouseLeave;
+    /// <param name="eventArgs"></param>
+    /// <returns>
+    ///     <see langword="true"/> if the event was canceled, <see langword="false"/> if not. Cancelling the event
+    ///     prevents Views higher in the visible hierarchy from receiving Enter/Leave events.
+    /// </returns>
+    protected virtual bool OnMouseEnter (CancelEventArgs eventArgs) { return false; }
 
     /// <summary>
-    ///     Processes a <see cref="MouseEvent"/>. This method is called by <see cref="Application.OnMouseEvent"/> when a mouse
+    ///     Raised when the mouse moves over the View's <see cref="Frame"/>. <see cref="MouseLeave"/> will
+    ///     be raised when the mouse is no longer over the <see cref="Frame"/>. If another View occludes this View, the
+    ///     that View will also receive MouseEnter/Leave events.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         A view must be visible to receive Enter events (Leave events are always received).
+    ///     </para>
+    ///     <para>
+    ///         If the event is cancelled, the mouse event will not be propagated to other views.
+    ///     </para>
+    ///     <para>
+    ///         Adornments receive MouseEnter/Leave events when the mouse is over the Adornment's <see cref="Thickness"/>.
+    ///     </para>
+    ///     <para>
+    ///         Set <see cref="CancelEventArgs.Cancel"/> to <see langword="true"/> if the event was canceled,
+    ///         <see langword="false"/> if not. Cancelling the event
+    ///         prevents Views higher in the visible hierarchy from receiving Enter/Leave events.
+    ///     </para>
+    ///     <para>
+    ///         See <see cref="SetPressedHighlight"/> for more information.
+    ///     </para>
+    /// </remarks>
+    public event EventHandler<CancelEventArgs>? MouseEnter;
+
+    /// <summary>
+    ///     INTERNAL Called by <see cref="Application.RaiseMouseEvent"/> when the mouse leaves <see cref="Frame"/>, or is occluded
+    ///     by another non-SubView.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         This method calls <see cref="OnMouseLeave"/> and raises the <see cref="MouseLeave"/> event.
+    ///     </para>
+    ///     <para>
+    ///         Adornments receive MouseEnter/Leave events when the mouse is over the Adornment's <see cref="Thickness"/>.
+    ///     </para>
+    ///     <para>
+    ///         See <see cref="SetPressedHighlight"/> for more information.
+    ///     </para>
+    /// </remarks>
+    internal void NewMouseLeaveEvent ()
+    {
+        // Pre-conditions
+
+        // Non-cancellable event
+        OnMouseLeave ();
+
+        MouseLeave?.Invoke (this, EventArgs.Empty);
+
+        // Post-conditions
+        _hovering = false;
+
+        if (HighlightStyle.HasFlag (HighlightStyle.Hover) || Diagnostics.HasFlag (ViewDiagnosticFlags.Hover))
+        {
+            HighlightStyle copy = HighlightStyle;
+            var hover = HighlightStyle.None;
+            RaiseHighlight (new (ref copy, ref hover));
+
+            if (_savedNonHoverColorScheme is { })
+            {
+                ColorScheme = _savedNonHoverColorScheme;
+                _savedNonHoverColorScheme = null;
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Called when the mouse moves outside View's <see cref="Frame"/>, or is occluded by another non-SubView.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         Adornments receive MouseEnter/Leave events when the mouse is over the Adornment's <see cref="Thickness"/>.
+    ///     </para>
+    ///     <para>
+    ///         See <see cref="SetPressedHighlight"/> for more information.
+    ///     </para>
+    /// </remarks>
+    protected virtual void OnMouseLeave () { }
+
+    /// <summary>
+    ///     Raised when the mouse moves outside View's <see cref="Frame"/>, or is occluded by another non-SubView.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         Adornments receive MouseEnter/Leave events when the mouse is over the Adornment's <see cref="Thickness"/>.
+    ///     </para>
+    ///     <para>
+    ///         See <see cref="SetPressedHighlight"/> for more information.
+    ///     </para>
+    /// </remarks>
+    public event EventHandler? MouseLeave;
+
+    #endregion MouseEnterLeave
+
+    #region Low Level Mouse Events
+
+    /// <summary>Gets or sets whether the <see cref="View"/> wants continuous button pressed events.</summary>
+    public virtual bool WantContinuousButtonPressed { get; set; }
+
+    /// <summary>Gets or sets whether the <see cref="View"/> wants mouse position reports.</summary>
+    /// <value><see langword="true"/> if mouse position reports are wanted; otherwise, <see langword="false"/>.</value>
+    public bool WantMousePositionReports { get; set; }
+
+    /// <summary>
+    ///     Processes a new <see cref="MouseEvent"/>. This method is called by <see cref="Application.RaiseMouseEvent"/> when a mouse
     ///     event occurs.
     /// </summary>
     /// <remarks>
@@ -54,21 +212,22 @@ public partial class View // Mouse APIs
     ///         A view must be both enabled and visible to receive mouse events.
     ///     </para>
     ///     <para>
-    ///         This method calls <see cref="OnMouseEvent"/> to process the event. If the event is not handled, and one of the
-    ///         mouse buttons was clicked, it calls <see cref="OnMouseClick"/> to process the click.
+    ///         This method raises <see cref="RaiseMouseEvent"/>/<see cref="MouseEvent"/>; if not handled, and one of the
+    ///         mouse buttons was clicked, the <see cref="RaiseMouseClickEvent"/>/<see cref="MouseClick"/> event will be raised
     ///     </para>
     ///     <para>
-    ///         See <see cref="SetHighlight"/> for more information.
+    ///         See <see cref="SetPressedHighlight"/> for more information.
     ///     </para>
     ///     <para>
-    ///         If <see cref="WantContinuousButtonPressed"/> is <see langword="true"/>, the <see cref="OnMouseClick"/> event
-    ///         will be invoked repeatedly while the button is pressed.
+    ///         If <see cref="WantContinuousButtonPressed"/> is <see langword="true"/>, the <see cref="RaiseMouseEvent"/>/<see cref="MouseEvent"/> event
+    ///         will be raised on any new mouse event where <see cref="Terminal.Gui.MouseEventArgs.Flags"/> indicates a button is pressed.
     ///     </para>
     /// </remarks>
     /// <param name="mouseEvent"></param>
     /// <returns><see langword="true"/> if the event was handled, <see langword="false"/> otherwise.</returns>
-    public bool? NewMouseEvent (MouseEvent mouseEvent)
+    public bool? NewMouseEvent (MouseEventArgs mouseEvent)
     {
+        // Pre-conditions
         if (!Enabled)
         {
             // A disabled view should not eat mouse events
@@ -80,82 +239,62 @@ public partial class View // Mouse APIs
             return false;
         }
 
-        if (OnMouseEvent (mouseEvent))
+        if (!WantMousePositionReports && mouseEvent.Flags == MouseFlags.ReportMousePosition)
         {
-            // Technically mouseEvent.Handled should already be true if implementers of OnMouseEvent
-            // follow the rules. But we'll update it just in case.
-            return mouseEvent.Handled = true;
+            return false;
         }
 
-        if (HighlightStyle != HighlightStyle.None || (WantContinuousButtonPressed && WantMousePositionReports))
+        // Cancellable event
+        if (RaiseMouseEvent (mouseEvent) || mouseEvent.Handled)
         {
-            if (HandlePressed (mouseEvent))
+            return true;
+        }
+
+        // Post-Conditions
+        if (HighlightStyle != HighlightStyle.None || WantContinuousButtonPressed)
+        {
+            if (WhenGrabbedHandlePressed (mouseEvent))
             {
                 return mouseEvent.Handled;
             }
 
-            if (HandleReleased (mouseEvent))
+            if (WhenGrabbedHandleReleased (mouseEvent))
             {
                 return mouseEvent.Handled;
             }
 
-            if (HandleClicked (mouseEvent))
+            if (WhenGrabbedHandleClicked (mouseEvent))
             {
                 return mouseEvent.Handled;
             }
         }
 
-        if (mouseEvent.Flags.HasFlag (MouseFlags.Button1Clicked)
-            || mouseEvent.Flags.HasFlag (MouseFlags.Button2Clicked)
-            || mouseEvent.Flags.HasFlag (MouseFlags.Button3Clicked)
-            || mouseEvent.Flags.HasFlag (MouseFlags.Button4Clicked)
-            || mouseEvent.Flags.HasFlag (MouseFlags.Button1DoubleClicked)
-            || mouseEvent.Flags.HasFlag (MouseFlags.Button2DoubleClicked)
-            || mouseEvent.Flags.HasFlag (MouseFlags.Button3DoubleClicked)
-            || mouseEvent.Flags.HasFlag (MouseFlags.Button4DoubleClicked)
-            || mouseEvent.Flags.HasFlag (MouseFlags.Button1TripleClicked)
-            || mouseEvent.Flags.HasFlag (MouseFlags.Button2TripleClicked)
-            || mouseEvent.Flags.HasFlag (MouseFlags.Button3TripleClicked)
-            || mouseEvent.Flags.HasFlag (MouseFlags.Button4TripleClicked)
-           )
+        if (mouseEvent.IsSingleDoubleOrTripleClicked)
         {
-            // If it's a click, and we didn't handle it, then we'll call OnMouseClick
+            // If it's a click, and we didn't handle it, then we need to generate a click event
             // We get here if the view did not handle the mouse event via OnMouseEvent/MouseEvent and
             // it did not handle the press/release/clicked events via HandlePress/HandleRelease/HandleClicked
-            return OnMouseClick (new (mouseEvent));
+            return RaiseMouseClickEvent (mouseEvent);
         }
 
         return false;
     }
 
-    /// <summary>Gets or sets whether the <see cref="View"/> wants continuous button pressed events.</summary>
-    public virtual bool WantContinuousButtonPressed { get; set; }
-
-    /// <summary>Gets or sets whether the <see cref="View"/> wants mouse position reports.</summary>
-    /// <value><see langword="true"/> if mouse position reports are wanted; otherwise, <see langword="false"/>.</value>
-    public virtual bool WantMousePositionReports { get; set; }
-
     /// <summary>
-    ///     Called by <see cref="NewMouseEvent"/> when the mouse enters <see cref="Viewport"/>. The view will
-    ///     then receive mouse events until <see cref="OnMouseLeave"/> is called indicating the mouse has left
-    ///     the view.
+    ///     Raises the <see cref="RaiseMouseEvent"/>/<see cref="MouseEvent"/> event.
     /// </summary>
-    /// <remarks>
-    ///     <para>
-    ///         Override this method or subscribe to <see cref="MouseEnter"/> to change the default enter behavior.
-    ///     </para>
-    ///     <para>
-    ///         The coordinates are relative to <see cref="View.Viewport"/>.
-    ///     </para>
-    /// </remarks>
     /// <param name="mouseEvent"></param>
     /// <returns><see langword="true"/>, if the event was handled, <see langword="false"/> otherwise.</returns>
-    protected internal virtual bool? OnMouseEnter (MouseEvent mouseEvent)
+    public bool RaiseMouseEvent (MouseEventArgs mouseEvent)
     {
-        var args = new MouseEventEventArgs (mouseEvent);
-        MouseEnter?.Invoke (this, args);
+        if (OnMouseEvent (mouseEvent) || mouseEvent.Handled == true)
+        {
+            return true;
+        }
 
-        return args.Handled;
+        MouseEvent?.Invoke (this, mouseEvent);
+
+        return mouseEvent.Handled;
     }
 
     /// <summary>Called when a mouse event occurs within the view's <see cref="Viewport"/>.</summary>
@@ -166,85 +305,48 @@ public partial class View // Mouse APIs
     /// </remarks>
     /// <param name="mouseEvent"></param>
     /// <returns><see langword="true"/>, if the event was handled, <see langword="false"/> otherwise.</returns>
-    protected internal virtual bool OnMouseEvent (MouseEvent mouseEvent)
+    protected virtual bool OnMouseEvent (MouseEventArgs mouseEvent)
     {
-        var args = new MouseEventEventArgs (mouseEvent);
-
-        MouseEvent?.Invoke (this, args);
-
-        return args.Handled;
+        return false;
     }
 
-    /// <summary>
-    ///     Called by <see cref="NewMouseEvent"/> when a mouse leaves <see cref="Viewport"/>. The view will
-    ///     no longer receive mouse events.
-    /// </summary>
+    /// <summary>Raised when a mouse event occurs.</summary>
     /// <remarks>
-    ///     <para>
-    ///         Override this method or subscribe to <see cref="MouseEnter"/> to change the default leave behavior.
-    ///     </para>
     ///     <para>
     ///         The coordinates are relative to <see cref="View.Viewport"/>.
     ///     </para>
     /// </remarks>
-    /// <param name="mouseEvent"></param>
-    /// <returns><see langword="true"/>, if the event was handled, <see langword="false"/> otherwise.</returns>
-    protected internal virtual bool OnMouseLeave (MouseEvent mouseEvent)
-    {
-        if (!Enabled)
-        {
-            return true;
-        }
+    public event EventHandler<MouseEventArgs>? MouseEvent;
 
-        if (!CanBeVisible (this))
-        {
-            return false;
-        }
+    #endregion Low Level Mouse Events
 
-        var args = new MouseEventEventArgs (mouseEvent);
-        MouseLeave?.Invoke (this, args);
+    #region Mouse Click Events
 
-        return args.Handled;
-    }
-
-    /// <summary>
-    ///     Called when the view is to be highlighted.
-    /// </summary>
-    /// <returns><see langword="true"/>, if the event was handled, <see langword="false"/> otherwise.</returns>
-    protected virtual bool? OnHighlight (CancelEventArgs<HighlightStyle> args)
-    {
-        Highlight?.Invoke (this, args);
-
-        if (args.Cancel)
-        {
-            return true;
-        }
-
-        Margin?.Highlight?.Invoke (this, args);
-
-        //args = new (highlight);
-        //Border?.Highlight?.Invoke (this, args);
-
-        //args = new (highlight);
-        //Padding?.Highlight?.Invoke (this, args);
-
-        return args.Cancel;
-    }
-
-    /// <summary>Invokes the MouseClick event.</summary>
+    /// <summary>Raises the <see cref="OnMouseClick"/>/<see cref="MouseClick"/> event.</summary>
     /// <remarks>
     ///     <para>
-    ///         Called when the mouse is either clicked or double-clicked. Check
-    ///         <see cref="MouseEvent.Flags"/> to see which button was clicked.
+    ///         Called when the mouse is either clicked or double-clicked.
+    ///     </para>
+    ///     <para>
+    ///         If <see cref="WantContinuousButtonPressed"/> is <see langword="true"/>, will be invoked on every mouse event where
+    ///         the mouse button is pressed.
     ///     </para>
     /// </remarks>
     /// <returns><see langword="true"/>, if the event was handled, <see langword="false"/> otherwise.</returns>
-    protected bool OnMouseClick (MouseEventEventArgs args)
+    protected bool RaiseMouseClickEvent (MouseEventArgs args)
     {
+        // Pre-conditions
         if (!Enabled)
         {
             // QUESTION: Is this right? Should a disabled view eat mouse clicks?
             return args.Handled = false;
+        }
+
+        // Cancellable event
+
+        if (OnMouseClick (args) || args.Handled)
+        {
+            return args.Handled;
         }
 
         MouseClick?.Invoke (this, args);
@@ -254,17 +356,45 @@ public partial class View // Mouse APIs
             return true;
         }
 
-        if (!HasFocus && CanFocus)
-        {
-            args.Handled = true;
-            SetFocus ();
-        }
+        // Post-conditions
+
+        // Always invoke Select command on MouseClick
+        // By default, this will raise Selecting/OnSelecting - Subclasses can override this via AddCommand (Command.Select ...).
+        args.Handled = InvokeCommand (Command.Select, ctx: new (Command.Select, key: null, data: args)) == true;
 
         return args.Handled;
     }
 
     /// <summary>
-    ///     For cases where the view is grabbed and the mouse is clicked, this method handles the click event (typically
+    ///     Called when a mouse click occurs. Check <see cref="MouseEventArgs.Flags"/> to see which button was clicked.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         Called when the mouse is either clicked or double-clicked.
+    ///     </para>
+    ///     <para>
+    ///         If <see cref="WantContinuousButtonPressed"/> is <see langword="true"/>, will be called on every mouse event where
+    ///         the mouse button is pressed.
+    ///     </para>
+    /// </remarks>
+    /// <param name="args"></param>
+    /// <returns><see langword="true"/>, if the event was handled, <see langword="false"/> otherwise.</returns>
+    protected virtual bool OnMouseClick (MouseEventArgs args) { return false; }
+
+    /// <summary>Raised when a mouse click occurs.</summary>
+    /// <remarks>
+    ///     <para>
+    ///         Raised when the mouse is either clicked or double-clicked.
+    ///     </para>
+    ///     <para>
+    ///         If <see cref="WantContinuousButtonPressed"/> is <see langword="true"/>, will be raised on every mouse event where
+    ///         the mouse button is pressed.
+    ///     </para>
+    /// </remarks>
+    public event EventHandler<MouseEventArgs>? MouseClick;
+
+    /// <summary>
+    ///     INTERNAL For cases where the view is grabbed and the mouse is clicked, this method handles the click event (typically
     ///     when <see cref="WantContinuousButtonPressed"/> or <see cref="HighlightStyle"/> are set).
     /// </summary>
     /// <remarks>
@@ -272,26 +402,24 @@ public partial class View // Mouse APIs
     /// </remarks>
     /// <param name="mouseEvent"></param>
     /// <returns><see langword="true"/>, if the event was handled, <see langword="false"/> otherwise.</returns>
-    internal bool HandleClicked (MouseEvent mouseEvent)
+    internal bool WhenGrabbedHandleClicked (MouseEventArgs mouseEvent)
     {
-        if (Application.MouseGrabView == this
-            && (mouseEvent.Flags.HasFlag (MouseFlags.Button1Clicked)
-                || mouseEvent.Flags.HasFlag (MouseFlags.Button2Clicked)
-                || mouseEvent.Flags.HasFlag (MouseFlags.Button3Clicked)
-                || mouseEvent.Flags.HasFlag (MouseFlags.Button4Clicked)))
+        mouseEvent.Handled = false;
+
+        if (Application.MouseGrabView == this && mouseEvent.IsSingleClicked)
         {
             // We're grabbed. Clicked event comes after the last Release. This is our signal to ungrab
             Application.UngrabMouse ();
 
-            if (SetHighlight (HighlightStyle.None))
+            if (SetPressedHighlight (HighlightStyle.None))
             {
                 return true;
             }
 
-            // If mouse is still in bounds, click
-            if (!WantContinuousButtonPressed && Viewport.Contains (mouseEvent.Position))
+            // If mouse is still in bounds, generate a click
+            if (!WantMousePositionReports && Viewport.Contains (mouseEvent.Position))
             {
-                return OnMouseClick (new (mouseEvent));
+                return RaiseMouseClickEvent (mouseEvent);
             }
 
             return mouseEvent.Handled = true;
@@ -301,7 +429,7 @@ public partial class View // Mouse APIs
     }
 
     /// <summary>
-    ///     For cases where the view is grabbed and the mouse is clicked, this method handles the released event (typically
+    ///     INTERNAL For cases where the view is grabbed and the mouse is clicked, this method handles the released event (typically
     ///     when <see cref="WantContinuousButtonPressed"/> or <see cref="HighlightStyle"/> are set).
     /// </summary>
     /// <remarks>
@@ -309,16 +437,15 @@ public partial class View // Mouse APIs
     /// </remarks>
     /// <param name="mouseEvent"></param>
     /// <returns><see langword="true"/>, if the event was handled, <see langword="false"/> otherwise.</returns>
-    internal bool HandleReleased (MouseEvent mouseEvent)
+    internal bool WhenGrabbedHandleReleased (MouseEventArgs mouseEvent)
     {
-        if (mouseEvent.Flags.HasFlag (MouseFlags.Button1Released)
-            || mouseEvent.Flags.HasFlag (MouseFlags.Button2Released)
-            || mouseEvent.Flags.HasFlag (MouseFlags.Button3Released)
-            || mouseEvent.Flags.HasFlag (MouseFlags.Button4Released))
+        mouseEvent.Handled = false;
+
+        if (mouseEvent.IsReleased)
         {
             if (Application.MouseGrabView == this)
             {
-                SetHighlight (HighlightStyle.None);
+                SetPressedHighlight (HighlightStyle.None);
             }
 
             return mouseEvent.Handled = true;
@@ -328,111 +455,132 @@ public partial class View // Mouse APIs
     }
 
     /// <summary>
-    ///     Called by <see cref="Application.OnMouseEvent"/> when the mouse enters <see cref="Viewport"/>. The view will
-    ///     then receive mouse events until <see cref="NewMouseLeaveEvent"/> is called indicating the mouse has left
-    ///     the view.
+    ///     INTERNAL For cases where the view is grabbed and the mouse is clicked, this method handles the released event (typically
+    ///     when <see cref="WantContinuousButtonPressed"/> or <see cref="HighlightStyle"/> are set).
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///         A view must be both enabled and visible to receive mouse events.
-    ///     </para>
-    ///     <para>
-    ///         This method calls <see cref="OnMouseEnter"/> to fire the event.
-    ///     </para>
-    ///     <para>
-    ///         See <see cref="SetHighlight"/> for more information.
+    ///         Marked internal just to support unit tests
     ///     </para>
     /// </remarks>
     /// <param name="mouseEvent"></param>
-    /// <returns><see langword="true"/> if the event was handled, <see langword="false"/> otherwise.</returns>
-    internal bool? NewMouseEnterEvent (MouseEvent mouseEvent)
+    /// <returns><see langword="true"/>, if the event was handled, <see langword="false"/> otherwise.</returns>
+    private bool WhenGrabbedHandlePressed (MouseEventArgs mouseEvent)
     {
-        if (!Enabled)
-        {
-            return true;
-        }
+        mouseEvent.Handled = false;
 
-        if (!CanBeVisible (this))
+        if (mouseEvent.IsPressed)
         {
-            return false;
-        }
-
-        if (OnMouseEnter (mouseEvent) == true)
-        {
-            return true;
-        }
-
-#if HOVER
-        if (HighlightStyle.HasFlag(HighlightStyle.Hover))
-        {
-            if (SetHighlight (HighlightStyle.Hover))
+            // The first time we get pressed event, grab the mouse and set focus
+            if (Application.MouseGrabView != this)
             {
-                return true;
+                Application.GrabMouse (this);
+
+                if (!HasFocus && CanFocus)
+                {
+                    // Set the focus, but don't invoke Accept
+                    SetFocus ();
+                }
+
+                mouseEvent.Handled = true;
             }
+
+            if (Viewport.Contains (mouseEvent.Position))
+            {
+                if (this is not Adornment
+                    && SetPressedHighlight (HighlightStyle.HasFlag (HighlightStyle.Pressed) ? HighlightStyle.Pressed : HighlightStyle.None))
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                if (this is not Adornment
+                    && SetPressedHighlight (HighlightStyle.HasFlag (HighlightStyle.PressedOutside) ? HighlightStyle.PressedOutside : HighlightStyle.None))
+
+                {
+                    return true;
+                }
+            }
+
+            if (WantContinuousButtonPressed && Application.MouseGrabView == this)
+            {
+                return RaiseMouseClickEvent (mouseEvent);
+            }
+
+            return mouseEvent.Handled = true;
         }
-#endif
+
         return false;
     }
 
+    #endregion Mouse Click Events
+
+    #region Highlight Handling
+
+    // Used for Pressed highlighting
+    private ColorScheme? _savedHighlightColorScheme;
+
     /// <summary>
-    ///     Called by <see cref="Application.OnMouseEvent"/> when the mouse leaves <see cref="Viewport"/>. The view will
-    ///     then no longer receive mouse events.
+    ///     Gets or sets whether the <see cref="View"/> will be highlighted visually by mouse interaction.
     /// </summary>
-    /// <remarks>
-    ///     <para>
-    ///         A view must be both enabled and visible to receive mouse events.
-    ///     </para>
-    ///     <para>
-    ///         This method calls <see cref="OnMouseLeave"/> to fire the event.
-    ///     </para>
-    ///     <para>
-    ///         See <see cref="SetHighlight"/> for more information.
-    ///     </para>
-    /// </remarks>
-    /// <param name="mouseEvent"></param>
-    /// <returns><see langword="true"/> if the event was handled, <see langword="false"/> otherwise.</returns>
-    internal bool? NewMouseLeaveEvent (MouseEvent mouseEvent)
+    public HighlightStyle HighlightStyle { get; set; }
+
+    /// <summary>
+    ///     INTERNAL Raises the <see cref="Highlight"/> event. Returns <see langword="true"/> if the event was handled,
+    ///     <see langword="false"/> otherwise.
+    /// </summary>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    private bool RaiseHighlight (CancelEventArgs<HighlightStyle> args)
     {
-        if (!Enabled)
+        if (OnHighlight (args))
         {
             return true;
         }
 
-        if (!CanBeVisible (this))
-        {
-            return false;
-        }
+        Highlight?.Invoke (this, args);
 
-        if (OnMouseLeave (mouseEvent))
-        {
-            return true;
-        }
-#if HOVER
-        if (HighlightStyle.HasFlag (HighlightStyle.Hover))
-        {
-            SetHighlight (HighlightStyle.None);
-        }
-#endif
-
-        return false;
+        return args.Cancel;
     }
 
     /// <summary>
-    ///     Enables the highlight for the view when the mouse is pressed. Called from OnMouseEvent.
+    ///     Called when the view is to be highlighted. The <see cref="HighlightStyle"/> passed in the event indicates the
+    ///     highlight style that will be applied. The view can modify the highlight style by setting the
+    ///     <see cref="CancelEventArgs{T}.NewValue"/> property.
+    /// </summary>
+    /// <param name="args">
+    ///     Set the <see cref="CancelEventArgs{T}.NewValue"/> property to <see langword="true"/>, to cancel, indicating custom
+    ///     highlighting.
+    /// </param>
+    /// <returns><see langword="true"/>, to cancel, indicating custom highlighting.</returns>
+    protected virtual bool OnHighlight (CancelEventArgs<HighlightStyle> args) { return false; }
+
+    /// <summary>
+    ///     Raised when the view is to be highlighted. The <see cref="HighlightStyle"/> passed in the event indicates the
+    ///     highlight style that will be applied. The view can modify the highlight style by setting the
+    ///     <see cref="CancelEventArgs{T}.NewValue"/> property.
+    ///     Set to <see langword="true"/>, to cancel, indicating custom highlighting.
+    /// </summary>
+    public event EventHandler<CancelEventArgs<HighlightStyle>>? Highlight;
+
+    /// <summary>
+    ///     INTERNAL Enables the highlight for the view when the mouse is pressed. Called from OnMouseEvent.
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///         Set <see cref="HighlightStyle"/> to have the view highlighted based on the mouse.
+    ///         Set <see cref="HighlightStyle"/> to <see cref="HighlightStyle.Pressed"/> and/or
+    ///         <see cref="HighlightStyle.PressedOutside"/> to enable.
     ///     </para>
     ///     <para>
-    ///         Calls <see cref="OnHighlight"/> which fires the <see cref="Highlight"/> event.
+    ///         Calls <see cref="OnHighlight"/> and raises the <see cref="Highlight"/> event.
     ///     </para>
     ///     <para>
     ///         Marked internal just to support unit tests
     ///     </para>
     /// </remarks>
     /// <returns><see langword="true"/>, if the Highlight event was handled, <see langword="false"/> otherwise.</returns>
-    internal bool SetHighlight (HighlightStyle newHighlightStyle)
+    internal bool SetPressedHighlight (HighlightStyle newHighlightStyle)
     {
         // TODO: Make the highlight colors configurable
         if (!CanFocus)
@@ -440,32 +588,18 @@ public partial class View // Mouse APIs
             return false;
         }
 
-        // Enable override via virtual method and/or event
         HighlightStyle copy = HighlightStyle;
-        var args = new CancelEventArgs<HighlightStyle> (ref copy, ref newHighlightStyle);
+        CancelEventArgs<HighlightStyle> args = new (ref copy, ref newHighlightStyle);
 
-        if (OnHighlight (args) == true)
+        if (RaiseHighlight (args) || args.Cancel)
         {
             return true;
         }
-#if HOVER
-        if (style.HasFlag (HighlightStyle.Hover))
-        {
-            if (_savedHighlightColorScheme is null && ColorScheme is { })
-            {
-                _savedHighlightColorScheme ??= ColorScheme;
 
-                var cs = new ColorScheme (ColorScheme)
-                {
-                    Normal = GetFocusColor (),
-                    HotNormal = ColorScheme.HotFocus
-                };
-                ColorScheme = cs;
-            }
+        // For 3D Pressed Style - Note we don't care about canceling the event here
+        Margin?.RaiseHighlight (args);
+        args.Cancel = false; // Just in case
 
-            return true;
-        }
-#endif
         if (args.NewValue.HasFlag (HighlightStyle.Pressed) || args.NewValue.HasFlag (HighlightStyle.PressedOutside))
         {
             if (_savedHighlightColorScheme is null && ColorScheme is { })
@@ -509,65 +643,81 @@ public partial class View // Mouse APIs
         return false;
     }
 
+    #endregion Highlight Handling
+
     /// <summary>
-    ///     For cases where the view is grabbed and the mouse is clicked, this method handles the released event (typically
-    ///     when <see cref="WantContinuousButtonPressed"/> or <see cref="HighlightStyle"/> are set).
+    ///     INTERNAL: Gets the Views that are under the mouse at <paramref name="location"/>, including Adornments.
     /// </summary>
-    /// <remarks>
-    ///     <para>
-    ///         Marked internal just to support unit tests
-    ///     </para>
-    /// </remarks>
-    /// <param name="mouseEvent"></param>
-    /// <returns><see langword="true"/>, if the event was handled, <see langword="false"/> otherwise.</returns>
-    private bool HandlePressed (MouseEvent mouseEvent)
+    /// <param name="location"></param>
+    /// <returns></returns>
+    internal static List<View?> GetViewsUnderMouse (in Point location)
     {
-        if (mouseEvent.Flags.HasFlag (MouseFlags.Button1Pressed)
-            || mouseEvent.Flags.HasFlag (MouseFlags.Button2Pressed)
-            || mouseEvent.Flags.HasFlag (MouseFlags.Button3Pressed)
-            || mouseEvent.Flags.HasFlag (MouseFlags.Button4Pressed))
+        List<View?> viewsUnderMouse = new ();
+
+        View? start = Application.Top;
+
+        Point currentLocation = location;
+
+        while (start is { Visible: true } && start.Contains (currentLocation))
         {
-            // The first time we get pressed event, grab the mouse and set focus
-            if (Application.MouseGrabView != this)
-            {
-                Application.GrabMouse (this);
+            viewsUnderMouse.Add (start);
 
-                if (!HasFocus && CanFocus)
+            Adornment? found = null;
+
+            if (start is not Adornment)
+            {
+                if (start.Margin is {} && start.Margin.Contains (currentLocation))
                 {
-                    // Set the focus, but don't invoke Accept
-                    SetFocus ();
+                    found = start.Margin;
                 }
-
-                mouseEvent.Handled = true;
-            }
-
-            if (Viewport.Contains (mouseEvent.Position))
-            {
-                if (this is not Adornment
-                    && SetHighlight (HighlightStyle.HasFlag (HighlightStyle.Pressed) ? HighlightStyle.Pressed : HighlightStyle.None))
+                else if (start.Border is {} && start.Border.Contains (currentLocation))
                 {
-                    return true;
+                    found = start.Border;
                 }
-            }
-            else
-            {
-                if (this is not Adornment
-                    && SetHighlight (HighlightStyle.HasFlag (HighlightStyle.PressedOutside) ? HighlightStyle.PressedOutside : HighlightStyle.None))
-
+                else if (start.Padding is { } && start.Padding.Contains(currentLocation))
                 {
-                    return true;
+                    found = start.Padding;
                 }
             }
 
-            if (WantContinuousButtonPressed && Application.MouseGrabView == this)
+            Point viewportOffset = start.GetViewportOffsetFromFrame ();
+
+            if (found is { })
             {
-                // If this is not the first pressed event, click
-                return OnMouseClick (new (mouseEvent));
+                start = found;
+                viewsUnderMouse.Add (start);
+                viewportOffset = found.Parent?.Frame.Location ?? Point.Empty;
             }
 
-            return mouseEvent.Handled = true;
+            int startOffsetX = currentLocation.X - (start.Frame.X + viewportOffset.X);
+            int startOffsetY = currentLocation.Y - (start.Frame.Y + viewportOffset.Y);
+
+            View? subview = null;
+
+            for (int i = start.InternalSubviews.Count - 1; i >= 0; i--)
+            {
+                if (start.InternalSubviews [i].Visible
+                    && start.InternalSubviews [i].Contains (new (startOffsetX + start.Viewport.X, startOffsetY + start.Viewport.Y)))
+                {
+                    subview = start.InternalSubviews [i];
+                    currentLocation.X = startOffsetX + start.Viewport.X;
+                    currentLocation.Y = startOffsetY + start.Viewport.Y;
+
+                    // start is the deepest subview under the mouse; stop searching the subviews
+                    break;
+                }
+            }
+
+            if (subview is null)
+            {
+                // No subview was found that's under the mouse, so we're done
+                return viewsUnderMouse;
+            }
+
+            // We found a subview of start that's under the mouse, continue...
+            start = subview;
         }
 
-        return false;
+        return viewsUnderMouse;
     }
 }

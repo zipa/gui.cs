@@ -108,11 +108,11 @@ public class VkeyPacketSimulator : Scenario
                                 if (_outputStarted)
                                 {
                                     // If the key wasn't handled by the TextView will popup a Dialog with the keys pressed.
-                                    bool? handled = tvOutput.OnInvokingKeyBindings (e, KeyBindingScope.HotKey | KeyBindingScope.Focused);
+                                    bool? handled = tvOutput.NewKeyDownEvent (e);
 
                                     if (handled == null || handled == false)
                                     {
-                                        if (!tvOutput.OnProcessKeyDown (e))
+                                        if (!tvOutput.NewKeyDownEvent (e))
                                         {
                                             Application.Invoke (
                                                                 () => MessageBox.Query (
@@ -148,7 +148,7 @@ public class VkeyPacketSimulator : Scenario
                                }
                            };
 
-        tvInput.InvokingKeyBindings += (s, e) =>
+        tvInput.KeyDownNotHandled += (s, e) =>
                                        {
                                            Key ev = e;
 
@@ -176,7 +176,7 @@ public class VkeyPacketSimulator : Scenario
                                  _outputStarted = true;
                                  tvOutput.ReadOnly = false;
                                  tvOutput.SetFocus ();
-                                 tvOutput.SetNeedsDisplay ();
+                                 tvOutput.SetNeedsDraw ();
 
                                  Task.Run (
                                            () =>
@@ -244,7 +244,7 @@ public class VkeyPacketSimulator : Scenario
                              }
                          };
 
-        btnInput.Accept += (s, e) =>
+        btnInput.Accepting += (s, e) =>
                            {
                                if (!tvInput.HasFocus && _keyboardStrokes.Count == 0)
                                {
@@ -252,7 +252,7 @@ public class VkeyPacketSimulator : Scenario
                                }
                            };
 
-        btnOutput.Accept += (s, e) =>
+        btnOutput.Accepting += (s, e) =>
                             {
                                 if (!tvOutput.HasFocus && _keyboardStrokes.Count == 0)
                                 {
@@ -287,7 +287,7 @@ public class VkeyPacketSimulator : Scenario
                      ..outputVerticalRuler.Viewport.Height];
         }
 
-        win.LayoutComplete += Win_LayoutComplete;
+        win.SubviewsLaidOut += Win_LayoutComplete;
 
         Application.Run (win);
         win.Dispose ();

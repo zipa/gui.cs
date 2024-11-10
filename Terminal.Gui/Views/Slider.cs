@@ -47,7 +47,7 @@ public class Slider<T> : View, IOrientation
 
         _options = options ?? new List<SliderOption<T>> ();
 
-        _orientationHelper = new (this);
+        _orientationHelper = new (this); // Do not use object initializer!
         _orientationHelper.Orientation = _config._sliderOrientation = orientation;
         _orientationHelper.OrientationChanging += (sender, e) => OrientationChanging?.Invoke (this, e);
         _orientationHelper.OrientationChanged += (sender, e) => OrientationChanged?.Invoke (this, e);
@@ -59,7 +59,7 @@ public class Slider<T> : View, IOrientation
         // BUGBUG: This should not be needed - Need to ensure SetRelativeLayout gets called during EndInit
         Initialized += (s, e) => { SetContentSize (); };
 
-        LayoutStarted += (s, e) => { SetContentSize (); };
+        SubviewLayout += (s, e) => { SetContentSize (); };
     }
 
     // TODO: Make configurable via ConfigurationManager
@@ -222,7 +222,7 @@ public class Slider<T> : View, IOrientation
 
             // Todo: Custom logic to preserve options.
             _setOptions.Clear ();
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
         }
     }
 
@@ -353,7 +353,7 @@ public class Slider<T> : View, IOrientation
     public virtual void OnOptionsChanged ()
     {
         OptionsChanged?.Invoke (this, new (GetSetOptionDictionary ()));
-        SetNeedsDisplay ();
+        SetNeedsDraw ();
     }
 
     /// <summary>Event raised When the option is hovered with the keys or the mouse.</summary>
@@ -775,13 +775,13 @@ public class Slider<T> : View, IOrientation
     #region Drawing
 
     /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
         // TODO: make this more surgical to reduce repaint
 
         if (_options is null || _options.Count == 0)
         {
-            return;
+            return true;
         }
 
         // Draw Slider
@@ -797,6 +797,8 @@ public class Slider<T> : View, IOrientation
         {
             AddRune (_moveRenderPosition.Value.X, _moveRenderPosition.Value.Y, Style.DragChar.Rune);
         }
+
+        return true;
     }
 
     private string AlignText (string text, int width, Alignment alignment)
@@ -839,7 +841,7 @@ public class Slider<T> : View, IOrientation
     private void DrawSlider ()
     {
         // TODO: be more surgical on clear
-        Clear ();
+        ClearViewport ();
 
         // Attributes
 
@@ -848,8 +850,8 @@ public class Slider<T> : View, IOrientation
 
         if (IsInitialized)
         {
-            normalAttr = ColorScheme?.Normal ?? Application.Current.ColorScheme.Normal;
-            setAttr = Style.SetChar.Attribute ?? ColorScheme!.HotNormal;
+            normalAttr = GetNormalColor();
+            setAttr = Style.SetChar.Attribute ?? GetHotNormalColor ();
         }
 
         bool isVertical = _config._sliderOrientation == Orientation.Vertical;
@@ -864,7 +866,7 @@ public class Slider<T> : View, IOrientation
         // Left Spacing
         if (_config._showEndSpacing && _config._startSpacing > 0)
         {
-            Driver?.SetAttribute (
+            SetAttribute (
                                   isSet && _config._type == SliderType.LeftRange
                                       ? Style.RangeChar.Attribute ?? normalAttr
                                       : Style.SpaceChar.Attribute ?? normalAttr
@@ -887,7 +889,7 @@ public class Slider<T> : View, IOrientation
         }
         else
         {
-            Driver?.SetAttribute (Style.EmptyChar.Attribute ?? normalAttr);
+            SetAttribute (Style.EmptyChar.Attribute ?? normalAttr);
 
             for (var i = 0; i < _config._startSpacing; i++)
             {
@@ -940,7 +942,7 @@ public class Slider<T> : View, IOrientation
                 }
 
                 // Draw Option
-                Driver?.SetAttribute (
+                SetAttribute (
                                       isSet && _setOptions.Contains (i) ? Style.SetChar.Attribute ?? setAttr :
                                       drawRange ? Style.RangeChar.Attribute ?? setAttr : Style.OptionChar.Attribute ?? normalAttr
                                      );
@@ -978,7 +980,7 @@ public class Slider<T> : View, IOrientation
                 if (_config._showEndSpacing || i < _options.Count - 1)
                 {
                     // Skip if is the Last Spacing.
-                    Driver?.SetAttribute (
+                    SetAttribute (
                                           drawRange && isSet
                                               ? Style.RangeChar.Attribute ?? setAttr
                                               : Style.SpaceChar.Attribute ?? normalAttr
@@ -1006,7 +1008,7 @@ public class Slider<T> : View, IOrientation
         // Right Spacing
         if (_config._showEndSpacing)
         {
-            Driver?.SetAttribute (
+            SetAttribute (
                                   isSet && _config._type == SliderType.RightRange
                                       ? Style.RangeChar.Attribute ?? normalAttr
                                       : Style.SpaceChar.Attribute ?? normalAttr
@@ -1029,7 +1031,7 @@ public class Slider<T> : View, IOrientation
         }
         else
         {
-            Driver?.SetAttribute (Style.EmptyChar.Attribute ?? normalAttr);
+            SetAttribute (Style.EmptyChar.Attribute ?? normalAttr);
 
             for (var i = 0; i < remaining; i++)
             {
@@ -1056,8 +1058,8 @@ public class Slider<T> : View, IOrientation
 
         if (IsInitialized)
         {
-            normalAttr = Style.LegendAttributes.NormalAttribute ?? ColorScheme?.Normal ?? ColorScheme.Disabled;
-            setAttr = Style.LegendAttributes.SetAttribute ?? ColorScheme?.HotNormal ?? ColorScheme.Normal;
+            normalAttr = Style.LegendAttributes.NormalAttribute ?? GetNormalColor ();
+            setAttr = Style.LegendAttributes.SetAttribute ?? GetHotNormalColor ();
             spaceAttr = Style.LegendAttributes.EmptyAttribute ?? normalAttr;
         }
 
@@ -1221,7 +1223,7 @@ public class Slider<T> : View, IOrientation
             }
 
             // Legend
-            Driver?.SetAttribute (isOptionSet ? setAttr : normalAttr);
+            SetAttribute (isOptionSet ? setAttr : normalAttr);
 
             foreach (Rune c in text.EnumerateRunes ())
             {
@@ -1247,7 +1249,7 @@ public class Slider<T> : View, IOrientation
             }
 
             // Option Right Spacing of Option
-            Driver?.SetAttribute (spaceAttr);
+            SetAttribute (spaceAttr);
 
             if (isTextVertical)
             {
@@ -1282,7 +1284,7 @@ public class Slider<T> : View, IOrientation
     private Point? _moveRenderPosition;
 
     /// <inheritdoc/>
-    protected internal override bool OnMouseEvent (MouseEvent mouseEvent)
+    protected override bool OnMouseEvent (MouseEventArgs mouseEvent)
     {
         // Note(jmperricone): Maybe we click to focus the cursor, and on next click we set the option.
         //                    That will make OptionFocused Event more relevant.
@@ -1309,7 +1311,7 @@ public class Slider<T> : View, IOrientation
                 Application.GrabMouse (this);
             }
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             return true;
         }
@@ -1343,7 +1345,7 @@ public class Slider<T> : View, IOrientation
                 }
             }
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             return true;
         }
@@ -1377,13 +1379,13 @@ public class Slider<T> : View, IOrientation
                 }
             }
 
-            SetNeedsDisplay ();
+            SetNeedsDraw ();
 
             mouseEvent.Handled = true;
-            return OnMouseClick (new (mouseEvent));
+
         }
 
-        return false;
+        return mouseEvent.Handled;
 
         Point ClampMovePosition (Point position)
         {
@@ -1413,15 +1415,15 @@ public class Slider<T> : View, IOrientation
     private void SetCommands ()
     {
         AddCommand (Command.Right, () => MovePlus ());
-        AddCommand (Command.LineDown, () => MovePlus ());
+        AddCommand (Command.Down, () => MovePlus ());
         AddCommand (Command.Left, () => MoveMinus ());
-        AddCommand (Command.LineUp, () => MoveMinus ());
-        AddCommand (Command.LeftHome, () => MoveStart ());
+        AddCommand (Command.Up, () => MoveMinus ());
+        AddCommand (Command.LeftStart, () => MoveStart ());
         AddCommand (Command.RightEnd, () => MoveEnd ());
         AddCommand (Command.RightExtend, () => ExtendPlus ());
         AddCommand (Command.LeftExtend, () => ExtendMinus ());
         AddCommand (Command.Select, () => Select ());
-        AddCommand (Command.Accept, () => Accept ());
+        AddCommand (Command.Accept, (ctx) => Accept (ctx));
 
         SetKeyBindings ();
     }
@@ -1444,9 +1446,9 @@ public class Slider<T> : View, IOrientation
         else
         {
             KeyBindings.Remove (Key.CursorRight);
-            KeyBindings.Add (Key.CursorDown, Command.LineDown);
+            KeyBindings.Add (Key.CursorDown, Command.Down);
             KeyBindings.Remove (Key.CursorLeft);
-            KeyBindings.Add (Key.CursorUp, Command.LineUp);
+            KeyBindings.Add (Key.CursorUp, Command.Up);
 
             KeyBindings.Remove (Key.CursorRight.WithCtrl);
             KeyBindings.Add (Key.CursorDown.WithCtrl, Command.RightExtend);
@@ -1455,7 +1457,7 @@ public class Slider<T> : View, IOrientation
         }
 
         KeyBindings.Remove (Key.Home);
-        KeyBindings.Add (Key.Home, Command.LeftHome);
+        KeyBindings.Add (Key.Home, Command.LeftStart);
         KeyBindings.Remove (Key.End);
         KeyBindings.Add (Key.End, Command.RightEnd);
         KeyBindings.Remove (Key.Enter);
@@ -1466,8 +1468,41 @@ public class Slider<T> : View, IOrientation
 
     private Dictionary<int, SliderOption<T>> GetSetOptionDictionary () { return _setOptions.ToDictionary (e => e, e => _options [e]); }
 
-    private void SetFocusedOption ()
+    /// <summary>
+    /// Sets or unsets <paramref name="optionIndex"/> based on <paramref name="set"/>.
+    /// </summary>
+    /// <param name="optionIndex">The option to change.</param>
+    /// <param name="set">If <see langword="true"/>, sets the option. Unsets it otherwise.</param>
+    public void ChangeOption (int optionIndex, bool set)
     {
+        if (set)
+        {
+            if (!_setOptions.Contains (optionIndex))
+            {
+                _setOptions.Add (optionIndex);
+                _options [optionIndex].OnSet ();
+            }
+        }
+        else
+        {
+            if (_setOptions.Contains (optionIndex))
+            {
+                _setOptions.Remove (optionIndex);
+                _options [optionIndex].OnUnSet ();
+            }
+        }
+
+        // Raise slider changed event.
+        OnOptionsChanged ();
+    }
+
+    private bool SetFocusedOption ()
+    {
+        if (_options.Count == 0)
+        {
+            return false;
+        }
+        bool changed = false;
         switch (_config._type)
         {
             case SliderType.Single:
@@ -1500,6 +1535,7 @@ public class Slider<T> : View, IOrientation
 
                 // Raise slider changed event.
                 OnOptionsChanged ();
+                changed = true;
 
                 break;
             case SliderType.Multiple:
@@ -1520,6 +1556,7 @@ public class Slider<T> : View, IOrientation
                 }
 
                 OnOptionsChanged ();
+                changed = true;
 
                 break;
 
@@ -1653,11 +1690,14 @@ public class Slider<T> : View, IOrientation
 
                 // Raise Slider Option Changed Event.
                 OnOptionsChanged ();
+                changed = true;
 
                 break;
             default:
                 throw new ArgumentOutOfRangeException (_config._type.ToString ());
         }
+
+        return changed;
     }
 
     internal bool ExtendPlus ()
@@ -1742,16 +1782,14 @@ public class Slider<T> : View, IOrientation
 
     internal bool Select ()
     {
-        SetFocusedOption ();
-
-        return true;
+        return SetFocusedOption ();
     }
 
-    internal new bool Accept ()
+    internal bool Accept (CommandContext ctx)
     {
         SetFocusedOption ();
 
-        return OnAccept () == true;
+        return RaiseAccepting (ctx) == true;
     }
 
     internal bool MovePlus ()

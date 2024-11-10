@@ -7,7 +7,7 @@ namespace Terminal.Gui;
 /// <summary>
 ///     True color picker using HSL
 /// </summary>
-public class ColorPicker : View
+public partial class ColorPicker : View
 {
     /// <summary>
     ///     Creates a new instance of <see cref="ColorPicker"/>. Use
@@ -64,7 +64,7 @@ public class ColorPicker : View
                     Width = textFieldWidth
                 };
                 tfValue.HasFocusChanged += UpdateSingleBarValueFromTextField;
-                tfValue.Accept += (s, _)=>UpdateSingleBarValueFromTextField(s);
+                tfValue.Accepting += (s, _)=>UpdateSingleBarValueFromTextField(s);
                 _textFields.Add (bar, tfValue);
             }
 
@@ -90,10 +90,7 @@ public class ColorPicker : View
         CreateTextField ();
         SelectedColor = oldValue;
 
-        if (IsInitialized)
-        {
-            LayoutSubviews ();
-        }
+        SetNeedsLayout ();
     }
 
     /// <summary>
@@ -102,13 +99,14 @@ public class ColorPicker : View
     public event EventHandler<ColorEventArgs>? ColorChanged;
 
     /// <inheritdoc/>
-    public override void OnDrawContent (Rectangle viewport)
+    protected override bool OnDrawingContent ()
     {
-        base.OnDrawContent (viewport);
         Attribute normal = GetNormalColor ();
-        Driver.SetAttribute (new (SelectedColor, normal.Background));
+        SetAttribute (new (SelectedColor, normal.Background));
         int y = _bars.Count + (Style.ShowColorName ? 1 : 0);
         AddRune (13, y, (Rune)'■');
+
+        return true;
     }
 
     /// <summary>
@@ -154,7 +152,7 @@ public class ColorPicker : View
         _tfName.Autocomplete = auto;
 
         _tfName.HasFocusChanged += UpdateValueFromName;
-        _tfName.Accept += (s, _) => UpdateValueFromName ();
+        _tfName.Accepting += (s, _) => UpdateValueFromName ();
     }
 
     private void CreateTextField ()
@@ -184,7 +182,7 @@ public class ColorPicker : View
         Add (_tfHex);
 
         _tfHex.HasFocusChanged += UpdateValueFromTextField;
-        _tfHex.Accept += (_,_)=> UpdateValueFromTextField();
+        _tfHex.Accepting += (_,_)=> UpdateValueFromTextField();
     }
 
     private void DisposeOldViews ()
@@ -275,6 +273,8 @@ public class ColorPicker : View
         {
             _tfHex.Text = colorHex;
         }
+
+        SetNeedsLayout ();
     }
 
     private void UpdateSingleBarValueFromTextField (object? sender, HasFocusEventArgs e)

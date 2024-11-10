@@ -22,11 +22,6 @@ public class ClassExplorer : Scenario
         Application.Init ();
         var top = new Toplevel ();
 
-        var win = new Window
-        {
-            Title = GetName ()
-        };
-
         var menu = new MenuBar
         {
             Menus =
@@ -60,6 +55,12 @@ public class ClassExplorer : Scenario
             ]
         };
         top.Add (menu);
+
+        var win = new Window
+        {
+            Title = GetName (),
+            Y = Pos.Bottom (menu)
+        };
 
         _treeView = new TreeView<object> { X = 0, Y = 1, Width = Dim.Percent (50), Height = Dim.Fill () };
 
@@ -192,7 +193,7 @@ public class ClassExplorer : Scenario
     {
         _treeView.Style.HighlightModelTextOnly = !_treeView.Style.HighlightModelTextOnly;
         _highlightModelTextOnly.Checked = _treeView.Style.HighlightModelTextOnly;
-        _treeView.SetNeedsDisplay ();
+        _treeView.SetNeedsDraw ();
     }
 
     private void Quit () { Application.RequestStop (); }
@@ -291,7 +292,7 @@ public class ClassExplorer : Scenario
             _textView.Text = ex.Message;
         }
 
-        _textView.SetNeedsDisplay ();
+        _textView.SetNeedsDraw ();
     }
 
     private enum Showable

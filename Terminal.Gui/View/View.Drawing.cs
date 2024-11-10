@@ -1,253 +1,293 @@
-﻿using System.Drawing;
+﻿#nullable enable
+using System.ComponentModel;
 
 namespace Terminal.Gui;
 
 public partial class View // Drawing APIs
 {
-    private ColorScheme _colorScheme;
-
-    /// <summary>The color scheme for this view, if it is not defined, it returns the <see cref="SuperView"/>'s color scheme.</summary>
-    public virtual ColorScheme ColorScheme
-    {
-        get
-        {
-            if (_colorScheme is null)
-            {
-                return SuperView?.ColorScheme;
-            }
-
-            return _colorScheme;
-        }
-        set
-        {
-            if (_colorScheme != value)
-            {
-                _colorScheme = value;
-                SetNeedsDisplay ();
-            }
-        }
-    }
-
-    /// <summary>The canvas that any line drawing that is to be shared by subviews of this view should add lines to.</summary>
-    /// <remarks><see cref="Border"/> adds border lines to this LineCanvas.</remarks>
-    public LineCanvas LineCanvas { get; } = new ();
-
-    // The view-relative region that needs to be redrawn. Marked internal for unit tests.
-    internal Rectangle _needsDisplayRect = Rectangle.Empty;
-
-    /// <summary>Gets or sets whether the view needs to be redrawn.</summary>
-    public bool NeedsDisplay
-    {
-        get => _needsDisplayRect != Rectangle.Empty;
-        set
-        {
-            if (value)
-            {
-                SetNeedsDisplay ();
-            }
-            else
-            {
-                ClearNeedsDisplay ();
-            }
-        }
-    }
-
-    /// <summary>Gets whether any Subviews need to be redrawn.</summary>
-    public bool SubViewNeedsDisplay { get; private set; }
-
     /// <summary>
-    ///     Gets or sets whether this View will use it's SuperView's <see cref="LineCanvas"/> for rendering any 
-    ///     lines. If <see langword="true"/> the rendering of any borders drawn by this Frame will be done by its parent's
-    ///     SuperView. If <see langword="false"/> (the default) this View's <see cref="OnDrawAdornments"/> method will be
-    ///     called to render the borders.
+    ///     Draws a set of views.
     /// </summary>
-    public virtual bool SuperViewRendersLineCanvas { get; set; } = false;
-
-    /// <summary>Draws the specified character in the specified viewport-relative column and row of the View.</summary>
-    /// <para>
-    ///     If the provided coordinates are outside the visible content area, this method does nothing.
-    /// </para>
-    /// <remarks>
-    ///     The top-left corner of the visible content area is <c>ViewPort.Location</c>.
-    /// </remarks>
-    /// <param name="col">Column (viewport-relative).</param>
-    /// <param name="row">Row (viewport-relative).</param>
-    /// <param name="rune">The Rune.</param>
-    public void AddRune (int col, int row, Rune rune)
+    /// <param name="views">The peer views to draw.</param>
+    /// <param name="force">If <see langword="true"/>, <see cref="View.SetNeedsDraw()"/> will be called on each view to force it to be drawn.</param>
+    internal static void Draw (IEnumerable<View> views, bool force)
     {
-        if (Move (col, row))
-        {
-            Driver.AddRune (rune);
-        }
-    }
+        IEnumerable<View> viewsArray = views as View [] ?? views.ToArray ();
 
-    /// <summary>Clears <see cref="Viewport"/> with the normal background.</summary>
-    /// <remarks>
-    ///     <para>
-    ///         If <see cref="ViewportSettings"/> has <see cref="Gui.ViewportSettings.ClearContentOnly"/> only
-    ///         the portion of the content
-    ///         area that is visible within the <see cref="View.Viewport"/> will be cleared. This is useful for views that have a
-    ///         content area larger than the Viewport (e.g. when <see cref="ViewportSettings.AllowNegativeLocation"/> is
-    ///         enabled) and want
-    ///         the area outside the content to be visually distinct.
-    ///     </para>
-    /// </remarks>
-    public void Clear ()
-    {
-        if (Driver is null)
+        foreach (View view in viewsArray)
         {
-            return;
+            if (force)
+            {
+                view.SetNeedsDraw ();
+            }
+
+            view.Draw ();
         }
 
-        // Get screen-relative coords
-        Rectangle toClear = ViewportToScreen (Viewport with { Location = new (0, 0) });
-
-        Rectangle prevClip = Driver.Clip;
-
-        if (ViewportSettings.HasFlag (ViewportSettings.ClearContentOnly))
-        {
-            Rectangle visibleContent = ViewportToScreen (new Rectangle (new (-Viewport.X, -Viewport.Y), GetContentSize ()));
-            toClear = Rectangle.Intersect (toClear, visibleContent);
-        }
-
-        Attribute prev = Driver.SetAttribute (GetNormalColor ());
-        Driver.FillRect (toClear);
-        Driver.SetAttribute (prev);
-
-        Driver.Clip = prevClip;
-    }
-
-    /// <summary>Fills the specified <see cref="Viewport"/>-relative rectangle with the specified color.</summary>
-    /// <param name="rect">The Viewport-relative rectangle to clear.</param>
-    /// <param name="color">The color to use to fill the rectangle. If not provided, the Normal background color will be used.</param>
-    public void FillRect (Rectangle rect, Color? color = null)
-    {
-        if (Driver is null)
-        {
-            return;
-        }
-
-        // Get screen-relative coords
-        Rectangle toClear = ViewportToScreen (rect);
-
-        Rectangle prevClip = Driver.Clip;
-
-        Driver.Clip = Rectangle.Intersect (prevClip, ViewportToScreen (Viewport with { Location = new (0, 0) }));
-
-        Attribute prev = Driver.SetAttribute (new (color ?? GetNormalColor ().Background));
-        Driver.FillRect (toClear);
-        Driver.SetAttribute (prev);
-
-        Driver.Clip = prevClip;
-    }
-
-    /// <summary>Sets the <see cref="ConsoleDriver"/>'s clip region to <see cref="Viewport"/>.</summary>
-    /// <remarks>
-    /// <para>
-    ///     By default, the clip rectangle is set to the intersection of the current clip region and the
-    ///     <see cref="Viewport"/>. This ensures that drawing is constrained to the viewport, but allows
-    ///     content to be drawn beyond the viewport.
-    /// </para>
-    /// <para>
-    ///     If <see cref="ViewportSettings"/> has <see cref="Gui.ViewportSettings.ClipContentOnly"/> set, clipping will be
-    ///     applied to just the visible content area.
-    /// </para>
-    /// </remarks>
-    /// <returns>
-    ///     The current screen-relative clip region, which can be then re-applied by setting
-    ///     <see cref="ConsoleDriver.Clip"/>.
-    /// </returns>
-    public Rectangle SetClip ()
-    {
-        if (Driver is null)
-        {
-            return Rectangle.Empty;
-        }
-
-        Rectangle previous = Driver.Clip;
-
-        // Clamp the Clip to the entire visible area
-        Rectangle clip = Rectangle.Intersect (ViewportToScreen (Viewport with { Location = Point.Empty }), previous);
-
-        if (ViewportSettings.HasFlag (ViewportSettings.ClipContentOnly))
-        {
-            // Clamp the Clip to the just content area that is within the viewport
-            Rectangle visibleContent = ViewportToScreen (new Rectangle (new (-Viewport.X, -Viewport.Y), GetContentSize ()));
-            clip = Rectangle.Intersect (clip, visibleContent);
-        }
-
-        Driver.Clip = clip;
-
-        return previous;
+        Margin.DrawMargins (viewsArray);
     }
 
     /// <summary>
-    ///     Draws the view. Causes the following virtual methods to be called (along with their related events):
-    ///     <see cref="OnDrawContent"/>, <see cref="OnDrawContentComplete"/>.
+    ///     Draws the view if it needs to be drawn.
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///         Always use <see cref="Viewport"/> (view-relative) when calling <see cref="OnDrawContent(Rectangle)"/>, NOT
-    ///         <see cref="Frame"/> (superview-relative).
+    ///         The view will only be drawn if it is visible, and has any of <see cref="NeedsDraw"/>,
+    ///         <see cref="SubViewNeedsDraw"/>,
+    ///         or <see cref="NeedsLayout"/> set.
     ///     </para>
     ///     <para>
-    ///         Views should set the color that they want to use on entry, as otherwise this will inherit the last color that
-    ///         was set globally on the driver.
-    ///     </para>
-    ///     <para>
-    ///         Overrides of <see cref="OnDrawContent(Rectangle)"/> must ensure they do not set <c>Driver.Clip</c> to a clip
-    ///         region larger than the <ref name="Viewport"/> property, as this will cause the driver to clip the entire
-    ///         region.
+    ///         See the View Drawing Deep Dive for more information: <see href="https://gui-cs.github.io/Terminal.GuiV2Docs/docs/drawing.html"/>.
     ///     </para>
     /// </remarks>
     public void Draw ()
     {
-        OnDrawAdornments ();
+        if (!CanBeVisible (this))
+        {
+            return;
+        }
 
+        Region? saved = GetClip ();
+
+        // TODO: This can be further optimized by checking NeedsDraw below and only clearing, drawing text, drawing content, etc. if it is true.
+        if (NeedsDraw || SubViewNeedsDraw)
+        {
+            // Draw the Border and Padding.
+            // We clip to the frame to prevent drawing outside the frame.
+            saved = ClipFrame ();
+            DoDrawBorderAndPadding ();
+            SetClip (saved);
+
+            // Draw the content within the Viewport
+            // By default, we clip to the viewport preventing drawing outside the viewport
+            // We also clip to the content, but if a developer wants to draw outside the viewport, they can do
+            // so via settings. SetClip honors the ViewportSettings.DisableVisibleContentClipping flag.
+            // Get our Viewport in screen coordinates
+
+            saved = ClipViewport ();
+
+            // Clear the viewport
+            // TODO: Simplify/optimize SetAttribute system.
+            DoSetAttribute ();
+            DoClearViewport ();
+
+            // Draw the subviews
+            if (SubViewNeedsDraw)
+            {
+                DoSetAttribute ();
+                DoDrawSubviews ();
+            }
+
+            // Draw the text
+            DoSetAttribute ();
+            DoDrawText ();
+
+            // Draw the content
+            DoSetAttribute ();
+            DoDrawContent ();
+
+            // Restore the clip before rendering the line canvas and adornment subviews
+            // because they may draw outside the viewport.
+            SetClip (saved);
+
+            saved = ClipFrame ();
+
+            // Draw the line canvas
+            DoRenderLineCanvas ();
+
+            // Re-draw the border and padding subviews
+            // HACK: This is a hack to ensure that the border and padding subviews are drawn after the line canvas.
+            DoDrawBorderAndPaddingSubViews ();
+
+            // Advance the diagnostics draw indicator
+            Border?.AdvanceDrawIndicator ();
+
+            ClearNeedsDraw ();
+        }
+
+        // This causes the Margin to be drawn in a second pass
+        // PERFORMANCE: If there is a Margin, it will be redrawn each iteration of the main loop.
+        Margin?.CacheClip ();
+
+        // We're done drawing
+        DoDrawComplete ();
+
+        // QUESTION: Should this go before DoDrawComplete? What is more correct?
+        SetClip (saved);
+
+        // Exclude this view (not including Margin) from the Clip
+        if (this is not Adornment)
+        {
+            Rectangle borderFrame = FrameToScreen ();
+
+            if (Border is { })
+            {
+                borderFrame = Border.FrameToScreen ();
+            }
+
+            ExcludeFromClip (borderFrame);
+        }
+    }
+
+    #region DrawAdornments
+
+    private void DoDrawBorderAndPaddingSubViews ()
+    {
+        if (Border?.Subviews is { } && Border.Thickness != Thickness.Empty)
+        {
+            // PERFORMANCE: Get the check for DrawIndicator out of this somehow.
+            foreach (View subview in Border.Subviews.Where (v => v.Visible || v.Id == "DrawIndicator"))
+            {
+                if (subview.Id != "DrawIndicator")
+                {
+                    subview.SetNeedsDraw ();
+                }
+
+                LineCanvas.Exclude (new (subview.FrameToScreen()));
+            }
+
+            Region? saved = Border?.ClipFrame ();
+            Border?.DoDrawSubviews ();
+            SetClip (saved);
+        }
+
+        if (Padding?.Subviews is { } && Padding.Thickness != Thickness.Empty)
+        {
+            foreach (View subview in Padding.Subviews)
+            {
+                subview.SetNeedsDraw ();
+            }
+
+            Region? saved = Padding?.ClipFrame ();
+            Padding?.DoDrawSubviews ();
+            SetClip (saved);
+        }
+    }
+
+    private void DoDrawBorderAndPadding ()
+    {
+        if (OnDrawingBorderAndPadding ())
+        {
+            return;
+        }
+
+        // TODO: add event.
+
+        DrawBorderAndPadding ();
+    }
+
+    /// <summary>
+    ///     Causes <see cref="Border"/> and <see cref="Padding"/> to be drawn.
+    /// </summary>
+    /// <remarks>
+    ///     <para>
+    ///         <see cref="Margin"/> is drawn in a separate pass.
+    ///     </para>
+    /// </remarks>
+    public void DrawBorderAndPadding ()
+    {
+        // We do not attempt to draw Margin. It is drawn in a separate pass.
+
+        // Each of these renders lines to this View's LineCanvas 
+        // Those lines will be finally rendered in OnRenderLineCanvas
+        if (Border is { } && Border.Thickness != Thickness.Empty)
+        {
+            Border?.Draw ();
+        }
+
+        if (Padding is { } && Padding.Thickness != Thickness.Empty)
+        {
+            Padding?.Draw ();
+        }
+
+    }
+
+    /// <summary>
+    ///     Called when the View's Adornments are to be drawn. Prepares <see cref="View.LineCanvas"/>. If
+    ///     <see cref="SuperViewRendersLineCanvas"/> is true, only the
+    ///     <see cref="LineCanvas"/> of this view's subviews will be rendered. If <see cref="SuperViewRendersLineCanvas"/> is
+    ///     false (the default), this method will cause the <see cref="LineCanvas"/> be prepared to be rendered.
+    /// </summary>
+    /// <returns><see langword="true"/> to stop further drawing of the Adornments.</returns>
+    protected virtual bool OnDrawingBorderAndPadding () { return false; }
+
+    #endregion DrawAdornments
+
+    #region SetAttribute
+
+    private void DoSetAttribute ()
+    {
+        if (OnSettingAttribute ())
+        {
+            return;
+        }
+
+        var args = new CancelEventArgs ();
+        SettingAttribute?.Invoke (this, args);
+
+        if (args.Cancel)
+        {
+            return;
+        }
+
+        SetNormalAttribute ();
+    }
+
+    /// <summary>
+    ///     Called when the normal attribute for the View is to be set. This is called before the View is drawn.
+    /// </summary>
+    /// <returns><see langword="true"/> to stop default behavior.</returns>
+    protected virtual bool OnSettingAttribute () { return false; }
+
+    /// <summary>Raised  when the normal attribute for the View is to be set. This is raised before the View is drawn.</summary>
+    /// <returns>
+    ///     Set <see cref="CancelEventArgs.Cancel"/> to <see langword="true"/> to stop default behavior.
+    /// </returns>
+    public event EventHandler<CancelEventArgs>? SettingAttribute;
+
+    /// <summary>
+    ///     Sets the attribute for the View. This is called before the View is drawn.
+    /// </summary>
+    public void SetNormalAttribute ()
+    {
         if (ColorScheme is { })
         {
-            //Driver.SetAttribute (HasFocus ? GetFocusColor () : GetNormalColor ());
-            Driver?.SetAttribute (GetNormalColor ());
+            SetAttribute (GetNormalColor ());
         }
-
-        // By default, we clip to the viewport preventing drawing outside the viewport
-        // We also clip to the content, but if a developer wants to draw outside the viewport, they can do
-        // so via settings. SetClip honors the ViewportSettings.DisableVisibleContentClipping flag.
-        Rectangle prevClip = SetClip ();
-
-        // Invoke DrawContentEvent
-        var dev = new DrawEventArgs (Viewport, Rectangle.Empty);
-        DrawContent?.Invoke (this, dev);
-
-        if (!dev.Cancel)
-        {
-            OnDrawContent (Viewport);
-        }
-
-        if (Driver is { })
-        {
-            Driver.Clip = prevClip;
-        }
-
-        OnRenderLineCanvas ();
-
-        // TODO: This is a hack to force the border subviews to draw.
-        if (Border?.Subviews is { })
-        {
-            foreach (View view in Border.Subviews)
-            {
-                view.SetNeedsDisplay ();
-                view.Draw ();
-            }
-        }
-
-        // Invoke DrawContentCompleteEvent
-        OnDrawContentComplete (Viewport);
-
-        // BUGBUG: v2 - We should be able to use View.SetClip here and not have to resort to knowing Driver details.
-        ClearLayoutNeeded ();
-        ClearNeedsDisplay ();
     }
+
+    #endregion
+
+    #region ClearViewport
+
+    private void DoClearViewport ()
+    {
+        if (OnClearingViewport ())
+        {
+            return;
+        }
+
+        var dev = new DrawEventArgs (Viewport, Rectangle.Empty);
+        ClearingViewport?.Invoke (this, dev);
+
+        if (dev.Cancel)
+        {
+            return;
+        }
+
+        if (!NeedsDraw)
+        {
+            return;
+        }
+
+        ClearViewport ();
+    }
+
+    /// <summary>
+    ///     Called when the <see cref="Viewport"/> is to be cleared.
+    /// </summary>
+    /// <returns><see langword="true"/> to stop further clearing.</returns>
+    protected virtual bool OnClearingViewport () { return false; }
 
     /// <summary>Event invoked when the content area of the View is to be drawn.</summary>
     /// <remarks>
@@ -257,314 +297,276 @@ public partial class View // Drawing APIs
     ///         <see cref="View"/> .
     ///     </para>
     /// </remarks>
-    [CanBeNull]
-    public event EventHandler<DrawEventArgs> DrawContent;
+    public event EventHandler<DrawEventArgs>? ClearingViewport;
 
-    /// <summary>Event invoked when the content area of the View is completed drawing.</summary>
+    /// <summary>Clears <see cref="Viewport"/> with the normal background.</summary>
     /// <remarks>
-    ///     <para>Will be invoked after any subviews removed with <see cref="Remove(View)"/> have been completed drawing.</para>
+    ///     <para>
+    ///         If <see cref="ViewportSettings"/> has <see cref="Gui.ViewportSettings.ClearContentOnly"/> only
+    ///         the portion of the content
+    ///         area that is visible within the <see cref="View.Viewport"/> will be cleared. This is useful for views that have
+    ///         a
+    ///         content area larger than the Viewport (e.g. when <see cref="ViewportSettings.AllowNegativeLocation"/> is
+    ///         enabled) and want
+    ///         the area outside the content to be visually distinct.
+    ///     </para>
+    /// </remarks>
+    public void ClearViewport ()
+    {
+        if (Driver is null)
+        {
+            return;
+        }
+
+        // Get screen-relative coords
+        Rectangle toClear = ViewportToScreen (Viewport with { Location = new (0, 0) });
+
+        if (ViewportSettings.HasFlag (ViewportSettings.ClearContentOnly))
+        {
+            Rectangle visibleContent = ViewportToScreen (new Rectangle (new (-Viewport.X, -Viewport.Y), GetContentSize ()));
+            toClear = Rectangle.Intersect (toClear, visibleContent);
+        }
+
+        Attribute prev = SetAttribute (GetNormalColor ());
+        Driver.FillRect (toClear);
+        SetAttribute (prev);
+        SetNeedsDraw ();
+    }
+
+    #endregion ClearViewport
+
+    #region DrawText
+
+    private void DoDrawText ()
+    {
+        if (OnDrawingText ())
+        {
+            return;
+        }
+
+        var dev = new DrawEventArgs (Viewport, Rectangle.Empty);
+        DrawingText?.Invoke (this, dev);
+
+        if (dev.Cancel)
+        {
+            return;
+        }
+
+        if (!NeedsDraw)
+        {
+            return;
+        }
+
+        DrawText ();
+    }
+
+    /// <summary>
+    ///     Called when the <see cref="Text"/> of the View is to be drawn.
+    /// </summary>
+    /// <returns><see langword="true"/> to stop further drawing of  <see cref="Text"/>.</returns>
+    protected virtual bool OnDrawingText () { return false; }
+
+
+#pragma warning disable CS1574 // XML comment has cref attribute that could not be resolved
+    /// <summary>Raised when the <see cref="Text"/> of the View is to be drawn.</summary>
+    /// <returns>
+    ///     Set <see cref="DrawEventArgs.Cancel"/> to <see langword="true"/> to stop further drawing of
+    ///     <see cref="Text"/>.
+    /// </returns>
+    public event EventHandler<DrawEventArgs>? DrawingText;
+#pragma warning restore CS1574 // XML comment has cref attribute that could not be resolved
+
+    /// <summary>
+    ///     Draws the <see cref="Text"/> of the View using the <see cref="TextFormatter"/>.
+    /// </summary>
+    public void DrawText ()
+    {
+        if (!string.IsNullOrEmpty (TextFormatter.Text))
+        {
+            TextFormatter.NeedsFormat = true;
+        }
+
+        // TODO: If the output is not in the Viewport, do nothing
+        var drawRect = new Rectangle (ContentToScreen (Point.Empty), GetContentSize ());
+
+        TextFormatter?.Draw (
+                             drawRect,
+                             HasFocus ? GetFocusColor () : GetNormalColor (),
+                             HasFocus ? GetHotFocusColor () : GetHotNormalColor (),
+                             Rectangle.Empty
+                            );
+
+        // We assume that the text has been drawn over the entire area; ensure that the subviews are redrawn.
+        SetSubViewNeedsDraw ();
+    }
+
+    #endregion DrawText
+
+    #region DrawContent
+
+    private void DoDrawContent ()
+    {
+        if (OnDrawingContent ())
+        {
+            return;
+        }
+
+        var dev = new DrawEventArgs (Viewport, Rectangle.Empty);
+        DrawingContent?.Invoke (this, dev);
+
+        if (dev.Cancel)
+        { }
+
+        // Do nothing.
+    }
+
+    /// <summary>
+    ///     Called when the View's content is to be drawn. The default implementation does nothing.
+    /// </summary>
+    /// <remarks>
+    /// </remarks>
+    /// <returns><see langword="true"/> to stop further drawing content.</returns>
+    protected virtual bool OnDrawingContent () { return false; }
+
+    /// <summary>Raised when  the View's content is to be drawn.</summary>
+    /// <remarks>
+    ///     <para>Will be invoked before any subviews added with <see cref="Add(View)"/> have been drawn.</para>
     ///     <para>
     ///         Rect provides the view-relative rectangle describing the currently visible viewport into the
     ///         <see cref="View"/> .
     ///     </para>
     /// </remarks>
-    [CanBeNull]
-    public event EventHandler<DrawEventArgs> DrawContentComplete;
+    public event EventHandler<DrawEventArgs>? DrawingContent;
 
-    /// <summary>Utility function to draw strings that contain a hotkey.</summary>
-    /// <param name="text">String to display, the hotkey specifier before a letter flags the next letter as the hotkey.</param>
-    /// <param name="hotColor">Hot color.</param>
-    /// <param name="normalColor">Normal color.</param>
+    #endregion DrawContent
+
+    #region DrawSubviews
+
+    private void DoDrawSubviews ()
+    {
+        if (OnDrawingSubviews ())
+        {
+            return;
+        }
+
+        var dev = new DrawEventArgs (Viewport, Rectangle.Empty);
+        DrawingSubviews?.Invoke (this, dev);
+
+        if (dev.Cancel)
+        {
+            return;
+        }
+
+        if (!SubViewNeedsDraw)
+        {
+            return;
+        }
+
+        DrawSubviews ();
+    }
+
+    /// <summary>
+    ///     Called when the <see cref="Subviews"/> are to be drawn.
+    /// </summary>
+    /// <returns><see langword="true"/> to stop further drawing of <see cref="Subviews"/>.</returns>
+    protected virtual bool OnDrawingSubviews () { return false; }
+
+
+#pragma warning disable CS1574 // XML comment has cref attribute that could not be resolved
+    /// <summary>Raised when the <see cref="Subviews"/> are to be drawn.</summary>
     /// <remarks>
-    ///     <para>
-    ///         The hotkey is any character following the hotkey specifier, which is the underscore ('_') character by
-    ///         default.
-    ///     </para>
-    ///     <para>The hotkey specifier can be changed via <see cref="HotKeySpecifier"/></para>
     /// </remarks>
-    public void DrawHotString (string text, Attribute hotColor, Attribute normalColor)
-    {
-        Rune hotkeySpec = HotKeySpecifier == (Rune)0xffff ? (Rune)'_' : HotKeySpecifier;
-        Application.Driver?.SetAttribute (normalColor);
-
-        foreach (Rune rune in text.EnumerateRunes ())
-        {
-            if (rune == new Rune (hotkeySpec.Value))
-            {
-                Application.Driver?.SetAttribute (hotColor);
-
-                continue;
-            }
-
-            Application.Driver?.AddRune (rune);
-            Application.Driver?.SetAttribute (normalColor);
-        }
-    }
-
-    /// <summary>
-    ///     Utility function to draw strings that contains a hotkey using a <see cref="ColorScheme"/> and the "focused"
-    ///     state.
-    /// </summary>
-    /// <param name="text">String to display, the underscore before a letter flags the next letter as the hotkey.</param>
-    /// <param name="focused">
-    ///     If set to <see langword="true"/> this uses the focused colors from the color scheme, otherwise
-    ///     the regular ones.
-    /// </param>
-    /// <param name="scheme">The color scheme to use.</param>
-    public void DrawHotString (string text, bool focused, ColorScheme scheme)
-    {
-        if (focused)
-        {
-            DrawHotString (text, scheme.HotFocus, scheme.Focus);
-        }
-        else
-        {
-            DrawHotString (
-                           text,
-                           Enabled ? scheme.HotNormal : scheme.Disabled,
-                           Enabled ? scheme.Normal : scheme.Disabled
-                          );
-        }
-    }
-
-    /// <summary>Determines the current <see cref="ColorScheme"/> based on the <see cref="Enabled"/> value.</summary>
     /// <returns>
-    ///     <see cref="ColorScheme.Focus"/> if <see cref="Enabled"/> is <see langword="true"/> or
-    ///     <see cref="ColorScheme.Disabled"/> if <see cref="Enabled"/> is <see langword="false"/>. If it's
-    ///     overridden can return other values.
+    ///     Set <see cref="DrawEventArgs.Cancel"/> to <see langword="true"/> to stop further drawing of
+    ///     <see cref="Subviews"/>.
     /// </returns>
-    public virtual Attribute GetFocusColor ()
-    {
-        ColorScheme cs = ColorScheme;
-        if (cs is null)
-        {
-            cs = new ();
-        }
+    public event EventHandler<DrawEventArgs>? DrawingSubviews;
+#pragma warning restore CS1574 // XML comment has cref attribute that could not be resolved
 
-        return Enabled ? cs.Focus : cs.Disabled;
-    }
-
-    /// <summary>Determines the current <see cref="ColorScheme"/> based on the <see cref="Enabled"/> value.</summary>
-    /// <returns>
-    ///     <see cref="Terminal.Gui.ColorScheme.HotNormal"/> if <see cref="Enabled"/> is <see langword="true"/> or
-    ///     <see cref="Terminal.Gui.ColorScheme.Disabled"/> if <see cref="Enabled"/> is <see langword="false"/>. If it's
-    ///     overridden can return other values.
-    /// </returns>
-    public virtual Attribute GetHotNormalColor ()
-    {
-        ColorScheme cs = ColorScheme;
-
-        if (cs is null)
-        {
-            cs = new ();
-        }
-
-        return Enabled ? cs.HotNormal : cs.Disabled;
-    }
-
-    /// <summary>Determines the current <see cref="ColorScheme"/> based on the <see cref="Enabled"/> value.</summary>
-    /// <returns>
-    ///     <see cref="Terminal.Gui.ColorScheme.Normal"/> if <see cref="Enabled"/> is <see langword="true"/> or
-    ///     <see cref="Terminal.Gui.ColorScheme.Disabled"/> if <see cref="Enabled"/> is <see langword="false"/>. If it's
-    ///     overridden can return other values.
-    /// </returns>
-    public virtual Attribute GetNormalColor ()
-    {
-        ColorScheme cs = ColorScheme;
-
-        if (cs is null)
-        {
-            cs = new ();
-        }
-
-        return Enabled ? cs.Normal : cs.Disabled;
-    }
-
-    /// <summary>Moves the drawing cursor to the specified <see cref="Viewport"/>-relative location in the view.</summary>
-    /// <remarks>
-    ///     <para>
-    ///         If the provided coordinates are outside the visible content area, this method does nothing.
-    ///     </para>
-    ///     <para>
-    ///         The top-left corner of the visible content area is <c>ViewPort.Location</c>.
-    ///     </para>
-    /// </remarks>
-    /// <param name="col">Column (viewport-relative).</param>
-    /// <param name="row">Row (viewport-relative).</param>
-    public bool Move (int col, int row)
-    {
-        if (Driver is null || Driver?.Rows == 0)
-        {
-            return false;
-        }
-
-        if (col < 0 || row < 0 || col >= Viewport.Width || row >= Viewport.Height)
-        {
-            return false;
-        }
-
-        var screen = ViewportToScreen (new Point (col, row));
-        Driver?.Move (screen.X, screen.Y);
-
-        return true;
-    }
-
-    // TODO: Make this cancelable
     /// <summary>
-    ///     Prepares <see cref="View.LineCanvas"/>. If <see cref="SuperViewRendersLineCanvas"/> is true, only the
-    ///     <see cref="LineCanvas"/> of this view's subviews will be rendered. If <see cref="SuperViewRendersLineCanvas"/> is
-    ///     false (the default), this method will cause the <see cref="LineCanvas"/> be prepared to be rendered.
+    ///     Draws the <see cref="Subviews"/>.
     /// </summary>
-    /// <returns></returns>
-    public virtual bool OnDrawAdornments ()
+    public void DrawSubviews ()
     {
-        if (!IsInitialized)
+        if (_subviews is null)
         {
-            return false;
+            return;
         }
 
-        // Each of these renders lines to either this View's LineCanvas 
-        // Those lines will be finally rendered in OnRenderLineCanvas
-        Margin?.OnDrawContent (Margin.Viewport);
-        Border?.OnDrawContent (Border.Viewport);
-        Padding?.OnDrawContent (Padding.Viewport);
-
-        return true;
-    }
-
-    /// <summary>
-    ///     Draws the view's content, including Subviews.
-    /// </summary>
-    /// <remarks>
-    ///     <para>
-    ///         The <paramref name="viewport"/> parameter is provided as a convenience; it has the same values as the
-    ///         <see cref="Viewport"/> property.
-    ///     </para>
-    ///     <para>
-    ///         The <see cref="Viewport"/> Location and Size indicate what part of the View's content, defined
-    ///         by <see cref="GetContentSize ()"/>, is visible and should be drawn. The coordinates taken by <see cref="Move"/> and
-    ///         <see cref="AddRune"/> are relative to <see cref="Viewport"/>, thus if <c>ViewPort.Location.Y</c> is <c>5</c>
-    ///         the 6th row of the content should be drawn using <c>MoveTo (x, 5)</c>.
-    ///     </para>
-    ///     <para>
-    ///         If <see cref="GetContentSize ()"/> is larger than <c>ViewPort.Size</c> drawing code should use <see cref="Viewport"/>
-    ///         to constrain drawing for better performance.
-    ///     </para>
-    ///     <para>
-    ///         The <see cref="ConsoleDriver.Clip"/> may define smaller area than <see cref="Viewport"/>; complex drawing code
-    ///         can be more
-    ///         efficient by using <see cref="ConsoleDriver.Clip"/> to constrain drawing for better performance.
-    ///     </para>
-    ///     <para>
-    ///         Overrides should loop through the subviews and call <see cref="Draw"/>.
-    ///     </para>
-    /// </remarks>
-    /// <param name="viewport">
-    ///     The rectangle describing the currently visible viewport into the <see cref="View"/>; has the same value as
-    ///     <see cref="Viewport"/>.
-    /// </param>
-    public virtual void OnDrawContent (Rectangle viewport)
-    {
-        if (NeedsDisplay)
+        // Draw the subviews in reverse order to leverage clipping.
+        foreach (View view in _subviews.Where (view => view.Visible).Reverse ())
         {
-            if (SuperView is { })
+            // TODO: HACK - This enables auto line join to work, but is brute force.
+            if (view.SuperViewRendersLineCanvas)
             {
-                Clear ();
+                view.SetNeedsDraw ();
             }
+            view.Draw ();
 
-            if (!CanBeVisible (this))
+            if (view.SuperViewRendersLineCanvas)
             {
-                return;
-            }
-
-            if (!string.IsNullOrEmpty (TextFormatter.Text))
-            {
-                if (TextFormatter is { })
-                {
-                    TextFormatter.NeedsFormat = true;
-                }
-            }
-
-            // This should NOT clear 
-            // TODO: If the output is not in the Viewport, do nothing
-            var drawRect = new Rectangle (ContentToScreen (Point.Empty), GetContentSize ());
-
-            TextFormatter?.Draw (
-                                 drawRect,
-                                 HasFocus ? GetFocusColor () : GetNormalColor (),
-                                 HasFocus ? ColorScheme.HotFocus : GetHotNormalColor (),
-                                 Rectangle.Empty
-                                );
-            SetSubViewNeedsDisplay ();
-        }
-
-        // TODO: Move drawing of subviews to a separate OnDrawSubviews virtual method
-        // Draw subviews
-        // TODO: Implement OnDrawSubviews (cancelable);
-        if (_subviews is { } && SubViewNeedsDisplay)
-        {
-            IEnumerable<View> subviewsNeedingDraw;
-            if (TabStop == TabBehavior.TabGroup && _subviews.Count(v => v.Arrangement.HasFlag (ViewArrangement.Overlapped)) > 0)
-            {
-                // TODO: This is a temporary hack to make overlapped non-Toplevels have a zorder. See also View.SetFocus
-                subviewsNeedingDraw = _subviews.Where (
-                                                       view => view.Visible
-                                                               && (view.NeedsDisplay || view.SubViewNeedsDisplay || view.LayoutNeeded)
-                                                      ).Reverse ();
-
-            }
-            else
-            {
-                subviewsNeedingDraw = _subviews.Where (
-                                                                         view => view.Visible
-                                                                                 && (view.NeedsDisplay || view.SubViewNeedsDisplay || view.LayoutNeeded)
-                                                                        );
-
-            }
-            foreach (View view in subviewsNeedingDraw)
-            {
-                if (view.LayoutNeeded)
-                {
-                    view.LayoutSubviews ();
-                }
-
-                view.Draw ();
+                LineCanvas.Merge (view.LineCanvas);
+                view.LineCanvas.Clear ();
             }
         }
     }
 
-    /// <summary>
-    ///     Called after <see cref="OnDrawContent"/> to enable overrides.
-    /// </summary>
-    /// <param name="viewport">
-    ///     The viewport-relative rectangle describing the currently visible viewport into the
-    ///     <see cref="View"/>
-    /// </param>
-    public virtual void OnDrawContentComplete (Rectangle viewport) { DrawContentComplete?.Invoke (this, new (viewport, Rectangle.Empty)); }
+    #endregion DrawSubviews
 
-    // TODO: Make this cancelable
+    #region DrawLineCanvas
+
+    private void DoRenderLineCanvas ()
+    {
+        if (OnRenderingLineCanvas ())
+        {
+            return;
+        }
+
+        // TODO: Add event
+
+        RenderLineCanvas ();
+    }
+
     /// <summary>
-    ///     Renders <see cref="View.LineCanvas"/>. If <see cref="SuperViewRendersLineCanvas"/> is true, only the
+    ///     Called when the <see cref="View.LineCanvas"/> is to be rendered. See <see cref="RenderLineCanvas"/>.
+    /// </summary>
+    /// <returns><see langword="true"/> to stop further drawing of <see cref="LineCanvas"/>.</returns>
+    protected virtual bool OnRenderingLineCanvas () { return false; }
+
+    /// <summary>The canvas that any line drawing that is to be shared by subviews of this view should add lines to.</summary>
+    /// <remarks><see cref="Border"/> adds border lines to this LineCanvas.</remarks>
+    public LineCanvas LineCanvas { get; } = new ();
+
+    /// <summary>
+    ///     Gets or sets whether this View will use it's SuperView's <see cref="LineCanvas"/> for rendering any
+    ///     lines. If <see langword="true"/> the rendering of any borders drawn by this Frame will be done by its parent's
+    ///     SuperView. If <see langword="false"/> (the default) this View's <see cref="OnDrawingBorderAndPadding"/> method will
+    ///     be
+    ///     called to render the borders.
+    /// </summary>
+    public virtual bool SuperViewRendersLineCanvas { get; set; } = false;
+
+    /// <summary>
+    ///     Causes the contents of <see cref="LineCanvas"/> to be drawn.
+    ///     If <see cref="SuperViewRendersLineCanvas"/> is true, only the
     ///     <see cref="LineCanvas"/> of this view's subviews will be rendered. If <see cref="SuperViewRendersLineCanvas"/> is
     ///     false (the default), this method will cause the <see cref="LineCanvas"/> to be rendered.
     /// </summary>
-    /// <returns></returns>
-    public virtual bool OnRenderLineCanvas ()
+    public void RenderLineCanvas ()
     {
-        if (!IsInitialized || Driver is null)
+        if (Driver is null)
         {
-            return false;
+            return;
         }
 
-        // If we have a SuperView, it'll render our frames.
-        if (!SuperViewRendersLineCanvas && LineCanvas.Viewport != Rectangle.Empty)
+        if (!SuperViewRendersLineCanvas && LineCanvas.Bounds != Rectangle.Empty)
         {
             foreach (KeyValuePair<Point, Cell?> p in LineCanvas.GetCellMap ())
             {
                 // Get the entire map
                 if (p.Value is { })
                 {
-                    Driver.SetAttribute (p.Value.Value.Attribute ?? ColorScheme.Normal);
+                    SetAttribute (p.Value.Value.Attribute ?? ColorScheme!.Normal);
                     Driver.Move (p.Key.X, p.Key.Y);
 
                     // TODO: #2616 - Support combining sequences that don't normalize
@@ -574,121 +576,212 @@ public partial class View // Drawing APIs
 
             LineCanvas.Clear ();
         }
-
-        if (Subviews.Any (s => s.SuperViewRendersLineCanvas))
-        {
-            foreach (View subview in Subviews.Where (s => s.SuperViewRendersLineCanvas))
-            {
-                // Combine the LineCanvas'
-                LineCanvas.Merge (subview.LineCanvas);
-                subview.LineCanvas.Clear ();
-            }
-
-            foreach (KeyValuePair<Point, Cell?> p in LineCanvas.GetCellMap ())
-            {
-                // Get the entire map
-                if (p.Value is { })
-                {
-                    Driver.SetAttribute (p.Value.Value.Attribute ?? ColorScheme.Normal);
-                    Driver.Move (p.Key.X, p.Key.Y);
-
-                    // TODO: #2616 - Support combining sequences that don't normalize
-                    Driver.AddRune (p.Value.Value.Rune);
-                }
-            }
-
-            LineCanvas.Clear ();
-        }
-
-        return true;
     }
 
-    /// <summary>Sets the area of this view needing to be redrawn to <see cref="Viewport"/>.</summary>
+    #endregion DrawLineCanvas
+
+    #region DrawComplete
+
+    private void DoDrawComplete ()
+    {
+        OnDrawComplete ();
+
+        DrawComplete?.Invoke (this, new (Viewport, Viewport));
+
+        // Default implementation does nothing.
+    }
+
+    /// <summary>
+    ///     Called when the View is completed drawing.
+    /// </summary>
+    protected virtual void OnDrawComplete () { }
+
+    /// <summary>Raised when the View is completed drawing.</summary>
+    /// <remarks>
+    /// </remarks>
+    public event EventHandler<DrawEventArgs>? DrawComplete;
+
+    #endregion DrawComplete
+
+    #region NeedsDraw
+
+    // TODO: Change NeedsDraw to use a Region instead of Rectangle
+    // TODO: Make _needsDrawRect nullable instead of relying on Empty
+    //      TODO: If null, it means ?
+    //      TODO: If Empty, it means no need to redraw
+    //      TODO: If not Empty, it means the region that needs to be redrawn
+    // The viewport-relative region that needs to be redrawn. Marked internal for unit tests.
+    internal Rectangle _needsDrawRect = Rectangle.Empty;
+
+    /// <summary>Gets or sets whether the view needs to be redrawn.</summary>
+    /// <remarks>
+    ///     <para>
+    ///         Will be <see langword="true"/> if the <see cref="NeedsLayout"/> property is <see langword="true"/> or if
+    ///         any part of the view's <see cref="Viewport"/> needs to be redrawn.
+    ///     </para>
+    ///     <para>
+    ///         Setting has no effect on <see cref="NeedsLayout"/>.
+    ///     </para>
+    /// </remarks>
+    public bool NeedsDraw
+    {
+        // TODO: Figure out if we can decouple NeedsDraw from NeedsLayout.
+        get => Visible && (_needsDrawRect != Rectangle.Empty || NeedsLayout);
+        set
+        {
+            if (value)
+            {
+                SetNeedsDraw ();
+            }
+            else
+            {
+                ClearNeedsDraw ();
+            }
+        }
+    }
+
+    /// <summary>Gets whether any Subviews need to be redrawn.</summary>
+    public bool SubViewNeedsDraw { get; private set; }
+
+    /// <summary>Sets that the <see cref="Viewport"/> of this View needs to be redrawn.</summary>
     /// <remarks>
     ///     If the view has not been initialized (<see cref="IsInitialized"/> is <see langword="false"/>), this method
     ///     does nothing.
     /// </remarks>
-    public void SetNeedsDisplay ()
+    public void SetNeedsDraw ()
     {
-        SetNeedsDisplay (Viewport);
+        Rectangle viewport = Viewport;
+
+        if (!Visible || (_needsDrawRect != Rectangle.Empty && viewport.IsEmpty))
+        {
+            // This handles the case where the view has not been initialized yet
+            return;
+        }
+
+        SetNeedsDraw (viewport);
     }
 
-    /// <summary>Expands the area of this view needing to be redrawn to include <paramref name="region"/>.</summary>
+    /// <summary>Expands the area of this view needing to be redrawn to include <paramref name="viewPortRelativeRegion"/>.</summary>
     /// <remarks>
     ///     <para>
-    ///         The location of <paramref name="region"/> is relative to the View's content, bound by <c>Size.Empty</c> and
-    ///         <see cref="GetContentSize ()"/>.
+    ///         The location of <paramref name="viewPortRelativeRegion"/> is relative to the View's <see cref="Viewport"/>.
     ///     </para>
     ///     <para>
     ///         If the view has not been initialized (<see cref="IsInitialized"/> is <see langword="false"/>), the area to be
-    ///         redrawn will be the <paramref name="region"/>.
+    ///         redrawn will be the <paramref name="viewPortRelativeRegion"/>.
     ///     </para>
     /// </remarks>
-    /// <param name="region">The content-relative region that needs to be redrawn.</param>
-    public void SetNeedsDisplay (Rectangle region)
+    /// <param name="viewPortRelativeRegion">The <see cref="Viewport"/>relative region that needs to be redrawn.</param>
+    public void SetNeedsDraw (Rectangle viewPortRelativeRegion)
     {
-        if (_needsDisplayRect.IsEmpty)
+        if (!Visible)
         {
-            _needsDisplayRect = region;
+            return;
+        }
+
+        if (_needsDrawRect.IsEmpty)
+        {
+            _needsDrawRect = viewPortRelativeRegion;
         }
         else
         {
-            int x = Math.Min (_needsDisplayRect.X, region.X);
-            int y = Math.Min (_needsDisplayRect.Y, region.Y);
-            int w = Math.Max (_needsDisplayRect.Width, region.Width);
-            int h = Math.Max (_needsDisplayRect.Height, region.Height);
-            _needsDisplayRect = new (x, y, w, h);
+            int x = Math.Min (Viewport.X, viewPortRelativeRegion.X);
+            int y = Math.Min (Viewport.Y, viewPortRelativeRegion.Y);
+            int w = Math.Max (Viewport.Width, viewPortRelativeRegion.Width);
+            int h = Math.Max (Viewport.Height, viewPortRelativeRegion.Height);
+            _needsDrawRect = new (x, y, w, h);
         }
 
-        Margin?.SetNeedsDisplay ();
-        Border?.SetNeedsDisplay ();
-        Padding?.SetNeedsDisplay ();
+        // Do not set on Margin - it will be drawn in a separate pass.
 
-        SuperView?.SetSubViewNeedsDisplay ();
+        if (Border is { } && Border.Thickness != Thickness.Empty)
+        {
+            Border?.SetNeedsDraw ();
+        }
+
+        if (Padding is { } && Padding.Thickness != Thickness.Empty)
+        {
+            Padding?.SetNeedsDraw ();
+        }
+
+        SuperView?.SetSubViewNeedsDraw ();
+
+        if (this is Adornment adornment)
+        {
+            adornment.Parent?.SetSubViewNeedsDraw ();
+        }
 
         foreach (View subview in Subviews)
         {
-            if (subview.Frame.IntersectsWith (region))
+            if (subview.Frame.IntersectsWith (viewPortRelativeRegion))
             {
-                Rectangle subviewRegion = Rectangle.Intersect (subview.Frame, region);
+                Rectangle subviewRegion = Rectangle.Intersect (subview.Frame, viewPortRelativeRegion);
                 subviewRegion.X -= subview.Frame.X;
                 subviewRegion.Y -= subview.Frame.Y;
-                subview.SetNeedsDisplay (subviewRegion);
+                subview.SetNeedsDraw (subviewRegion);
             }
         }
     }
 
-    /// <summary>Sets <see cref="SubViewNeedsDisplay"/> to <see langword="true"/> for this View and all Superviews.</summary>
-    public void SetSubViewNeedsDisplay ()
+    /// <summary>Sets <see cref="SubViewNeedsDraw"/> to <see langword="true"/> for this View and all Superviews.</summary>
+    public void SetSubViewNeedsDraw ()
     {
-        SubViewNeedsDisplay = true;
+        if (!Visible)
+        {
+            return;
+        }
+
+        SubViewNeedsDraw = true;
 
         if (this is Adornment adornment)
         {
-            adornment.Parent?.SetSubViewNeedsDisplay ();
+            adornment.Parent?.SetSubViewNeedsDraw ();
         }
 
-        if (SuperView is { SubViewNeedsDisplay: false })
+        if (SuperView is { SubViewNeedsDraw: false })
         {
-            SuperView.SetSubViewNeedsDisplay ();
-
-            return;
+            SuperView.SetSubViewNeedsDraw ();
         }
     }
 
-    /// <summary>Clears <see cref="NeedsDisplay"/> and <see cref="SubViewNeedsDisplay"/>.</summary>
-    protected void ClearNeedsDisplay ()
+    /// <summary>Clears <see cref="NeedsDraw"/> and <see cref="SubViewNeedsDraw"/>.</summary>
+    protected void ClearNeedsDraw ()
     {
-        _needsDisplayRect = Rectangle.Empty;
-        SubViewNeedsDisplay = false;
+        _needsDrawRect = Rectangle.Empty;
+        SubViewNeedsDraw = false;
 
-        Margin?.ClearNeedsDisplay ();
-        Border?.ClearNeedsDisplay ();
-        Padding?.ClearNeedsDisplay ();
+        if (Margin is { } && Margin.Thickness != Thickness.Empty)
+        {
+            Margin?.ClearNeedsDraw ();
+        }
+
+        if (Border is { } && Border.Thickness != Thickness.Empty)
+        {
+            Border?.ClearNeedsDraw ();
+        }
+
+        if (Padding is { } && Padding.Thickness != Thickness.Empty)
+        {
+            Padding?.ClearNeedsDraw ();
+        }
 
         foreach (View subview in Subviews)
         {
-            subview.ClearNeedsDisplay ();
+            subview.ClearNeedsDraw ();
         }
+
+        if (SuperView is { })
+        {
+            SuperView.SubViewNeedsDraw = false;
+        }
+
+        // This ensures LineCanvas' get redrawn
+        if (!SuperViewRendersLineCanvas)
+        {
+            LineCanvas.Clear ();
+        }
+
     }
+
+    #endregion NeedsDraw
 }
