@@ -607,12 +607,12 @@ public class UICatalogApp
         // Validate there are no outstanding Responder-based instances 
         // after a scenario was selected to run. This proves the main UI Catalog
         // 'app' closed cleanly.
-        foreach (Responder? inst in Responder.Instances)
+        foreach (View? inst in View.Instances)
         {
             Debug.Assert (inst.WasDisposed);
         }
 
-        Responder.Instances.Clear ();
+        View.Instances.Clear ();
 
         // Validate there are no outstanding Application.RunState-based instances 
         // after a scenario was selected to run. This proves the main UI Catalog

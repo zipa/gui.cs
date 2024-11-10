@@ -13,7 +13,7 @@ public class ApplicationMouseTests
     {
         _output = output;
 #if DEBUG_IDISPOSABLE
-        Responder.Instances.Clear ();
+        View.Instances.Clear ();
         RunState.Instances.Clear ();
 #endif
     }
