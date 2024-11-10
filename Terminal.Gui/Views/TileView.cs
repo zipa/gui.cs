@@ -174,11 +174,9 @@ public class TileView : View
     // BUG: v2 fix this hack
     // QUESTION: Does this need to be fixed before events are refactored?
     /// <summary>Overridden so no Frames get drawn</summary>
-    /// <param name="clipRegion"></param>
     /// <returns></returns>
     protected override bool OnDrawingBorderAndPadding () { return true; }
 
-    /// <param name="clipRegion"></param>
     /// <inheritdoc/>
     protected override bool OnRenderingLineCanvas () { return false; }
 
