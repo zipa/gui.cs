@@ -752,9 +752,9 @@ internal class NetDriver : ConsoleDriver
                                                      _waitAnsiResponse.Set ();
                                                  };
 
-                _mainLoopDriver._netEvents!.EscSeqRequests.Add (ansiRequest);
+                AnsiEscapeSequenceRequests.Add (ansiRequest);
 
-                _mainLoopDriver._netEvents._forceRead = true;
+                _mainLoopDriver._netEvents!._forceRead = true;
             }
 
             if (!_ansiResponseTokenSource.IsCancellationRequested)
@@ -763,6 +763,8 @@ internal class NetDriver : ConsoleDriver
                 {
                     _mainLoopDriver._waitForProbe.Set ();
                     _mainLoopDriver._netEvents._waitForStart.Set ();
+
+                    WriteRaw (ansiRequest.Request);
                 }
 
                 _waitAnsiResponse.Wait (_ansiResponseTokenSource.Token);
@@ -777,15 +779,15 @@ internal class NetDriver : ConsoleDriver
         {
             _mainLoopDriver._netEvents._forceRead = false;
 
-            if (_mainLoopDriver._netEvents.EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? request))
+            if (AnsiEscapeSequenceRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? request))
             {
-                if (_mainLoopDriver._netEvents.EscSeqRequests.Statuses.Count > 0
+                if (AnsiEscapeSequenceRequests.Statuses.Count > 0
                     && string.IsNullOrEmpty (request.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
                 {
                     lock (request.AnsiRequest._responseLock)
                     {
                         // Bad request or no response at all
-                        _mainLoopDriver._netEvents.EscSeqRequests.Statuses.TryDequeue (out _);
+                        AnsiEscapeSequenceRequests.Statuses.TryDequeue (out _);
                     }
                 }
             }
@@ -797,7 +799,11 @@ internal class NetDriver : ConsoleDriver
     }
 
     /// <inheritdoc/>
-    internal override void WriteRaw (string ansi) { throw new NotImplementedException (); }
+    internal override void WriteRaw (string ansi)
+    {
+        Console.Out.Write (ansi);
+        Console.Out.Flush ();
+    }
 
     private volatile bool _winSizeChanging;
 

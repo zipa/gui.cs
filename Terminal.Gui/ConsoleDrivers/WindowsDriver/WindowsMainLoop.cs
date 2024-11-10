@@ -1,5 +1,4 @@
 ﻿#nullable enable
-using System.Collections.Concurrent;
 
 namespace Terminal.Gui;
 
@@ -21,7 +20,8 @@ internal class WindowsMainLoop : IMainLoopDriver
     private readonly ManualResetEventSlim _eventReady = new (false);
 
     // The records that we keep fetching
-    private readonly BlockingCollection<WindowsConsole.InputRecord> _resultQueue = new (new ConcurrentQueue<WindowsConsole.InputRecord> ());
+    private readonly Queue<WindowsConsole.InputRecord> _resultQueue = new ();
+    private readonly ManualResetEventSlim _waitForProbe = new (false);
     private readonly WindowsConsole? _winConsole;
     private CancellationTokenSource _eventReadyTokenSource = new ();
     private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
@@ -37,8 +37,6 @@ internal class WindowsMainLoop : IMainLoopDriver
             _winConsole!._mainLoop = this;
         }
     }
-
-    public AnsiEscapeSequenceRequests EscSeqRequests { get; } = new ();
 
     void IMainLoopDriver.Setup (MainLoop mainLoop)
     {
@@ -59,6 +57,7 @@ internal class WindowsMainLoop : IMainLoopDriver
 
     bool IMainLoopDriver.EventsPending ()
     {
+        _waitForProbe.Set ();
 #if HACK_CHECK_WINCHANGED
         _winChange.Set ();
 #endif
@@ -105,10 +104,7 @@ internal class WindowsMainLoop : IMainLoopDriver
     {
         while (_resultQueue.Count > 0)
         {
-            if (_resultQueue.TryTake (out WindowsConsole.InputRecord dequeueResult))
-            {
-                ((WindowsDriver)_consoleDriver).ProcessInput (dequeueResult);
-            }
+            ((WindowsDriver)_consoleDriver).ProcessInput (_resultQueue.Dequeue ());
         }
 #if HACK_CHECK_WINCHANGED
         if (_winChanged)
@@ -135,7 +131,9 @@ internal class WindowsMainLoop : IMainLoopDriver
             }
         }
 
-        _resultQueue.Dispose ();
+        _waitForProbe?.Dispose ();
+
+        _resultQueue.Clear ();
 
         _eventReadyTokenSource.Cancel ();
         _eventReadyTokenSource.Dispose ();
@@ -156,9 +154,9 @@ internal class WindowsMainLoop : IMainLoopDriver
         {
             try
             {
-                if (_inputHandlerTokenSource.IsCancellationRequested)
+                if (_inputHandlerTokenSource.IsCancellationRequested && !_forceRead)
                 {
-                    return;
+                    _waitForProbe.Wait (_inputHandlerTokenSource.Token);
                 }
 
                 if (_resultQueue?.Count == 0 || _forceRead)
@@ -167,18 +165,21 @@ internal class WindowsMainLoop : IMainLoopDriver
 
                     if (result.HasValue)
                     {
-                        _resultQueue!.Add (result.Value);
+                        _resultQueue!.Enqueue (result.Value);
                     }
                 }
 
-                if (!_inputHandlerTokenSource.IsCancellationRequested && _resultQueue?.Count > 0)
-                {
-                    _eventReady.Set ();
-                }
             }
             catch (OperationCanceledException)
             {
                 return;
+            }
+            finally
+            {
+                if (_inputHandlerTokenSource is { IsCancellationRequested: false })
+                {
+                    _eventReady.Set ();
+                }
             }
         }
     }

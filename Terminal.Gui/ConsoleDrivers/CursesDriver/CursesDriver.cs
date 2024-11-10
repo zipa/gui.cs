@@ -806,7 +806,9 @@ internal class CursesDriver : ConsoleDriver
                                                      _waitAnsiResponse.Set ();
                                                  };
 
-                _mainLoopDriver.EscSeqRequests.Add (ansiRequest, this);
+                AnsiEscapeSequenceRequests.Add (ansiRequest);
+
+                WriteRaw (ansiRequest.Request);
 
                 _mainLoopDriver._forceRead = true;
             }
@@ -827,15 +829,15 @@ internal class CursesDriver : ConsoleDriver
         {
             _mainLoopDriver._forceRead = false;
 
-            if (_mainLoopDriver.EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? request))
+            if (AnsiEscapeSequenceRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? request))
             {
-                if (_mainLoopDriver.EscSeqRequests.Statuses.Count > 0
+                if (AnsiEscapeSequenceRequests.Statuses.Count > 0
                     && string.IsNullOrEmpty (request.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
                 {
                     lock (request.AnsiRequest._responseLock)
                     {
                         // Bad request or no response at all
-                        _mainLoopDriver.EscSeqRequests.Statuses.TryDequeue (out _);
+                        AnsiEscapeSequenceRequests.Statuses.TryDequeue (out _);
                     }
                 }
             }
@@ -848,7 +850,6 @@ internal class CursesDriver : ConsoleDriver
 
     /// <inheritdoc/>
     internal override void WriteRaw (string ansi) { _mainLoopDriver?.WriteRaw (ansi); }
-
 }
 
 // TODO: One type per file - move to another file

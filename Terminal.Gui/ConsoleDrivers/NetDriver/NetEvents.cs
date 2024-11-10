@@ -15,8 +15,6 @@ internal class NetEvents : IDisposable
 #if PROCESS_REQUEST
     bool _neededProcessRequest;
 #endif
-    public AnsiEscapeSequenceRequests EscSeqRequests { get; } = new ();
-
     public NetEvents (ConsoleDriver consoleDriver)
     {
         _consoleDriver = consoleDriver ?? throw new ArgumentNullException (nameof (consoleDriver));
@@ -79,15 +77,15 @@ internal class NetEvents : IDisposable
                 return Console.ReadKey (intercept);
             }
 
-            if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && EscSeqRequests is { Statuses.Count: > 0 })
+            if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && AnsiEscapeSequenceRequests.Statuses.Count > 0)
             {
                 if (_retries > 1)
                 {
-                    if (EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
+                    if (AnsiEscapeSequenceRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
                     {
                         lock (seqReqStatus.AnsiRequest._responseLock)
                         {
-                            EscSeqRequests.Statuses.TryDequeue (out _);
+                            AnsiEscapeSequenceRequests.Statuses.TryDequeue (out _);
 
                             seqReqStatus.AnsiRequest.RaiseResponseFromInput (null);
                         }
@@ -371,21 +369,20 @@ internal class NetEvents : IDisposable
     {
         // isMouse is true if it's CSI<, false otherwise
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  EscSeqRequests,
-                                  ref newConsoleKeyInfo,
-                                  ref key,
-                                  cki,
-                                  ref mod,
-                                  out string c1Control,
-                                  out string code,
-                                  out string [] values,
-                                  out string terminating,
-                                  out bool isMouse,
-                                  out List<MouseFlags> mouseFlags,
-                                  out Point pos,
-                                  out AnsiEscapeSequenceRequestStatus? seqReqStatus,
-                                  (f, p) => HandleMouseEvent (MapMouseFlags (f), p)
-                                 );
+                                                     ref newConsoleKeyInfo,
+                                                     ref key,
+                                                     cki,
+                                                     ref mod,
+                                                     out string c1Control,
+                                                     out string code,
+                                                     out string [] values,
+                                                     out string terminating,
+                                                     out bool isMouse,
+                                                     out List<MouseFlags> mouseFlags,
+                                                     out Point pos,
+                                                     out AnsiEscapeSequenceRequestStatus? seqReqStatus,
+                                                     (f, p) => HandleMouseEvent (MapMouseFlags (f), p)
+                                                    );
 
         if (isMouse)
         {
@@ -413,7 +410,7 @@ internal class NetEvents : IDisposable
 
         if (!string.IsNullOrEmpty (AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator))
         {
-            if (EscSeqRequests.Statuses.TryDequeue (out AnsiEscapeSequenceRequestStatus? result))
+            if (AnsiEscapeSequenceRequests.Statuses.TryDequeue (out AnsiEscapeSequenceRequestStatus? result))
             {
                 lock (result.AnsiRequest._responseLock)
                 {

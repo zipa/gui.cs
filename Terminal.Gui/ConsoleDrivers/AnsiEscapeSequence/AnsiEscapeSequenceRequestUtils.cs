@@ -183,7 +183,6 @@ public static class AnsiEscapeSequenceRequestUtils
     /// <summary>
     ///     Decodes an ANSI escape sequence.
     /// </summary>
-    /// <param name="escSeqRequests">The <see cref="AnsiEscapeSequenceRequests"/> which may contain a request.</param>
     /// <param name="newConsoleKeyInfo">The <see cref="ConsoleKeyInfo"/> which may change.</param>
     /// <param name="key">The <see cref="ConsoleKey"/> which may change.</param>
     /// <param name="cki">The <see cref="ConsoleKeyInfo"/> array.</param>
@@ -198,7 +197,6 @@ public static class AnsiEscapeSequenceRequestUtils
     /// <param name="seqReqStatus">The <see cref="AnsiEscapeSequenceRequestStatus"/> object.</param>
     /// <param name="continuousButtonPressedHandler">The handler that will process the event.</param>
     public static void DecodeEscSeq (
-        AnsiEscapeSequenceRequests? escSeqRequests,
         ref ConsoleKeyInfo newConsoleKeyInfo,
         ref ConsoleKey key,
         ConsoleKeyInfo [] cki,
@@ -346,9 +344,9 @@ public static class AnsiEscapeSequenceRequestUtils
                     return;
                 }
 
-                if (escSeqRequests is { } && escSeqRequests.HasResponse (terminator, out seqReqStatus))
+                if (AnsiEscapeSequenceRequests.HasResponse (terminator, out seqReqStatus))
                 {
-                    escSeqRequests.Remove (seqReqStatus);
+                    AnsiEscapeSequenceRequests.Remove (seqReqStatus);
 
                     return;
                 }
@@ -376,7 +374,7 @@ public static class AnsiEscapeSequenceRequestUtils
                     else
                     {
                         // It's request response that wasn't handled by a valid request terminator
-                        System.Diagnostics.Debug.Assert (escSeqRequests is null or { Statuses.Count: > 0 });
+                        System.Diagnostics.Debug.Assert (AnsiEscapeSequenceRequests.Statuses.Count > 0);
 
                         InvalidRequestTerminator = ToString (cki);
                     }

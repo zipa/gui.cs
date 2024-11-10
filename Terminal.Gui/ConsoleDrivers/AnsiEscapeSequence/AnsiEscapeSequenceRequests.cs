@@ -4,35 +4,36 @@ using System.Collections.Concurrent;
 
 namespace Terminal.Gui;
 
-// TODO: This class is a singleton. It should use the singleton pattern.
 /// <summary>
 ///     Manages ANSI Escape Sequence requests and responses. The list of <see cref="AnsiEscapeSequenceRequestStatus"/>
 ///     contains the
 ///     status of the request. Each request is identified by the terminator (e.g. ESC[8t ... t is the terminator).
 /// </summary>
-public class AnsiEscapeSequenceRequests
+public static class AnsiEscapeSequenceRequests
 {
     /// <summary>
     ///     Adds a new request for the ANSI Escape Sequence defined by <paramref name="ansiRequest"/>. Adds a
     ///     <see cref="AnsiEscapeSequenceRequestStatus"/> instance to <see cref="Statuses"/> list.
     /// </summary>
     /// <param name="ansiRequest">The <see cref="AnsiEscapeSequenceRequest"/> object.</param>
-    /// <param name="driver">The driver in use.</param>
-    public void Add (AnsiEscapeSequenceRequest ansiRequest, ConsoleDriver? driver = null)
+    public static void Add (AnsiEscapeSequenceRequest ansiRequest)
+    {
+        lock (ansiRequest._responseLock)
+        {
+            Statuses.Enqueue (new (ansiRequest));
+        }
+
+        System.Diagnostics.Debug.Assert (Statuses.Count > 0);
+    }
+
+    /// <summary>
+    ///     Clear the <see cref="Statuses"/> property.
+    /// </summary>
+    public static void Clear ()
     {
         lock (Statuses)
         {
-            Statuses.Enqueue (new (ansiRequest));
-
-            if (driver is null)
-            {
-                Console.Out.Write (ansiRequest.Request);
-                Console.Out.Flush ();
-            }
-            else
-            {
-                driver.WriteRaw (ansiRequest.Request);
-            }
+            Statuses.Clear ();
         }
     }
 
@@ -43,22 +44,13 @@ public class AnsiEscapeSequenceRequests
     /// <param name="terminator"></param>
     /// <param name="seqReqStatus"></param>
     /// <returns><see langword="true"/> if exist, <see langword="false"/> otherwise.</returns>
-    public bool HasResponse (string terminator, out AnsiEscapeSequenceRequestStatus? seqReqStatus)
+    public static bool HasResponse (string terminator, out AnsiEscapeSequenceRequestStatus? seqReqStatus)
     {
         lock (Statuses)
         {
             Statuses.TryPeek (out seqReqStatus);
 
-            bool result = seqReqStatus?.AnsiRequest.Terminator == terminator;
-
-            if (result)
-            {
-                return true;
-            }
-
-            seqReqStatus = null;
-
-            return false;
+            return seqReqStatus?.AnsiRequest.Terminator == terminator;
         }
     }
 
@@ -70,7 +62,7 @@ public class AnsiEscapeSequenceRequests
     ///     <see cref="Statuses"/>.
     /// </summary>
     /// <param name="seqReqStatus">The <see cref="AnsiEscapeSequenceRequestStatus"/> object.</param>
-    public void Remove (AnsiEscapeSequenceRequestStatus? seqReqStatus)
+    public static void Remove (AnsiEscapeSequenceRequestStatus? seqReqStatus)
     {
         lock (Statuses)
         {
@@ -84,5 +76,5 @@ public class AnsiEscapeSequenceRequests
     }
 
     /// <summary>Gets the <see cref="AnsiEscapeSequenceRequestStatus"/> list.</summary>
-    public ConcurrentQueue<AnsiEscapeSequenceRequestStatus> Statuses { get; } = new ();
+    public static ConcurrentQueue<AnsiEscapeSequenceRequestStatus> Statuses { get; } = new ();
 }

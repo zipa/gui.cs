@@ -10,7 +10,6 @@ public class AnsiEscapeSequenceRequestUtilsTests
     private Point _arg2;
     private string _c1Control, _code, _terminating;
     private ConsoleKeyInfo [] _cki;
-    private AnsiEscapeSequenceRequests _escSeqReqProc;
     private bool _isKeyMouse;
     [CanBeNull]
     private AnsiEscapeSequenceRequestStatus _seqReqStatus;
@@ -30,22 +29,21 @@ public class AnsiEscapeSequenceRequestUtilsTests
         var expectedCki = new ConsoleKeyInfo ('\u001b', ConsoleKey.Escape, false, false, false);
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Null (_escSeqReqProc);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (ConsoleKey.Escape, _key);
         Assert.Equal (0, (int)_mod);
@@ -65,22 +63,21 @@ public class AnsiEscapeSequenceRequestUtilsTests
         expectedCki = new ('\u0012', ConsoleKey.R, false, true, true);
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Null (_escSeqReqProc);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (ConsoleKey.R, _key);
         Assert.Equal (ConsoleModifiers.Alt | ConsoleModifiers.Control, _mod);
@@ -100,22 +97,21 @@ public class AnsiEscapeSequenceRequestUtilsTests
         expectedCki = new ('r', ConsoleKey.R, false, true, false);
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Null (_escSeqReqProc);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (ConsoleKey.R, _key);
         Assert.Equal (ConsoleModifiers.Alt, _mod);
@@ -140,22 +136,21 @@ public class AnsiEscapeSequenceRequestUtilsTests
         expectedCki = new ('\0', ConsoleKey.F3, false, false, false);
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Null (_escSeqReqProc);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (ConsoleKey.F3, _key);
         Assert.Equal (0, (int)_mod);
@@ -186,22 +181,21 @@ public class AnsiEscapeSequenceRequestUtilsTests
         expectedCki = new ('\0', ConsoleKey.F3, true, false, false);
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Null (_escSeqReqProc);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (ConsoleKey.F3, _key);
         Assert.Equal (ConsoleModifiers.Shift, _mod);
@@ -232,22 +226,21 @@ public class AnsiEscapeSequenceRequestUtilsTests
         expectedCki = new ('\0', ConsoleKey.F3, false, true, false);
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Null (_escSeqReqProc);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (ConsoleKey.F3, _key);
         Assert.Equal (ConsoleModifiers.Alt, _mod);
@@ -278,22 +271,21 @@ public class AnsiEscapeSequenceRequestUtilsTests
         expectedCki = new ('\0', ConsoleKey.F3, true, true, false);
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Null (_escSeqReqProc);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (ConsoleKey.F3, _key);
         Assert.Equal (ConsoleModifiers.Shift | ConsoleModifiers.Alt, _mod);
@@ -324,22 +316,21 @@ public class AnsiEscapeSequenceRequestUtilsTests
         expectedCki = new ('\0', ConsoleKey.F3, false, false, true);
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Null (_escSeqReqProc);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (ConsoleKey.F3, _key);
         Assert.Equal (ConsoleModifiers.Control, _mod);
@@ -370,22 +361,21 @@ public class AnsiEscapeSequenceRequestUtilsTests
         expectedCki = new ('\0', ConsoleKey.F3, true, false, true);
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Null (_escSeqReqProc);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (ConsoleKey.F3, _key);
         Assert.Equal (ConsoleModifiers.Shift | ConsoleModifiers.Control, _mod);
@@ -416,22 +406,21 @@ public class AnsiEscapeSequenceRequestUtilsTests
         expectedCki = new ('\0', ConsoleKey.F3, false, true, true);
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Null (_escSeqReqProc);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (ConsoleKey.F3, _key);
         Assert.Equal (ConsoleModifiers.Alt | ConsoleModifiers.Control, _mod);
@@ -462,22 +451,21 @@ public class AnsiEscapeSequenceRequestUtilsTests
         expectedCki = new ('\0', ConsoleKey.F3, true, true, true);
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Null (_escSeqReqProc);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (ConsoleKey.F3, _key);
         Assert.Equal (ConsoleModifiers.Shift | ConsoleModifiers.Alt | ConsoleModifiers.Control, _mod);
@@ -511,22 +499,21 @@ public class AnsiEscapeSequenceRequestUtilsTests
         expectedCki = default (ConsoleKeyInfo);
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Null (_escSeqReqProc);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (0, (int)_key);
         Assert.Equal (0, (int)_mod);
@@ -561,22 +548,21 @@ public class AnsiEscapeSequenceRequestUtilsTests
         expectedCki = default (ConsoleKeyInfo);
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Null (_escSeqReqProc);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (0, (int)_key);
         Assert.Equal (0, (int)_mod);
@@ -616,22 +602,21 @@ public class AnsiEscapeSequenceRequestUtilsTests
         expectedCki = default (ConsoleKeyInfo);
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Null (_escSeqReqProc);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (0, (int)_key);
         Assert.Equal (0, (int)_mod);
@@ -664,22 +649,21 @@ public class AnsiEscapeSequenceRequestUtilsTests
         expectedCki = default (ConsoleKeyInfo);
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Null (_escSeqReqProc);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (0, (int)_key);
         Assert.Equal (0, (int)_mod);
@@ -719,22 +703,21 @@ public class AnsiEscapeSequenceRequestUtilsTests
         expectedCki = default (ConsoleKeyInfo);
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Null (_escSeqReqProc);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (0, (int)_key);
         Assert.Equal (0, (int)_mod);
@@ -788,22 +771,21 @@ public class AnsiEscapeSequenceRequestUtilsTests
         expectedCki = default (ConsoleKeyInfo);
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Null (_escSeqReqProc);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (0, (int)_key);
         Assert.Equal (0, (int)_mod);
@@ -823,9 +805,9 @@ public class AnsiEscapeSequenceRequestUtilsTests
 
         ClearAll ();
 
-        Assert.Null (_escSeqReqProc);
-        _escSeqReqProc = new ();
-        _escSeqReqProc.Add (new () { Request = "", Terminator = "t" });
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
+        AnsiEscapeSequenceRequests.Clear ();
+        AnsiEscapeSequenceRequests.Add (new () { Request = "", Terminator = "t" });
 
         _cki = new ConsoleKeyInfo []
         {
@@ -841,26 +823,25 @@ public class AnsiEscapeSequenceRequestUtilsTests
             new ('t', 0, false, false, false)
         };
         expectedCki = default (ConsoleKeyInfo);
-        Assert.Single (_escSeqReqProc.Statuses);
-        Assert.Equal ("t", _escSeqReqProc.Statuses.ToArray () [^1].AnsiRequest.Terminator);
+        Assert.Single (AnsiEscapeSequenceRequests.Statuses);
+        Assert.Equal ("t", AnsiEscapeSequenceRequests.Statuses.ToArray () [^1].AnsiRequest.Terminator);
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Empty (_escSeqReqProc.Statuses);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (0, (int)_key);
         Assert.Equal (0, (int)_mod);
@@ -909,22 +890,21 @@ public class AnsiEscapeSequenceRequestUtilsTests
         var expectedCki = new ConsoleKeyInfo (keyChar, consoleKey, shift, alt, control);
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Null (_escSeqReqProc);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (consoleKey, _key);
 
@@ -976,22 +956,21 @@ public class AnsiEscapeSequenceRequestUtilsTests
         ConsoleKeyInfo expectedCki = default;
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Null (_escSeqReqProc);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (ConsoleKey.None, _key);
         Assert.Equal (ConsoleModifiers.None, _mod);
@@ -1019,23 +998,25 @@ public class AnsiEscapeSequenceRequestUtilsTests
 
         expectedCki = default;
 
+        // Add a request to avoid assert failure in the DecodeEscSeq method
+        AnsiEscapeSequenceRequests.Add (new () { Request = "", Terminator = "t" });
+
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Null (_escSeqReqProc);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (ConsoleKey.None, _key);
 
@@ -1047,6 +1028,7 @@ public class AnsiEscapeSequenceRequestUtilsTests
         Assert.False (_isKeyMouse);
         Assert.Equal ([0], _mouseFlags);
         Assert.Equal (Point.Empty, _pos);
+        AnsiEscapeSequenceRequests.HasResponse ("t", out _seqReqStatus);
         Assert.Null (_seqReqStatus);
         Assert.Equal (0, (int)_arg1);
         Assert.Equal (Point.Empty, _arg2);
@@ -1073,22 +1055,21 @@ public class AnsiEscapeSequenceRequestUtilsTests
         var expectedCki = new ConsoleKeyInfo (keyChar, consoleKey, shift, alt, control);
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  _escSeqReqProc,
-                                  ref _newConsoleKeyInfo,
-                                  ref _key,
-                                  _cki,
-                                  ref _mod,
-                                  out _c1Control,
-                                  out _code,
-                                  out _values,
-                                  out _terminating,
-                                  out _isKeyMouse,
-                                  out _mouseFlags,
-                                  out _pos,
-                                  out _seqReqStatus,
-                                  ProcessContinuousButtonPressed
-                                 );
-        Assert.Null (_escSeqReqProc);
+                                                     ref _newConsoleKeyInfo,
+                                                     ref _key,
+                                                     _cki,
+                                                     ref _mod,
+                                                     out _c1Control,
+                                                     out _code,
+                                                     out _values,
+                                                     out _terminating,
+                                                     out _isKeyMouse,
+                                                     out _mouseFlags,
+                                                     out _pos,
+                                                     out _seqReqStatus,
+                                                     ProcessContinuousButtonPressed
+                                                    );
+        Assert.Empty (AnsiEscapeSequenceRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (consoleKey, _key);
 
@@ -1559,7 +1540,7 @@ public class AnsiEscapeSequenceRequestUtilsTests
 
     private void ClearAll ()
     {
-        _escSeqReqProc = default (AnsiEscapeSequenceRequests);
+        AnsiEscapeSequenceRequests.Clear ();
         _newConsoleKeyInfo = default (ConsoleKeyInfo);
         _key = default (ConsoleKey);
         _cki = default (ConsoleKeyInfo []);

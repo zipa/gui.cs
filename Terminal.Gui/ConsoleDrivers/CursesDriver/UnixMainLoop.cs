@@ -1,3 +1,4 @@
+#nullable enable
 //
 // mainloop.cs: Linux/Curses MainLoop implementation.
 //
@@ -12,7 +13,7 @@ namespace Terminal.Gui;
 ///     In addition to the general functions of the MainLoop, the Unix version can watch file descriptors using the
 ///     AddWatch methods.
 /// </remarks>
-internal class UnixMainLoop : IMainLoopDriver
+internal class UnixMainLoop (ConsoleDriver consoleDriver) : IMainLoopDriver
 {
     /// <summary>Condition on which to wake up from file descriptor activity.  These match the Linux/BSD poll definitions.</summary>
     [Flags]
@@ -37,22 +38,15 @@ internal class UnixMainLoop : IMainLoopDriver
         PollNval = 32
     }
 
-    private readonly CursesDriver _cursesDriver;
-    private MainLoop _mainLoop;
-    private Pollfd [] _pollMap;
+    private readonly CursesDriver _cursesDriver = (CursesDriver)consoleDriver ?? throw new ArgumentNullException (nameof (consoleDriver));
+    private MainLoop? _mainLoop;
+    private Pollfd []? _pollMap;
     private readonly ConcurrentQueue<PollData> _pollDataQueue = new ();
     private readonly ManualResetEventSlim _eventReady = new (false);
     internal readonly ManualResetEventSlim _waitForInput = new (false);
     private readonly ManualResetEventSlim _windowSizeChange = new (false);
     private readonly CancellationTokenSource _eventReadyTokenSource = new ();
     private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
-
-    public UnixMainLoop (ConsoleDriver consoleDriver = null)
-    {
-        _cursesDriver = (CursesDriver)consoleDriver ?? throw new ArgumentNullException (nameof (consoleDriver));
-    }
-
-    public AnsiEscapeSequenceRequests EscSeqRequests { get; } = new ();
 
     void IMainLoopDriver.Wakeup () { _eventReady.Set (); }
 
@@ -110,7 +104,7 @@ internal class UnixMainLoop : IMainLoopDriver
         return GetTIOCGWINSZValueInternal ();
     }
 
-    private void EscSeqUtils_ContinuousButtonPressed (object sender, MouseEventArgs e)
+    private void EscSeqUtils_ContinuousButtonPressed (object? sender, MouseEventArgs e)
     {
         _pollDataQueue!.Enqueue (EnqueueMouseEvent (e.Flags, e.Position));
     }
@@ -238,15 +232,15 @@ internal class UnixMainLoop : IMainLoopDriver
                         break;
                     }
 
-                    if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && EscSeqRequests is { Statuses.Count: > 0 })
+                    if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && AnsiEscapeSequenceRequests.Statuses.Count > 0)
                     {
                         if (_retries > 1)
                         {
-                            if (EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus seqReqStatus) && seqReqStatus.AnsiRequest.AnsiEscapeSequenceResponse is { } && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.AnsiEscapeSequenceResponse.Response))
+                            if (AnsiEscapeSequenceRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? seqReqStatus) && seqReqStatus.AnsiRequest.AnsiEscapeSequenceResponse is { } && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.AnsiEscapeSequenceResponse.Response))
                             {
                                 lock (seqReqStatus!.AnsiRequest._responseLock)
                                 {
-                                    EscSeqRequests.Statuses.TryDequeue (out _);
+                                    AnsiEscapeSequenceRequests.Statuses.TryDequeue (out _);
 
                                     seqReqStatus.AnsiRequest.RaiseResponseFromInput (null);
                                 }
@@ -299,21 +293,20 @@ internal class UnixMainLoop : IMainLoopDriver
         ConsoleKeyInfo newConsoleKeyInfo = default;
 
         AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
-                                  EscSeqRequests,
-                                  ref newConsoleKeyInfo,
-                                  ref key,
-                                  cki,
-                                  ref mod,
-                                  out string c1Control,
-                                  out string code,
-                                  out string [] values,
-                                  out string terminating,
-                                  out bool isMouse,
-                                  out List<MouseFlags> mouseFlags,
-                                  out Point pos,
-                                  out AnsiEscapeSequenceRequestStatus seqReqStatus,
-                                  AnsiEscapeSequenceRequestUtils.ProcessMouseEvent
-                                 );
+                                                     ref newConsoleKeyInfo,
+                                                     ref key,
+                                                     cki,
+                                                     ref mod,
+                                                     out string c1Control,
+                                                     out string code,
+                                                     out string [] values,
+                                                     out string terminating,
+                                                     out bool isMouse,
+                                                     out List<MouseFlags> mouseFlags,
+                                                     out Point pos,
+                                                     out AnsiEscapeSequenceRequestStatus seqReqStatus,
+                                                     AnsiEscapeSequenceRequestUtils.ProcessMouseEvent
+                                                    );
 
         if (isMouse)
         {
@@ -339,7 +332,7 @@ internal class UnixMainLoop : IMainLoopDriver
 
         if (!string.IsNullOrEmpty (AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator))
         {
-            if (EscSeqRequests.Statuses.TryDequeue (out AnsiEscapeSequenceRequestStatus result))
+            if (AnsiEscapeSequenceRequests.Statuses.TryDequeue (out AnsiEscapeSequenceRequestStatus? result))
             {
                 lock (result.AnsiRequest._responseLock)
                 {

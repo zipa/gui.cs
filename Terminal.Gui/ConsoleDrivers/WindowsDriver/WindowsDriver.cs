@@ -222,7 +222,9 @@ internal class WindowsDriver : ConsoleDriver
                                                      _waitAnsiResponse.Set ();
                                                  };
 
-                _mainLoopDriver.EscSeqRequests.Add (ansiRequest, this);
+                AnsiEscapeSequenceRequests.Add (ansiRequest);
+
+                WriteRaw (ansiRequest.Request);
 
                 _mainLoopDriver._forceRead = true;
             }
@@ -238,15 +240,15 @@ internal class WindowsDriver : ConsoleDriver
         {
             _mainLoopDriver._forceRead = false;
 
-            if (_mainLoopDriver.EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? request))
+            if (AnsiEscapeSequenceRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? request))
             {
-                if (_mainLoopDriver.EscSeqRequests.Statuses.Count > 0
+                if (AnsiEscapeSequenceRequests.Statuses.Count > 0
                     && string.IsNullOrEmpty (request.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
                 {
                     lock (request.AnsiRequest._responseLock)
                     {
                         // Bad request or no response at all
-                        _mainLoopDriver.EscSeqRequests.Statuses.TryDequeue (out _);
+                        AnsiEscapeSequenceRequests.Statuses.TryDequeue (out _);
                     }
                 }
             }
@@ -257,10 +259,7 @@ internal class WindowsDriver : ConsoleDriver
         }
     }
 
-    internal override void WriteRaw (string ansi)
-    {
-        WinConsole?.WriteANSI (ansi);
-    }
+    internal override void WriteRaw (string ansi) { WinConsole?.WriteANSI (ansi); }
 
     #region Not Implemented
 

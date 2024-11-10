@@ -110,10 +110,10 @@ internal class WindowsConsole
                                 ansiSequence.Append (inputChar);
 
                                 // Check if the sequence has ended with an expected command terminator
-                                if (_mainLoop?.EscSeqRequests is { } && _mainLoop.EscSeqRequests.HasResponse (inputChar.ToString (), out AnsiEscapeSequenceRequestStatus? seqReqStatus))
+                                if (AnsiEscapeSequenceRequests.HasResponse (inputChar.ToString (), out AnsiEscapeSequenceRequestStatus? seqReqStatus))
                                 {
                                     // Finished reading the sequence and remove the enqueued request
-                                    _mainLoop.EscSeqRequests.Remove (seqReqStatus);
+                                    AnsiEscapeSequenceRequests.Remove (seqReqStatus);
 
                                     lock (seqReqStatus!.AnsiRequest._responseLock)
                                     {
@@ -130,9 +130,9 @@ internal class WindowsConsole
                     }
                 }
 
-                if (readingSequence && !raisedResponse && AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && _mainLoop?.EscSeqRequests is { Statuses.Count: > 0 })
+                if (readingSequence && !raisedResponse && AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && AnsiEscapeSequenceRequests.Statuses.Count > 0)
                 {
-                    _mainLoop.EscSeqRequests.Statuses.TryDequeue (out AnsiEscapeSequenceRequestStatus? seqReqStatus);
+                    AnsiEscapeSequenceRequests.Statuses.TryDequeue (out AnsiEscapeSequenceRequestStatus? seqReqStatus);
 
                     lock (seqReqStatus!.AnsiRequest._responseLock)
                     {
@@ -143,15 +143,15 @@ internal class WindowsConsole
 
                     _retries = 0;
                 }
-                else if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && _mainLoop?.EscSeqRequests is { Statuses.Count: > 0 })
+                else if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && AnsiEscapeSequenceRequests.Statuses.Count > 0)
                 {
                     if (_retries > 1)
                     {
-                        if (_mainLoop.EscSeqRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
+                        if (AnsiEscapeSequenceRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
                         {
                             lock (seqReqStatus.AnsiRequest._responseLock)
                             {
-                                _mainLoop.EscSeqRequests.Statuses.TryDequeue (out _);
+                                AnsiEscapeSequenceRequests.Statuses.TryDequeue (out _);
 
                                 seqReqStatus.AnsiRequest.RaiseResponseFromInput (null);
                                 // Clear the terminator for not be enqueued
