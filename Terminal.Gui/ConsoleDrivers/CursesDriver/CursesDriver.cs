@@ -15,46 +15,20 @@ internal class CursesDriver : ConsoleDriver
 {
     public override string GetVersionInfo () { return $"{Curses.curses_version ()}"; }
 
-    public override void Refresh ()
-    {
-        UpdateScreen ();
-        UpdateCursor ();
-    }
-
-    public override void Suspend ()
-    {
-        StopReportingMouseMoves ();
-
-        if (!RunningUnitTests)
-        {
-            Platform.Suspend ();
-
-            if (Force16Colors)
-            {
-                Curses.Window.Standard.redrawwin ();
-                Curses.refresh ();
-            }
-        }
-
-        StartReportingMouseMoves ();
-    }
-
-    #region Screen and Contents
-
-    public override int Cols
+    internal override int Cols
     {
         get => Curses.Cols;
-        internal set
+        set
         {
             Curses.Cols = value;
             ClearContents ();
         }
     }
 
-    public override int Rows
+    internal override int Rows
     {
         get => Curses.Lines;
-        internal set
+        set
         {
             Curses.Lines = value;
             ClearContents ();
@@ -76,7 +50,7 @@ internal class CursesDriver : ConsoleDriver
             return;
         }
 
-        if (IsValidLocation (col, row))
+        if (IsValidLocation (default, col, row))
         {
             Curses.move (row, col);
         }
@@ -84,12 +58,132 @@ internal class CursesDriver : ConsoleDriver
         {
             // Not a valid location (outside screen or clip region)
             // Move within the clip region, then AddRune will actually move to Col, Row
-            Curses.move (Clip.Y, Clip.X);
+            Rectangle clipRect = Clip.GetBounds ();
+            Curses.move (clipRect.Y, clipRect.X);
         }
     }
 
-    public override void UpdateScreen ()
+    
+    public override void SendKeys (char keyChar, ConsoleKey consoleKey, bool shift, bool alt, bool control)
     {
+        KeyCode key;
+
+        if (consoleKey == ConsoleKey.Packet)
+        {
+            var mod = new ConsoleModifiers ();
+
+            if (shift)
+            {
+                mod |= ConsoleModifiers.Shift;
+            }
+
+            if (alt)
+            {
+                mod |= ConsoleModifiers.Alt;
+            }
+
+            if (control)
+            {
+                mod |= ConsoleModifiers.Control;
+            }
+
+            var cKeyInfo = new ConsoleKeyInfo (keyChar, consoleKey, shift, alt, control);
+            cKeyInfo = ConsoleKeyMapping.DecodeVKPacketToKConsoleKeyInfo (cKeyInfo);
+            key = ConsoleKeyMapping.MapConsoleKeyInfoToKeyCode (cKeyInfo);
+        }
+        else
+        {
+            key = (KeyCode)keyChar;
+        }
+
+        OnKeyDown (new Key (key));
+        OnKeyUp (new Key (key));
+
+        //OnKeyPressed (new KeyEventArgsEventArgs (key));
+    }
+
+    /// <inheritdoc/>
+    public override bool SetCursorVisibility (CursorVisibility visibility)
+    {
+        if (_initialCursorVisibility.HasValue == false)
+        {
+            return false;
+        }
+
+        if (!RunningUnitTests)
+        {
+            Curses.curs_set (((int)visibility >> 16) & 0x000000FF);
+        }
+
+        if (visibility != CursorVisibility.Invisible)
+        {
+            Console.Out.Write (
+                               EscSeqUtils.CSI_SetCursorStyle (
+                                                               (EscSeqUtils.DECSCUSR_Style)(((int)visibility >> 24)
+                                                                                            & 0xFF)
+                                                              )
+                              );
+        }
+
+        _currentCursorVisibility = visibility;
+
+        return true;
+    }
+
+    public void StartReportingMouseMoves ()
+    {
+        if (!RunningUnitTests)
+        {
+            Console.Out.Write (EscSeqUtils.CSI_EnableMouseEvents);
+        }
+    }
+
+    public void StopReportingMouseMoves ()
+    {
+        if (!RunningUnitTests)
+        {
+            Console.Out.Write (EscSeqUtils.CSI_DisableMouseEvents);
+        }
+    }
+
+    public override void Suspend ()
+    {
+        StopReportingMouseMoves ();
+
+        if (!RunningUnitTests)
+        {
+            Platform.Suspend ();
+
+            if (Force16Colors)
+            {
+                Curses.Window.Standard.redrawwin ();
+                Curses.refresh ();
+            }
+        }
+
+        StartReportingMouseMoves ();
+    }
+
+    public override void UpdateCursor ()
+    {
+        EnsureCursorVisibility ();
+
+        if (!RunningUnitTests && Col >= 0 && Col < Cols && Row >= 0 && Row < Rows)
+        {
+            Curses.move (Row, Col);
+
+            if (Force16Colors)
+            {
+                Curses.raw ();
+                Curses.noecho ();
+                Curses.refresh ();
+            }
+        }
+    }
+
+    public override bool UpdateScreen ()
+    {
+        bool updated = false;
         if (Force16Colors)
         {
             for (var row = 0; row < Rows; row++)
@@ -157,7 +251,7 @@ internal class CursesDriver : ConsoleDriver
                 || Contents!.Length != Rows * Cols
                 || Rows != Console.WindowHeight)
             {
-                return;
+                return updated;
             }
 
             var top = 0;
@@ -175,7 +269,7 @@ internal class CursesDriver : ConsoleDriver
             {
                 if (Console.WindowHeight < 1)
                 {
-                    return;
+                    return updated;
                 }
 
                 if (!_dirtyLines! [row])
@@ -185,7 +279,7 @@ internal class CursesDriver : ConsoleDriver
 
                 if (!SetCursorPosition (0, row))
                 {
-                    return;
+                    return updated;
                 }
 
                 _dirtyLines [row] = false;
@@ -198,6 +292,7 @@ internal class CursesDriver : ConsoleDriver
 
                     for (; col < cols; col++)
                     {
+                        updated = true;
                         if (!Contents [row, col].IsDirty)
                         {
                             if (output.Length > 0)
@@ -300,6 +395,8 @@ internal class CursesDriver : ConsoleDriver
                 outputWidth = 0;
             }
         }
+
+        return updated;
     }
 
     #endregion Screen and Contents

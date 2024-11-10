@@ -22,7 +22,7 @@ public class MenuBarv2 : Bar
         ColorScheme = Colors.ColorSchemes ["Menu"];
         Orientation = Orientation.Horizontal;
 
-        LayoutStarted += MenuBarv2_LayoutStarted;
+        SubviewLayout += MenuBarv2_LayoutStarted;
     }
 
     // MenuBarv2 arranges the items horizontally.
