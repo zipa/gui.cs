@@ -1687,6 +1687,11 @@ internal class NetMainLoop : IMainLoopDriver
 
         if (_mainLoop.CheckTimersAndIdleHandlers (out int waitTimeout))
         {
+            // HACK: CheckTimers returns true even if the timer is not due i.e. it could be
+            //       timer is due to run in 30s interval but even so it return true so we hammer main loop
+            //       this avoids hammer CPU but better fix would be to only return true from CheckTimersAndIdleHandlers
+            //       if the timeout is actually due
+            Task.Delay (50).Wait (_eventReadyTokenSource.Token);
             return true;
         }
 
