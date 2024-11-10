@@ -245,7 +245,7 @@ internal class UnixMainLoop (ConsoleDriver consoleDriver) : IMainLoopDriver
                     {
                         if (_retries > 1)
                         {
-                            if (AnsiEscapeSequenceRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? seqReqStatus) && seqReqStatus.AnsiRequest.AnsiEscapeSequenceResponse is { } && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.AnsiEscapeSequenceResponse.Response))
+                            if (AnsiEscapeSequenceRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? seqReqStatus))
                             {
                                 lock (seqReqStatus!.AnsiRequest._responseLock)
                                 {
@@ -301,7 +301,7 @@ internal class UnixMainLoop (ConsoleDriver consoleDriver) : IMainLoopDriver
                                                      out bool isMouse,
                                                      out List<MouseFlags> mouseFlags,
                                                      out Point pos,
-                                                     out AnsiEscapeSequenceRequestStatus seqReqStatus,
+                                                     out AnsiEscapeSequenceRequestStatus? seqReqStatus,
                                                      AnsiEscapeSequenceRequestUtils.ProcessMouseEvent
                                                     );
 
@@ -310,33 +310,6 @@ internal class UnixMainLoop (ConsoleDriver consoleDriver) : IMainLoopDriver
             foreach (MouseFlags mf in mouseFlags)
             {
                 _pollDataQueue!.Enqueue (EnqueueMouseEvent (mf, pos));
-            }
-
-            return;
-        }
-
-        if (seqReqStatus is { })
-        {
-            var ckiString = AnsiEscapeSequenceRequestUtils.ToString (cki);
-
-            lock (seqReqStatus.AnsiRequest._responseLock)
-            {
-                seqReqStatus.AnsiRequest.RaiseResponseFromInput (ckiString);
-            }
-
-            return;
-        }
-
-        if (!string.IsNullOrEmpty (AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator))
-        {
-            if (AnsiEscapeSequenceRequests.Statuses.TryDequeue (out AnsiEscapeSequenceRequestStatus? result))
-            {
-                lock (result.AnsiRequest._responseLock)
-                {
-                    result.AnsiRequest.RaiseResponseFromInput (AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator);
-
-                    AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator = null;
-                }
             }
 
             return;

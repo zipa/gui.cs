@@ -394,34 +394,12 @@ internal class NetEvents : IDisposable
             return;
         }
 
-        if (seqReqStatus is { })
-        {
-            //HandleRequestResponseEvent (c1Control, code, values, terminating);
+        //if (seqReqStatus is { })
+        //{
+        //    HandleRequestResponseEvent (c1Control, code, values, terminating);
 
-            var ckiString = AnsiEscapeSequenceRequestUtils.ToString (cki);
-
-            lock (seqReqStatus.AnsiRequest._responseLock)
-            {
-                seqReqStatus.AnsiRequest.RaiseResponseFromInput (ckiString);
-            }
-
-            return;
-        }
-
-        if (!string.IsNullOrEmpty (AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator))
-        {
-            if (AnsiEscapeSequenceRequests.Statuses.TryDequeue (out AnsiEscapeSequenceRequestStatus? result))
-            {
-                lock (result.AnsiRequest._responseLock)
-                {
-                    result.AnsiRequest.RaiseResponseFromInput (AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator);
-
-                    AnsiEscapeSequenceRequestUtils.InvalidRequestTerminator = null;
-                }
-            }
-
-            return;
-        }
+        //    return;
+        //}
 
         if (newConsoleKeyInfo != default)
         {

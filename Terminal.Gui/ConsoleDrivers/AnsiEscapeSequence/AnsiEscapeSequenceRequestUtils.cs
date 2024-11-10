@@ -176,11 +176,6 @@ public static class AnsiEscapeSequenceRequestUtils
     public static ConsoleKeyInfo []? IncompleteCkInfos { get; set; }
 
     /// <summary>
-    ///     Represent a response that was requested by an invalid terminator.
-    /// </summary>
-    public static string? InvalidRequestTerminator { get; set; }
-
-    /// <summary>
     ///     Decodes an ANSI escape sequence.
     /// </summary>
     /// <param name="newConsoleKeyInfo">The <see cref="ConsoleKeyInfo"/> which may change.</param>
@@ -348,6 +343,13 @@ public static class AnsiEscapeSequenceRequestUtils
                 {
                     AnsiEscapeSequenceRequests.Remove (seqReqStatus);
 
+                    var ckiString = ToString (cki);
+
+                    lock (seqReqStatus?.AnsiRequest._responseLock!)
+                    {
+                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (ckiString);
+                    }
+
                     return;
                 }
 
@@ -376,7 +378,13 @@ public static class AnsiEscapeSequenceRequestUtils
                         // It's request response that wasn't handled by a valid request terminator
                         System.Diagnostics.Debug.Assert (AnsiEscapeSequenceRequests.Statuses.Count > 0);
 
-                        InvalidRequestTerminator = ToString (cki);
+                        if (AnsiEscapeSequenceRequests.Statuses.TryDequeue (out AnsiEscapeSequenceRequestStatus? result))
+                        {
+                            lock (result.AnsiRequest._responseLock)
+                            {
+                                result.AnsiRequest.RaiseResponseFromInput (ToString (cki));
+                            }
+                        }
                     }
                 }
                 else
