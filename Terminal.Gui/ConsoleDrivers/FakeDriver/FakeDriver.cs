@@ -393,9 +393,6 @@ public class FakeDriver : ConsoleDriver
     }
 
     /// <inheritdoc />
-    public override bool TryWriteAnsiRequest (IMainLoopDriver mainLoopDriver, ref AnsiEscapeSequenceRequest ansiRequest) { throw new NotImplementedException (); }
-
-    /// <inheritdoc />
     internal override void WriteRaw (string ansi) { throw new NotImplementedException (); }
 
     public void SetBufferSize (int width, int height)

@@ -1,5 +1,6 @@
 #nullable enable
 
+using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace Terminal.Gui;
@@ -12,6 +13,79 @@ namespace Terminal.Gui;
 /// </remarks>
 public abstract class ConsoleDriver
 {
+    private readonly ManualResetEventSlim _waitAnsiRequest = new (false);
+    private readonly ManualResetEventSlim _waitAnsiResponse = new (false);
+    private readonly CancellationTokenSource? _ansiRequestTokenSource = new ();
+    private readonly ConcurrentQueue<AnsiEscapeSequenceRequest> _requestQueue = new ();
+    private readonly ConcurrentQueue<AnsiEscapeSequenceRequest> _responseQueue = new ();
+    private IMainLoopDriver? _mainLoopDriver;
+
+    internal void ProcessAnsiRequestHandler ()
+    {
+        while (_ansiRequestTokenSource is { IsCancellationRequested: false})
+        {
+            try
+            {
+                if (_requestQueue.Count == 0)
+                {
+                    try
+                    {
+                        _waitAnsiRequest.Wait (_ansiRequestTokenSource.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return;
+                    }
+
+                    _waitAnsiRequest.Reset ();
+                }
+
+                while (_requestQueue.TryDequeue (out AnsiEscapeSequenceRequest? ansiRequest))
+                {
+                    try
+                    {
+                        lock (ansiRequest._responseLock)
+                        {
+                            AnsiEscapeSequenceRequest? request = ansiRequest;
+
+                            ansiRequest.ResponseFromInput += (s, e) =>
+                                                             {
+                                                                 Debug.Assert (s == request);
+                                                                 Debug.Assert (e == request.AnsiEscapeSequenceResponse);
+
+                                                                 _responseQueue.Enqueue (request);
+
+                                                                 _waitAnsiResponse.Set ();
+                                                             };
+
+                            AnsiEscapeSequenceRequests.Add (ansiRequest);
+
+                            WriteRaw (ansiRequest.Request);
+
+                            _mainLoopDriver!._forceRead = true;
+                        }
+
+                        if (!_ansiRequestTokenSource.IsCancellationRequested)
+                        {
+                            _mainLoopDriver._waitForInput.Set ();
+
+                            _waitAnsiRequest.Wait (_ansiRequestTokenSource.Token);
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return;
+                    }
+
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+        }
+    }
+
     /// <summary>
     ///     Set this to true in any unit tests that attempt to test drivers other than FakeDriver.
     ///     <code>
@@ -32,81 +106,56 @@ public abstract class ConsoleDriver
 
     #region ANSI Esc Sequence Handling
 
-    private readonly ManualResetEventSlim _waitAnsiResponse = new (false);
-    private CancellationTokenSource? _ansiResponseTokenSource;
-
-    // QUESTION: Should this be virtual with a default implementation that does the common stuff?
-    // QUESTION: Looking at the implementations of this method, there is TONs of duplicated code.
-    // QUESTION: We should figure out how to find just the things that are unique to each driver and
-    // QUESTION: create more fine-grained APIs to handle those.
     /// <summary>
-    ///     Provide handling for the terminal write ANSI escape sequence request.
+    ///     Provide unique handling for all the terminal write ANSI escape sequence request.
     /// </summary>
     /// <param name="mainLoopDriver">The <see cref="IMainLoopDriver"/> object.</param>
     /// <param name="ansiRequest">The <see cref="AnsiEscapeSequenceRequest"/> object.</param>
-    /// <returns>The request response.</returns>
-    public virtual bool TryWriteAnsiRequest (IMainLoopDriver mainLoopDriver, ref AnsiEscapeSequenceRequest ansiRequest)
+    /// <returns><see languard="true"/> if the request response is valid, <see languard="false"/> otherwise.</returns>
+    public bool TryWriteAnsiRequest (IMainLoopDriver mainLoopDriver, ref AnsiEscapeSequenceRequest ansiRequest)
     {
-        if (mainLoopDriver is null)
-        {
-            return false;
-        }
+        ArgumentNullException.ThrowIfNull (mainLoopDriver, nameof (mainLoopDriver));
+        ArgumentNullException.ThrowIfNull (ansiRequest, nameof (ansiRequest));
 
-        _ansiResponseTokenSource ??= new ();
+        lock (ansiRequest._responseLock)
+        {
+            _mainLoopDriver = mainLoopDriver;
+            _requestQueue.Enqueue (ansiRequest);
+
+            _waitAnsiRequest.Set ();
+        }
 
         try
         {
+            _waitAnsiResponse.Wait (_ansiRequestTokenSource!.Token);
+
+            _waitAnsiResponse.Reset ();
+
+            _responseQueue.TryDequeue (out _);
+
             lock (ansiRequest._responseLock)
             {
-                AnsiEscapeSequenceRequest? request = ansiRequest;
+                _mainLoopDriver._forceRead = false;
 
-                ansiRequest.ResponseFromInput += (s, e) =>
-                                                 {
-                                                     Debug.Assert (s == request);
-                                                     Debug.Assert (e == request.AnsiEscapeSequenceResponse);
+                if (AnsiEscapeSequenceRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? request))
+                {
+                    if (AnsiEscapeSequenceRequests.Statuses.Count > 0
+                        && string.IsNullOrEmpty (request.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
+                    {
+                        lock (request.AnsiRequest._responseLock)
+                        {
+                            // Bad request or no response at all
+                            AnsiEscapeSequenceRequests.Statuses.TryDequeue (out _);
+                        }
+                    }
+                }
 
-                                                     _waitAnsiResponse.Set ();
-                                                 };
-
-                AnsiEscapeSequenceRequests.Add (ansiRequest);
-
-                WriteRaw (ansiRequest.Request);
-
-                mainLoopDriver._forceRead = true;
-            }
-
-            if (!_ansiResponseTokenSource.IsCancellationRequested)
-            {
-                mainLoopDriver._waitForInput.Set ();
-
-                _waitAnsiResponse.Wait (_ansiResponseTokenSource.Token);
+                return ansiRequest.AnsiEscapeSequenceResponse is { Valid: true };
             }
         }
         catch (OperationCanceledException)
         {
             return false;
-        }
-
-        lock (ansiRequest._responseLock)
-        {
-            mainLoopDriver._forceRead = false;
-
-            if (AnsiEscapeSequenceRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? request))
-            {
-                if (AnsiEscapeSequenceRequests.Statuses.Count > 0
-                    && string.IsNullOrEmpty (request.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
-                {
-                    lock (request.AnsiRequest._responseLock)
-                    {
-                        // Bad request or no response at all
-                        AnsiEscapeSequenceRequests.Statuses.TryDequeue (out _);
-                    }
-                }
-            }
-
-            _waitAnsiResponse.Reset ();
-
-            return ansiRequest.AnsiEscapeSequenceResponse is { Valid: true };
         }
     }
 

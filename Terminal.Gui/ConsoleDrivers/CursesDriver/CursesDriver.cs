@@ -679,6 +679,8 @@ internal class CursesDriver : ConsoleDriver
             {
                 Curses.refresh ();
             }
+
+            Task.Run (ProcessAnsiRequestHandler);
         }
 
         return new (_mainLoopDriver);

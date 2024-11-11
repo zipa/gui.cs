@@ -481,6 +481,8 @@ internal class WindowsDriver : ConsoleDriver
         if (!RunningUnitTests)
         {
             WinConsole?.SetInitialCursorVisibility ();
+
+            Task.Run (ProcessAnsiRequestHandler);
         }
 
         return new MainLoop (_mainLoopDriver);

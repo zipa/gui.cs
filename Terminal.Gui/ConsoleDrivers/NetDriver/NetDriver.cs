@@ -294,6 +294,11 @@ internal class NetDriver : ConsoleDriver
         _mainLoopDriver = new (this);
         _mainLoopDriver.ProcessInput = ProcessInput;
 
+        if (!RunningUnitTests)
+        {
+            Task.Run (ProcessAnsiRequestHandler);
+        }
+
         return new (_mainLoopDriver);
     }
 
