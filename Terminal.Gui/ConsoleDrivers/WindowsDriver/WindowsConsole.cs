@@ -91,14 +91,15 @@ internal class WindowsConsole
                             // Check if input is part of an ANSI escape sequence
                             if (inputChar == '\u001B') // Escape character
                             {
-                                // Peek to check if there is any input available with key event and bKeyDown
+                                // Peek to check if there is any input available with key event and bKeyDown and not Escape character
                                 if (PeekConsoleInput (_inputHandle, out InputRecord peekRecord, BUFFER_SIZE, out eventsRead) && eventsRead > 0)
                                 {
-                                    if (peekRecord is { EventType: EventType.Key, KeyEvent.bKeyDown: true })
+                                    if (peekRecord is { EventType: EventType.Key, KeyEvent.bKeyDown: true, KeyEvent.UnicodeChar: not '\u001B' })
                                     {
                                         // It's really an ANSI request response
                                         readingSequence = true;
-                                        ansiSequence.Clear (); // Start a new sequence
+                                        // Start a new sequence ensuring in the cases where wasn't clear by reading the terminator
+                                        ansiSequence.Clear ();
                                         ansiSequence.Append (inputChar);
 
                                         continue;
@@ -127,7 +128,10 @@ internal class WindowsConsole
                                     }
                                 }
 
-                                continue;
+                                if (readingSequence)
+                                {
+                                    continue;
+                                }
                             }
                         }
                     }
