@@ -156,7 +156,16 @@ internal class WindowsMainLoop : IMainLoopDriver
             {
                 if (_inputHandlerTokenSource.IsCancellationRequested && !_forceRead)
                 {
-                    ((IMainLoopDriver)this)._waitForInput.Wait (_inputHandlerTokenSource.Token);
+                    try
+                    {
+                        ((IMainLoopDriver)this)._waitForInput.Wait (_inputHandlerTokenSource.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return;
+                    }
+
+                    ((IMainLoopDriver)this)._waitForInput.Reset ();
                 }
 
                 if (_resultQueue?.Count == 0 || _forceRead)
@@ -168,19 +177,13 @@ internal class WindowsMainLoop : IMainLoopDriver
                         _resultQueue!.Enqueue (result.Value);
                     }
                 }
-
             }
             catch (OperationCanceledException)
             {
                 return;
             }
-            finally
-            {
-                if (_inputHandlerTokenSource is { IsCancellationRequested: false })
-                {
-                    _eventReady.Set ();
-                }
-            }
+
+            _eventReady.Set ();
         }
     }
 
