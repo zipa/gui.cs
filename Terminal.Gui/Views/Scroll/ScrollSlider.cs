@@ -210,11 +210,11 @@ public class ScrollSlider : View, IOrientation, IDesignable
 
         if (Orientation == Orientation.Vertical)
         {
-            return Math.Clamp (newPosittion, 0, ViewportDimension - Viewport.Height);
+            return Math.Clamp (newPosittion, 0, Math.Max (0, ViewportDimension - Viewport.Height));
         }
         else
         {
-            return Math.Clamp (newPosittion, 0, ViewportDimension - Viewport.Width);
+            return Math.Clamp (newPosittion, 0, Math.Max (0, ViewportDimension - Viewport.Width));
         }
     }
 
@@ -233,7 +233,7 @@ public class ScrollSlider : View, IOrientation, IDesignable
             return;
         }
 
-        int scrollAmount = newPosition -_position;
+        int scrollAmount = newPosition - _position;
         _position = newPosition;
 
         OnPositionChanged (_position);
@@ -361,9 +361,21 @@ public class ScrollSlider : View, IOrientation, IDesignable
     /// <inheritdoc />
     public bool EnableForDesign ()
     {
-        Orientation = Orientation.Vertical;
-        Width = 1;
-        Height = 10;
+        OrientationChanged += (sender, args) =>
+                              {
+                                  if (args.CurrentValue == Orientation.Vertical)
+                                  {
+                                      Width = Dim.Fill ();
+                                      Height = 5;
+                                  }
+                                  else
+                                  {
+                                      Width = 5;
+                                      Height = Dim.Fill();
+                                  }
+                              };
+
+        Orientation = Orientation.Horizontal;
         ShowPercent = true;
 
         return true;

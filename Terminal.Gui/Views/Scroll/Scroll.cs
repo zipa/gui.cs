@@ -405,8 +405,7 @@ public class Scroll : View, IOrientation, IDesignable
 
         Width = 1;
         Height = Dim.Fill ();
-        Size = 1000;
-        ContentPosition = 10;
+        Size = 250;
 
         return true;
     }

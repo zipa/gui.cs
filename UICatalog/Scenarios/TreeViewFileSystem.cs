@@ -182,6 +182,8 @@ public class TreeViewFileSystem : Scenario
         _treeViewFiles = new TreeView<IFileSystemInfo> { X = 0, Y = 0, Width = Dim.Percent (50), Height = Dim.Fill () };
         _treeViewFiles.DrawLine += TreeViewFiles_DrawLine;
 
+        _treeViewFiles.VerticalScrollBar.AutoHide = false;
+
         _detailsFrame = new DetailsFrame (_iconProvider)
         {
             X = Pos.Right (_treeViewFiles), Y = 0, Width = Dim.Fill (), Height = Dim.Fill ()

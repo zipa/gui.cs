@@ -309,7 +309,6 @@ public class ScrollBar : View, IOrientation, IDesignable
         Width = 1;
         Height = Dim.Fill ();
         Size = 200;
-        ContentPosition = 10;
         //ShowPercent = true;
         return true;
     }

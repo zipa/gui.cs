@@ -262,6 +262,7 @@ public class Editor : Scenario
             AlignmentModes = AlignmentModes.StartToEnd | AlignmentModes.IgnoreFirstOrLast
         };
 
+        _textView.VerticalScrollBar.AutoHide = false;
         _textView.UnwrappedCursorPosition += (s, e) =>
                                              {
                                                  siCursorPosition.Title = $"Ln {e.Point.Y + 1}, Col {e.Point.X + 1}";
