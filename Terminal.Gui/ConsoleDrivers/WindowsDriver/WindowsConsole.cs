@@ -117,6 +117,7 @@ internal class WindowsConsole
 
                                     lock (seqReqStatus!.AnsiRequest._responseLock)
                                     {
+                                        readingSequence=false;
                                         raisedResponse = true;
                                         seqReqStatus.AnsiRequest.RaiseResponseFromInput (ansiSequence.ToString ());
                                         // Clear the terminator for not be enqueued
