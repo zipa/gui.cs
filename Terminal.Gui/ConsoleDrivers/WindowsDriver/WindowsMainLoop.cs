@@ -1,5 +1,7 @@
 ﻿#nullable enable
 
+using System.Collections.Concurrent;
+
 namespace Terminal.Gui;
 
 /// <summary>
@@ -20,7 +22,7 @@ internal class WindowsMainLoop : IMainLoopDriver
     private readonly ManualResetEventSlim _eventReady = new (false);
 
     // The records that we keep fetching
-    private readonly Queue<WindowsConsole.InputRecord> _resultQueue = new ();
+    private readonly ConcurrentQueue<WindowsConsole.InputRecord> _resultQueue = new ();
     ManualResetEventSlim IMainLoopDriver._waitForInput { get; set; } = new (false);
     private readonly WindowsConsole? _winConsole;
     private CancellationTokenSource _eventReadyTokenSource = new ();
@@ -102,9 +104,9 @@ internal class WindowsMainLoop : IMainLoopDriver
 
     void IMainLoopDriver.Iteration ()
     {
-        while (_resultQueue.Count > 0)
+        while (_resultQueue.TryDequeue (out WindowsConsole.InputRecord inputRecords))
         {
-            ((WindowsDriver)_consoleDriver).ProcessInput (_resultQueue.Dequeue ());
+            ((WindowsDriver)_consoleDriver).ProcessInput (inputRecords);
         }
 #if HACK_CHECK_WINCHANGED
         if (_winChanged)

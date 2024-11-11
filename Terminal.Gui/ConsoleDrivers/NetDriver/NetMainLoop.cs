@@ -1,5 +1,7 @@
 ﻿#nullable enable
 
+using System.Collections.Concurrent;
+
 namespace Terminal.Gui;
 
 /// <summary>
@@ -18,7 +20,7 @@ internal class NetMainLoop : IMainLoopDriver
     internal readonly ManualResetEventSlim _waitForProbe = new (false);
     private readonly CancellationTokenSource _eventReadyTokenSource = new ();
     private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
-    private readonly Queue<NetEvents.InputResult> _resultQueue = new ();
+    private readonly ConcurrentQueue<NetEvents.InputResult> _resultQueue = new ();
     private MainLoop? _mainLoop;
     bool IMainLoopDriver._forceRead { get; set; }
     ManualResetEventSlim IMainLoopDriver._waitForInput { get; set; } = new (false);
@@ -89,9 +91,9 @@ internal class NetMainLoop : IMainLoopDriver
 
     void IMainLoopDriver.Iteration ()
     {
-        while (_resultQueue.Count > 0)
+        while (_resultQueue.TryDequeue (out NetEvents.InputResult inputRecords))
         {
-            ProcessInput?.Invoke (_resultQueue.Dequeue ());
+            ProcessInput?.Invoke (inputRecords);
         }
     }
 
