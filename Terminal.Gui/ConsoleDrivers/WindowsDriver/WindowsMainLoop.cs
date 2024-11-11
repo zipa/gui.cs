@@ -162,9 +162,14 @@ internal class WindowsMainLoop : IMainLoopDriver
                     {
                         ((IMainLoopDriver)this)._waitForInput.Wait (_inputHandlerTokenSource.Token);
                     }
-                    catch (OperationCanceledException)
+                    catch (Exception ex)
                     {
-                        return;
+                        if (ex is OperationCanceledException or ObjectDisposedException)
+                        {
+                            return;
+                        }
+
+                        throw;
                     }
 
                     ((IMainLoopDriver)this)._waitForInput.Reset ();

@@ -126,9 +126,14 @@ internal class NetMainLoop : IMainLoopDriver
                     {
                         _waitForProbe.Wait (_inputHandlerTokenSource.Token);
                     }
-                    catch (OperationCanceledException)
+                    catch (Exception ex)
                     {
-                        return;
+                        if (ex is OperationCanceledException or ObjectDisposedException)
+                        {
+                            return;
+                        }
+
+                        throw;
                     }
 
                     _waitForProbe.Reset ();

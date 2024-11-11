@@ -191,9 +191,14 @@ internal class WindowsConsole
                     }
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                return null;
+                if (ex is OperationCanceledException or ObjectDisposedException)
+                {
+                    return null;
+                }
+
+                throw;
             }
         }
 
