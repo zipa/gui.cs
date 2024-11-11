@@ -52,7 +52,7 @@ public class ScrollBarTests
         Assert.False (scrollBar.CanFocus);
         Assert.Equal (Orientation.Vertical, scrollBar.Orientation);
         Assert.Equal (0, scrollBar.Size);
-        Assert.Equal (0, scrollBar.SliderPosition);
+        Assert.Equal (0, scrollBar.GetSliderPosition ());
         Assert.True (scrollBar.AutoHide);
     }
 
@@ -82,43 +82,10 @@ public class ScrollBarTests
         };
         super.Add (scrollBar);
         scrollBar.Layout ();
-        scrollBar.SliderPosition = 1;
+        scrollBar.ContentPosition = 1;
         scrollBar.Orientation = Orientation.Horizontal;
 
-        Assert.Equal (0, scrollBar.SliderPosition);
-    }
-
-
-    [Fact]
-    public void SliderPosition_Event_Cancelables ()
-    {
-        var changingCount = 0;
-        var changedCount = 0;
-        var scrollBar = new ScrollBar { };
-        scrollBar.Layout ();
-        scrollBar.Size = scrollBar.Viewport.Height * 2;
-        scrollBar.Layout ();
-
-        scrollBar.SliderPositionChanging += (s, e) =>
-                                         {
-                                             if (changingCount == 0)
-                                             {
-                                                 e.Cancel = true;
-                                             }
-
-                                             changingCount++;
-                                         };
-        scrollBar.SliderPositionChanged += (s, e) => changedCount++;
-
-        scrollBar.SliderPosition = 1;
-        Assert.Equal (0, scrollBar.SliderPosition);
-        Assert.Equal (1, changingCount);
-        Assert.Equal (0, changedCount);
-
-        scrollBar.SliderPosition = 1;
-        Assert.Equal (1, scrollBar.SliderPosition);
-        Assert.Equal (2, changingCount);
-        Assert.Equal (1, changedCount);
+        Assert.Equal (0, scrollBar.GetSliderPosition ());
     }
 
 
@@ -179,10 +146,10 @@ public class ScrollBarTests
         Assert.Equal (30, scrollBar.Size);
 
         scrollBar.KeepContentInAllViewport = false;
-        scrollBar.SliderPosition = 50;
-        Assert.Equal (scrollBar.SliderPosition, scrollBar.Size - 1);
-        Assert.Equal (scrollBar.SliderPosition, view.Viewport.Y);
-        Assert.Equal (29, scrollBar.SliderPosition);
+        scrollBar.ContentPosition = 50;
+        Assert.Equal (scrollBar.GetSliderPosition (), scrollBar.Size - 1);
+        Assert.Equal (scrollBar.GetSliderPosition (), view.Viewport.Y);
+        Assert.Equal (29, scrollBar.GetSliderPosition ());
         Assert.Equal (29, view.Viewport.Y);
 
         top.Dispose ();
@@ -198,7 +165,7 @@ public class ScrollBarTests
         var scrollBar = new ScrollBar
         {
             X = 10, Y = 10, Width = orientation == Orientation.Vertical ? 1 : 10, Height = orientation == Orientation.Vertical ? 10 : 1, Size = 20,
-            SliderPosition = 5, Orientation = orientation, KeepContentInAllViewport = true
+            ContentPosition = 5, Orientation = orientation, KeepContentInAllViewport = true
         };
         var top = new Toplevel ();
         top.Add (scrollBar);
@@ -346,7 +313,7 @@ public class ScrollBarTests
 
         scrollBar.Size = sliderSize;
         scrollBar.Layout ();
-        scrollBar.SliderPosition = sliderPosition;
+        scrollBar.ContentPosition = sliderPosition;
 
         super.BeginInit ();
         super.EndInit ();
@@ -392,10 +359,10 @@ public class ScrollBarTests
 
         top.Add (scrollBar);
         RunState rs = Application.Begin (top);
-        scrollBar.SliderPosition = 5;
+        scrollBar.ContentPosition = 5;
         Application.RunIteration (ref rs);
 
-        Assert.Equal (5, scrollBar.SliderPosition);
+        Assert.Equal (5, scrollBar.GetSliderPosition ());
         Assert.Equal (12, scrollBar.ContentPosition);
         int initialPos = scrollBar.ContentPosition;
 
@@ -433,10 +400,10 @@ public class ScrollBarTests
 
         top.Add (scrollBar);
         RunState rs = Application.Begin (top);
-        scrollBar.SliderPosition = 0;
+        scrollBar.ContentPosition = 0;
         Application.RunIteration (ref rs);
 
-        Assert.Equal (0, scrollBar.SliderPosition);
+        Assert.Equal (0, scrollBar.GetSliderPosition ());
         Assert.Equal (0, scrollBar.ContentPosition);
         int initialPos = scrollBar.ContentPosition;
 

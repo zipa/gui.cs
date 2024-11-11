@@ -21,7 +21,7 @@ public class ScrollTests
     }
 
     [Fact]
-    public void OnOrientationChanged_Sets_Position_To_0 ()
+    public void OnOrientationChanged_Sets_ContentPosition_To_0 ()
     {
         View super = new View ()
         {
@@ -34,10 +34,10 @@ public class ScrollTests
         };
         super.Add (scroll);
         scroll.Layout ();
-        scroll.SliderPosition = 1;
+        scroll.ContentPosition = 1;
         scroll.Orientation = Orientation.Horizontal;
 
-        Assert.Equal (0, scroll.SliderPosition);
+        Assert.Equal (0, scroll.ContentPosition);
     }
 
 
@@ -224,7 +224,7 @@ public class ScrollTests
         Assert.False (scroll.CanFocus);
         Assert.Equal (Orientation.Vertical, scroll.Orientation);
         Assert.Equal (0, scroll.Size);
-        Assert.Equal (0, scroll.SliderPosition);
+        Assert.Equal (0, scroll.GetSliderPosition ());
     }
 
     //[Fact]
@@ -324,7 +324,7 @@ public class ScrollTests
         top.Add (scroll);
         RunState rs = Application.Begin (top);
 
-        Assert.Equal (0, scroll.SliderPosition);
+        Assert.Equal (0, scroll.GetSliderPosition ());
         Assert.Equal (0, scroll.ContentPosition);
 
         Application.RaiseMouseEvent (new ()
@@ -377,10 +377,10 @@ public class ScrollTests
 
         top.Add (scroll);
         RunState rs = Application.Begin (top);
-        scroll.SliderPosition = 5;
+        scroll.ContentPosition = 5;
         Application.RunIteration (ref rs);
 
-        Assert.Equal (5, scroll.SliderPosition);
+        Assert.Equal (5, scroll.GetSliderPosition ());
         Assert.Equal (10, scroll.ContentPosition);
 
         Application.RaiseMouseEvent (new ()
@@ -390,7 +390,7 @@ public class ScrollTests
         });
         Application.RunIteration (ref rs);
 
-        Assert.Equal (0, scroll.SliderPosition);
+        Assert.Equal (0, scroll.GetSliderPosition ());
         Assert.Equal (0, scroll.ContentPosition);
 
         Application.ResetState (true);
@@ -421,42 +421,10 @@ public class ScrollTests
         scroll.Size = scrollSize;
         super.Layout ();
 
-        scroll.SliderPosition = scrollPosition;
+        scroll.ContentPosition = scrollPosition;
         super.Layout ();
 
-        Assert.True (scroll.SliderPosition <= scrollSize);
-    }
-
-    [Fact]
-    public void SliderPosition_Event_Cancelables ()
-    {
-        var changingCount = 0;
-        var changedCount = 0;
-        var scroll = new Scroll { };
-        scroll.Layout ();
-        scroll.Size = scroll.Viewport.Height * 2;
-        scroll.Layout ();
-
-        scroll.SliderPositionChanging += (s, e) =>
-                                   {
-                                       if (changingCount == 0)
-                                       {
-                                           e.Cancel = true;
-                                       }
-
-                                       changingCount++;
-                                   };
-        scroll.SliderPositionChanged += (s, e) => changedCount++;
-
-        scroll.SliderPosition = 1;
-        Assert.Equal (0, scroll.SliderPosition);
-        Assert.Equal (1, changingCount);
-        Assert.Equal (0, changedCount);
-
-        scroll.SliderPosition = 1;
-        Assert.Equal (1, scroll.SliderPosition);
-        Assert.Equal (2, changingCount);
-        Assert.Equal (1, changedCount);
+        Assert.True (scroll.GetSliderPosition () <= scrollSize);
     }
 
     [Fact]
@@ -466,59 +434,51 @@ public class ScrollTests
         var cancel = false;
         var changed = 0;
         var scroll = new Scroll { Height = 10, Size = 20 };
-        scroll.SliderPositionChanging += Scroll_PositionChanging;
         scroll.SliderPositionChanged += Scroll_PositionChanged;
 
         Assert.Equal (Orientation.Vertical, scroll.Orientation);
         scroll.Layout ();
         Assert.Equal (new (0, 0, 1, 10), scroll.Viewport);
-        Assert.Equal (0, scroll.SliderPosition);
+        Assert.Equal (0, scroll.GetSliderPosition ());
         Assert.Equal (0, changing);
         Assert.Equal (0, changed);
 
-        scroll.SliderPosition = 0;
-        Assert.Equal (0, scroll.SliderPosition);
+        scroll.ContentPosition = 0;
+        Assert.Equal (0, scroll.GetSliderPosition ());
         Assert.Equal (0, changing);
         Assert.Equal (0, changed);
 
-        scroll.SliderPosition = 1;
-        Assert.Equal (1, scroll.SliderPosition);
+        scroll.ContentPosition = 1;
+        Assert.Equal (1, scroll.GetSliderPosition ());
         Assert.Equal (1, changing);
         Assert.Equal (1, changed);
 
         Reset ();
         cancel = true;
-        scroll.SliderPosition = 2;
-        Assert.Equal (1, scroll.SliderPosition);
+        scroll.ContentPosition = 2;
+        Assert.Equal (1, scroll.GetSliderPosition ());
         Assert.Equal (1, changing);
         Assert.Equal (0, changed);
 
         Reset ();
-        scroll.SliderPosition = 10;
-        Assert.Equal (5, scroll.SliderPosition);
+        scroll.ContentPosition = 10;
+        Assert.Equal (5, scroll.GetSliderPosition ());
         Assert.Equal (1, changing);
         Assert.Equal (1, changed);
 
         Reset ();
-        scroll.SliderPosition = 11;
-        Assert.Equal (5, scroll.SliderPosition);
+        scroll.ContentPosition = 11;
+        Assert.Equal (5, scroll.GetSliderPosition ());
         Assert.Equal (1, changing);
         Assert.Equal (1, changed);
 
         Reset ();
-        scroll.SliderPosition = 0;
-        Assert.Equal (0, scroll.SliderPosition);
+        scroll.ContentPosition = 0;
+        Assert.Equal (0, scroll.GetSliderPosition ());
         Assert.Equal (1, changing);
         Assert.Equal (1, changed);
 
-        scroll.SliderPositionChanging -= Scroll_PositionChanging;
         scroll.SliderPositionChanged -= Scroll_PositionChanged;
-
-        void Scroll_PositionChanging (object sender, CancelEventArgs<int> e)
-        {
-            changing++;
-            e.Cancel = cancel;
-        }
 
         void Scroll_PositionChanged (object sender, EventArgs<int> e) { changed++; }
 
@@ -625,7 +585,7 @@ public class ScrollTests
 
         scroll.Size = sliderSize;
         scroll.Layout ();
-        scroll.SliderPosition = sliderPosition;
+        scroll.ContentPosition = sliderPosition;
 
         super.BeginInit ();
         super.EndInit ();

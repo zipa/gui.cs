@@ -130,11 +130,13 @@ public partial class View
         {
             if (_verticalScrollBar.IsValueCreated)
             {
+                _verticalScrollBar.Value.ViewportDimension = Viewport.Height;
                 _verticalScrollBar.Value.ContentPosition = Viewport.Y;
             }
 
             if (_horizontalScrollBar.IsValueCreated)
             {
+                _horizontalScrollBar.Value.ViewportDimension = Viewport.Width;
                 _horizontalScrollBar.Value.ContentPosition = Viewport.X;
             }
         };

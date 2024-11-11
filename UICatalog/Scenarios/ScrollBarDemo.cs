@@ -4,12 +4,10 @@ using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("ScrollBar Demo", "Demonstrates using ScrollBar view.")]
+[ScenarioMetadata ("ScrollBar Demo", "Demonstrates ScrollBar.")]
 [ScenarioCategory ("Scrolling")]
 public class ScrollBarDemo : Scenario
 {
-    private ViewDiagnosticFlags _diagnosticFlags;
-
     public override void Main ()
     {
         Application.Init ();
@@ -29,22 +27,21 @@ public class ScrollBarDemo : Scenario
             X = Pos.Right (editor),
             Width = Dim.Fill (),
             Height = Dim.Fill (),
-            ColorScheme = Colors.ColorSchemes ["Base"]
+            ColorScheme = Colors.ColorSchemes ["Base"],
+            Arrangement = ViewArrangement.Resizable
         };
+        frameView!.Padding!.Thickness = new (1);
+        frameView.Padding.Diagnostics = ViewDiagnosticFlags.Ruler;
         app.Add (frameView);
 
         var scrollBar = new ScrollBar
         {
             X = Pos.AnchorEnd (),
-            AutoHide = false
+            AutoHide = false,
+            Size = 100,
             //ShowPercent = true
         };
         frameView.Add (scrollBar);
-
-        app.Loaded += (s, e) =>
-                      {
-                          scrollBar.Size = scrollBar.Viewport.Height;
-                      };
 
         int GetMaxLabelWidth (int groupId)
         {
@@ -134,7 +131,6 @@ public class ScrollBarDemo : Scenario
                                                      scrollBar.Y = 0;
                                                      scrollWidthHeight.Value = Math.Min (scrollWidthHeight.Value, scrollBar.SuperView.GetContentSize ().Width);
                                                      scrollBar.Width = scrollWidthHeight.Value;
-                                                     scrollBar.Size /= 3;
                                                  }
                                                  else
                                                  {
@@ -143,7 +139,6 @@ public class ScrollBarDemo : Scenario
                                                      scrollBar.Y = Pos.AnchorEnd ();
                                                      scrollWidthHeight.Value = Math.Min (scrollWidthHeight.Value, scrollBar.SuperView.GetContentSize ().Height);
                                                      scrollBar.Height = scrollWidthHeight.Value;
-                                                     scrollBar.Size *= 3;
                                                  }
                                              };
 
@@ -189,33 +184,13 @@ public class ScrollBarDemo : Scenario
         };
         frameView.Add (lblSliderPosition);
 
-        NumericUpDown<int> scrollSliderPosition = new ()
+        Label scrollSliderPosition = new ()
         {
-            Value = scrollBar.SliderPosition,
+            Text = scrollBar.GetSliderPosition ().ToString (),
             X = Pos.Right (lblSliderPosition) + 1,
             Y = Pos.Top (lblSliderPosition)
         };
         frameView.Add (scrollSliderPosition);
-
-        scrollSliderPosition.ValueChanging += (s, e) =>
-                                              {
-                                                  if (e.NewValue < 0)
-                                                  {
-                                                      e.Cancel = true;
-
-                                                      return;
-                                                  }
-
-                                                  if (scrollBar.SliderPosition != e.NewValue)
-                                                  {
-                                                      scrollBar.SliderPosition = e.NewValue;
-                                                  }
-
-                                                  if (scrollBar.SliderPosition != e.NewValue)
-                                                  {
-                                                      e.Cancel = true;
-                                                  }
-                                              };
 
         var lblContentPosition = new Label
         {
@@ -229,7 +204,7 @@ public class ScrollBarDemo : Scenario
 
         NumericUpDown<int> scrollContentPosition = new ()
         {
-            Value = scrollBar.SliderPosition,
+            Value = scrollBar.GetSliderPosition (),
             X = Pos.Right (lblContentPosition) + 1,
             Y = Pos.Top (lblContentPosition)
         };
@@ -342,22 +317,15 @@ public class ScrollBarDemo : Scenario
                                          }
                                      };
 
-            scrollBar.SliderPositionChanging += (s, e) =>
-                                          {
-                                              eventLog.Log ($"SliderPositionChanging: {e.CurrentValue}");
-                                              eventLog.Log ($"  NewValue: {e.NewValue}");
-                                          };
-
             scrollBar.SliderPositionChanged += (s, e) =>
                                          {
                                              eventLog.Log ($"SliderPositionChanged: {e.CurrentValue}");
                                              eventLog.Log ($"  ContentPosition: {scrollBar.ContentPosition}");
-                                             scrollSliderPosition.Value = e.CurrentValue;
+                                             scrollSliderPosition.Text = e.CurrentValue.ToString ();
                                          };
 
             editor.Initialized += (s, e) =>
                                   {
-                                      scrollBar.Size = int.Max (app.GetContentSize ().Height * 2, app.GetContentSize ().Width * 2);
                                       editor.ViewToEdit = scrollBar;
                                   };
 

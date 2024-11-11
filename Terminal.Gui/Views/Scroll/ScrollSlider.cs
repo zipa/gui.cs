@@ -1,5 +1,6 @@
 ﻿#nullable enable
 
+using System.ComponentModel;
 using System.Diagnostics;
 
 namespace Terminal.Gui;
@@ -39,6 +40,8 @@ public class ScrollSlider : View, IOrientation, IDesignable
 
         // Default size is 1
         Size = 1;
+
+        FrameChanged += OnFrameChanged;
     }
 
     #region IOrientation members
@@ -67,6 +70,7 @@ public class ScrollSlider : View, IOrientation, IDesignable
         // Reset Position to 0 when changing orientation
         X = 0;
         Y = 0;
+        //Position = 0;
 
         // Reset Size to 1 when changing orientation
         if (Orientation == Orientation.Vertical)
@@ -103,7 +107,7 @@ public class ScrollSlider : View, IOrientation, IDesignable
         set
         {
             _showPercent = value;
-            SetNeedsDraw();
+            SetNeedsDraw ();
         }
     }
 
@@ -123,11 +127,11 @@ public class ScrollSlider : View, IOrientation, IDesignable
         {
             if (Orientation == Orientation.Vertical)
             {
-                return Frame.Height;
+                return Viewport.Height;
             }
             else
             {
-                return Frame.Width;
+                return Viewport.Width;
             }
         }
         set
@@ -148,37 +152,122 @@ public class ScrollSlider : View, IOrientation, IDesignable
     }
 
     /// <summary>
-    ///     Gets or sets the position of the ScrollSlider relative to the size of the ScrollSlider's Frame. This is a helper that simply gets or sets the X or Y depending on the
-    ///     <see cref="Orientation"/>. The position will be constrained such that the ScrollSlider will not go outside the Viewport of
+    ///     Gets the size of the viewport into the content being scrolled, bounded by <see cref="Size"/>.
+    /// </summary>
+    /// <remarks>
+    ///     This is the SuperView's Viewport demension.
+    /// </remarks>
+    public int ViewportDimension => Orientation == Orientation.Vertical ? SuperView?.Viewport.Height ?? 0 : SuperView?.Viewport.Width ?? 0;
+
+    private void OnFrameChanged (object? sender, EventArgs<Rectangle> e)
+    {
+        Position = Orientation == Orientation.Vertical ? e.CurrentValue.Y : e.CurrentValue.X;
+    }
+
+    private int _position;
+
+    /// <summary>
+    ///     Gets or sets the position of the ScrollSlider relative to the size of the ScrollSlider's Frame.
+    ///     The position will be constrained such that the ScrollSlider will not go outside the Viewport of
     ///     the <see cref="View.SuperView"/>.
     /// </summary>
     public int Position
     {
-        get
-        {
-            if (Orientation == Orientation.Vertical)
-            {
-                return Frame.Y;
-            }
-            else
-            {
-                return Frame.X;
-            }
-        }
+        get => _position;
         set
         {
-            if (Orientation == Orientation.Vertical)
+            if (_position == value)
             {
-                int viewport = Math.Max (1, SuperView?.Viewport.Height ?? 1);
-                Y = Math.Clamp (value, 0, viewport - Frame.Height);
+                return;
             }
-            else
-            {
-                int viewport = Math.Max (1, SuperView?.Viewport.Width ?? 1);
-                X = Math.Clamp (value, 0, viewport - Frame.Width);
-            }
+
+            RaisePositionChangeEvents (ClampPosition (value));
+
+            SetNeedsLayout ();
         }
     }
+
+    public void SetPosition (int position)
+    {
+        _position = ClampPosition (position);
+
+        if (Orientation == Orientation.Vertical)
+        {
+            Y = _position;
+        }
+        else
+        {
+            X = _position;
+        }
+    }
+
+    private int ClampPosition (int newPosittion)
+    {
+        if (SuperView is null || !IsInitialized)
+        {
+            return 1;
+        }
+
+        if (Orientation == Orientation.Vertical)
+        {
+            return Math.Clamp (newPosittion, 0, ViewportDimension - Viewport.Height);
+        }
+        else
+        {
+            return Math.Clamp (newPosittion, 0, ViewportDimension - Viewport.Width);
+        }
+    }
+
+    private void RaisePositionChangeEvents (int newPosition)
+    {
+        if (OnPositionChanging (_position, newPosition))
+        {
+            return;
+        }
+
+        CancelEventArgs<int> args = new (ref _position, ref newPosition);
+        PositionChanging?.Invoke (this, args);
+
+        if (args.Cancel)
+        {
+            return;
+        }
+
+        int scrollAmount = newPosition -_position;
+        _position = newPosition;
+
+        OnPositionChanged (_position);
+        PositionChanged?.Invoke (this, new (in _position));
+
+        OnScroll (scrollAmount);
+        Scroll?.Invoke (this, new (in scrollAmount));
+
+        RaiseSelecting (new CommandContext (Command.Select, null, null, scrollAmount));
+    }
+
+    /// <summary>
+    ///     Called when <see cref="Position"/> is changing. Return true to cancel the change.
+    /// </summary>
+    protected virtual bool OnPositionChanging (int currentPos, int newPos) { return false; }
+
+    /// <summary>
+    ///     Raised when the <see cref="Position"/> is changing. Set <see cref="CancelEventArgs.Cancel"/> to
+    ///     <see langword="true"/> to prevent the position from being changed.
+    /// </summary>
+    public event EventHandler<CancelEventArgs<int>>? PositionChanging;
+
+    /// <summary>Called when <see cref="Position"/> has changed.</summary>
+    protected virtual void OnPositionChanged (int position) { }
+
+    /// <summary>Raised when the <see cref="Position"/> has changed.</summary>
+    public event EventHandler<EventArgs<int>>? PositionChanged;
+
+
+    /// <summary>Called when <see cref="Position"/> has changed. Indicates how much to scroll.</summary>
+    protected virtual void OnScroll (int scrollAmount) { }
+
+    /// <summary>Raised when the <see cref="Position"/> has changed. Indicates how much to scroll.</summary>
+    public event EventHandler<EventArgs<int>>? Scroll;
 
     /// <inheritdoc/>
     protected override bool OnDrawingText ()
@@ -240,7 +329,7 @@ public class ScrollSlider : View, IOrientation, IDesignable
                 if (Orientation == Orientation.Vertical)
                 {
                     Y = Frame.Y + offset < 0
-                            ? 0
+                                  ? 0
                             : Frame.Y + offset + Frame.Height > superViewDimension
                                 ? Math.Max (superViewDimension - Frame.Height, 0)
                                 : Frame.Y + offset;
@@ -248,7 +337,7 @@ public class ScrollSlider : View, IOrientation, IDesignable
                 else
                 {
                     X = Frame.X + offset < 0
-                            ? 0
+                                  ? 0
                             : Frame.X + offset + Frame.Width > superViewDimension
                                 ? Math.Max (superViewDimension - Frame.Width, 0)
                                 : Frame.X + offset;

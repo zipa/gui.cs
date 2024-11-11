@@ -11,9 +11,6 @@ namespace Terminal.Gui;
 ///     and clicking with the mouse to scroll.
 /// </summary>
 /// <remarks>
-///     <para>
-///         <see cref="SliderPosition"/> indicates the number of rows or columns the Scroll has moved from 0.
-///     </para>
 /// </remarks>
 public class ScrollBar : View, IOrientation, IDesignable
 {
@@ -27,7 +24,6 @@ public class ScrollBar : View, IOrientation, IDesignable
         CanFocus = false;
 
         _scroll = new ();
-        _scroll.SliderPositionChanging += OnScrollOnSliderPositionChanging;
         _scroll.SliderPositionChanged += OnScrollOnSliderPositionChanged;
         _scroll.ContentPositionChanging += OnScrollOnContentPositionChanging;
         _scroll.ContentPositionChanged += OnScrollOnContentPositionChanged;
@@ -112,6 +108,8 @@ public class ScrollBar : View, IOrientation, IDesignable
             Height = 1;
         }
 
+        // Force a layout to ensure _scroll 
+        Layout ();
         _scroll.Orientation = newOrientation;
     }
 
@@ -183,43 +181,34 @@ public class ScrollBar : View, IOrientation, IDesignable
     }
 
     /// <summary>Gets or sets the position of the slider within the ScrollBar's Viewport.</summary>
-    /// <value>The position.</value>
-    public int SliderPosition
-    {
-        get => _scroll.SliderPosition;
-        set => _scroll.SliderPosition = value;
-    }
+    /// <returns>The position.</returns>
+    public int GetSliderPosition () => _scroll.GetSliderPosition ();
 
-    private void OnScrollOnSliderPositionChanging (object? sender, CancelEventArgs<int> e) { SliderPositionChanging?.Invoke (this, e); }
     private void OnScrollOnSliderPositionChanged (object? sender, EventArgs<int> e) { SliderPositionChanged?.Invoke (this, e); }
 
-    /// <summary>
-    ///     Raised when the <see cref="SliderPosition"/> is changing. Set <see cref="CancelEventArgs.Cancel"/> to
-    ///     <see langword="true"/> to prevent the position from being changed.
-    /// </summary>
-    public event EventHandler<CancelEventArgs<int>>? SliderPositionChanging;
-
-    /// <summary>Raised when the <see cref="SliderPosition"/> has changed.</summary>
+    /// <summary>Raised when the position of the slider has changed.</summary>
     public event EventHandler<EventArgs<int>>? SliderPositionChanged;
-
 
     /// <summary>
     ///     Gets or sets the size of the Scroll. This is the total size of the content that can be scrolled through.
     /// </summary>
     public int Size
     {
-        get
-        {
-            // Add two for increment/decrement buttons
-            return _scroll.Size + 2;
-        }
-        set
-        {
-            // Remove two for increment/decrement buttons
-            _scroll.Size = value - 2;
-        }
+        get => _scroll.Size;
+        set => _scroll.Size = value;
     }
 
+    /// <summary>
+    ///     Gets or sets the size of the viewport into the content being scrolled, bounded by <see cref="Size"/>.
+    /// </summary>
+    /// <remarks>
+    ///     If not explicitly set, will be the appropriate dimension of the Scroll's Frame.
+    /// </remarks>
+    public int ViewportDimension
+    {
+        get => _scroll.ViewportDimension;
+        set => _scroll.ViewportDimension = value;
+    }
     /// <summary>
     ///     Gets or sets the position of the ScrollSlider within the range of 0...<see cref="Size"/>.
     /// </summary>
@@ -233,12 +222,12 @@ public class ScrollBar : View, IOrientation, IDesignable
     private void OnScrollOnContentPositionChanged (object? sender, EventArgs<int> e) { ContentPositionChanged?.Invoke (this, e); }
 
     /// <summary>
-    ///     Raised when the <see cref="SliderPosition"/> is changing. Set <see cref="CancelEventArgs.Cancel"/> to
+    ///     Raised when the <see cref="ContentPosition"/> is changing. Set <see cref="CancelEventArgs.Cancel"/> to
     ///     <see langword="true"/> to prevent the position from being changed.
     /// </summary>
     public event EventHandler<CancelEventArgs<int>>? ContentPositionChanging;
 
-    /// <summary>Raised when the <see cref="SliderPosition"/> has changed.</summary>
+    /// <summary>Raised when the <see cref="ContentPosition"/> has changed.</summary>
     public event EventHandler<EventArgs<int>>? ContentPositionChanged;
 
     /// <summary>Raised when <see cref="Size"/> has changed.</summary>
@@ -320,7 +309,7 @@ public class ScrollBar : View, IOrientation, IDesignable
         Width = 1;
         Height = Dim.Fill ();
         Size = 200;
-        SliderPosition = 10;
+        ContentPosition = 10;
         //ShowPercent = true;
         return true;
     }

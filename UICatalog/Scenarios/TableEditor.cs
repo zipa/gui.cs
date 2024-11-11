@@ -65,8 +65,8 @@ public class TableEditor : Scenario
              "Cuneiform Numbers and Punctuation"
             ),
         new (
-             (uint)(CharMap._maxCodePoint - 16),
-             (uint)CharMap._maxCodePoint,
+             (uint)(UICatalog.Scenarios.UnicodeRange.Ranges.Max (r => r.End) - 16),
+             (uint)UICatalog.Scenarios.UnicodeRange.Ranges.Max (r => r.End),
              "End"
             ),
         new (0x0020, 0x007F, "Basic Latin"),
@@ -1533,17 +1533,10 @@ public class TableEditor : Scenario
                                   );
     }
 
-    private class UnicodeRange
+    public class UnicodeRange (uint start, uint end, string category)
     {
-        public readonly string Category;
-        public readonly uint End;
-        public readonly uint Start;
-
-        public UnicodeRange (uint start, uint end, string category)
-        {
-            Start = start;
-            End = end;
-            Category = category;
-        }
+        public readonly string Category = category;
+        public readonly uint End = end;
+        public readonly uint Start = start;
     }
 }

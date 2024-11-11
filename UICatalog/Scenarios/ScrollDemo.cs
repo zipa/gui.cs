@@ -1,22 +1,21 @@
 ﻿using System;
+using System.Linq;
 using Terminal.Gui;
 
 namespace UICatalog.Scenarios;
 
-[ScenarioMetadata ("Scroll Demo", "Demonstrates using Scroll view.")]
-[ScenarioCategory ("Drawing")]
+[ScenarioMetadata ("Scroll Demo", "Demonstrates Scroll.")]
 [ScenarioCategory ("Scrolling")]
 public class ScrollDemo : Scenario
 {
-    private ViewDiagnosticFlags _diagnosticFlags;
-
     public override void Main ()
     {
         Application.Init ();
 
         Window app = new ()
         {
-            Title = $"{Application.QuitKey} to Quit - Scenario: {GetName ()}"
+            Title = $"{Application.QuitKey} to Quit - Scenario: {GetName ()}",
+            Arrangement = ViewArrangement.Fixed
         };
 
         var editor = new AdornmentsEditor ();
@@ -28,25 +27,40 @@ public class ScrollDemo : Scenario
             X = Pos.Right (editor),
             Width = Dim.Fill (),
             Height = Dim.Fill (),
-            ColorScheme = Colors.ColorSchemes ["Base"]
+            ColorScheme = Colors.ColorSchemes ["Base"],
+            Arrangement = ViewArrangement.Resizable
         };
+        frameView.Padding.Thickness = new (1);
+        frameView.Padding.Diagnostics = ViewDiagnosticFlags.Ruler;
         app.Add (frameView);
 
         var scroll = new Scroll
         {
             X = Pos.AnchorEnd (),
-            ShowPercent = true
+            Size = 1000,
         };
         frameView.Add (scroll);
 
-        app.Loaded += (s, e) =>
-                                 {
-                                     scroll.Size = frameView.Viewport.Height;
-                                 };
+        int GetMaxLabelWidth (int groupId)
+        {
+            return frameView.Subviews.Max (
+                                           v =>
+                                           {
+                                               if (v.Y.Has<PosAlign> (out var pos) && pos.GroupId == groupId)
+                                               {
+                                                   return v.Text.GetColumns ();
+                                               }
+
+                                               return 0;
+                                           });
+        }
 
         var lblWidthHeight = new Label
         {
-            Text = "Width/Height:"
+            Text = "_Width/Height:",
+            TextAlignment = Alignment.End,
+            Y = Pos.Align (Alignment.Start, AlignmentModes.StartToEnd, groupId: 1),
+            Width = Dim.Func (() => GetMaxLabelWidth (1))
         };
         frameView.Add (lblWidthHeight);
 
@@ -59,71 +73,79 @@ public class ScrollDemo : Scenario
         frameView.Add (scrollWidthHeight);
 
         scrollWidthHeight.ValueChanging += (s, e) =>
-                                           {
-                                               if (e.NewValue < 1
-                                                   || (e.NewValue
-                                                       > (scroll.Orientation == Orientation.Vertical
-                                                              ? scroll.SuperView?.GetContentSize ().Width
-                                                              : scroll.SuperView?.GetContentSize ().Height)))
-                                               {
-                                                   // TODO: This must be handled in the ScrollSlider if Width and Height being virtual
-                                                   e.Cancel = true;
+        {
+            if (e.NewValue < 1
+                || (e.NewValue
+                    > (scroll.Orientation == Orientation.Vertical
+                           ? scroll.SuperView?.GetContentSize ().Width
+                           : scroll.SuperView?.GetContentSize ().Height)))
+            {
+                // TODO: This must be handled in the ScrollSlider if Width and Height being virtual
+                e.Cancel = true;
 
-                                                   return;
-                                               }
+                return;
+            }
 
-                                               if (scroll.Orientation == Orientation.Vertical)
-                                               {
-                                                   scroll.Width = e.NewValue;
-                                               }
-                                               else
-                                               {
-                                                   scroll.Height = e.NewValue;
-                                               }
-                                           };
+            if (scroll.Orientation == Orientation.Vertical)
+            {
+                scroll.Width = e.NewValue;
+            }
+            else
+            {
+                scroll.Height = e.NewValue;
+            }
+        };
+
+
+        var lblOrientationabel = new Label
+        {
+            Text = "_Orientation:",
+            TextAlignment = Alignment.End,
+            Y = Pos.Align (Alignment.Start, groupId: 1),
+            Width = Dim.Func (() => GetMaxLabelWidth (1))
+        };
+        frameView.Add (lblOrientationabel);
 
         var rgOrientation = new RadioGroup
         {
-            Y = Pos.Bottom (lblWidthHeight),
+            X = Pos.Right (lblOrientationabel) + 1,
+            Y = Pos.Top (lblOrientationabel),
             RadioLabels = ["Vertical", "Horizontal"],
             Orientation = Orientation.Horizontal
         };
         frameView.Add (rgOrientation);
 
         rgOrientation.SelectedItemChanged += (s, e) =>
-                                             {
-                                                 if (e.SelectedItem == e.PreviousSelectedItem)
-                                                 {
-                                                     return;
-                                                 }
+        {
+            if (e.SelectedItem == e.PreviousSelectedItem)
+            {
+                return;
+            }
 
-                                                 if (rgOrientation.SelectedItem == 0)
-                                                 {
-                                                     scroll.Orientation = Orientation.Vertical;
-                                                     scroll.X = Pos.AnchorEnd ();
-                                                     scroll.Y = 0;
-                                                     scrollWidthHeight.Value = Math.Min (scrollWidthHeight.Value, scroll.SuperView.GetContentSize ().Width);
-                                                     scroll.Width = scrollWidthHeight.Value;
-                                                     scroll.Height = Dim.Fill ();
-                                                     scroll.Size /= 3;
-                                                 }
-                                                 else
-                                                 {
-                                                     scroll.Orientation = Orientation.Horizontal;
-                                                     scroll.X = 0;
-                                                     scroll.Y = Pos.AnchorEnd ();
-                                                     scroll.Width = Dim.Fill ();
-
-                                                     scrollWidthHeight.Value = Math.Min (scrollWidthHeight.Value, scroll.SuperView.GetContentSize ().Height);
-                                                     scroll.Height = scrollWidthHeight.Value;
-                                                     scroll.Size *= 3;
-                                                 }
-                                             };
+            if (rgOrientation.SelectedItem == 0)
+            {
+                scroll.Orientation = Orientation.Vertical;
+                scroll.X = Pos.AnchorEnd ();
+                scroll.Y = 0;
+                scrollWidthHeight.Value = Math.Min (scrollWidthHeight.Value, scroll.SuperView.GetContentSize ().Width);
+                scroll.Width = scrollWidthHeight.Value;
+            }
+            else
+            {
+                scroll.Orientation = Orientation.Horizontal;
+                scroll.X = 0;
+                scroll.Y = Pos.AnchorEnd ();
+                scrollWidthHeight.Value = Math.Min (scrollWidthHeight.Value, scroll.SuperView.GetContentSize ().Height);
+                scroll.Height = scrollWidthHeight.Value;
+            }
+        };
 
         var lblSize = new Label
         {
-            Y = Pos.Bottom (rgOrientation),
-            Text = "Size:"
+            Text = "_Size:",
+            TextAlignment = Alignment.End,
+            Y = Pos.Align (Alignment.Start, groupId: 1),
+            Width = Dim.Func (() => GetMaxLabelWidth (1))
         };
         frameView.Add (lblSize);
 
@@ -133,106 +155,109 @@ public class ScrollDemo : Scenario
             X = Pos.Right (lblSize) + 1,
             Y = Pos.Top (lblSize)
         };
-        scroll.SizeChanged += (sender, args) => scrollSize.Value = args.CurrentValue;
         frameView.Add (scrollSize);
 
         scrollSize.ValueChanging += (s, e) =>
-                                    {
-                                        if (e.NewValue < 0)
-                                        {
-                                            e.Cancel = true;
-
-                                            return;
-                                        }
-
-                                        if (scroll.Size != e.NewValue)
-                                        {
-                                            scroll.Size = e.NewValue;
-                                        }
-                                    };
-
-        var lblPosition = new Label
         {
-            Y = Pos.Bottom (lblSize),
-            Text = "Position:"
-        };
-        frameView.Add (lblPosition);
+            if (e.NewValue < 0)
+            {
+                e.Cancel = true;
 
-        NumericUpDown<int> scrollPosition = new ()
+                return;
+            }
+
+            if (scroll.Size != e.NewValue)
+            {
+                scroll.Size = e.NewValue;
+            }
+        };
+
+        var lblSliderPosition = new Label
         {
-            Value = scroll.SliderPosition,
-            X = Pos.Right (lblPosition) + 1,
-            Y = Pos.Top (lblPosition)
+            Text = "_SliderPosition:",
+            TextAlignment = Alignment.End,
+            Y = Pos.Align (Alignment.Start, groupId: 1),
+            Width = Dim.Func (() => GetMaxLabelWidth (1))
+
         };
-        frameView.Add (scrollPosition);
+        frameView.Add (lblSliderPosition);
 
-        scrollPosition.ValueChanging += (s, e) =>
-                                        {
-                                            if (e.NewValue < 0)
-                                            {
-                                                e.Cancel = true;
+        Label scrollSliderPosition = new ()
+        {
+            Text = scroll.GetSliderPosition ().ToString (),
+            X = Pos.Right (lblSliderPosition) + 1,
+            Y = Pos.Top (lblSliderPosition)
+        };
+        frameView.Add (scrollSliderPosition);
 
-                                                return;
-                                            }
+        var lblContentPosition = new Label
+        {
+            Text = "_ContentPosition:",
+            TextAlignment = Alignment.End,
+            Y = Pos.Align (Alignment.Start, groupId: 1),
+            Width = Dim.Func (() => GetMaxLabelWidth (1))
 
-                                            if (scroll.SliderPosition != e.NewValue)
-                                            {
-                                                scroll.SliderPosition = e.NewValue;
-                                            }
+        };
+        frameView.Add (lblContentPosition);
 
-                                            if (scroll.SliderPosition != e.NewValue)
-                                            {
-                                                e.Cancel = true;
-                                            }
-                                        };
+        NumericUpDown<int> scrollContentPosition = new ()
+        {
+            Value = scroll.GetSliderPosition (),
+            X = Pos.Right (lblContentPosition) + 1,
+            Y = Pos.Top (lblContentPosition)
+        };
+        frameView.Add (scrollContentPosition);
+
+        scrollContentPosition.ValueChanging += (s, e) =>
+        {
+            if (e.NewValue < 0)
+            {
+                e.Cancel = true;
+
+                return;
+            }
+
+            if (scroll.ContentPosition != e.NewValue)
+            {
+                scroll.ContentPosition = e.NewValue;
+            }
+
+            if (scroll.ContentPosition != e.NewValue)
+            {
+                e.Cancel = true;
+            }
+        };
+
+        var lblOptions = new Label
+        {
+            Text = "_Options:",
+            TextAlignment = Alignment.End,
+            Y = Pos.Align (Alignment.Start, groupId: 1),
+            Width = Dim.Func (() => GetMaxLabelWidth (1))
+        };
+        frameView.Add (lblOptions);
+
+        var ckbShowPercent = new CheckBox
+        {
+            Y = Pos.Top (lblOptions),
+            X = Pos.Right (lblOptions) + 1,
+            Text = "Sho_wPercent",
+            CheckedState = scroll.ShowPercent ? CheckState.Checked : CheckState.UnChecked
+        };
+        ckbShowPercent.CheckedStateChanging += (s, e) => scroll.ShowPercent = e.NewValue == CheckState.Checked;
+        frameView.Add (ckbShowPercent);
 
         //var ckbKeepContentInAllViewport = new CheckBox
         //{
-        //    Y = Pos.Bottom (scrollPosition), Text = "KeepContentInAllViewport",
-        //    CheckedState = scroll.KeepContentInAllViewport ? CheckState.Checked : CheckState.UnChecked
+        //    X = Pos.Right (ckbShowScrollIndicator) + 1, Y = Pos.Bottom (scrollPosition), Text = "KeepContentInAllViewport",
+        //    CheckedState = Scroll.KeepContentInAllViewport ? CheckState.Checked : CheckState.UnChecked
         //};
-        //ckbKeepContentInAllViewport.CheckedStateChanging += (s, e) => scroll.KeepContentInAllViewport = e.NewValue == CheckState.Checked;
+        //ckbKeepContentInAllViewport.CheckedStateChanging += (s, e) => Scroll.KeepContentInAllViewport = e.NewValue == CheckState.Checked;
         //view.Add (ckbKeepContentInAllViewport);
-
-        var lblSizeChanged = new Label
-        {
-            Y = Pos.Bottom (scrollPosition) + 1
-        };
-        frameView.Add (lblSizeChanged);
-
-        scroll.SizeChanged += (s, e) =>
-                              {
-                                  lblSizeChanged.Text = $"SizeChanged event - CurrentValue: {e.CurrentValue}";
-
-                                  if (scrollSize.Value != e.CurrentValue)
-                                  {
-                                      scrollSize.Value = e.CurrentValue;
-                                  }
-                              };
-
-        var lblPosChanging = new Label
-        {
-            Y = Pos.Bottom (lblSizeChanged)
-        };
-        frameView.Add (lblPosChanging);
-
-        scroll.SliderPositionChanging += (s, e) => { lblPosChanging.Text = $"PositionChanging event - CurrentValue: {e.CurrentValue}; NewValue: {e.NewValue}"; };
-
-        var lblPositionChanged = new Label
-        {
-            Y = Pos.Bottom (lblPosChanging)
-        };
-        frameView.Add (lblPositionChanged);
-
-        scroll.SliderPositionChanged += (s, e) =>
-                                  {
-                                      lblPositionChanged.Text = $"PositionChanged event - CurrentValue: {e.CurrentValue}";
-                                      scrollPosition.Value = e.CurrentValue;
-                                  };
 
         var lblScrollFrame = new Label
         {
-            Y = Pos.Bottom (lblPositionChanged) + 1
+            Y = Pos.Bottom (lblOptions) + 1
         };
         frameView.Add (lblScrollFrame);
 
@@ -248,21 +273,59 @@ public class ScrollDemo : Scenario
         };
         frameView.Add (lblScrollContentSize);
 
-
         scroll.SubviewsLaidOut += (s, e) =>
-                                 {
-                                     lblScrollFrame.Text = $"Scroll Frame: {scroll.Frame.ToString ()}";
-                                     lblScrollViewport.Text = $"Scroll Viewport: {scroll.Viewport.ToString ()}";
-                                     lblScrollContentSize.Text = $"Scroll ContentSize: {scroll.GetContentSize ().ToString ()}";
-                                 };
+        {
+            lblScrollFrame.Text = $"Scroll Frame: {scroll.Frame.ToString ()}";
+            lblScrollViewport.Text = $"Scroll Viewport: {scroll.Viewport.ToString ()}";
+            lblScrollContentSize.Text = $"Scroll ContentSize: {scroll.GetContentSize ().ToString ()}";
+        };
 
-        editor.Initialized += (s, e) =>
-                              {
-                                  scroll.Size = int.Max (app.GetContentSize ().Height * 2, app.GetContentSize ().Width * 2);
-                                  editor.ViewToEdit = scroll;
-                              };
+        EventLog eventLog = new ()
+        {
+            X = Pos.AnchorEnd () - 1,
+            Y = 0,
+            Height = Dim.Height (frameView),
+            BorderStyle = LineStyle.Single,
+            ViewToLog = scroll
+        };
+        app.Add (eventLog);
+        frameView.Width = Dim.Fill (Dim.Func (() => Math.Max (28, eventLog.Frame.Width + 1)));
 
-        app.Closed += (s, e) => View.Diagnostics = _diagnosticFlags;
+        app.Initialized += AppOnInitialized;
+
+
+        void AppOnInitialized (object sender, EventArgs e)
+        {
+            scroll.SizeChanged += (s, e) =>
+            {
+                eventLog.Log ($"SizeChanged: {e.CurrentValue}");
+
+                if (scrollSize.Value != e.CurrentValue)
+                {
+                    scrollSize.Value = e.CurrentValue;
+                }
+            };
+
+            scroll.SliderPositionChanged += (s, e) =>
+            {
+                eventLog.Log ($"SliderPositionChanged: {e.CurrentValue}");
+                eventLog.Log ($"  ContentPosition: {scroll.ContentPosition}");
+                scrollSliderPosition.Text = e.CurrentValue.ToString ();
+            };
+
+            scroll.ContentPositionChanged += (s, e) =>
+                                            {
+                                                eventLog.Log ($"SliderPositionChanged: {e.CurrentValue}");
+                                                eventLog.Log ($"  ContentPosition: {scroll.ContentPosition}");
+                                                scrollContentPosition.Value = e.CurrentValue;
+                                            };
+
+            editor.Initialized += (s, e) =>
+            {
+                editor.ViewToEdit = scroll;
+            };
+
+        }
 
         Application.Run (app);
         app.Dispose ();
