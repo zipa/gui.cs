@@ -173,10 +173,9 @@ internal class UnixMainLoop (ConsoleDriver consoleDriver) : IMainLoopDriver
                     }
 
                     ((IMainLoopDriver)this)._waitForInput.Reset ();
-
-
-                    ProcessInputQueue ();
                 }
+
+                ProcessInputQueue ();
             }
             catch (OperationCanceledException)
             {
