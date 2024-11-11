@@ -946,10 +946,14 @@ public class MainLoopTests
     private class TestMainloop : IMainLoopDriver
     {
         private MainLoop mainLoop;
+        private bool _forceRead1;
+        private ManualResetEventSlim _waitForInput1;
         public bool EventsPending () { throw new NotImplementedException (); }
         public void Iteration () { throw new NotImplementedException (); }
         public void TearDown () { throw new NotImplementedException (); }
         public void Setup (MainLoop mainLoop) { this.mainLoop = mainLoop; }
         public void Wakeup () { throw new NotImplementedException (); }
+        public bool _forceRead { get; set; }
+        public ManualResetEventSlim _waitForInput { get; set; }
     }
 }

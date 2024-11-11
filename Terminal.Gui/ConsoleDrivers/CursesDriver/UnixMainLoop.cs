@@ -43,7 +43,7 @@ internal class UnixMainLoop (ConsoleDriver consoleDriver) : IMainLoopDriver
     private Pollfd []? _pollMap;
     private readonly ConcurrentQueue<PollData> _pollDataQueue = new ();
     private readonly ManualResetEventSlim _eventReady = new (false);
-    internal readonly ManualResetEventSlim _waitForInput = new (false);
+    ManualResetEventSlim IMainLoopDriver._waitForInput { get; set; } = new (false);
     private readonly ManualResetEventSlim _windowSizeChange = new (false);
     private readonly CancellationTokenSource _eventReadyTokenSource = new ();
     private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
@@ -152,7 +152,7 @@ internal class UnixMainLoop (ConsoleDriver consoleDriver) : IMainLoopDriver
         }
     }
 
-    internal bool _forceRead;
+    bool IMainLoopDriver._forceRead { get; set; }
     private int _retries;
 
     private void CursesInputHandler ()
@@ -161,9 +161,9 @@ internal class UnixMainLoop (ConsoleDriver consoleDriver) : IMainLoopDriver
         {
             try
             {
-                if (!_inputHandlerTokenSource.IsCancellationRequested && !_forceRead)
+                if (!_inputHandlerTokenSource.IsCancellationRequested && !((IMainLoopDriver)this)._forceRead)
                 {
-                    _waitForInput.Wait (_inputHandlerTokenSource.Token);
+                    ((IMainLoopDriver)this)._waitForInput.Wait (_inputHandlerTokenSource.Token);
                 }
             }
             catch (OperationCanceledException)
@@ -174,11 +174,11 @@ internal class UnixMainLoop (ConsoleDriver consoleDriver) : IMainLoopDriver
             {
                 if (!_inputHandlerTokenSource.IsCancellationRequested)
                 {
-                    _waitForInput.Reset ();
+                    ((IMainLoopDriver)this)._waitForInput.Reset ();
                 }
             }
 
-            if (_pollDataQueue?.Count == 0 || _forceRead)
+            if (_pollDataQueue?.Count == 0 || ((IMainLoopDriver)this)._forceRead)
             {
                 while (!_inputHandlerTokenSource.IsCancellationRequested)
                 {
@@ -340,7 +340,7 @@ internal class UnixMainLoop (ConsoleDriver consoleDriver) : IMainLoopDriver
 
     bool IMainLoopDriver.EventsPending ()
     {
-        _waitForInput.Set ();
+        ((IMainLoopDriver)this)._waitForInput.Set ();
         _windowSizeChange.Set ();
 
         if (_mainLoop.CheckTimersAndIdleHandlers (out int waitTimeout))
@@ -390,7 +390,7 @@ internal class UnixMainLoop (ConsoleDriver consoleDriver) : IMainLoopDriver
 
         _inputHandlerTokenSource?.Cancel ();
         _inputHandlerTokenSource?.Dispose ();
-        _waitForInput?.Dispose ();
+        ((IMainLoopDriver)this)._waitForInput?.Dispose ();
 
         _windowSizeChange.Dispose();
 

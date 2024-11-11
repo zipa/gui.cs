@@ -7,7 +7,6 @@ internal class NetEvents : IDisposable
 {
     private readonly ManualResetEventSlim _inputReady = new (false);
     private CancellationTokenSource? _inputReadyCancellationTokenSource;
-    internal readonly ManualResetEventSlim _waitForStart = new (false);
     private readonly Queue<InputResult> _inputQueue = new ();
     private readonly ConsoleDriver _consoleDriver;
     private ConsoleKeyInfo []? _cki;
@@ -29,8 +28,6 @@ internal class NetEvents : IDisposable
     {
         while (_inputReadyCancellationTokenSource is { Token.IsCancellationRequested: false })
         {
-            _waitForStart.Set ();
-
             try
             {
                 if (!_inputReadyCancellationTokenSource.Token.IsCancellationRequested)
@@ -81,32 +78,7 @@ internal class NetEvents : IDisposable
             // In WSL it takes longer for keys to be available.
             Task.Delay (100, cancellationToken).Wait (cancellationToken);
 
-            if (!Console.KeyAvailable && AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && AnsiEscapeSequenceRequests.Statuses.Count > 0)
-            {
-                if (_retries > 1)
-                {
-                    if (AnsiEscapeSequenceRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? seqReqStatus)
-                        && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
-                    {
-                        lock (seqReqStatus.AnsiRequest._responseLock)
-                        {
-                            AnsiEscapeSequenceRequests.Statuses.TryDequeue (out _);
-
-                            seqReqStatus.AnsiRequest.RaiseResponseFromInput (null);
-                        }
-                    }
-
-                    _retries = 0;
-                }
-                else
-                {
-                    _retries++;
-                }
-            }
-            else
-            {
-                _retries = 0;
-            }
+            ProcessResponse ();
         }
 
         cancellationToken.ThrowIfCancellationRequested ();
@@ -114,8 +86,38 @@ internal class NetEvents : IDisposable
         return default (ConsoleKeyInfo);
     }
 
-    internal bool _forceRead;
+    //internal bool _forceRead;
     private int _retries;
+
+    private void ProcessResponse ()
+    {
+        if (!Console.KeyAvailable && AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && AnsiEscapeSequenceRequests.Statuses.Count > 0)
+        {
+            if (_retries > 1)
+            {
+                if (AnsiEscapeSequenceRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? seqReqStatus)
+                    && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
+                {
+                    lock (seqReqStatus.AnsiRequest._responseLock)
+                    {
+                        AnsiEscapeSequenceRequests.Statuses.TryDequeue (out _);
+
+                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (null);
+                    }
+                }
+
+                _retries = 0;
+            }
+            else
+            {
+                _retries++;
+            }
+        }
+        else
+        {
+            _retries = 0;
+        }
+    }
 
     private void ProcessInputQueue ()
     {
@@ -123,143 +125,130 @@ internal class NetEvents : IDisposable
         {
             try
             {
-                if (!_forceRead)
-                {
-                    _waitForStart.Wait (_inputReadyCancellationTokenSource.Token);
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                return;
-            }
-            finally
-            {
-                if (_inputReadyCancellationTokenSource is { IsCancellationRequested: false })
-                {
-                    _waitForStart.Reset ();
-                }
-            }
+                ConsoleKey key = 0;
+                ConsoleModifiers mod = 0;
+                ConsoleKeyInfo newConsoleKeyInfo = default;
 
-            try
-            {
-                if (_inputQueue.Count == 0 || _forceRead)
+                while (_inputReadyCancellationTokenSource is { IsCancellationRequested: false })
                 {
-                    ConsoleKey key = 0;
-                    ConsoleModifiers mod = 0;
-                    ConsoleKeyInfo newConsoleKeyInfo = default;
+                    ConsoleKeyInfo consoleKeyInfo;
 
-                    while (_inputReadyCancellationTokenSource is { IsCancellationRequested: false })
+                    try
                     {
-                        ConsoleKeyInfo consoleKeyInfo;
+                        consoleKeyInfo = ReadConsoleKeyInfo (_inputReadyCancellationTokenSource.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return;
+                    }
 
-                        try
+                    var ckiAlreadyResized = false;
+
+                    if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is { })
+                    {
+                        ckiAlreadyResized = true;
+
+                        _cki = AnsiEscapeSequenceRequestUtils.ResizeArray (consoleKeyInfo, _cki);
+                        _cki = AnsiEscapeSequenceRequestUtils.InsertArray (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos, _cki);
+                        AnsiEscapeSequenceRequestUtils.IncompleteCkInfos = null;
+
+                        if (_cki.Length > 1 && _cki [0].KeyChar == '\u001B')
                         {
-                            consoleKeyInfo = ReadConsoleKeyInfo (_inputReadyCancellationTokenSource.Token);
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            return;
-                        }
-
-                        var ckiAlreadyResized = false;
-
-                        if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is { })
-                        {
-                            ckiAlreadyResized = true;
-
-                            _cki = AnsiEscapeSequenceRequestUtils.ResizeArray (consoleKeyInfo, _cki);
-                            _cki = AnsiEscapeSequenceRequestUtils.InsertArray (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos, _cki);
-                            AnsiEscapeSequenceRequestUtils.IncompleteCkInfos = null;
-
-                            if (_cki.Length > 1 && _cki [0].KeyChar == '\u001B')
-                            {
-                                _isEscSeq = true;
-                            }
-                        }
-
-                        if ((consoleKeyInfo.KeyChar == (char)KeyCode.Esc && !_isEscSeq)
-                            || (consoleKeyInfo.KeyChar != (char)KeyCode.Esc && _isEscSeq))
-                        {
-                            if (_cki is null && consoleKeyInfo.KeyChar != (char)KeyCode.Esc && _isEscSeq)
-                            {
-                                _cki = AnsiEscapeSequenceRequestUtils.ResizeArray (
-                                                                                   new (
-                                                                                        (char)KeyCode.Esc,
-                                                                                        0,
-                                                                                        false,
-                                                                                        false,
-                                                                                        false
-                                                                                       ),
-                                                                                   _cki
-                                                                                  );
-                            }
-
                             _isEscSeq = true;
+                        }
+                    }
 
-                            if ((_cki is { } && _cki [^1].KeyChar != Key.Esc && consoleKeyInfo.KeyChar != Key.Esc && consoleKeyInfo.KeyChar <= Key.Space)
-                                || (_cki is { } && _cki [^1].KeyChar != '\u001B' && consoleKeyInfo.KeyChar == 127)
-                                || (_cki is { } && char.IsLetter (_cki [^1].KeyChar) && char.IsLower (consoleKeyInfo.KeyChar) && char.IsLetter (consoleKeyInfo.KeyChar))
-                                || (_cki is { Length: > 2 } && char.IsLetter (_cki [^1].KeyChar) && char.IsLetterOrDigit (consoleKeyInfo.KeyChar))
-                                || (_cki is { Length: > 2 } && char.IsLetter (_cki [^1].KeyChar) && char.IsPunctuation (consoleKeyInfo.KeyChar))
-                                || (_cki is { Length: > 2 } && char.IsLetter (_cki [^1].KeyChar) && char.IsSymbol (consoleKeyInfo.KeyChar)))
-                            {
-                                ProcessRequestResponse (ref newConsoleKeyInfo, ref key, _cki, ref mod);
-                                _cki = null;
-                                _isEscSeq = false;
-
-                                ProcessMapConsoleKeyInfo (consoleKeyInfo);
-                            }
-                            else
-                            {
-                                newConsoleKeyInfo = consoleKeyInfo;
-
-                                if (!ckiAlreadyResized)
-                                {
-                                    _cki = AnsiEscapeSequenceRequestUtils.ResizeArray (consoleKeyInfo, _cki);
-                                }
-
-                                if (Console.KeyAvailable)
-                                {
-                                    continue;
-                                }
-
-                                ProcessRequestResponse (ref newConsoleKeyInfo, ref key, _cki, ref mod);
-                                _cki = null;
-                                _isEscSeq = false;
-                            }
-
-                            break;
+                    if ((consoleKeyInfo.KeyChar == (char)KeyCode.Esc && !_isEscSeq)
+                        || (consoleKeyInfo.KeyChar != (char)KeyCode.Esc && _isEscSeq))
+                    {
+                        if (_cki is null && consoleKeyInfo.KeyChar != (char)KeyCode.Esc && _isEscSeq)
+                        {
+                            _cki = AnsiEscapeSequenceRequestUtils.ResizeArray (
+                                                                               new (
+                                                                                    (char)KeyCode.Esc,
+                                                                                    0,
+                                                                                    false,
+                                                                                    false,
+                                                                                    false
+                                                                                   ),
+                                                                               _cki
+                                                                              );
                         }
 
-                        if (consoleKeyInfo.KeyChar == (char)KeyCode.Esc && _isEscSeq && _cki is { })
+                        _isEscSeq = true;
+
+                        if ((_cki is { } && _cki [^1].KeyChar != Key.Esc && consoleKeyInfo.KeyChar != Key.Esc && consoleKeyInfo.KeyChar <= Key.Space)
+                            || (_cki is { } && _cki [^1].KeyChar != '\u001B' && consoleKeyInfo.KeyChar == 127)
+                            || (_cki is { }
+                                && char.IsLetter (_cki [^1].KeyChar)
+                                && char.IsLower (consoleKeyInfo.KeyChar)
+                                && char.IsLetter (consoleKeyInfo.KeyChar))
+                            || (_cki is { Length: > 2 } && char.IsLetter (_cki [^1].KeyChar) && char.IsLetterOrDigit (consoleKeyInfo.KeyChar))
+                            || (_cki is { Length: > 2 } && char.IsLetter (_cki [^1].KeyChar) && char.IsPunctuation (consoleKeyInfo.KeyChar))
+                            || (_cki is { Length: > 2 } && char.IsLetter (_cki [^1].KeyChar) && char.IsSymbol (consoleKeyInfo.KeyChar)))
                         {
                             ProcessRequestResponse (ref newConsoleKeyInfo, ref key, _cki, ref mod);
                             _cki = null;
+                            _isEscSeq = false;
+                            ProcessResponse ();
 
-                            if (Console.KeyAvailable)
+                            ProcessMapConsoleKeyInfo (consoleKeyInfo);
+                        }
+                        else
+                        {
+                            newConsoleKeyInfo = consoleKeyInfo;
+
+                            if (!ckiAlreadyResized)
                             {
                                 _cki = AnsiEscapeSequenceRequestUtils.ResizeArray (consoleKeyInfo, _cki);
                             }
-                            else
+
+                            if (Console.KeyAvailable)
                             {
-                                ProcessMapConsoleKeyInfo (consoleKeyInfo);
+                                continue;
                             }
 
-                            break;
-                        }
-
-                        ProcessMapConsoleKeyInfo (consoleKeyInfo);
-
-                        if (_retries > 0)
-                        {
-                            _retries = 0;
+                            ProcessRequestResponse (ref newConsoleKeyInfo, ref key, _cki, ref mod);
+                            _cki = null;
+                            _isEscSeq = false;
+                            ProcessResponse ();
                         }
 
                         break;
                     }
+
+                    if (consoleKeyInfo.KeyChar == (char)KeyCode.Esc && _isEscSeq && _cki is { })
+                    {
+                        ProcessRequestResponse (ref newConsoleKeyInfo, ref key, _cki, ref mod);
+                        _cki = null;
+                        ProcessResponse ();
+
+                        if (Console.KeyAvailable)
+                        {
+                            _cki = AnsiEscapeSequenceRequestUtils.ResizeArray (consoleKeyInfo, _cki);
+                        }
+                        else
+                        {
+                            ProcessMapConsoleKeyInfo (consoleKeyInfo);
+                        }
+
+                        break;
+                    }
+
+                    ProcessMapConsoleKeyInfo (consoleKeyInfo);
+
+                    if (_retries > 0)
+                    {
+                        _retries = 0;
+                    }
+
+                    break;
                 }
 
-                _inputReady.Set ();
+                if (!_inputReady.IsSet)
+                {
+                    _inputReady.Set ();
+                }
             }
             catch (OperationCanceledException)
             {
@@ -394,12 +383,12 @@ internal class NetEvents : IDisposable
             return;
         }
 
-        //if (seqReqStatus is { })
-        //{
-        //    HandleRequestResponseEvent (c1Control, code, values, terminating);
+        if (seqReqStatus is { })
+        {
+            //HandleRequestResponseEvent (c1Control, code, values, terminating);
 
-        //    return;
-        //}
+            return;
+        }
 
         if (newConsoleKeyInfo != default)
         {
@@ -731,7 +720,6 @@ internal class NetEvents : IDisposable
         _inputReadyCancellationTokenSource = null;
 
         _inputReady.Dispose ();
-        _waitForStart.Dispose ();
 
         try
         {

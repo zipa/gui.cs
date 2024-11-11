@@ -32,6 +32,9 @@ public abstract class ConsoleDriver
 
     #region ANSI Esc Sequence Handling
 
+    private readonly ManualResetEventSlim _waitAnsiResponse = new (false);
+    private CancellationTokenSource? _ansiResponseTokenSource;
+
     // QUESTION: Should this be virtual with a default implementation that does the common stuff?
     // QUESTION: Looking at the implementations of this method, there is TONs of duplicated code.
     // QUESTION: We should figure out how to find just the things that are unique to each driver and
@@ -39,9 +42,73 @@ public abstract class ConsoleDriver
     /// <summary>
     ///     Provide handling for the terminal write ANSI escape sequence request.
     /// </summary>
+    /// <param name="mainLoopDriver">The <see cref="IMainLoopDriver"/> object.</param>
     /// <param name="ansiRequest">The <see cref="AnsiEscapeSequenceRequest"/> object.</param>
     /// <returns>The request response.</returns>
-    public abstract bool TryWriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest);
+    public virtual bool TryWriteAnsiRequest (IMainLoopDriver mainLoopDriver, ref AnsiEscapeSequenceRequest ansiRequest)
+    {
+        if (mainLoopDriver is null)
+        {
+            return false;
+        }
+
+        _ansiResponseTokenSource ??= new ();
+
+        try
+        {
+            lock (ansiRequest._responseLock)
+            {
+                AnsiEscapeSequenceRequest? request = ansiRequest;
+
+                ansiRequest.ResponseFromInput += (s, e) =>
+                                                 {
+                                                     Debug.Assert (s == request);
+                                                     Debug.Assert (e == request.AnsiEscapeSequenceResponse);
+
+                                                     _waitAnsiResponse.Set ();
+                                                 };
+
+                AnsiEscapeSequenceRequests.Add (ansiRequest);
+
+                WriteRaw (ansiRequest.Request);
+
+                mainLoopDriver._forceRead = true;
+            }
+
+            if (!_ansiResponseTokenSource.IsCancellationRequested)
+            {
+                mainLoopDriver._waitForInput.Set ();
+
+                _waitAnsiResponse.Wait (_ansiResponseTokenSource.Token);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return false;
+        }
+
+        lock (ansiRequest._responseLock)
+        {
+            mainLoopDriver._forceRead = false;
+
+            if (AnsiEscapeSequenceRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? request))
+            {
+                if (AnsiEscapeSequenceRequests.Statuses.Count > 0
+                    && string.IsNullOrEmpty (request.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
+                {
+                    lock (request.AnsiRequest._responseLock)
+                    {
+                        // Bad request or no response at all
+                        AnsiEscapeSequenceRequests.Statuses.TryDequeue (out _);
+                    }
+                }
+            }
+
+            _waitAnsiResponse.Reset ();
+
+            return ansiRequest.AnsiEscapeSequenceResponse is { Valid: true };
+        }
+    }
 
     // QUESTION: This appears to be an API to help in debugging. It's only implemented in CursesDriver and WindowsDriver.
     // QUESTION: Can it be factored such that it does not contaminate the ConsoleDriver API?

@@ -21,7 +21,7 @@ internal class WindowsMainLoop : IMainLoopDriver
 
     // The records that we keep fetching
     private readonly Queue<WindowsConsole.InputRecord> _resultQueue = new ();
-    private readonly ManualResetEventSlim _waitForProbe = new (false);
+    ManualResetEventSlim IMainLoopDriver._waitForInput { get; set; } = new (false);
     private readonly WindowsConsole? _winConsole;
     private CancellationTokenSource _eventReadyTokenSource = new ();
     private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
@@ -57,7 +57,7 @@ internal class WindowsMainLoop : IMainLoopDriver
 
     bool IMainLoopDriver.EventsPending ()
     {
-        _waitForProbe.Set ();
+        ((IMainLoopDriver)this)._waitForInput.Set ();
 #if HACK_CHECK_WINCHANGED
         _winChange.Set ();
 #endif
@@ -131,7 +131,7 @@ internal class WindowsMainLoop : IMainLoopDriver
             }
         }
 
-        _waitForProbe?.Dispose ();
+        ((IMainLoopDriver)this)._waitForInput?.Dispose ();
 
         _resultQueue.Clear ();
 
@@ -146,7 +146,7 @@ internal class WindowsMainLoop : IMainLoopDriver
         _mainLoop = null;
     }
 
-    internal bool _forceRead;
+    public bool _forceRead { get; set; }
 
     private void WindowsInputHandler ()
     {
@@ -156,7 +156,7 @@ internal class WindowsMainLoop : IMainLoopDriver
             {
                 if (_inputHandlerTokenSource.IsCancellationRequested && !_forceRead)
                 {
-                    _waitForProbe.Wait (_inputHandlerTokenSource.Token);
+                    ((IMainLoopDriver)this)._waitForInput.Wait (_inputHandlerTokenSource.Token);
                 }
 
                 if (_resultQueue?.Count == 0 || _forceRead)

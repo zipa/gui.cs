@@ -359,10 +359,7 @@ internal class NetDriver : ConsoleDriver
 
         StopReportingMouseMoves ();
 
-        _ansiResponseTokenSource?.Cancel ();
-        _ansiResponseTokenSource?.Dispose ();
 
-        _waitAnsiResponse.Dispose ();
 
         if (!RunningUnitTests)
         {
@@ -720,80 +717,6 @@ internal class NetDriver : ConsoleDriver
     #endregion Keyboard Handling
 
     #region Low-Level DotNet tuff
-
-    private readonly ManualResetEventSlim _waitAnsiResponse = new (false);
-    private CancellationTokenSource? _ansiResponseTokenSource;
-
-    /// <inheritdoc/>
-    public override bool TryWriteAnsiRequest (AnsiEscapeSequenceRequest ansiRequest)
-    {
-        lock (ansiRequest._responseLock)
-        {
-            if (_mainLoopDriver is null)
-            {
-                return false;
-            }
-        }
-
-        _ansiResponseTokenSource ??= new ();
-
-        try
-        {
-            lock (ansiRequest._responseLock)
-            {
-                ansiRequest.ResponseFromInput += (s, e) =>
-                                                 {
-                                                     Debug.Assert (s == ansiRequest);
-                                                     Debug.Assert (e == ansiRequest.AnsiEscapeSequenceResponse);
-
-                                                     _waitAnsiResponse.Set ();
-                                                 };
-
-                AnsiEscapeSequenceRequests.Add (ansiRequest);
-
-                _mainLoopDriver._netEvents!._forceRead = true;
-            }
-
-            if (!_ansiResponseTokenSource.IsCancellationRequested)
-            {
-                lock (ansiRequest._responseLock)
-                {
-                    _mainLoopDriver._waitForProbe.Set ();
-                    _mainLoopDriver._netEvents._waitForStart.Set ();
-
-                    WriteRaw (ansiRequest.Request);
-                }
-
-                _waitAnsiResponse.Wait (_ansiResponseTokenSource.Token);
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            return false;
-        }
-
-        lock (ansiRequest._responseLock)
-        {
-            _mainLoopDriver._netEvents._forceRead = false;
-
-            if (AnsiEscapeSequenceRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? request))
-            {
-                if (AnsiEscapeSequenceRequests.Statuses.Count > 0
-                    && string.IsNullOrEmpty (request.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
-                {
-                    lock (request.AnsiRequest._responseLock)
-                    {
-                        // Bad request or no response at all
-                        AnsiEscapeSequenceRequests.Statuses.TryDequeue (out _);
-                    }
-                }
-            }
-
-            _waitAnsiResponse.Reset ();
-
-            return ansiRequest.AnsiEscapeSequenceResponse is { Valid: true };
-        }
-    }
 
     /// <inheritdoc/>
     internal override void WriteRaw (string ansi)

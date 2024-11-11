@@ -10,7 +10,7 @@ using System.Collections.ObjectModel;
 namespace Terminal.Gui;
 
 /// <summary>Interface to create a platform specific <see cref="MainLoop"/> driver.</summary>
-internal interface IMainLoopDriver
+public interface IMainLoopDriver
 {
     /// <summary>Must report whether there are any events pending, or even block waiting for events.</summary>
     /// <returns><c>true</c>, if there were pending events, <c>false</c> otherwise.</returns>
@@ -29,6 +29,10 @@ internal interface IMainLoopDriver
 
     /// <summary>Wakes up the <see cref="MainLoop"/> that might be waiting on input, must be thread safe.</summary>
     void Wakeup ();
+
+    bool _forceRead { get; set; }
+
+    ManualResetEventSlim _waitForInput { get; set; }
 }
 
 /// <summary>The MainLoop monitors timers and idle handlers.</summary>
@@ -36,7 +40,7 @@ internal interface IMainLoopDriver
 ///     Monitoring of file descriptors is only available on Unix, there does not seem to be a way of supporting this
 ///     on Windows.
 /// </remarks>
-internal class MainLoop : IDisposable
+public class MainLoop : IDisposable
 {
     internal List<Func<bool>> _idleHandlers = new ();
     internal SortedList<long, Timeout> _timeouts = new ();
@@ -72,7 +76,7 @@ internal class MainLoop : IDisposable
 
     /// <summary>The current <see cref="IMainLoopDriver"/> in use.</summary>
     /// <value>The main loop driver.</value>
-    internal IMainLoopDriver MainLoopDriver { get; private set; }
+    public IMainLoopDriver MainLoopDriver { get; private set; }
 
     /// <summary>Used for unit tests.</summary>
     internal bool Running { get; set; }

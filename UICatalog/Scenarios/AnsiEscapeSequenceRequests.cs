@@ -293,7 +293,8 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
                                      };
 
                                      bool success = Application.Driver!.TryWriteAnsiRequest (
-                                                                                             ansiEscapeSequenceRequest
+                                                                                             Application.MainLoop.MainLoopDriver,
+                                                                                             ref ansiEscapeSequenceRequest
                                                                                             );
 
                                      tvResponse.Text = ansiEscapeSequenceRequest.AnsiEscapeSequenceResponse?.Response ?? "";
@@ -369,7 +370,7 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
     {
         _sends.Add (DateTime.Now);
         AnsiEscapeSequenceRequest ansiRequest = AnsiEscapeSequenceRequestUtils.CSI_SendDeviceAttributes;
-        if (Application.Driver!.TryWriteAnsiRequest (ansiRequest))
+        if (Application.Driver!.TryWriteAnsiRequest (Application.MainLoop.MainLoopDriver, ref ansiRequest))
         {
             HandleResponse (ansiRequest.AnsiEscapeSequenceResponse?.Response);
         }

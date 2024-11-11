@@ -20,6 +20,8 @@ internal class NetMainLoop : IMainLoopDriver
     private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
     private readonly Queue<NetEvents.InputResult> _resultQueue = new ();
     private MainLoop? _mainLoop;
+    bool IMainLoopDriver._forceRead { get; set; }
+    ManualResetEventSlim IMainLoopDriver._waitForInput { get; set; } = new (false);
 
     /// <summary>Initializes the class with the console driver.</summary>
     /// <remarks>Passing a consoleDriver is provided to capture windows resizing.</remarks>
@@ -116,12 +118,12 @@ internal class NetMainLoop : IMainLoopDriver
         {
             try
             {
-                if (!_inputHandlerTokenSource.IsCancellationRequested && !_netEvents!._forceRead)
+                if (!_inputHandlerTokenSource.IsCancellationRequested && !((IMainLoopDriver)this)._forceRead)
                 {
                     _waitForProbe.Wait (_inputHandlerTokenSource.Token);
                 }
 
-                if (_resultQueue?.Count == 0 || _netEvents!._forceRead)
+                if (_resultQueue?.Count == 0 || ((IMainLoopDriver)this)._forceRead)
                 {
                     NetEvents.InputResult? result = _netEvents!.DequeueInput ();
 
