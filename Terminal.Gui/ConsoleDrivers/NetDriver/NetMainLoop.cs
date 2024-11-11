@@ -120,34 +120,38 @@ internal class NetMainLoop : IMainLoopDriver
             {
                 if (!_inputHandlerTokenSource.IsCancellationRequested && !((IMainLoopDriver)this)._forceRead)
                 {
-                    _waitForProbe.Wait (_inputHandlerTokenSource.Token);
-                }
-
-                if (_resultQueue?.Count == 0 || ((IMainLoopDriver)this)._forceRead)
-                {
-                    NetEvents.InputResult? result = _netEvents!.DequeueInput ();
-
-                    if (result.HasValue)
+                    try
                     {
-                        _resultQueue?.Enqueue (result.Value);
+                        _waitForProbe.Wait (_inputHandlerTokenSource.Token);
                     }
+                    catch (OperationCanceledException)
+                    {
+                        return;
+                    }
+
+                    _waitForProbe.Reset ();
                 }
 
-                if (!_inputHandlerTokenSource.IsCancellationRequested && _resultQueue?.Count > 0)
-                {
-                    _eventReady.Set ();
-                }
+                ProcessInputQueue ();
             }
             catch (OperationCanceledException)
             {
                 return;
             }
-            finally
+        }
+    }
+
+    private void ProcessInputQueue ()
+    {
+        if (_resultQueue?.Count == 0 || ((IMainLoopDriver)this)._forceRead)
+        {
+            NetEvents.InputResult? result = _netEvents!.DequeueInput ();
+
+            if (result.HasValue)
             {
-                if (_inputHandlerTokenSource is { IsCancellationRequested: false })
-                {
-                    _waitForProbe.Reset ();
-                }
+                _resultQueue?.Enqueue (result.Value);
+
+                _eventReady.Set ();
             }
         }
     }

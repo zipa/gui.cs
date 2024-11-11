@@ -245,7 +245,7 @@ internal class NetEvents : IDisposable
                     break;
                 }
 
-                if (!_inputReady.IsSet)
+                if (_inputQueue.Count > 0)
                 {
                     _inputReady.Set ();
                 }

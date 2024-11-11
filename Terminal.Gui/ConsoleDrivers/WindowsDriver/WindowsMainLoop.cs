@@ -168,22 +168,28 @@ internal class WindowsMainLoop : IMainLoopDriver
                     ((IMainLoopDriver)this)._waitForInput.Reset ();
                 }
 
-                if (_resultQueue?.Count == 0 || _forceRead)
-                {
-                    WindowsConsole.InputRecord? result = _winConsole!.DequeueInput ();
-
-                    if (result.HasValue)
-                    {
-                        _resultQueue!.Enqueue (result.Value);
-                    }
-                }
+                ProcessInputQueue ();
             }
             catch (OperationCanceledException)
             {
                 return;
             }
 
-            _eventReady.Set ();
+        }
+    }
+
+    private void ProcessInputQueue ()
+    {
+        if (_resultQueue?.Count == 0 || _forceRead)
+        {
+            WindowsConsole.InputRecord? result = _winConsole!.DequeueInput ();
+
+            if (result.HasValue)
+            {
+                _resultQueue!.Enqueue (result.Value);
+
+                _eventReady.Set ();
+            }
         }
     }
 

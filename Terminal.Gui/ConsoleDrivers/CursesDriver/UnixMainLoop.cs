@@ -181,8 +181,6 @@ internal class UnixMainLoop (ConsoleDriver consoleDriver) : IMainLoopDriver
             {
                 return;
             }
-
-            _eventReady.Set ();
         }
     }
 
@@ -277,6 +275,11 @@ internal class UnixMainLoop (ConsoleDriver consoleDriver) : IMainLoopDriver
                     _retries = 0;
                 }
             }
+        }
+
+        if (_pollDataQueue.Count > 0)
+        {
+            _eventReady.Set ();
         }
     }
 
