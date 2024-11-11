@@ -17,7 +17,6 @@ internal class NetMainLoop : IMainLoopDriver
     internal Action<NetEvents.InputResult>? ProcessInput;
 
     private readonly ManualResetEventSlim _eventReady = new (false);
-    internal readonly ManualResetEventSlim _waitForProbe = new (false);
     private readonly CancellationTokenSource _eventReadyTokenSource = new ();
     private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
     private readonly ConcurrentQueue<NetEvents.InputResult> _resultQueue = new ();
@@ -53,7 +52,7 @@ internal class NetMainLoop : IMainLoopDriver
 
     bool IMainLoopDriver.EventsPending ()
     {
-        _waitForProbe.Set ();
+        ((IMainLoopDriver)this)._waitForInput.Set ();
 
         if (_resultQueue.Count > 0 || _mainLoop!.CheckTimersAndIdleHandlers (out int waitTimeout))
         {
@@ -105,7 +104,7 @@ internal class NetMainLoop : IMainLoopDriver
         _eventReadyTokenSource.Dispose ();
 
         _eventReady.Dispose ();
-        _waitForProbe.Dispose ();
+        ((IMainLoopDriver)this)._waitForInput.Dispose ();
 
         _resultQueue.Clear ();
         _netEvents?.Dispose ();
@@ -124,7 +123,7 @@ internal class NetMainLoop : IMainLoopDriver
                 {
                     try
                     {
-                        _waitForProbe.Wait (_inputHandlerTokenSource.Token);
+                        ((IMainLoopDriver)this)._waitForInput.Wait (_inputHandlerTokenSource.Token);
                     }
                     catch (Exception ex)
                     {
@@ -136,7 +135,7 @@ internal class NetMainLoop : IMainLoopDriver
                         throw;
                     }
 
-                    _waitForProbe.Reset ();
+                    ((IMainLoopDriver)this)._waitForInput.Reset ();
                 }
 
                 ProcessInputQueue ();
