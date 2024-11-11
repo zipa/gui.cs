@@ -69,4 +69,11 @@ public class AnsiEscapeSequenceRequestsTests
         Assert.NotNull (seqReqStatus);
         Assert.Equal ("t", seqReqStatus.AnsiRequest.Terminator);
     }
+
+    [Fact]
+    public void Request_Initialization_AnsiEscapeSequenceResponse_Is_Null ()
+    {
+        AnsiEscapeSequenceRequest ansiRequest = new () { Request = "\u001b[0c", Terminator = "c"};
+        Assert.Null (ansiRequest.AnsiEscapeSequenceResponse);
+    }
 }

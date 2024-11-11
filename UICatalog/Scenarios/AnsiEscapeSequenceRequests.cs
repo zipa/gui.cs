@@ -9,12 +9,11 @@ namespace UICatalog.Scenarios;
 [ScenarioCategory ("Tests")]
 public sealed class AnsiEscapeSequenceRequests : Scenario
 {
-    private readonly List<DateTime> _sends = new ();
+    private readonly Dictionary<DateTime, AnsiEscapeSequenceRequest> _sends = new ();
 
     private readonly object _lockAnswers = new ();
-    private readonly Dictionary<DateTime, string> _answers = new ();
-    private readonly object _lockErrors = new ();
-    private readonly Dictionary<DateTime, string> _errors = new ();
+    private readonly Dictionary<DateTime, AnsiEscapeSequenceRequest> _answers = new ();
+    private readonly Dictionary<DateTime, AnsiEscapeSequenceRequest> _errors = new ();
 
     private GraphView _graphView;
 
@@ -117,7 +116,7 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
 
         cbDar.ValueChanging += (s, e) =>
                                {
-                                   if (e.NewValue < 0 || e.NewValue > 20)
+                                   if (e.NewValue is < 0 or > 20)
                                    {
                                        e.Cancel = true;
                                    }
@@ -327,7 +326,7 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
             return "No requests sent yet";
         }
 
-        string last = _answers.Last ().Value;
+        string last = _answers.Last ().Value.AnsiEscapeSequenceResponse!.Response;
 
         int unique = _answers.Values.Distinct ().Count ();
         int total = _answers.Count;
@@ -342,7 +341,7 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
             return "No errors received yet";
         }
 
-        string last = _errors.Last ().Value;
+        string last = _errors.Last ().Value.AnsiEscapeSequenceResponse!.Error;
 
         int unique = _errors.Values.Distinct ().Count ();
         int total = _errors.Count;
@@ -350,33 +349,34 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         return $"Last:{last} U:{unique} T:{total}";
     }
 
-    private void HandleResponse (string response)
+    private void HandleResponse (AnsiEscapeSequenceRequest ansiRequest)
     {
         lock (_lockAnswers)
         {
-            _answers.Add (DateTime.Now, response);
+            _answers.Add (DateTime.Now, ansiRequest);
         }
     }
 
-    private void HandleResponseError (string response)
+    private void HandleResponseError (AnsiEscapeSequenceRequest ansiRequest)
     {
         lock (_lockAnswers)
         {
-            _errors.Add (DateTime.Now, response);
+            _errors.Add (DateTime.Now, ansiRequest);
         }
     }
 
     private void SendDar ()
     {
-        _sends.Add (DateTime.Now);
         AnsiEscapeSequenceRequest ansiRequest = AnsiEscapeSequenceRequestUtils.CSI_SendDeviceAttributes;
-        if (Application.Driver!.TryWriteAnsiRequest (Application.MainLoop.MainLoopDriver, ref ansiRequest))
+        _sends.Add (DateTime.Now, ansiRequest);
+
+        if (Application.Driver!.TryWriteAnsiRequest (Application.MainLoop!.MainLoopDriver, ref ansiRequest))
         {
-            HandleResponse (ansiRequest.AnsiEscapeSequenceResponse?.Response);
+            HandleResponse (ansiRequest);
         }
         else
         {
-            HandleResponseError (ansiRequest.AnsiEscapeSequenceResponse?.Response);
+            HandleResponseError (ansiRequest);
         }
     }
 
@@ -398,19 +398,26 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         _graphView.GraphColor = new Attribute (Color.Green, Color.Black);
     }
 
-    private int ToSeconds (DateTime t) { return (int)(DateTime.Now - t).TotalSeconds; }
+    private static Func<KeyValuePair<DateTime, AnsiEscapeSequenceRequest>, int> ToSeconds () { return t => (int)(DateTime.Now - t.Key).TotalSeconds; }
 
     private void UpdateGraph ()
     {
         _sentSeries.Points = _sends
-                             .GroupBy (ToSeconds)
+                             .Where (
+                                     r => r.Value?.AnsiEscapeSequenceResponse is null
+                                          || (r.Value?.AnsiEscapeSequenceResponse is { }
+                                              && string.IsNullOrEmpty (r.Value?.AnsiEscapeSequenceResponse.Response)))
+                             .GroupBy (ToSeconds ())
                              .Select (g => new PointF (g.Key, g.Count ()))
                              .ToList ();
 
-        _answeredSeries.Points = _answers.Keys
-                                         .GroupBy (ToSeconds)
-                                         .Select (g => new PointF (g.Key, g.Count ()))
-                                         .ToList ();
+        _answeredSeries.Points = _answers
+                                 .Where (
+                                         r => r.Value.AnsiEscapeSequenceResponse is { }
+                                              && !string.IsNullOrEmpty (r.Value?.AnsiEscapeSequenceResponse.Response))
+                                 .GroupBy (ToSeconds ())
+                                 .Select (g => new PointF (g.Key, g.Count ()))
+                                 .ToList ();
 
         //  _graphView.ScrollOffset  = new PointF(,0);
         if (_sentSeries.Points.Count > 0 || _answeredSeries.Points.Count > 0)
