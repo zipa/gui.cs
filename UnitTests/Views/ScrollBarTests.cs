@@ -179,6 +179,31 @@ public class ScrollBarTests
 
     [Theory]
     [SetupFakeDriver]
+
+    #region Vertical
+
+    #region Super 10 - ScrollBar 8
+    [InlineData (
+                    10,
+                    1,
+                    10,
+                    -1,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│◄████████►│
+└──────────┘")]
+
+    [InlineData (
+                    10,
+                    1,
+                    20,
+                    -1,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│◄████░░░░►│
+└──────────┘")]
     [InlineData (
                     10,
                     1,
@@ -187,69 +212,462 @@ public class ScrollBarTests
                     Orientation.Horizontal,
                     @"
 ┌──────────┐
-│◄███░░░░░►│
+│◄████░░░░►│
 └──────────┘")]
 
     [InlineData (
                     10,
-                    3,
+                    1,
                     20,
                     1,
                     Orientation.Horizontal,
                     @"
 ┌──────────┐
-│ ░███░░░░ │
-│◄░███░░░░►│
-│ ░███░░░░ │
+│◄████░░░░►│
 └──────────┘")]
+
+    [InlineData (
+                    10,
+                    1,
+                    20,
+                    2,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│◄░████░░░►│
+└──────────┘
+")]
+
+    [InlineData (
+                    10,
+                    1,
+                    20,
+                    3,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│◄░████░░░►│
+└──────────┘
+")]
+
+    [InlineData (
+                    10,
+                    1,
+                    20,
+                    4,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│◄░░████░░►│
+└──────────┘
+")]
+    [InlineData (
+                    10,
+                    1,
+                    20,
+                    5,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│◄░░████░░►│
+└──────────┘
+")]
+
+    [InlineData (
+                    10,
+                    1,
+                    20,
+                    6,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│◄░░░████░►│
+└──────────┘
+")]
+
+    [InlineData (
+                    10,
+                    1,
+                    20,
+                    7,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│◄░░░████░►│
+└──────────┘
+")]
+
+
+    [InlineData (
+                    10,
+                    1,
+                    20,
+                    8,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│◄░░░░████►│
+└──────────┘
+")]
+
+    [InlineData (
+                    10,
+                    1,
+                    20,
+                    9,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│◄░░░░████►│
+└──────────┘
+")]
+
+    [InlineData (
+                    10,
+                    1,
+                    20,
+                    10,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│◄░░░░████►│
+└──────────┘
+")]
+
+
+    [InlineData (
+                    10,
+                    1,
+                    20,
+                    19,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│◄░░░░████►│
+└──────────┘
+")]
+
+
+    [InlineData (
+                    10,
+                    1,
+                    20,
+                    20,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│◄░░░░████►│
+└──────────┘
+")]
+    #endregion  Super 10 - ScrollBar 8
+
+    #region  Super 12 - ScrollBar 10
+    [InlineData (
+                    12,
+                    1,
+                    10,
+                    -1,
+                    Orientation.Horizontal,
+                    @"
+┌────────────┐
+│◄██████████►│
+└────────────┘")]
+
+    [InlineData (
+                    12,
+                    1,
+                    20,
+                    -1,
+                    Orientation.Horizontal,
+                    @"
+┌────────────┐
+│◄██████░░░░►│
+└────────────┘")]
+    [InlineData (
+                    12,
+                    1,
+                    20,
+                    0,
+                    Orientation.Horizontal,
+                    @"
+┌────────────┐
+│◄██████░░░░►│
+└────────────┘")]
+
+    [InlineData (
+                    12,
+                    1,
+                    20,
+                    1,
+                    Orientation.Horizontal,
+                    @"
+┌────────────┐
+│◄██████░░░░►│
+└────────────┘")]
+
+    [InlineData (
+                    12,
+                    1,
+                    20,
+                    2,
+                    Orientation.Horizontal,
+                    @"
+┌────────────┐
+│◄░██████░░░►│
+└────────────┘
+")]
+
+    [InlineData (
+                    12,
+                    1,
+                    20,
+                    3,
+                    Orientation.Horizontal,
+                    @"
+┌────────────┐
+│◄░██████░░░►│
+└────────────┘
+")]
+
+    [InlineData (
+                    12,
+                    1,
+                    20,
+                    4,
+                    Orientation.Horizontal,
+                    @"
+┌────────────┐
+│◄░░██████░░►│
+└────────────┘
+")]
+    [InlineData (
+                    12,
+                    1,
+                    20,
+                    5,
+                    Orientation.Horizontal,
+                    @"
+┌────────────┐
+│◄░░░██████░►│
+└────────────┘
+")]
+
+    [InlineData (
+                    12,
+                    1,
+                    20,
+                    6,
+                    Orientation.Horizontal,
+                    @"
+┌────────────┐
+│◄░░░██████░►│
+└────────────┘
+")]
+
+    [InlineData (
+                    12,
+                    1,
+                    20,
+                    7,
+                    Orientation.Horizontal,
+                    @"
+┌────────────┐
+│◄░░░░██████►│
+└────────────┘
+")]
+
+
+    [InlineData (
+                    12,
+                    1,
+                    20,
+                    8,
+                    Orientation.Horizontal,
+                    @"
+┌────────────┐
+│◄░░░░██████►│
+└────────────┘
+")]
+
+    [InlineData (
+                    12,
+                    1,
+                    20,
+                    9,
+                    Orientation.Horizontal,
+                    @"
+┌────────────┐
+│◄░░░░██████►│
+└────────────┘
+")]
+
+    [InlineData (
+                    12,
+                    1,
+                    20,
+                    10,
+                    Orientation.Horizontal,
+                    @"
+┌────────────┐
+│◄░░░░██████►│
+└────────────┘
+")]
+
+
+    [InlineData (
+                    12,
+                    1,
+                    20,
+                    19,
+                    Orientation.Horizontal,
+                    @"
+┌────────────┐
+│◄░░░░██████►│
+└────────────┘
+")]
+
+
+    [InlineData (
+                    12,
+                    1,
+                    20,
+                    20,
+                    Orientation.Horizontal,
+                    @"
+┌────────────┐
+│◄░░░░██████►│
+└────────────┘
+")]
+    #endregion Super 12 - ScrollBar 10
+    [InlineData (
+                    10,
+                    3,
+                    20,
+                    2,
+                    Orientation.Horizontal,
+                    @"
+┌──────────┐
+│ ░████░░░ │
+│◄░████░░░►│
+│ ░████░░░ │
+└──────────┘
+")]
+    #endregion Vertical
+
+    #region Horizontal
+
+    [InlineData (
+                    1,
+                    10,
+                    10,
+                    -1,
+                    Orientation.Vertical,
+                    @"
+┌─┐
+│▲│
+│█│
+│█│
+│█│
+│█│
+│█│
+│█│
+│█│
+│█│
+│▼│
+└─┘")]
+
+    [InlineData (
+                    1,
+                    10,
+                    10,
+                    5,
+                    Orientation.Vertical,
+                    @"
+┌─┐
+│▲│
+│█│
+│█│
+│█│
+│█│
+│█│
+│█│
+│█│
+│█│
+│▼│
+└─┘")]
+
+    [InlineData (
+                    1,
+                    10,
+                    20,
+                    5,
+                    Orientation.Vertical,
+                    @"
+┌─┐
+│▲│
+│░│
+│░│
+│█│
+│█│
+│█│
+│█│
+│░│
+│░│
+│▼│
+└─┘")]
+
+    [InlineData (
+                    1,
+                    12,
+                    20,
+                    5,
+                    Orientation.Vertical,
+                    @"
+┌─┐
+│▲│
+│░│
+│░│
+│░│
+│█│
+│█│
+│█│
+│█│
+│█│
+│█│
+│░│
+│▼│
+└─┘")]
 
     [InlineData (
                     3,
                     10,
                     20,
-                    0,
+                    2,
                     Orientation.Vertical,
                     @"
 ┌───┐
 │ ▲ │
-│███│
-│███│
-│███│
 │░░░│
-│░░░│
+│███│
+│███│
+│███│
+│███│
 │░░░│
 │░░░│
 │░░░│
 │ ▼ │
-└───┘")]
-    [InlineData (
-                    6,
-                    10,
-                    20,
-                    1,
-                    Orientation.Vertical,
-                    @"
-┌──────┐
-│  ▲   │
-│░░░░░░│
-│██████│
-│██████│
-│██████│
-│░░░░░░│
-│░░░░░░│
-│░░░░░░│
-│░░░░░░│
-│  ▼   │
-└──────┘")]
+└───┘
+")]
+    #endregion
 
 
-    public void Draws_Correctly (int superViewportWidth, int superViewportHeight, int sliderSize, int sliderPosition, Orientation orientation, string expected)
+    public void Draws_Correctly (int superWidth, int superHeight, int contentSize, int contentPosition, Orientation orientation, string expected)
     {
         var super = new Window
         {
             Id = "super",
-            Width = superViewportWidth + 2,
-            Height = superViewportHeight + 2
+            Width = superWidth + 2,
+            Height = superHeight + 2
         };
 
         var scrollBar = new ScrollBar
@@ -267,9 +685,9 @@ public class ScrollBarTests
         }
         super.Add (scrollBar);
 
-        scrollBar.Size = sliderSize;
+        scrollBar.Size = contentSize;
         scrollBar.Layout ();
-        scrollBar.ContentPosition = sliderPosition;
+        scrollBar.ContentPosition = contentPosition;
 
         super.BeginInit ();
         super.EndInit ();
@@ -374,4 +792,54 @@ public class ScrollBarTests
 
         Application.ResetState (true);
     }
+
+    [Theory]
+    [InlineData (1, 10, 0, 0)]
+    [InlineData (1, 10, 5, 0)]
+    [InlineData (1, 10, 10, 1)]
+    [InlineData (1, 20, 0, 0)]
+    [InlineData (1, 20, 10, 0)]
+    [InlineData (1, 20, 20, 1)]
+    [InlineData (2, 10, 0, 0)]
+    [InlineData (2, 10, 5, 1)]
+    [InlineData (2, 10, 10, 2)]
+    [InlineData (2, 20, 0, 0)]
+    [InlineData (2, 20, 10, 1)]
+    [InlineData (2, 20, 20, 2)]
+    [InlineData (3, 10, 0, 0)]
+    [InlineData (3, 10, 5, 1)]
+    [InlineData (3, 10, 10, 3)]
+    [InlineData (3, 20, 0, 0)]
+    [InlineData (3, 20, 10, 1)]
+    [InlineData (3, 20, 20, 3)]
+    [InlineData (4, 10, 0, 0)]
+    [InlineData (4, 10, 5, 2)]
+    [InlineData (4, 10, 10, 4)]
+    [InlineData (4, 20, 0, 0)]
+    [InlineData (4, 20, 10, 2)]
+    [InlineData (4, 20, 20, 4)]
+    [InlineData (5, 10, 0, 0)]
+    [InlineData (5, 10, 5, 2)]
+    [InlineData (5, 10, 10, 5)]
+    [InlineData (5, 20, 0, 0)]
+    [InlineData (5, 20, 10, 2)]
+    [InlineData (5, 20, 20, 5)]
+    public void ScrollBar_CombinatorialTests (int width, int size, int contentPosition, int expectedSliderPosition)
+    {
+        // Arrange
+        var scrollBar = new ScrollBar
+        {
+            Width = width,
+            Size = size,
+            ContentPosition = contentPosition
+        };
+        scrollBar.Layout ();
+
+        // Act
+        var sliderPosition = scrollBar.GetSliderPosition ();
+
+        // Assert
+        Assert.Equal (expectedSliderPosition, sliderPosition);
+    }
+
 }

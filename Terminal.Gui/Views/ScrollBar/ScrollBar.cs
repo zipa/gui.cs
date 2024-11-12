@@ -121,7 +121,9 @@ public class ScrollBar : View, IOrientation, IDesignable
         {
             return 1;
         }
-        return (int)Math.Clamp (Math.Floor ((double)ViewportDimension / Size * (Viewport.Height - 2)), 1, ViewportDimension);
+
+        int viewport = Orientation == Orientation.Vertical ? Viewport.Height : Viewport.Width;
+        return (int)Math.Clamp (Math.Floor ((double)ViewportDimension / Size * (viewport - 2)), 1, ViewportDimension);
     }
 
     private void PositionSubviews ()

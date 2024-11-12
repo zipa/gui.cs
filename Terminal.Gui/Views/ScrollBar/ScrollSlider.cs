@@ -1,12 +1,12 @@
 ﻿#nullable enable
 
 using System.ComponentModel;
-using System.Diagnostics;
 
 namespace Terminal.Gui;
 
 /// <summary>
-///     The ScrollSlider can be dragged with the mouse, constrained by the size of the Viewport of it's superview. The ScrollSlider can be
+///     The ScrollSlider can be dragged with the mouse, constrained by the size of the Viewport of it's superview. The
+///     ScrollSlider can be
 ///     oriented either vertically or horizontally.
 /// </summary>
 /// <remarks>
@@ -16,7 +16,7 @@ namespace Terminal.Gui;
 ///         be show what percent the slider is to the Superview's Viewport size.
 ///     </para>
 ///     <para>
-///        Used to represent the proportion of the visible content to the Viewport in a <see cref="Scrolled"/>.
+///         Used to represent the proportion of the visible content to the Viewport in a <see cref="Scrolled"/>.
 ///     </para>
 /// </remarks>
 public class ScrollSlider : View, IOrientation, IDesignable
@@ -42,6 +42,7 @@ public class ScrollSlider : View, IOrientation, IDesignable
     }
 
     #region IOrientation members
+
     private readonly OrientationHelper _orientationHelper;
 
     /// <inheritdoc/>
@@ -109,13 +110,16 @@ public class ScrollSlider : View, IOrientation, IDesignable
     }
 
     /// <summary>
-    ///     Gets or sets the size of the ScrollSlider. This is a helper that simply gets or sets the Width or Height depending on the
-    ///     <see cref="Orientation"/>. The size will be constrained such that the ScrollSlider will not go outside the Viewport of
+    ///     Gets or sets the size of the ScrollSlider. This is a helper that simply gets or sets the Width or Height depending
+    ///     on the
+    ///     <see cref="Orientation"/>. The size will be constrained such that the ScrollSlider will not go outside the Viewport
+    ///     of
     ///     the <see cref="View.SuperView"/>. The size will never be less than 1.
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///         The dimension of the ScrollSlider that is perpendicular to the <see cref="Orientation"/> will be set to <see cref="Dim.Fill()"/>
+    ///         The dimension of the ScrollSlider that is perpendicular to the <see cref="Orientation"/> will be set to
+    ///         <see cref="Dim.Fill()"/>
     ///     </para>
     /// </remarks>
     public int Size
@@ -126,10 +130,8 @@ public class ScrollSlider : View, IOrientation, IDesignable
             {
                 return Viewport.Height - ShrinkBy / 2;
             }
-            else
-            {
-                return Viewport.Width - ShrinkBy / 2;
-            }
+
+            return Viewport.Width - ShrinkBy / 2;
         }
         set
         {
@@ -149,6 +151,7 @@ public class ScrollSlider : View, IOrientation, IDesignable
     }
 
     private int? _viewportDimension;
+
     /// <summary>
     ///     Gets the size of the viewport into the content being scrolled, bounded by <see cref="Size"/>.
     /// </summary>
@@ -163,6 +166,7 @@ public class ScrollSlider : View, IOrientation, IDesignable
             {
                 return _viewportDimension.Value;
             }
+
             return Orientation == Orientation.Vertical ? SuperView?.Viewport.Height ?? 0 : SuperView?.Viewport.Width ?? 0;
         }
         set => _viewportDimension = value;
@@ -170,7 +174,6 @@ public class ScrollSlider : View, IOrientation, IDesignable
 
     private void OnFrameChanged (object? sender, EventArgs<Rectangle> e)
     {
-        
         Position = (Orientation == Orientation.Vertical ? e.CurrentValue.Y : e.CurrentValue.X) - ShrinkBy / 2;
     }
 
@@ -225,10 +228,8 @@ public class ScrollSlider : View, IOrientation, IDesignable
         {
             return Math.Clamp (newPosittion, 0, Math.Max (0, ViewportDimension - Viewport.Height));
         }
-        else
-        {
-            return Math.Clamp (newPosittion, 0, Math.Max (0, ViewportDimension - Viewport.Width));
-        }
+
+        return Math.Clamp (newPosittion, 0, Math.Max (0, ViewportDimension - Viewport.Width));
     }
 
     private void RaisePositionChangeEvents (int newPosition)
@@ -255,7 +256,7 @@ public class ScrollSlider : View, IOrientation, IDesignable
         OnScrolled (distance);
         Scrolled?.Invoke (this, new (in distance));
 
-        RaiseSelecting (new CommandContext (Command.Select, null, null, distance));
+        RaiseSelecting (new (Command.Select, null, null, distance));
     }
 
     /// <summary>
@@ -274,7 +275,6 @@ public class ScrollSlider : View, IOrientation, IDesignable
 
     /// <summary>Raised when the <see cref="Position"/> has changed.</summary>
     public event EventHandler<EventArgs<int>>? PositionChanged;
-
 
     /// <summary>Called when <see cref="Position"/> has changed. Indicates how much to scroll.</summary>
     protected virtual void OnScrolled (int distance) { }
@@ -349,10 +349,10 @@ public class ScrollSlider : View, IOrientation, IDesignable
                 if (Orientation == Orientation.Vertical)
                 {
                     Y = Frame.Y + offset < ShrinkBy / 2
-                             ? ShrinkBy / 2
-                             : Frame.Y + offset + Frame.Height > superViewDimension
-                                 ? Math.Max (superViewDimension - Frame.Height + ShrinkBy, 1)
-                                 : Frame.Y + offset;
+                            ? ShrinkBy / 2
+                            : Frame.Y + offset + Frame.Height > superViewDimension
+                                ? Math.Max (superViewDimension - Frame.Height + ShrinkBy, 1)
+                                : Frame.Y + offset;
                 }
                 else
                 {
@@ -372,13 +372,14 @@ public class ScrollSlider : View, IOrientation, IDesignable
                     Application.UngrabMouse ();
                 }
             }
+
             return true;
         }
-        return false;
 
+        return false;
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public bool EnableForDesign ()
     {
         OrientationChanged += (sender, args) =>
