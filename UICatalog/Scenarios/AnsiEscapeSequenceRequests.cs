@@ -292,7 +292,7 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
                                      };
 
                                      bool success = Application.Driver!.TryWriteAnsiRequest (
-                                                                                             Application.MainLoop.MainLoopDriver,
+                                                                                             Application.MainLoop!.MainLoopDriver,
                                                                                              ref ansiEscapeSequenceRequest
                                                                                             );
 
@@ -354,6 +354,8 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         lock (_lockAnswers)
         {
             _answers.Add (DateTime.Now, ansiRequest);
+            KeyValuePair<DateTime, AnsiEscapeSequenceRequest> found = _sends.First (r => r.Value == ansiRequest);
+            _sends.Remove (found.Key);
         }
     }
 
@@ -362,6 +364,8 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         lock (_lockAnswers)
         {
             _errors.Add (DateTime.Now, ansiRequest);
+            KeyValuePair<DateTime, AnsiEscapeSequenceRequest> found = _sends.First (r => r.Value == ansiRequest);
+            _sends.Remove (found.Key);
         }
     }
 
@@ -402,11 +406,9 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
 
     private void UpdateGraph ()
     {
+        System.Diagnostics.Debug.Assert (_sends.Count == 0);
+
         _sentSeries.Points = _sends
-                             .Where (
-                                     r => r.Value?.AnsiEscapeSequenceResponse is null
-                                          || (r.Value?.AnsiEscapeSequenceResponse is { }
-                                              && string.IsNullOrEmpty (r.Value?.AnsiEscapeSequenceResponse.Response)))
                              .GroupBy (ToSeconds ())
                              .Select (g => new PointF (g.Key, g.Count ()))
                              .ToList ();
