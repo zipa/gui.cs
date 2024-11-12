@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Terminal.Gui;
 
@@ -18,34 +19,44 @@ public class ScrollBarDemo : Scenario
             Arrangement = ViewArrangement.Fixed
         };
 
-        var editor = new AdornmentsEditor ();
-        app.Add (editor);
-
-        var frameView = new FrameView
+        var demoFrame = new FrameView ()
         {
             Title = "Demo View",
-            X = Pos.Right (editor),
-            Width = Dim.Fill (),
-            Height = Dim.Fill (),
+            X = 0,
+            Width = 75,
+            Height = 25 + 4,
             ColorScheme = Colors.ColorSchemes ["Base"],
             Arrangement = ViewArrangement.Resizable
         };
-        frameView!.Padding!.Thickness = new (1);
-        frameView.Padding.Diagnostics = ViewDiagnosticFlags.Ruler;
-        app.Add (frameView);
+        demoFrame!.Padding!.Thickness = new (1);
+        demoFrame.Padding.Diagnostics = ViewDiagnosticFlags.Ruler;
+        app.Add (demoFrame);
 
         var scrollBar = new ScrollBar
         {
-            X = Pos.AnchorEnd (),
+            X = Pos.AnchorEnd () - 5,
             AutoHide = false,
             Size = 100,
             //ShowPercent = true
         };
-        frameView.Add (scrollBar);
+        demoFrame.Add (scrollBar);
+
+        ListView controlledList = new ()
+        {
+            X = Pos.AnchorEnd (),
+            Width = 5,
+            Height = Dim.Fill (),
+            ColorScheme = Colors.ColorSchemes ["Error"],
+        };
+
+        demoFrame.Add (controlledList);
+
+        // populate the list box with Size items of the form "{n:00000}"
+        controlledList.SetSource (new ObservableCollection<string> (Enumerable.Range (0, scrollBar.Size).Select (n => $"{n:00000}")));
 
         int GetMaxLabelWidth (int groupId)
         {
-            return frameView.Subviews.Max (
+            return demoFrame.Subviews.Max (
                                            v =>
                                            {
                                                if (v.Y.Has<PosAlign> (out var pos) && pos.GroupId == groupId)
@@ -64,7 +75,7 @@ public class ScrollBarDemo : Scenario
             Y = Pos.Align (Alignment.Start, AlignmentModes.StartToEnd, groupId: 1),
             Width = Dim.Func (() => GetMaxLabelWidth (1))
         };
-        frameView.Add (lblWidthHeight);
+        demoFrame.Add (lblWidthHeight);
 
         NumericUpDown<int> scrollWidthHeight = new ()
         {
@@ -72,7 +83,7 @@ public class ScrollBarDemo : Scenario
             X = Pos.Right (lblWidthHeight) + 1,
             Y = Pos.Top (lblWidthHeight)
         };
-        frameView.Add (scrollWidthHeight);
+        demoFrame.Add (scrollWidthHeight);
 
         scrollWidthHeight.ValueChanging += (s, e) =>
                                            {
@@ -106,7 +117,7 @@ public class ScrollBarDemo : Scenario
             Y = Pos.Align (Alignment.Start, groupId: 1),
             Width = Dim.Func (() => GetMaxLabelWidth (1))
         };
-        frameView.Add (lblOrientationabel);
+        demoFrame.Add (lblOrientationabel);
 
         var rgOrientation = new RadioGroup
         {
@@ -115,7 +126,7 @@ public class ScrollBarDemo : Scenario
             RadioLabels = ["Vertical", "Horizontal"],
             Orientation = Orientation.Horizontal
         };
-        frameView.Add (rgOrientation);
+        demoFrame.Add (rgOrientation);
 
         rgOrientation.SelectedItemChanged += (s, e) =>
                                              {
@@ -127,18 +138,21 @@ public class ScrollBarDemo : Scenario
                                                  if (rgOrientation.SelectedItem == 0)
                                                  {
                                                      scrollBar.Orientation = Orientation.Vertical;
-                                                     scrollBar.X = Pos.AnchorEnd ();
+                                                     scrollBar.X = Pos.AnchorEnd () - 5;
                                                      scrollBar.Y = 0;
-                                                     scrollWidthHeight.Value = Math.Min (scrollWidthHeight.Value, scrollBar.SuperView.GetContentSize ().Width);
+                                                     scrollWidthHeight.Value = Math.Min (scrollWidthHeight.Value, scrollBar.SuperView!.GetContentSize ().Width);
                                                      scrollBar.Width = scrollWidthHeight.Value;
+                                                     controlledList.Visible = true;
                                                  }
                                                  else
                                                  {
                                                      scrollBar.Orientation = Orientation.Horizontal;
                                                      scrollBar.X = 0;
                                                      scrollBar.Y = Pos.AnchorEnd ();
-                                                     scrollWidthHeight.Value = Math.Min (scrollWidthHeight.Value, scrollBar.SuperView.GetContentSize ().Height);
+                                                     scrollWidthHeight.Value = Math.Min (scrollWidthHeight.Value, scrollBar.SuperView!.GetContentSize ().Height);
                                                      scrollBar.Height = scrollWidthHeight.Value;
+                                                     controlledList.Visible = false;
+
                                                  }
                                              };
 
@@ -149,7 +163,7 @@ public class ScrollBarDemo : Scenario
             Y = Pos.Align (Alignment.Start, groupId: 1),
             Width = Dim.Func (() => GetMaxLabelWidth (1))
         };
-        frameView.Add (lblSize);
+        demoFrame.Add (lblSize);
 
         NumericUpDown<int> scrollSize = new ()
         {
@@ -157,7 +171,7 @@ public class ScrollBarDemo : Scenario
             X = Pos.Right (lblSize) + 1,
             Y = Pos.Top (lblSize)
         };
-        frameView.Add (scrollSize);
+        demoFrame.Add (scrollSize);
 
         scrollSize.ValueChanging += (s, e) =>
                                     {
@@ -174,6 +188,38 @@ public class ScrollBarDemo : Scenario
                                         }
                                     };
 
+        var lblViewportDimension = new Label
+        {
+            Text = "_ViewportDimension::",
+            TextAlignment = Alignment.End,
+            Y = Pos.Align (Alignment.Start, groupId: 1),
+            Width = Dim.Func (() => GetMaxLabelWidth (1))
+        };
+        demoFrame.Add (lblViewportDimension);
+
+        NumericUpDown<int> viewportDimension = new ()
+        {
+            Value = scrollBar.ViewportDimension,
+            X = Pos.Right (lblViewportDimension) + 1,
+            Y = Pos.Top (lblViewportDimension)
+        };
+        demoFrame.Add (viewportDimension);
+
+        viewportDimension.ValueChanging += (s, e) =>
+                                           {
+                                               if (e.NewValue < 0)
+                                               {
+                                                   e.Cancel = true;
+
+                                                   return;
+                                               }
+
+                                               if (scrollBar.ViewportDimension != e.NewValue)
+                                               {
+                                                   scrollBar.ViewportDimension = e.NewValue;
+                                               }
+                                           };
+
         var lblSliderPosition = new Label
         {
             Text = "_SliderPosition:",
@@ -182,7 +228,7 @@ public class ScrollBarDemo : Scenario
             Width = Dim.Func (() => GetMaxLabelWidth (1))
 
         };
-        frameView.Add (lblSliderPosition);
+        demoFrame.Add (lblSliderPosition);
 
         Label scrollSliderPosition = new ()
         {
@@ -190,7 +236,23 @@ public class ScrollBarDemo : Scenario
             X = Pos.Right (lblSliderPosition) + 1,
             Y = Pos.Top (lblSliderPosition)
         };
-        frameView.Add (scrollSliderPosition);
+        demoFrame.Add (scrollSliderPosition);
+
+        var lblScrolled = new Label
+        {
+            Text = "_Scrolled:",
+            TextAlignment = Alignment.End,
+            Y = Pos.Align (Alignment.Start, groupId: 1),
+            Width = Dim.Func (() => GetMaxLabelWidth (1))
+
+        };
+        demoFrame.Add (lblScrolled);
+        Label scrolled = new ()
+        {
+            X = Pos.Right (lblScrolled) + 1,
+            Y = Pos.Top (lblScrolled)
+        };
+        demoFrame.Add (scrolled);
 
         var lblContentPosition = new Label
         {
@@ -200,7 +262,7 @@ public class ScrollBarDemo : Scenario
             Width = Dim.Func (() => GetMaxLabelWidth (1))
 
         };
-        frameView.Add (lblContentPosition);
+        demoFrame.Add (lblContentPosition);
 
         NumericUpDown<int> scrollContentPosition = new ()
         {
@@ -208,7 +270,7 @@ public class ScrollBarDemo : Scenario
             X = Pos.Right (lblContentPosition) + 1,
             Y = Pos.Top (lblContentPosition)
         };
-        frameView.Add (scrollContentPosition);
+        demoFrame.Add (scrollContentPosition);
 
         scrollContentPosition.ValueChanging += (s, e) =>
                                                {
@@ -237,7 +299,7 @@ public class ScrollBarDemo : Scenario
             Y = Pos.Align (Alignment.Start, groupId: 1),
             Width = Dim.Func (() => GetMaxLabelWidth (1))
         };
-        frameView.Add (lblOptions);
+        demoFrame.Add (lblOptions);
         var ckbAutoHide = new CheckBox
         {
             Y = Pos.Top (lblOptions),
@@ -246,7 +308,7 @@ public class ScrollBarDemo : Scenario
             CheckedState = scrollBar.AutoHide ? CheckState.Checked : CheckState.UnChecked
         };
         ckbAutoHide.CheckedStateChanging += (s, e) => scrollBar.AutoHide = e.NewValue == CheckState.Checked;
-        frameView.Add (ckbAutoHide);
+        demoFrame.Add (ckbAutoHide);
 
         var ckbShowPercent = new CheckBox
         {
@@ -256,7 +318,7 @@ public class ScrollBarDemo : Scenario
             CheckedState = scrollBar.ShowPercent ? CheckState.Checked : CheckState.UnChecked
         };
         ckbShowPercent.CheckedStateChanging += (s, e) => scrollBar.ShowPercent = e.NewValue == CheckState.Checked;
-        frameView.Add (ckbShowPercent);
+        demoFrame.Add (ckbShowPercent);
 
         //var ckbKeepContentInAllViewport = new CheckBox
         //{
@@ -270,64 +332,79 @@ public class ScrollBarDemo : Scenario
         {
             Y = Pos.Bottom (lblOptions) + 1
         };
-        frameView.Add (lblScrollFrame);
+        demoFrame.Add (lblScrollFrame);
 
         var lblScrollViewport = new Label
         {
             Y = Pos.Bottom (lblScrollFrame)
         };
-        frameView.Add (lblScrollViewport);
+        demoFrame.Add (lblScrollViewport);
 
         var lblScrollContentSize = new Label
         {
             Y = Pos.Bottom (lblScrollViewport)
         };
-        frameView.Add (lblScrollContentSize);
+        demoFrame.Add (lblScrollContentSize);
 
         scrollBar.SubviewsLaidOut += (s, e) =>
                                      {
                                          lblScrollFrame.Text = $"Scroll Frame: {scrollBar.Frame.ToString ()}";
                                          lblScrollViewport.Text = $"Scroll Viewport: {scrollBar.Viewport.ToString ()}";
                                          lblScrollContentSize.Text = $"Scroll ContentSize: {scrollBar.GetContentSize ().ToString ()}";
+                                         viewportDimension.Value = scrollBar.ViewportDimension;
                                      };
 
         EventLog eventLog = new ()
         {
-            X = Pos.AnchorEnd () - 1,
+            X = Pos.AnchorEnd (),
             Y = 0,
-            Height = Dim.Height (frameView),
+            Height = Dim.Fill (),
             BorderStyle = LineStyle.Single,
             ViewToLog = scrollBar
         };
         app.Add (eventLog);
-        frameView.Width = Dim.Fill (Dim.Func (() => Math.Max (28, eventLog.Frame.Width + 1)));
 
         app.Initialized += AppOnInitialized;
-
 
         void AppOnInitialized (object sender, EventArgs e)
         {
             scrollBar.SizeChanged += (s, e) =>
-                                     {
-                                         eventLog.Log ($"SizeChanged: {e.CurrentValue}");
+                                  {
+                                      eventLog.Log ($"SizeChanged: {e.CurrentValue}");
 
-                                         if (scrollSize.Value != e.CurrentValue)
-                                         {
-                                             scrollSize.Value = e.CurrentValue;
-                                         }
-                                     };
+                                      if (scrollSize.Value != e.CurrentValue)
+                                      {
+                                          scrollSize.Value = e.CurrentValue;
+                                      }
+                                  };
 
             scrollBar.SliderPositionChanged += (s, e) =>
-                                         {
-                                             eventLog.Log ($"SliderPositionChanged: {e.CurrentValue}");
-                                             eventLog.Log ($"  ContentPosition: {scrollBar.ContentPosition}");
-                                             scrollSliderPosition.Text = e.CurrentValue.ToString ();
-                                         };
+                                            {
+                                                eventLog.Log ($"SliderPositionChanged: {e.CurrentValue}");
+                                                eventLog.Log ($"  ContentPosition: {scrollBar.ContentPosition}");
+                                                scrollSliderPosition.Text = e.CurrentValue.ToString ();
+                                            };
 
-            editor.Initialized += (s, e) =>
-                                  {
-                                      editor.ViewToEdit = scrollBar;
-                                  };
+            scrollBar.Scrolled += (s, e) =>
+                               {
+                                   eventLog.Log ($"Scrolled: {e.CurrentValue}");
+                                   eventLog.Log ($"  SliderPosition: {scrollBar.GetSliderPosition ()}");
+                                   scrolled.Text = e.CurrentValue.ToString ();
+                               };
+
+            scrollBar.ContentPositionChanged += (s, e) =>
+                                             {
+                                                 eventLog.Log ($"ContentPositionChanged: {e.CurrentValue}");
+                                                 scrollContentPosition.Value = e.CurrentValue;
+                                                 controlledList.Viewport = controlledList.Viewport with { Y = e.CurrentValue };
+                                             };
+
+
+            controlledList.ViewportChanged += (s, e) =>
+                                              {
+                                                  eventLog.Log ($"ViewportChanged: {e.NewViewport.Y}");
+                                                  scrollBar.ContentPosition = e.NewViewport.Y;
+                                              };
 
         }
 

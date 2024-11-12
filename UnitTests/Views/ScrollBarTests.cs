@@ -60,7 +60,7 @@ public class ScrollBarTests
     [Fact]
     public void OnOrientationChanged_Keeps_Size ()
     {
-        var scroll = new Scroll ();
+        var scroll = new ScrollBar ();
         scroll.Layout ();
         scroll.Size = 1;
 
@@ -155,50 +155,6 @@ public class ScrollBarTests
         top.Dispose ();
     }
 
-
-    [Theory (Skip = "Disabled - Will put this feature in View")]
-    [AutoInitShutdown]
-    [InlineData (Orientation.Vertical)]
-    [InlineData (Orientation.Horizontal)]
-    public void Moving_Mouse_Outside_Host_Ensures_Correct_Location_KeepContentInAllViewport_True (Orientation orientation)
-    {
-        var scrollBar = new ScrollBar
-        {
-            X = 10, Y = 10, Width = orientation == Orientation.Vertical ? 1 : 10, Height = orientation == Orientation.Vertical ? 10 : 1, Size = 20,
-            ContentPosition = 5, Orientation = orientation, KeepContentInAllViewport = true
-        };
-        var top = new Toplevel ();
-        top.Add (scrollBar);
-        RunState rs = Application.Begin (top);
-
-        var scroll = (Scroll)scrollBar.Subviews.FirstOrDefault (x => x is Scroll);
-        Rectangle scrollSliderFrame = scroll!.Subviews.FirstOrDefault (x => x is ScrollSlider)!.Frame;
-        Assert.Equal (scrollSliderFrame, orientation == Orientation.Vertical ? new (0, 2, 1, 4) : new (2, 0, 4, 1));
-
-        Application.RaiseMouseEvent (new () { ScreenPosition = orientation == Orientation.Vertical ? new (10, 14) : new (14, 10), Flags = MouseFlags.Button1Pressed });
-        Application.RunIteration (ref rs);
-
-        Application.RaiseMouseEvent (
-                                     new ()
-                                     {
-                                         ScreenPosition = orientation == Orientation.Vertical ? new (10, 0) : new (0, 10),
-                                         Flags = MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition
-                                     });
-        Application.RunIteration (ref rs);
-        Assert.Equal (new (0, 0), scroll.Subviews.FirstOrDefault (x => x is ScrollSlider)!.Frame.Location);
-
-        Application.RaiseMouseEvent (
-                                     new ()
-                                     {
-                                         ScreenPosition = orientation == Orientation.Vertical ? new (0, 25) : new (80, 0),
-                                         Flags = MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition
-                                     });
-
-        Application.RunIteration (ref rs);
-        Assert.Equal (
-                      orientation == Orientation.Vertical ? new (0, 4) : new (4, 0),
-                      scroll.Subviews.FirstOrDefault (x => x is ScrollSlider)!.Frame.Location);
-    }
 
     [Fact]
     public void Size_Cannot_Be_Negative ()

@@ -16,7 +16,7 @@ namespace Terminal.Gui;
 ///         be show what percent the slider is to the Superview's Viewport size.
 ///     </para>
 ///     <para>
-///        Used to represent the proportion of the visible content to the Viewport in a <see cref="Scroll"/>.
+///        Used to represent the proportion of the visible content to the Viewport in a <see cref="Scrolled"/>.
 ///     </para>
 /// </remarks>
 public class ScrollSlider : View, IOrientation, IDesignable
@@ -37,9 +37,6 @@ public class ScrollSlider : View, IOrientation, IDesignable
         OnOrientationChanged (Orientation);
 
         HighlightStyle = HighlightStyle.Hover;
-
-        // Default size is 1
-        Size = 1;
 
         FrameChanged += OnFrameChanged;
     }
@@ -70,7 +67,7 @@ public class ScrollSlider : View, IOrientation, IDesignable
         // Reset Position to 0 when changing orientation
         X = 0;
         Y = 0;
-        //Position = 0;
+        Position = 0;
 
         // Reset Size to 1 when changing orientation
         if (Orientation == Orientation.Vertical)
@@ -127,11 +124,11 @@ public class ScrollSlider : View, IOrientation, IDesignable
         {
             if (Orientation == Orientation.Vertical)
             {
-                return Viewport.Height;
+                return Viewport.Height - ShrinkBy / 2;
             }
             else
             {
-                return Viewport.Width;
+                return Viewport.Width - ShrinkBy / 2;
             }
         }
         set
@@ -144,24 +141,37 @@ public class ScrollSlider : View, IOrientation, IDesignable
             }
             else
             {
+                Height = Dim.Fill ();
                 int viewport = Math.Max (1, SuperView?.Viewport.Width ?? 1);
                 Width = Math.Clamp (value, 1, viewport);
-                Height = Dim.Fill ();
             }
         }
     }
 
+    private int? _viewportDimension;
     /// <summary>
     ///     Gets the size of the viewport into the content being scrolled, bounded by <see cref="Size"/>.
     /// </summary>
     /// <remarks>
     ///     This is the SuperView's Viewport demension.
     /// </remarks>
-    public int ViewportDimension => Orientation == Orientation.Vertical ? SuperView?.Viewport.Height ?? 0 : SuperView?.Viewport.Width ?? 0;
+    public int ViewportDimension
+    {
+        get
+        {
+            if (_viewportDimension.HasValue)
+            {
+                return _viewportDimension.Value;
+            }
+            return Orientation == Orientation.Vertical ? SuperView?.Viewport.Height ?? 0 : SuperView?.Viewport.Width ?? 0;
+        }
+        set => _viewportDimension = value;
+    }
 
     private void OnFrameChanged (object? sender, EventArgs<Rectangle> e)
     {
-        Position = Orientation == Orientation.Vertical ? e.CurrentValue.Y : e.CurrentValue.X;
+        
+        Position = (Orientation == Orientation.Vertical ? e.CurrentValue.Y : e.CurrentValue.X) - ShrinkBy / 2;
     }
 
     private int _position;
@@ -187,27 +197,30 @@ public class ScrollSlider : View, IOrientation, IDesignable
         }
     }
 
-    public void SetPosition (int position)
+    /// <summary>
+    ///     Moves the scroll slider to the specified position.
+    ///     The position will be constrained such that the ScrollSlider will not go outside the Viewport of
+    ///     its <see cref="View.SuperView"/>.
+    /// </summary>
+    /// <param name="position"></param>
+    public void MoveToPosition (int position)
     {
         _position = ClampPosition (position);
 
         if (Orientation == Orientation.Vertical)
         {
-            Y = _position;
+            Y = _position + ShrinkBy / 2;
         }
         else
         {
-            X = _position;
+            X = _position + ShrinkBy / 2;
         }
+
+        Layout ();
     }
 
     private int ClampPosition (int newPosittion)
     {
-        if (SuperView is null || !IsInitialized)
-        {
-            return 1;
-        }
-
         if (Orientation == Orientation.Vertical)
         {
             return Math.Clamp (newPosittion, 0, Math.Max (0, ViewportDimension - Viewport.Height));
@@ -233,16 +246,16 @@ public class ScrollSlider : View, IOrientation, IDesignable
             return;
         }
 
-        int scrollAmount = newPosition - _position;
-        _position = newPosition;
+        int distance = newPosition - _position;
+        MoveToPosition (newPosition);
 
         OnPositionChanged (_position);
         PositionChanged?.Invoke (this, new (in _position));
 
-        OnScroll (scrollAmount);
-        Scroll?.Invoke (this, new (in scrollAmount));
+        OnScrolled (distance);
+        Scrolled?.Invoke (this, new (in distance));
 
-        RaiseSelecting (new CommandContext (Command.Select, null, null, scrollAmount));
+        RaiseSelecting (new CommandContext (Command.Select, null, null, distance));
     }
 
     /// <summary>
@@ -264,10 +277,10 @@ public class ScrollSlider : View, IOrientation, IDesignable
 
 
     /// <summary>Called when <see cref="Position"/> has changed. Indicates how much to scroll.</summary>
-    protected virtual void OnScroll (int scrollAmount) { }
+    protected virtual void OnScrolled (int distance) { }
 
     /// <summary>Raised when the <see cref="Position"/> has changed. Indicates how much to scroll.</summary>
-    public event EventHandler<EventArgs<int>>? Scroll;
+    public event EventHandler<EventArgs<int>>? Scrolled;
 
     /// <inheritdoc/>
     protected override bool OnDrawingText ()
@@ -302,6 +315,8 @@ public class ScrollSlider : View, IOrientation, IDesignable
     ///// <inheritdoc/>
     private int _lastLocation = -1;
 
+    public int ShrinkBy { get; set; }
+
     /// <inheritdoc/>
     protected override bool OnMouseEvent (MouseEventArgs mouseEvent)
     {
@@ -310,9 +325,14 @@ public class ScrollSlider : View, IOrientation, IDesignable
             return false;
         }
 
-        int location = Orientation == Orientation.Vertical ? mouseEvent.Position.Y : mouseEvent.Position.X;
+        if (mouseEvent.IsSingleDoubleOrTripleClicked)
+        {
+            return true;
+        }
+
+        int location = (Orientation == Orientation.Vertical ? mouseEvent.Position.Y : mouseEvent.Position.X) + ShrinkBy / 2;
         int offset = _lastLocation > -1 ? location - _lastLocation : 0;
-        int superViewDimension = Orientation == Orientation.Vertical ? SuperView!.Viewport.Height : SuperView!.Viewport.Width;
+        int superViewDimension = ViewportDimension;
 
         if (mouseEvent.IsPressed || mouseEvent.IsReleased)
         {
@@ -328,18 +348,18 @@ public class ScrollSlider : View, IOrientation, IDesignable
             {
                 if (Orientation == Orientation.Vertical)
                 {
-                    Y = Frame.Y + offset < 0
-                                  ? 0
-                            : Frame.Y + offset + Frame.Height > superViewDimension
-                                ? Math.Max (superViewDimension - Frame.Height, 0)
-                                : Frame.Y + offset;
+                    Y = Frame.Y + offset < ShrinkBy / 2
+                             ? ShrinkBy / 2
+                             : Frame.Y + offset + Frame.Height > superViewDimension
+                                 ? Math.Max (superViewDimension - Frame.Height + ShrinkBy, 1)
+                                 : Frame.Y + offset;
                 }
                 else
                 {
-                    X = Frame.X + offset < 0
-                                  ? 0
-                            : Frame.X + offset + Frame.Width > superViewDimension
-                                ? Math.Max (superViewDimension - Frame.Width, 0)
+                    X = Frame.X + offset < ShrinkBy / 2
+                            ? ShrinkBy / 2
+                            : Frame.X + offset + Frame.Height > superViewDimension
+                                ? Math.Max (superViewDimension - Frame.Height + ShrinkBy / 2, 1)
                                 : Frame.X + offset;
                 }
             }
@@ -371,7 +391,7 @@ public class ScrollSlider : View, IOrientation, IDesignable
                                   else
                                   {
                                       Width = 5;
-                                      Height = Dim.Fill();
+                                      Height = Dim.Fill ();
                                   }
                               };
 

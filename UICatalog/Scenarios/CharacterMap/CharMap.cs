@@ -175,6 +175,10 @@ public class CharMap : View, IDesignable
                                                   }
                                               };
 
+        _vScrollBar.Scrolled += (sender, args) =>
+                                              {
+                                                  //ScrollVertical (args.CurrentValue);
+                                              };
         _hScrollBar.ContentPositionChanged += (sender, args) =>
                                               {
                                                   if (Viewport.Width > 0)

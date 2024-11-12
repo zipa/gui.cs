@@ -1,4 +1,5 @@
-﻿using Microsoft.VisualStudio.TestPlatform.Utilities;
+﻿using System.Diagnostics;
+using Microsoft.VisualStudio.TestPlatform.Utilities;
 using Xunit.Abstractions;
 using static Unix.Terminal.Delegates;
 
@@ -88,7 +89,7 @@ public class ScrollSliderTests (ITestOutputHelper output)
 
     [Theory]
     [CombinatorialData]
-    public void Position_Clamps_To_SuperView_Viewport ([CombinatorialRange (1, 6, 1)] int sliderSize, [CombinatorialRange (-1, 6, 1)] int sliderPosition, Orientation orientation)
+    public void Position_Clamps_To_SuperView_Viewport ([CombinatorialRange (0, 5, 1)] int sliderSize, [CombinatorialRange (-2, 6, 2)] int sliderPosition, Orientation orientation)
     {
         var super = new View
         {
@@ -106,7 +107,6 @@ public class ScrollSliderTests (ITestOutputHelper output)
         scrollSlider.Layout ();
 
         scrollSlider.Position = sliderPosition;
-        scrollSlider.Layout ();
 
         Assert.True (scrollSlider.Position <= 5);
     }
@@ -419,7 +419,7 @@ public class ScrollSliderTests (ITestOutputHelper output)
 │██████████│
 │██████████│
 └──────────┘")]
-    public void Draws_Correctly (int superViewportWidth, int superViewportHeight, int sliderSize, int sliderPosition, Orientation orientation, string expected)
+    public void Draws_Correctly (int superViewportWidth, int superViewportHeight, int sliderSize, int position, Orientation orientation, string expected)
     {
         var super = new Window
         {
@@ -436,7 +436,7 @@ public class ScrollSliderTests (ITestOutputHelper output)
 
         scrollSlider.Size = sliderSize;
         scrollSlider.Layout ();
-        scrollSlider.Position = sliderPosition;
+        scrollSlider.Position = position;
 
         super.BeginInit ();
         super.EndInit ();

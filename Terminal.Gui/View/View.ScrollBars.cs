@@ -105,9 +105,7 @@ public partial class View
                                                                                   {
                                                                                       Viewport = Viewport with
                                                                                       {
-                                                                                          Y = Math.Min (
-                                                                                                        args.CurrentValue,
-                                                                                                        GetContentSize ().Height - (Viewport.Height))
+                                                                                          Y = Math.Min (args.CurrentValue, GetContentSize ().Height - (Viewport.Height - 1))
                                                                                       };
                                                                                   };
 

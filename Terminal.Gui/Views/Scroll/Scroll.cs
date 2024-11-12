@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 using System.ComponentModel;
+using System.Drawing;
 
 namespace Terminal.Gui;
 
@@ -16,17 +17,42 @@ namespace Terminal.Gui;
 ///         By default, this view cannot be focused and does not support keyboard.
 ///     </para>
 /// </remarks>
-public class Scroll : View, IOrientation, IDesignable
+public class ScrollBar : View, IOrientation, IDesignable
 {
+    private readonly Button _decreaseButton;
     internal readonly ScrollSlider _slider;
+    private readonly Button _increaseButton;
 
     /// <inheritdoc/>
-    public Scroll ()
+    public ScrollBar ()
     {
-        _slider = new ();
-        base.Add (_slider);
-        _slider.Scroll += SliderOnScroll;
+        _decreaseButton = new ()
+        {
+            CanFocus = false,
+            NoDecorations = true,
+            NoPadding = true,
+            ShadowStyle = ShadowStyle.None,
+            WantContinuousButtonPressed = true
+        };
+        _decreaseButton.Accepting += OnDecreaseButtonOnAccept;
+
+        _slider = new ()
+        {
+            ShrinkBy = 2, // For the buttons
+        };
+        _slider.Scrolled += SliderOnScroll;
         _slider.PositionChanged += SliderOnPositionChanged;
+
+        _increaseButton = new ()
+        {
+            CanFocus = false,
+            NoDecorations = true,
+            NoPadding = true,
+            ShadowStyle = ShadowStyle.None,
+            WantContinuousButtonPressed = true
+        };
+        _increaseButton.Accepting += OnIncreaseButtonOnAccept;
+        base.Add (_decreaseButton, _slider, _increaseButton);
 
         CanFocus = false;
 
@@ -37,22 +63,106 @@ public class Scroll : View, IOrientation, IDesignable
 
         // This sets the width/height etc...
         OnOrientationChanged (Orientation);
+
+        void OnDecreaseButtonOnAccept (object? s, CommandEventArgs e)
+        {
+            ContentPosition -= Increment;
+            e.Cancel = true;
+        }
+
+        void OnIncreaseButtonOnAccept (object? s, CommandEventArgs e)
+        {
+            ContentPosition += Increment;
+            e.Cancel = true;
+        }
     }
 
+    /// <inheritdoc/>
+    protected override void OnFrameChanged (in Rectangle frame)
+    {
+        ShowHide ();
+    }
+
+    private void ShowHide ()
+    {
+        if (!AutoHide || !IsInitialized)
+        {
+            return;
+        }
+
+        if (Orientation == Orientation.Vertical)
+        {
+            Visible = Frame.Height < Size;
+        }
+        else
+        {
+            Visible = Frame.Width < Size;
+        }
+    }
 
     /// <inheritdoc/>
     protected override void OnSubviewLayout (LayoutEventArgs args)
     {
-        if (ViewportDimension < 1)
+        _slider.Size = CalculateSliderSize ();
+
+        if (Orientation == Orientation.Vertical)
         {
-            _slider.Size = 1;
-
-            return;
+            _slider.ViewportDimension = Viewport.Height - _slider.ShrinkBy;
         }
-
-        _slider.Size = (int)Math.Clamp (Math.Floor ((double)ViewportDimension * ViewportDimension / (Size)), 1, ViewportDimension);
+        else
+        {
+            _slider.ViewportDimension = Viewport.Width - _slider.ShrinkBy;
+        }
     }
 
+    private int CalculateSliderSize ()
+    {
+        if (Size == 0 || ViewportDimension == 0)
+        {
+            return 1;
+        }
+        return (int)Math.Clamp (Math.Floor ((double)ViewportDimension / Size * (Viewport.Height - 2)), 1, ViewportDimension);
+    }
+
+    private void PositionSubviews ()
+    {
+        if (Orientation == Orientation.Vertical)
+        {
+            _decreaseButton.Y = 0;
+            _decreaseButton.X = 0;
+            _decreaseButton.Width = Dim.Fill ();
+            _decreaseButton.Height = 1;
+            _decreaseButton.Title = Glyphs.UpArrow.ToString ();
+
+            _slider.X = 0;
+            _slider.Y = 1;
+            _slider.Width = Dim.Fill ();
+
+            _increaseButton.Y = Pos.AnchorEnd ();
+            _increaseButton.X = 0;
+            _increaseButton.Width = Dim.Fill ();
+            _increaseButton.Height = 1;
+            _increaseButton.Title = Glyphs.DownArrow.ToString ();
+        }
+        else
+        {
+            _decreaseButton.Y = 0;
+            _decreaseButton.X = 0;
+            _decreaseButton.Width = 1;
+            _decreaseButton.Height = Dim.Fill ();
+            _decreaseButton.Title = Glyphs.LeftArrow.ToString ();
+
+            _slider.Y = 0;
+            _slider.X = 1;
+            _slider.Height = Dim.Fill ();
+
+            _increaseButton.Y = 0;
+            _increaseButton.X = Pos.AnchorEnd ();
+            _increaseButton.Width = 1;
+            _increaseButton.Height = Dim.Fill ();
+            _increaseButton.Title = Glyphs.RightArrow.ToString ();
+        }
+    }
     #region IOrientation members
 
     private readonly OrientationHelper _orientationHelper;
@@ -92,9 +202,44 @@ public class Scroll : View, IOrientation, IDesignable
         }
 
         _slider.Orientation = newOrientation;
+        PositionSubviews ();
     }
 
     #endregion
+
+
+    private bool _autoHide = true;
+
+    /// <summary>
+    ///     Gets or sets whether <see cref="View.Visible"/> will be set to <see langword="false"/> if the dimension of the
+    ///     scroll bar is greater than or equal to <see cref="Size"/>.
+    /// </summary>
+    public bool AutoHide
+    {
+        get => _autoHide;
+        set
+        {
+            if (_autoHide != value)
+            {
+                _autoHide = value;
+
+                if (!AutoHide)
+                {
+                    Visible = true;
+                }
+
+                SetNeedsLayout ();
+            }
+        }
+    }
+
+    public bool KeepContentInAllViewport
+    {
+        //get => _scroll.KeepContentInAllViewport;
+        //set => _scroll.KeepContentInAllViewport = value;
+        get;
+        set;
+    }
 
     /// <summary>
     ///     Gets or sets whether the Scroll will show the percentage the slider
@@ -165,11 +310,9 @@ public class Scroll : View, IOrientation, IDesignable
             return;
         }
 
-        int calculatedSliderPos = CalculateSliderPosition (_contentPosition);
+        int pos = e.CurrentValue;
 
-        ContentPosition = (int)Math.Round ((double)e.CurrentValue / (ViewportDimension - _slider.Size) * (Size - ViewportDimension));
-
-        RaiseSliderPositionChangeEvents (calculatedSliderPos, e.CurrentValue);
+        RaiseSliderPositionChangeEvents (_slider.Position, pos);
     }
 
     private void SliderOnScroll (object? sender, EventArgs<int> e)
@@ -178,6 +321,14 @@ public class Scroll : View, IOrientation, IDesignable
         {
             return;
         }
+
+        int calculatedSliderPos = CalculateSliderPosition (_contentPosition, e.CurrentValue >= 0 ? NavigationDirection.Forward : NavigationDirection.Backward);
+        int sliderScrolledAmount = e.CurrentValue;
+        int scrolledAmount = CalculateContentPosition (sliderScrolledAmount);
+
+        RaiseSliderPositionChangeEvents (calculatedSliderPos, _slider.Position);
+
+        ContentPosition = _contentPosition + scrolledAmount;
     }
 
     /// <summary>
@@ -187,7 +338,7 @@ public class Scroll : View, IOrientation, IDesignable
 
     private void RaiseSliderPositionChangeEvents (int calculatedSliderPosition, int newSliderPosition)
     {
-        if (/*newSliderPosition > Size - ViewportDimension ||*/ calculatedSliderPosition == newSliderPosition)
+        if (calculatedSliderPosition == newSliderPosition)
         {
             return;
         }
@@ -205,15 +356,25 @@ public class Scroll : View, IOrientation, IDesignable
     /// <summary>Raised when the slider position has changed.</summary>
     public event EventHandler<EventArgs<int>>? SliderPositionChanged;
 
-    private int CalculateSliderPosition (int contentPosition)
+    private int CalculateSliderPosition (int contentPosition, NavigationDirection direction = NavigationDirection.Forward)
     {
         if (Size - ViewportDimension == 0)
         {
             return 0;
         }
 
-        return (int)Math.Round ((double)contentPosition / (Size - ViewportDimension) * (ViewportDimension - _slider.Size));
+        int scrollBarSize = Orientation == Orientation.Vertical ? Viewport.Height : Viewport.Width;
+        double newSliderPosition = (double)contentPosition / (Size - ViewportDimension) * (scrollBarSize - _slider.Size - _slider.ShrinkBy);
+
+        return direction == NavigationDirection.Forward ? (int)Math.Floor (newSliderPosition) : (int)Math.Ceiling (newSliderPosition);
     }
+
+    private int CalculateContentPosition (int sliderPosition)
+    {
+        int scrollBarSize = Orientation == Orientation.Vertical ? Viewport.Height : Viewport.Width;
+        return (int)Math.Round ((double)(sliderPosition) / (scrollBarSize - _slider.Size - _slider.ShrinkBy) * (Size - ViewportDimension));
+    }
+
 
     #endregion SliderPosition
 
@@ -245,33 +406,39 @@ public class Scroll : View, IOrientation, IDesignable
 
             // Clamp the value between 0 and Size - ViewportDimension
             int newContentPosition = (int)Math.Clamp (value, 0, Math.Max (0, Size - ViewportDimension));
+            NavigationDirection direction = newContentPosition >= _contentPosition ? NavigationDirection.Forward : NavigationDirection.Backward;
 
-            RaiseContentPositionChangeEvents (newContentPosition);
+            if (OnContentPositionChanging (_contentPosition, newContentPosition))
+            {
+                return;
+            }
 
-            _slider.SetPosition (CalculateSliderPosition (_contentPosition));
+            CancelEventArgs<int> args = new (ref _contentPosition, ref newContentPosition);
+            ContentPositionChanging?.Invoke (this, args);
+
+            if (args.Cancel)
+            {
+                return;
+            }
+
+            int distance = newContentPosition - _contentPosition;
+
+            _contentPosition = newContentPosition;
+
+            OnContentPositionChanged (_contentPosition);
+            ContentPositionChanged?.Invoke (this, new (in _contentPosition));
+
+            OnScrolled (distance);
+            Scrolled?.Invoke (this, new (in distance));
+
+            int currentSliderPosition = _slider.Position;
+            int calculatedSliderPosition = CalculateSliderPosition (_contentPosition, direction);
+
+            _slider.MoveToPosition (calculatedSliderPosition);
+
+            RaiseSliderPositionChangeEvents (currentSliderPosition, _slider.Position);
+
         }
-    }
-
-    private void RaiseContentPositionChangeEvents (int newContentPosition)
-    {
-
-        if (OnContentPositionChanging (_contentPosition, newContentPosition))
-        {
-            return;
-        }
-
-        CancelEventArgs<int> args = new (ref _contentPosition, ref newContentPosition);
-        ContentPositionChanging?.Invoke (this, args);
-
-        if (args.Cancel)
-        {
-            return;
-        }
-
-        _contentPosition = newContentPosition;
-
-        OnContentPositionChanged (_contentPosition);
-        ContentPositionChanged?.Invoke (this, new (in _contentPosition));
     }
 
     /// <summary>
@@ -291,16 +458,30 @@ public class Scroll : View, IOrientation, IDesignable
     /// <summary>Raised when the <see cref="ContentPosition"/> has changed.</summary>
     public event EventHandler<EventArgs<int>>? ContentPositionChanged;
 
+    /// <summary>Called when <see cref="ContentPosition"/> has changed. Indicates how much to scroll.</summary>
+    protected virtual void OnScrolled (int distance) { }
+
+    /// <summary>Raised when the <see cref="ContentPosition"/> has changed. Indicates how much to scroll.</summary>
+    public event EventHandler<EventArgs<int>>? Scrolled;
+
     #endregion ContentPosition
 
     /// <inheritdoc/>
     protected override bool OnClearingViewport ()
     {
-        FillRect (Viewport, Glyphs.Stipple);
+        if (Orientation == Orientation.Vertical)
+        {
+            FillRect (Viewport with { Y = Viewport.Y + 1, Height = Viewport.Height - 2 }, Glyphs.Stipple);
+        }
+        else
+        {
+            FillRect (Viewport with { X = Viewport.X + 1, Width = Viewport.Width - 2 }, Glyphs.Stipple);
+        }
 
         return true;
     }
 
+    // TODO: Change this to work OnMouseEvent with continuouse press and grab so it's continous.
     /// <inheritdoc/>
     protected override bool OnMouseClick (MouseEventArgs args)
     {
@@ -315,22 +496,35 @@ public class Scroll : View, IOrientation, IDesignable
 
         if (Orientation == Orientation.Vertical)
         {
-            sliderCenter = _slider.Frame.Y + _slider.Frame.Height / 2;
+            sliderCenter = 1 + _slider.Frame.Y + _slider.Frame.Height / 2;
             distanceFromCenter = args.Position.Y - sliderCenter;
         }
         else
         {
-            sliderCenter = _slider.Frame.X + _slider.Frame.Width / 2;
+            sliderCenter = 1 + _slider.Frame.X + _slider.Frame.Width / 2;
             distanceFromCenter = args.Position.X - sliderCenter;
         }
 
+#if PROPORTIONAL_SCROLL_JUMP
+        // BUGBUG: This logic mostly works to provide a proportional jump. However, the math
+        // BUGBUG: falls apart in edge cases. Most other scroll bars (e.g. Windows) do not do prooportional
+        // BUGBUG: Thus, this is disabled and we just jump a page each click.
         // Ratio of the distance to the viewport dimension
-        double ratio = (double)Math.Abs (distanceFromCenter) / ViewportDimension;
+        double ratio = (double)Math.Abs (distanceFromCenter) / (ViewportDimension);
         // Jump size based on the ratio and the total content size
-        int jump = (int)Math.Ceiling (ratio * Size);
-
+        int jump = (int)(ratio * (Size - ViewportDimension));
+#else
+        int jump = (ViewportDimension);
+#endif
         // Adjust the content position based on the distance
-        ContentPosition += distanceFromCenter < 0 ? -jump : jump;
+        if (distanceFromCenter < 0)
+        {
+            ContentPosition = Math.Max (0, ContentPosition - jump);
+        }
+        else
+        {
+            ContentPosition = Math.Min (Size - _slider.ViewportDimension, ContentPosition + jump);
+        }
 
         return true;
     }
