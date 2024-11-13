@@ -58,8 +58,8 @@ public class ScrollBar : View, IOrientation, IDesignable
 
         _orientationHelper = new (this); // Do not use object initializer!
         _orientationHelper.Orientation = Orientation.Vertical;
-        _orientationHelper.OrientationChanging += (sender, e) => OrientationChanging?.Invoke (this, e);
-        _orientationHelper.OrientationChanged += (sender, e) => OrientationChanged?.Invoke (this, e);
+        //_orientationHelper.OrientationChanging += (sender, e) => OrientationChanging?.Invoke (this, e);
+        //_orientationHelper.OrientationChanged += (sender, e) => OrientationChanged?.Invoke (this, e);
 
         // This sets the width/height etc...
         OnOrientationChanged (Orientation);
@@ -115,9 +115,13 @@ public class ScrollBar : View, IOrientation, IDesignable
         }
     }
 
-    private int CalculateSliderSize ()
+    /// <summary>
+    ///     INTERNAL (for unit tests). Calclates the size of the slider based on the Orientation, ViewportDimension, the actual Viewport, and Size.
+    /// </summary>
+    /// <returns></returns>
+    internal int CalculateSliderSize ()
     {
-        if (Size == 0 || ViewportDimension == 0)
+        if (Size <= 0 || ViewportDimension <= 0)
         {
             return 1;
         }
@@ -205,6 +209,8 @@ public class ScrollBar : View, IOrientation, IDesignable
 
         _slider.Orientation = newOrientation;
         PositionSubviews ();
+
+        OrientationChanged?.Invoke (this, new (newOrientation));
     }
 
     #endregion
@@ -371,10 +377,26 @@ public class ScrollBar : View, IOrientation, IDesignable
         return direction == NavigationDirection.Forward ? (int)Math.Floor (newSliderPosition) : (int)Math.Ceiling (newSliderPosition);
     }
 
-    private int CalculateContentPosition (int sliderPosition)
+    /// <summary>
+    ///    INTERNAL API (for unit tests) - Calculates the content position based on the slider position. 
+    /// </summary>
+    /// <remarks>
+    ///     Clamps the sliderPosition, ensuring the returned content position is always less than
+    ///     Size - VieportDimension.
+    /// </remarks>
+    /// <param name="sliderPosition"></param>
+    /// <returns></returns>
+    internal int CalculateContentPosition (int sliderPosition)
     {
+        // Clamp the slider 
+        int clampedSliderPosition = _slider.ClampPosition (sliderPosition);
         int scrollBarSize = Orientation == Orientation.Vertical ? Viewport.Height : Viewport.Width;
-        return (int)Math.Round ((double)(sliderPosition) / (scrollBarSize - _slider.Size - _slider.ShrinkBy) * (Size - ViewportDimension));
+        double pos = (double)(clampedSliderPosition) /
+                     (scrollBarSize - _slider.Size - _slider.ShrinkBy) * (Size - ViewportDimension);
+        double rounded = Math.Round (pos);
+
+        // Clamp between 0 and Size - SliderSize
+        return (int)Math.Clamp (pos, 0, Math.Max (0, Size - _slider.Size));
     }
 
 

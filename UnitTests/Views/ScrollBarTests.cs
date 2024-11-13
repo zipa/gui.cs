@@ -52,7 +52,9 @@ public class ScrollBarTests
         Assert.False (scrollBar.CanFocus);
         Assert.Equal (Orientation.Vertical, scrollBar.Orientation);
         Assert.Equal (0, scrollBar.Size);
+        Assert.Equal (0, scrollBar.ViewportDimension);
         Assert.Equal (0, scrollBar.GetSliderPosition ());
+        Assert.Equal (0, scrollBar.ContentPosition);
         Assert.True (scrollBar.AutoHide);
     }
 
@@ -95,9 +97,8 @@ public class ScrollBarTests
         var changingCount = 0;
         var changedCount = 0;
         var scrollBar = new ScrollBar { };
-        scrollBar.Layout ();
-        scrollBar.Size = scrollBar.Viewport.Height * 2;
-        scrollBar.Layout ();
+        scrollBar.Size = 4;
+        scrollBar.Frame = new Rectangle (0, 0, 1, 4); // Needs to be at least 4 for slider to move
 
         scrollBar.ContentPositionChanging += (s, e) =>
                                             {
@@ -686,7 +687,6 @@ public class ScrollBarTests
         super.Add (scrollBar);
 
         scrollBar.Size = contentSize;
-        scrollBar.Layout ();
         scrollBar.ContentPosition = contentPosition;
 
         super.BeginInit ();
@@ -794,52 +794,130 @@ public class ScrollBarTests
     }
 
     [Theory]
-    [InlineData (1, 10, 0, 0)]
-    [InlineData (1, 10, 5, 0)]
-    [InlineData (1, 10, 10, 1)]
-    [InlineData (1, 20, 0, 0)]
-    [InlineData (1, 20, 10, 0)]
-    [InlineData (1, 20, 20, 1)]
-    [InlineData (2, 10, 0, 0)]
-    [InlineData (2, 10, 5, 1)]
-    [InlineData (2, 10, 10, 2)]
-    [InlineData (2, 20, 0, 0)]
-    [InlineData (2, 20, 10, 1)]
-    [InlineData (2, 20, 20, 2)]
-    [InlineData (3, 10, 0, 0)]
-    [InlineData (3, 10, 5, 1)]
-    [InlineData (3, 10, 10, 3)]
-    [InlineData (3, 20, 0, 0)]
-    [InlineData (3, 20, 10, 1)]
-    [InlineData (3, 20, 20, 3)]
-    [InlineData (4, 10, 0, 0)]
-    [InlineData (4, 10, 5, 2)]
-    [InlineData (4, 10, 10, 4)]
-    [InlineData (4, 20, 0, 0)]
-    [InlineData (4, 20, 10, 2)]
-    [InlineData (4, 20, 20, 4)]
-    [InlineData (5, 10, 0, 0)]
-    [InlineData (5, 10, 5, 2)]
-    [InlineData (5, 10, 10, 5)]
-    [InlineData (5, 20, 0, 0)]
-    [InlineData (5, 20, 10, 2)]
-    [InlineData (5, 20, 20, 5)]
-    public void ScrollBar_CombinatorialTests (int width, int size, int contentPosition, int expectedSliderPosition)
+    [InlineData (-1, 10, 1)]
+    [InlineData (0, 10, 1)]
+    [InlineData (10, 15, 5)]
+    [InlineData (10, 5, 10)]
+    [InlineData (10, 3, 10)]
+    [InlineData (10, 2, 10)]
+    [InlineData (10, 1, 10)]
+    [InlineData (10, 0, 1)]
+    [InlineData (10, 10, 8)]
+    [InlineData (10, 20, 4)]
+    [InlineData (10, 100, 1)]
+    [InlineData (15, 10, 15)]
+    [InlineData (15, 0, 1)]
+    [InlineData (15, 1, 15)]
+    [InlineData (15, 2, 15)]
+    [InlineData (15, 3, 15)]
+    [InlineData (15, 5, 15)]
+    [InlineData (15, 14, 13)]
+    [InlineData (15, 15, 13)]
+    [InlineData (15, 16, 12)]
+    [InlineData (20, 10, 20)]
+    [InlineData (100, 10, 100)]
+    public void CalculateSliderSize_Width_Matches_ViewportDimension (int viewportDimension, int size, int expectedSliderSize)
     {
         // Arrange
         var scrollBar = new ScrollBar
         {
-            Width = width,
+            ViewportDimension = viewportDimension,
             Size = size,
-            ContentPosition = contentPosition
+            Orientation = Orientation.Horizontal // Assuming horizontal for simplicity
         };
+        scrollBar.Width = viewportDimension; // Changing orientation changes Width
+        scrollBar.BeginInit ();
+        scrollBar.EndInit ();
         scrollBar.Layout ();
 
         // Act
-        var sliderPosition = scrollBar.GetSliderPosition ();
+        var sliderSize = scrollBar.CalculateSliderSize ();
+
 
         // Assert
-        Assert.Equal (expectedSliderPosition, sliderPosition);
+        Assert.Equal (expectedSliderSize, sliderSize);
     }
 
+    // 012345678901
+    // ◄█░░░░░░░░░►
+    [Theory]
+    // ◄█►
+    [InlineData (3, 3, -1, 0)]
+    [InlineData (3, 3, 0, 0)]
+    [InlineData (3, 3, 1, 0)]
+    [InlineData (3, 3, 2, 0)]
+
+    // ◄██►
+    [InlineData (4, 2, 1, 0)]
+    [InlineData (4, 2, 2, 0)]
+
+    // 0123
+    //  ---
+    // ◄█░►
+    [InlineData (4, 3, 0, 0)]
+    // ◄░█►
+    [InlineData (4, 3, 1, 1)]
+    // ◄░█►
+    [InlineData (4, 3, 2, 1)]
+
+
+    // 01234
+    //  ----
+    // ◄█░►
+    [InlineData (4, 4, 0, 0)]
+    // ◄░█►
+    [InlineData (4, 4, 1, 1)]
+    // ◄░█►
+    [InlineData (4, 4, 2, 1)]
+
+    // 012345
+    // ◄███►
+    //  -----
+    [InlineData (5, 5, 3, 0)]
+    [InlineData (5, 5, 4, 0)]
+
+    // 0123456
+    // ◄██░►
+    //  ------
+    [InlineData (5, 6, 0, 0)]
+    [InlineData (5, 6, 1, 1)]
+    [InlineData (5, 6, 2, 1)]
+
+    // 01234567890
+    // ◄█░░░►
+    //  ----------
+    [InlineData (5, 10, -1, 0)]
+    [InlineData (5, 10, 0, 0)]
+
+    // 01234567890
+    // ◄░█░░►
+    //  --^-------
+    [InlineData (5, 10, 1, 2)]
+    [InlineData (5, 10, 2, 3)]
+    [InlineData (5, 10, 3, 3)]
+    [InlineData (5, 10, 4, 3)]
+    [InlineData (5, 10, 5, 3)]
+    [InlineData (5, 10, 6, 3)]
+    [InlineData (5, 10, 7, 3)]
+    [InlineData (5, 10, 8, 3)]
+    [InlineData (5, 10, 9, 3)]
+    [InlineData (5, 10, 10, 3)]
+    public void CalculateContentPosition_ComprehensiveTests (int viewportDimension, int size, int sliderPosition, int expectedContentPosition)
+    {
+        // Arrange
+        var scrollBar = new ScrollBar
+        {
+            ViewportDimension = viewportDimension,
+            Size = size,
+            Orientation = Orientation.Horizontal // Assuming horizontal for simplicity
+        };
+        scrollBar.Width = viewportDimension; // Changing orientation changes Width
+        scrollBar.Layout ();
+
+        // Act
+        var contentPosition = scrollBar.CalculateContentPosition (sliderPosition);
+
+        // Assert
+        Assert.Equal (expectedContentPosition, contentPosition);
+    }
 }
