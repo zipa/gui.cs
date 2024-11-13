@@ -38,7 +38,10 @@ public class ScrollSlider : View, IOrientation, IDesignable
 
         HighlightStyle = HighlightStyle.Hover;
 
-        FrameChanged += OnFrameChanged;
+        FrameChanged += (sender, args) =>
+                        {
+                            
+                        };
 
         SubviewLayout += (sender, args) =>
                          {
@@ -46,26 +49,7 @@ public class ScrollSlider : View, IOrientation, IDesignable
 
         SubviewsLaidOut += (sender, args) =>
                            {
-                               if (Orientation == Orientation.Vertical)
-                               {
-                                   if (SuperView?.Viewport.Height > 0)
-                                   {
-                                       ViewportDimension = SuperView!.Viewport.Height;
-                                   }
-                               }
-                               else
-                               {
-                                   if (SuperView?.Viewport.Width > 0)
-                                   {
-                                       ViewportDimension = SuperView!.Viewport.Width;
-                                   }
-                               }
-
-                               if (NeedsLayout)
-                               {
-                                   Layout ();
-                               }
-
+                               
                            };
     }
 
@@ -98,16 +82,14 @@ public class ScrollSlider : View, IOrientation, IDesignable
         Y = 0;
         Position = 0;
 
-        // Reset Size to 1 when changing orientation
+        // Reset opposite dim to Dim.Fill ()
         if (Orientation == Orientation.Vertical)
         {
             Width = Dim.Fill ();
-            Size = 1;
         }
         else
         {
             Height = Dim.Fill ();
-            Size = 1;
         }
         SetNeedsLayout ();
     }
@@ -144,11 +126,11 @@ public class ScrollSlider : View, IOrientation, IDesignable
         }
     }
 
-    private int _size;
+    private int? _size;
 
     /// <summary>
     ///     Gets or sets the size of the ScrollSlider. This is a helper that gets or sets Width or Height depending
-    ///     on  <see cref="Orientation"/>. The size will be clamed between 1 and the dimension of
+    ///     on  <see cref="Orientation"/>. The size will be clamped between 1 and the dimension of
     ///     the <see cref="View.SuperView"/>'s Viewport. 
     /// </summary>
     /// <remarks>
@@ -159,7 +141,7 @@ public class ScrollSlider : View, IOrientation, IDesignable
     /// </remarks>
     public int Size
     {
-        get => _size;
+        get => _size ?? 1;
         set
         {
             if (value == _size)
@@ -206,12 +188,7 @@ public class ScrollSlider : View, IOrientation, IDesignable
                 return;
             }
             _viewportDimension = int.Max (1, value);
-
-            if (Size > _viewportDimension)
-            {
-                Size = _viewportDimension.Value;
-            }
-
+            
             if (_position > _viewportDimension - _size)
             {
                 Position = _position;
@@ -219,13 +196,6 @@ public class ScrollSlider : View, IOrientation, IDesignable
 
             SetNeedsLayout ();
         }
-    }
-
-    private void OnFrameChanged (object? sender, EventArgs<Rectangle> e)
-    {
-
-        //ViewportDimension = (Orientation == Orientation.Vertical ? e.CurrentValue.Height : e.CurrentValue.Width);
-        //Position = (Orientation == Orientation.Vertical ? e.CurrentValue.Y : e.CurrentValue.X) - ShrinkBy / 2;
     }
 
     private int _position;
@@ -265,10 +235,6 @@ public class ScrollSlider : View, IOrientation, IDesignable
         {
             X = _position + ShrinkBy / 2;
         }
-
-        //SetNeedsLayout ();
-
-        // Layout ();
     }
 
     /// <summary>
@@ -410,8 +376,8 @@ public class ScrollSlider : View, IOrientation, IDesignable
                 {
                     X = Frame.X + offset < ShrinkBy / 2
                             ? ShrinkBy / 2
-                            : Frame.X + offset + Frame.Height > superViewDimension
-                                ? Math.Max (superViewDimension - Frame.Height + ShrinkBy / 2, 1)
+                            : Frame.X + offset + Frame.Width > superViewDimension
+                                ? Math.Max (superViewDimension - Frame.Width + ShrinkBy / 2, 1)
                                 : Frame.X + offset;
                 }
             }
