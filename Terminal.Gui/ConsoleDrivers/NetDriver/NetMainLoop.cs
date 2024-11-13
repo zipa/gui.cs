@@ -149,13 +149,13 @@ internal class NetMainLoop : IMainLoopDriver
 
     private void ProcessInputQueue ()
     {
-        if (_resultQueue?.Count == 0 || ((IMainLoopDriver)this).ForceRead)
+        if (_resultQueue.Count == 0 || ((IMainLoopDriver)this).ForceRead)
         {
             NetEvents.InputResult? result = _netEvents!.DequeueInput ();
 
             if (result.HasValue)
             {
-                _resultQueue?.Enqueue (result.Value);
+                _resultQueue.Enqueue (result.Value);
 
                 _eventReady.Set ();
             }

@@ -208,7 +208,7 @@ internal class NetEvents : IDisposable
                                 continue;
                             }
 
-                            ProcessRequestResponse (ref newConsoleKeyInfo, ref key, _cki, ref mod);
+                            ProcessRequestResponse (ref newConsoleKeyInfo, ref key, _cki!, ref mod);
                             _cki = null;
                             _isEscSeq = false;
                             ProcessResponse ();

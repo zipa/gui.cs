@@ -46,7 +46,7 @@ public abstract class ConsoleDriver
                     {
                         lock (ansiRequest._responseLock)
                         {
-                            AnsiEscapeSequenceRequest? request = ansiRequest;
+                            AnsiEscapeSequenceRequest request = ansiRequest;
 
                             ansiRequest.ResponseFromInput += (s, e) =>
                                                              {
@@ -179,7 +179,7 @@ public abstract class ConsoleDriver
     /// <summary>Gets the location and size of the terminal screen.</summary>
     internal Rectangle Screen => new (0, 0, Cols, Rows);
 
-    private Region? _clip = null;
+    private Region? _clip;
 
     /// <summary>
     ///     Gets or sets the clip rectangle that <see cref="AddRune(Rune)"/> and <see cref="AddStr(string)"/> are subject
@@ -248,7 +248,7 @@ public abstract class ConsoleDriver
     ///     <see langword="false"/> if the coordinate is outside the screen bounds or outside of <see cref="Clip"/>.
     ///     <see langword="true"/> otherwise.
     /// </returns>
-    public bool IsValidLocation (int col, int row) { return col >= 0 && row >= 0 && col < Cols && row < Rows && Clip.Contains (col, row); }
+    public bool IsValidLocation (int col, int row) { return col >= 0 && row >= 0 && col < Cols && row < Rows && Clip!.Contains (col, row); }
 
     /// <summary>
     ///     Updates <see cref="Col"/> and <see cref="Row"/> to the specified column and row in <see cref="Contents"/>.
@@ -523,7 +523,7 @@ public abstract class ConsoleDriver
                     }
                     Contents [r, c] = new Cell
                     {
-                        Rune = (rune != default ? rune : (Rune)' '),
+                        Rune = rune != default ? rune : (Rune)' ',
                         Attribute = CurrentAttribute, IsDirty = true
                     };
                     _dirtyLines! [r] = true;

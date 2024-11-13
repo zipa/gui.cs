@@ -3,7 +3,6 @@
 // Driver.cs: Curses-based Driver
 //
 
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Terminal.Gui.ConsoleDrivers;
 using Unix.Terminal;
@@ -58,12 +57,11 @@ internal class CursesDriver : ConsoleDriver
         {
             // Not a valid location (outside screen or clip region)
             // Move within the clip region, then AddRune will actually move to Col, Row
-            Rectangle clipRect = Clip.GetBounds ();
+            Rectangle clipRect = Clip!.GetBounds ();
             Curses.move (clipRect.Y, clipRect.X);
         }
     }
 
-    
     public override void SendKeys (char keyChar, ConsoleKey consoleKey, bool shift, bool alt, bool control)
     {
         KeyCode key;
@@ -580,7 +578,7 @@ internal class CursesDriver : ConsoleDriver
 
     #region Init/End/MainLoop
 
-    public Curses.Window? _window;
+    private Curses.Window? _window;
     private UnixMainLoop? _mainLoopDriver;
 
     internal override MainLoop Init ()
