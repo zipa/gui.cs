@@ -125,16 +125,17 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
 
         int lastSendTime = Environment.TickCount;
         var lockObj = new object ();
+        int interval = 50;
 
         Application.AddTimeout (
-                                TimeSpan.FromMilliseconds (50),
+                                TimeSpan.FromMilliseconds ((double)interval / (cbDar.Value > 0 ? cbDar.Value : 1)),
                                 () =>
                                 {
                                     lock (lockObj)
                                     {
                                         if (cbDar.Value > 0)
                                         {
-                                            int interval = 1000 / cbDar.Value; // Calculate the desired interval in milliseconds
+                                            interval = 1000 / cbDar.Value; // Calculate the desired interval in milliseconds
                                             int currentTime = Environment.TickCount; // Current system time in milliseconds
 
                                             // Check if the time elapsed since the last send is greater than the interval
