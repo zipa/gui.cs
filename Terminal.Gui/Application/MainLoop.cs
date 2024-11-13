@@ -163,7 +163,7 @@ public class MainLoop : IDisposable
 
         waitTimeout = 0;
 
-        lock (_timeouts)
+        lock (_timeoutsLockToken)
         {
             if (_timeouts.Count > 0)
             {
@@ -269,7 +269,7 @@ public class MainLoop : IDisposable
     /// </remarks>
     internal void RunIteration ()
     {
-        lock (_timeouts)
+        lock (_timeoutsLockToken)
         {
             if (_timeouts.Count > 0)
             {
