@@ -62,12 +62,12 @@ public abstract class ConsoleDriver
 
                             WriteRaw (ansiRequest.Request);
 
-                            _mainLoopDriver!._forceRead = true;
+                            _mainLoopDriver!.ForceRead = true;
                         }
 
                         if (!_ansiRequestTokenSource.IsCancellationRequested)
                         {
-                            _mainLoopDriver._waitForInput.Set ();
+                            _mainLoopDriver.WaitForInput.Set ();
 
                             _waitAnsiRequest.Wait (_ansiRequestTokenSource.Token);
                         }
@@ -135,7 +135,7 @@ public abstract class ConsoleDriver
 
             lock (ansiRequest._responseLock)
             {
-                _mainLoopDriver._forceRead = false;
+                _mainLoopDriver.ForceRead = false;
 
                 if (AnsiEscapeSequenceRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? request))
                 {

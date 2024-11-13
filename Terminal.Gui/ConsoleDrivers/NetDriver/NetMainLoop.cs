@@ -21,8 +21,8 @@ internal class NetMainLoop : IMainLoopDriver
     private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
     private readonly ConcurrentQueue<NetEvents.InputResult> _resultQueue = new ();
     private MainLoop? _mainLoop;
-    bool IMainLoopDriver._forceRead { get; set; }
-    ManualResetEventSlim IMainLoopDriver._waitForInput { get; set; } = new (false);
+    bool IMainLoopDriver.ForceRead { get; set; }
+    ManualResetEventSlim IMainLoopDriver.WaitForInput { get; set; } = new (false);
 
     /// <summary>Initializes the class with the console driver.</summary>
     /// <remarks>Passing a consoleDriver is provided to capture windows resizing.</remarks>
@@ -52,7 +52,7 @@ internal class NetMainLoop : IMainLoopDriver
 
     bool IMainLoopDriver.EventsPending ()
     {
-        ((IMainLoopDriver)this)._waitForInput.Set ();
+        ((IMainLoopDriver)this).WaitForInput.Set ();
 
         if (_resultQueue.Count > 0 || _mainLoop!.CheckTimersAndIdleHandlers (out int waitTimeout))
         {
@@ -104,7 +104,7 @@ internal class NetMainLoop : IMainLoopDriver
         _eventReadyTokenSource.Dispose ();
 
         _eventReady.Dispose ();
-        ((IMainLoopDriver)this)._waitForInput.Dispose ();
+        ((IMainLoopDriver)this).WaitForInput.Dispose ();
 
         _resultQueue.Clear ();
         _netEvents?.Dispose ();
@@ -119,11 +119,11 @@ internal class NetMainLoop : IMainLoopDriver
         {
             try
             {
-                if (!_inputHandlerTokenSource.IsCancellationRequested && !((IMainLoopDriver)this)._forceRead)
+                if (!_inputHandlerTokenSource.IsCancellationRequested && !((IMainLoopDriver)this).ForceRead)
                 {
                     try
                     {
-                        ((IMainLoopDriver)this)._waitForInput.Wait (_inputHandlerTokenSource.Token);
+                        ((IMainLoopDriver)this).WaitForInput.Wait (_inputHandlerTokenSource.Token);
                     }
                     catch (Exception ex)
                     {
@@ -135,7 +135,7 @@ internal class NetMainLoop : IMainLoopDriver
                         throw;
                     }
 
-                    ((IMainLoopDriver)this)._waitForInput.Reset ();
+                    ((IMainLoopDriver)this).WaitForInput.Reset ();
                 }
 
                 ProcessInputQueue ();
@@ -149,7 +149,7 @@ internal class NetMainLoop : IMainLoopDriver
 
     private void ProcessInputQueue ()
     {
-        if (_resultQueue?.Count == 0 || ((IMainLoopDriver)this)._forceRead)
+        if (_resultQueue?.Count == 0 || ((IMainLoopDriver)this).ForceRead)
         {
             NetEvents.InputResult? result = _netEvents!.DequeueInput ();
 

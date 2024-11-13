@@ -953,7 +953,7 @@ public class MainLoopTests
         public void TearDown () { throw new NotImplementedException (); }
         public void Setup (MainLoop mainLoop) { this.mainLoop = mainLoop; }
         public void Wakeup () { throw new NotImplementedException (); }
-        public bool _forceRead { get; set; }
-        public ManualResetEventSlim _waitForInput { get; set; }
+        public bool ForceRead { get; set; }
+        public ManualResetEventSlim WaitForInput { get; set; }
     }
 }

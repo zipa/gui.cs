@@ -30,9 +30,15 @@ public interface IMainLoopDriver
     /// <summary>Wakes up the <see cref="MainLoop"/> that might be waiting on input, must be thread safe.</summary>
     void Wakeup ();
 
-    bool _forceRead { get; set; }
+    /// <summary>
+    ///     Flag <see cref="WaitForInput"/> to force reading input instead of call <see cref="ManualResetEventSlim.Wait ()"/>.
+    /// </summary>
+    bool ForceRead { get; set; }
 
-    ManualResetEventSlim _waitForInput { get; set; }
+    /// <summary>
+    ///     Switch for waiting for input or signaled to resume.
+    /// </summary>
+    ManualResetEventSlim WaitForInput { get; set; }
 }
 
 /// <summary>The MainLoop monitors timers and idle handlers.</summary>
@@ -134,10 +140,7 @@ public class MainLoop : IDisposable
     /// </remarks>
     internal object AddTimeout (TimeSpan time, Func<bool> callback)
     {
-        if (callback is null)
-        {
-            throw new ArgumentNullException (nameof (callback));
-        }
+        ArgumentNullException.ThrowIfNull (callback);
 
         var timeout = new Timeout { Span = time, Callback = callback };
         AddTimeout (time, timeout);
@@ -276,7 +279,7 @@ public class MainLoop : IDisposable
 
         MainLoopDriver.Iteration ();
 
-        var runIdle = false;
+        bool runIdle;
 
         lock (_idleHandlersLock)
         {

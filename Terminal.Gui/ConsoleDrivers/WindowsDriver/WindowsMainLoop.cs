@@ -23,7 +23,7 @@ internal class WindowsMainLoop : IMainLoopDriver
 
     // The records that we keep fetching
     private readonly ConcurrentQueue<WindowsConsole.InputRecord> _resultQueue = new ();
-    ManualResetEventSlim IMainLoopDriver._waitForInput { get; set; } = new (false);
+    ManualResetEventSlim IMainLoopDriver.WaitForInput { get; set; } = new (false);
     private readonly WindowsConsole? _winConsole;
     private CancellationTokenSource _eventReadyTokenSource = new ();
     private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
@@ -59,7 +59,7 @@ internal class WindowsMainLoop : IMainLoopDriver
 
     bool IMainLoopDriver.EventsPending ()
     {
-        ((IMainLoopDriver)this)._waitForInput.Set ();
+        ((IMainLoopDriver)this).WaitForInput.Set ();
 #if HACK_CHECK_WINCHANGED
         _winChange.Set ();
 #endif
@@ -133,7 +133,7 @@ internal class WindowsMainLoop : IMainLoopDriver
             }
         }
 
-        ((IMainLoopDriver)this)._waitForInput?.Dispose ();
+        ((IMainLoopDriver)this).WaitForInput?.Dispose ();
 
         _resultQueue.Clear ();
 
@@ -148,7 +148,7 @@ internal class WindowsMainLoop : IMainLoopDriver
         _mainLoop = null;
     }
 
-    public bool _forceRead { get; set; }
+    public bool ForceRead { get; set; }
 
     private void WindowsInputHandler ()
     {
@@ -156,11 +156,11 @@ internal class WindowsMainLoop : IMainLoopDriver
         {
             try
             {
-                if (_inputHandlerTokenSource.IsCancellationRequested && !_forceRead)
+                if (_inputHandlerTokenSource.IsCancellationRequested && !ForceRead)
                 {
                     try
                     {
-                        ((IMainLoopDriver)this)._waitForInput.Wait (_inputHandlerTokenSource.Token);
+                        ((IMainLoopDriver)this).WaitForInput.Wait (_inputHandlerTokenSource.Token);
                     }
                     catch (Exception ex)
                     {
@@ -172,7 +172,7 @@ internal class WindowsMainLoop : IMainLoopDriver
                         throw;
                     }
 
-                    ((IMainLoopDriver)this)._waitForInput.Reset ();
+                    ((IMainLoopDriver)this).WaitForInput.Reset ();
                 }
 
                 ProcessInputQueue ();
@@ -187,7 +187,7 @@ internal class WindowsMainLoop : IMainLoopDriver
 
     private void ProcessInputQueue ()
     {
-        if (_resultQueue?.Count == 0 || _forceRead)
+        if (_resultQueue?.Count == 0 || ForceRead)
         {
             WindowsConsole.InputRecord? result = _winConsole!.DequeueInput ();
 
