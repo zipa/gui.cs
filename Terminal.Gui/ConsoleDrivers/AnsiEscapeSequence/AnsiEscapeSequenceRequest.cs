@@ -3,8 +3,7 @@ namespace Terminal.Gui;
 
 /// <summary>
 ///     Describes an ongoing ANSI request sent to the console.
-///     Use <see cref="ResponseReceived"/> to handle the response
-///     when the console answers the request.
+///     Send a request using <see cref="ConsoleDriver.TryWriteAnsiRequest"/> which will return the response.
 /// </summary>
 public class AnsiEscapeSequenceRequest
 {
