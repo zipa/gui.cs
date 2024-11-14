@@ -21,7 +21,7 @@ public class ScrollSliderTests (ITestOutputHelper output)
         Assert.Equal (0, scrollSlider.Frame.X);
         Assert.Equal (0, scrollSlider.Frame.Y);
         Assert.Equal (1, scrollSlider.Size);
-        Assert.Equal (2048, scrollSlider.ViewportDimension);
+        Assert.Equal (2048, scrollSlider.VisibleContentSize);
     }
 
     [Fact]
@@ -46,7 +46,7 @@ public class ScrollSliderTests (ITestOutputHelper output)
         Assert.Equal (0, scrollSlider.Frame.X);
         Assert.Equal (0, scrollSlider.Frame.Y);
         Assert.Equal (1, scrollSlider.Size);
-        Assert.Equal (10, scrollSlider.ViewportDimension);
+        Assert.Equal (10, scrollSlider.VisibleContentSize);
     }
 
     //[Fact]
@@ -116,12 +116,12 @@ public class ScrollSliderTests (ITestOutputHelper output)
 
     [Theory]
     [CombinatorialData]
-    public void Size_Clamps_To_ViewportDimensions ([CombinatorialRange (1, 6, 1)] int dimension, [CombinatorialRange (-1, 6, 1)] int sliderSize, Orientation orientation)
+    public void Size_Clamps_To_VisibleContentSizes ([CombinatorialRange (1, 6, 1)] int dimension, [CombinatorialRange (-1, 6, 1)] int sliderSize, Orientation orientation)
     {
         var scrollSlider = new ScrollSlider
         {
             Orientation = orientation,
-            ViewportDimension = dimension,
+            VisibleContentSize = dimension,
             Size = sliderSize,
         };
         scrollSlider.Layout ();
@@ -132,7 +132,7 @@ public class ScrollSliderTests (ITestOutputHelper output)
     }
 
     [Fact]
-    public void ViewportDimension_Not_Set_Uses_SuperView ()
+    public void VisibleContentSize_Not_Set_Uses_SuperView ()
     {
         View super = new ()
         {
@@ -146,11 +146,11 @@ public class ScrollSliderTests (ITestOutputHelper output)
 
         super.Add (scrollSlider);
         super.Layout ();
-        Assert.Equal (5, scrollSlider.ViewportDimension);
+        Assert.Equal (5, scrollSlider.VisibleContentSize);
     }
 
     [Fact]
-    public void ViewportDimension_Set_Overrides_SuperView ()
+    public void VisibleContentSize_Set_Overrides_SuperView ()
     {
         View super = new ()
         {
@@ -160,34 +160,34 @@ public class ScrollSliderTests (ITestOutputHelper output)
         };
         var scrollSlider = new ScrollSlider
         {
-            ViewportDimension = 10,
+            VisibleContentSize = 10,
         };
 
         super.Add (scrollSlider);
         super.Layout ();
-        Assert.Equal (10, scrollSlider.ViewportDimension);
+        Assert.Equal (10, scrollSlider.VisibleContentSize);
 
         super.Height = 3;
         super.Layout ();
-        Assert.Equal (10, scrollSlider.ViewportDimension);
+        Assert.Equal (10, scrollSlider.VisibleContentSize);
 
         super.Height = 7;
         super.Layout ();
-        Assert.Equal (10, scrollSlider.ViewportDimension);
+        Assert.Equal (10, scrollSlider.VisibleContentSize);
 
     }
 
     [Theory]
     [CombinatorialData]
-    public void ViewportDimensions_Clamps_0_To_Dimension ([CombinatorialRange (0, 10, 1)] int dimension, Orientation orientation)
+    public void VisibleContentSizes_Clamps_0_To_Dimension ([CombinatorialRange (0, 10, 1)] int dimension, Orientation orientation)
     {
         var scrollSlider = new ScrollSlider
         {
             Orientation = orientation,
-            ViewportDimension = dimension,
+            VisibleContentSize = dimension,
         };
 
-        Assert.InRange (scrollSlider.ViewportDimension, 1, 10);
+        Assert.InRange (scrollSlider.VisibleContentSize, 1, 10);
 
         View super = new ()
         {
@@ -203,16 +203,16 @@ public class ScrollSliderTests (ITestOutputHelper output)
         super.Add (scrollSlider);
         super.Layout ();
 
-        Assert.InRange (scrollSlider.ViewportDimension, 1, 10);
+        Assert.InRange (scrollSlider.VisibleContentSize, 1, 10);
 
-        scrollSlider.ViewportDimension = dimension;
+        scrollSlider.VisibleContentSize = dimension;
 
-        Assert.InRange (scrollSlider.ViewportDimension, 1, 10);
+        Assert.InRange (scrollSlider.VisibleContentSize, 1, 10);
     }
 
     [Theory]
     [CombinatorialData]
-    public void ClampPosition_WithSuperView_Clamps_To_ViewPort_Minus_Size_If_ViewportDimension_Not_Set ([CombinatorialRange (10, 10, 1)] int dimension, [CombinatorialRange (1, 5, 1)] int sliderSize, [CombinatorialRange (-1, 10, 2)] int sliderPosition, Orientation orientation)
+    public void ClampPosition_WithSuperView_Clamps_To_ViewPort_Minus_Size_If_VisibleContentSize_Not_Set ([CombinatorialRange (10, 10, 1)] int dimension, [CombinatorialRange (1, 5, 1)] int sliderSize, [CombinatorialRange (-1, 10, 2)] int sliderPosition, Orientation orientation)
     {
         View super = new ()
         {
@@ -228,7 +228,7 @@ public class ScrollSliderTests (ITestOutputHelper output)
         super.Add (scrollSlider);
         super.Layout ();
 
-        Assert.Equal(dimension, scrollSlider.ViewportDimension);
+        Assert.Equal(dimension, scrollSlider.VisibleContentSize);
 
         int clampedPosition = scrollSlider.ClampPosition (sliderPosition);
 
@@ -237,7 +237,7 @@ public class ScrollSliderTests (ITestOutputHelper output)
 
     [Theory]
     [CombinatorialData]
-    public void ClampPosition_WithSuperView_Clamps_To_ViewportDimension_Minus_Size ([CombinatorialRange (10, 10, 1)] int dimension, [CombinatorialRange (1, 5, 1)] int sliderSize, [CombinatorialRange (-1, 10, 2)] int sliderPosition, Orientation orientation)
+    public void ClampPosition_WithSuperView_Clamps_To_VisibleContentSize_Minus_Size ([CombinatorialRange (10, 10, 1)] int dimension, [CombinatorialRange (1, 5, 1)] int sliderSize, [CombinatorialRange (-1, 10, 2)] int sliderPosition, Orientation orientation)
     {
         View super = new ()
         {
@@ -248,7 +248,7 @@ public class ScrollSliderTests (ITestOutputHelper output)
         var scrollSlider = new ScrollSlider
         {
             Orientation = orientation,
-            ViewportDimension = dimension,
+            VisibleContentSize = dimension,
             Size = sliderSize,
         };
         super.Add (scrollSlider);
@@ -261,12 +261,12 @@ public class ScrollSliderTests (ITestOutputHelper output)
 
     [Theory]
     [CombinatorialData]
-    public void ClampPosition_NoSuperView_Clamps_To_ViewportDimension_Minus_Size ([CombinatorialRange (10, 10, 1)] int dimension, [CombinatorialRange (1, 5, 1)] int sliderSize, [CombinatorialRange (-1, 10, 2)] int sliderPosition, Orientation orientation)
+    public void ClampPosition_NoSuperView_Clamps_To_VisibleContentSize_Minus_Size ([CombinatorialRange (10, 10, 1)] int dimension, [CombinatorialRange (1, 5, 1)] int sliderSize, [CombinatorialRange (-1, 10, 2)] int sliderPosition, Orientation orientation)
     {
         var scrollSlider = new ScrollSlider
         {
             Orientation = orientation,
-            ViewportDimension = dimension,
+            VisibleContentSize = dimension,
             Size = sliderSize,
         };
 
@@ -277,12 +277,12 @@ public class ScrollSliderTests (ITestOutputHelper output)
 
     [Theory]
     [CombinatorialData]
-    public void Position_Clamps_To_ViewportDimension ([CombinatorialRange (0, 5, 1)] int dimension, [CombinatorialRange(1, 5, 1)] int sliderSize, [CombinatorialRange (-1, 10, 2)] int sliderPosition, Orientation orientation)
+    public void Position_Clamps_To_VisibleContentSize ([CombinatorialRange (0, 5, 1)] int dimension, [CombinatorialRange(1, 5, 1)] int sliderSize, [CombinatorialRange (-1, 10, 2)] int sliderPosition, Orientation orientation)
     {
         var scrollSlider = new ScrollSlider
         {
             Orientation = orientation,
-            ViewportDimension = dimension,
+            VisibleContentSize = dimension,
             Size = sliderSize,
             Position = sliderPosition
         };
@@ -318,7 +318,7 @@ public class ScrollSliderTests (ITestOutputHelper output)
 
     [Theory]
     [CombinatorialData]
-    public void Position_Clamps_To_ViewportDimension_With_SuperView ([CombinatorialRange (0, 5, 1)] int dimension, [CombinatorialRange (1, 5, 1)] int sliderSize, [CombinatorialRange (-2, 10, 2)] int sliderPosition, Orientation orientation)
+    public void Position_Clamps_To_VisibleContentSize_With_SuperView ([CombinatorialRange (0, 5, 1)] int dimension, [CombinatorialRange (1, 5, 1)] int sliderSize, [CombinatorialRange (-2, 10, 2)] int sliderPosition, Orientation orientation)
     {
         var super = new View
         {
@@ -330,7 +330,7 @@ public class ScrollSliderTests (ITestOutputHelper output)
         var scrollSlider = new ScrollSlider
         {
             Orientation = orientation,
-            ViewportDimension = dimension,
+            VisibleContentSize = dimension,
             Size = sliderSize,
             Position = sliderPosition
         };

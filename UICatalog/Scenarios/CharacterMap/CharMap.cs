@@ -149,7 +149,7 @@ public class CharMap : View, IDesignable
             Y = Pos.AnchorEnd (),
             Orientation = Orientation.Horizontal,
             Width = Dim.Fill (1),
-            Size = GetContentSize ().Width - RowLabelWidth,
+            ScrollableContentSize = GetContentSize ().Width - RowLabelWidth,
             Increment = COLUMN_WIDTH,
         };
 
@@ -159,12 +159,12 @@ public class CharMap : View, IDesignable
             X = Pos.AnchorEnd (),
             Y = 1, // Header
             Height = Dim.Fill (Dim.Func (() => Padding.Thickness.Bottom)),
-            Size = GetContentSize ().Height
+            ScrollableContentSize = GetContentSize ().Height
         };
 
         Padding.Add (_vScrollBar, _hScrollBar);
 
-        _vScrollBar.ContentPositionChanged += (sender, args) =>
+        _vScrollBar.PositionChanged += (sender, args) =>
                                               {
                                                   if (Viewport.Height > 0)
                                                   {
@@ -179,7 +179,7 @@ public class CharMap : View, IDesignable
                                               {
                                                   //ScrollVertical (args.CurrentValue);
                                               };
-        _hScrollBar.ContentPositionChanged += (sender, args) =>
+        _hScrollBar.PositionChanged += (sender, args) =>
                                               {
                                                   if (Viewport.Width > 0)
                                                   {
@@ -234,8 +234,8 @@ public class CharMap : View, IDesignable
             ScrollHorizontal (newCursor.X - Viewport.Width + 1);
         }
 
-        _vScrollBar.ContentPosition = Viewport.Y;
-        _hScrollBar.ContentPosition = Viewport.X;
+        _vScrollBar.Position = Viewport.Y;
+        _hScrollBar.Position = Viewport.X;
     }
 
     #region Cursor
@@ -524,7 +524,7 @@ public class CharMap : View, IDesignable
         if (e.Flags == MouseFlags.WheeledDown)
         {
             ScrollVertical (1);
-            _vScrollBar.ContentPosition = Viewport.Y;
+            _vScrollBar.Position = Viewport.Y;
             e.Handled = true;
 
             return;
@@ -533,7 +533,7 @@ public class CharMap : View, IDesignable
         if (e.Flags == MouseFlags.WheeledUp)
         {
             ScrollVertical (-1);
-            _vScrollBar.ContentPosition = Viewport.Y;
+            _vScrollBar.Position = Viewport.Y;
             e.Handled = true;
 
             return;
@@ -542,7 +542,7 @@ public class CharMap : View, IDesignable
         if (e.Flags == MouseFlags.WheeledRight)
         {
             ScrollHorizontal (1);
-            _hScrollBar.ContentPosition = Viewport.X;
+            _hScrollBar.Position = Viewport.X;
             e.Handled = true;
 
             return;
@@ -551,7 +551,7 @@ public class CharMap : View, IDesignable
         if (e.Flags == MouseFlags.WheeledLeft)
         {
             ScrollHorizontal (-1);
-            _hScrollBar.ContentPosition = Viewport.X;
+            _hScrollBar.Position = Viewport.X;
             e.Handled = true;
         }
     }

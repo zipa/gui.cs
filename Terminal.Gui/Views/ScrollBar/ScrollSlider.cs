@@ -40,7 +40,14 @@ public class ScrollSlider : View, IOrientation, IDesignable
 
         FrameChanged += (sender, args) =>
                         {
-                            
+                            //if (Orientation == Orientation.Vertical)
+                            //{
+                            //    Size = Frame.Height;
+                            //}
+                            //else
+                            //{
+                            //    Size = Frame.Width;
+                            //}
                         };
 
         SubviewLayout += (sender, args) =>
@@ -49,7 +56,7 @@ public class ScrollSlider : View, IOrientation, IDesignable
 
         SubviewsLaidOut += (sender, args) =>
                            {
-                               
+
                            };
     }
 
@@ -85,10 +92,12 @@ public class ScrollSlider : View, IOrientation, IDesignable
         // Reset opposite dim to Dim.Fill ()
         if (Orientation == Orientation.Vertical)
         {
+            Height = Width;
             Width = Dim.Fill ();
         }
         else
         {
+            Width = Height;
             Height = Dim.Fill ();
         }
         SetNeedsLayout ();
@@ -149,7 +158,7 @@ public class ScrollSlider : View, IOrientation, IDesignable
                 return;
             }
 
-            _size = Math.Clamp (value, 1, ViewportDimension);
+            _size = Math.Clamp (value, 1, VisibleContentSize);
 
 
             if (Orientation == Orientation.Vertical)
@@ -164,32 +173,32 @@ public class ScrollSlider : View, IOrientation, IDesignable
         }
     }
 
-    private int? _viewportDimension;
+    private int? _visibleContentSize;
 
     /// <summary>
     ///     Gets or sets the size of the viewport into the content being scrolled. If not explicitly set, will be the
     ///     greater of 1 and the dimension of the <see cref="View.SuperView"/>.
     /// </summary>
-    public int ViewportDimension
+    public int VisibleContentSize
     {
         get
         {
-            if (_viewportDimension.HasValue)
+            if (_visibleContentSize.HasValue)
             {
-                return _viewportDimension.Value;
+                return _visibleContentSize.Value;
             }
 
             return Math.Max (1, Orientation == Orientation.Vertical ? SuperView?.Viewport.Height ?? 2048 : SuperView?.Viewport.Width ?? 2048);
         }
         set
         {
-            if (value == _viewportDimension)
+            if (value == _visibleContentSize)
             {
                 return;
             }
-            _viewportDimension = int.Max (1, value);
-            
-            if (_position > _viewportDimension - _size)
+            _visibleContentSize = int.Max (1, value);
+
+            if (_position > _visibleContentSize - _size)
             {
                 Position = _position;
             }
@@ -229,11 +238,11 @@ public class ScrollSlider : View, IOrientation, IDesignable
     {
         if (Orientation == Orientation.Vertical)
         {
-            Y = _position + ShrinkBy / 2;
+            Y = _position + SliderPadding / 2;
         }
         else
         {
-            X = _position + ShrinkBy / 2;
+            X = _position + SliderPadding / 2;
         }
     }
 
@@ -245,7 +254,7 @@ public class ScrollSlider : View, IOrientation, IDesignable
     /// <returns></returns>
     internal int ClampPosition (int newPosition)
     {
-        return Math.Clamp (newPosition, 0, Math.Max (0, ViewportDimension - Size));
+        return Math.Clamp (newPosition, 0, Math.Max (0, VisibleContentSize - SliderPadding - Size));
     }
 
     private void RaisePositionChangeEvents (int newPosition)
@@ -333,7 +342,14 @@ public class ScrollSlider : View, IOrientation, IDesignable
     ///// <inheritdoc/>
     private int _lastLocation = -1;
 
-    public int ShrinkBy { get; set; }
+    /// <summary>
+    ///     Gets or sets the amount to pad the start and end of the scroll slider. The default is 0.
+    /// </summary>
+    /// <remarks>
+    ///     When the scroll slider is used by <see cref="ScrollBar"/>, which has increment and decrement buttons, the
+    ///     SliderPadding should be set to the size of the buttons (typically 2).
+    /// </remarks>
+    public int SliderPadding { get; set; }
 
     /// <inheritdoc/>
     protected override bool OnMouseEvent (MouseEventArgs mouseEvent)
@@ -348,9 +364,9 @@ public class ScrollSlider : View, IOrientation, IDesignable
             return true;
         }
 
-        int location = (Orientation == Orientation.Vertical ? mouseEvent.Position.Y : mouseEvent.Position.X) + ShrinkBy / 2;
-        int offset = _lastLocation > -1 ? location - _lastLocation : 0;
-        int superViewDimension = ViewportDimension;
+        int location = (Orientation == Orientation.Vertical ? mouseEvent.Position.Y : mouseEvent.Position.X);
+        int offsetFromLastLocation = _lastLocation > -1 ? location - _lastLocation : 0;
+        int superViewDimension = VisibleContentSize;
 
         if (mouseEvent.IsPressed || mouseEvent.IsReleased)
         {
@@ -364,22 +380,35 @@ public class ScrollSlider : View, IOrientation, IDesignable
             }
             else if (mouseEvent.Flags == (MouseFlags.Button1Pressed | MouseFlags.ReportMousePosition))
             {
+                int currentLocation;
                 if (Orientation == Orientation.Vertical)
                 {
-                    Y = Frame.Y + offset < ShrinkBy / 2
-                            ? ShrinkBy / 2
-                            : Frame.Y + offset + Frame.Height > superViewDimension
-                                ? Math.Max (superViewDimension - Frame.Height + ShrinkBy, 1)
-                                : Frame.Y + offset;
+                    currentLocation = Frame.Y;
                 }
                 else
                 {
-                    X = Frame.X + offset < ShrinkBy / 2
-                            ? ShrinkBy / 2
-                            : Frame.X + offset + Frame.Width > superViewDimension
-                                ? Math.Max (superViewDimension - Frame.Width + ShrinkBy / 2, 1)
-                                : Frame.X + offset;
+                    currentLocation = Frame.X;
                 }
+
+                // location does not account for the ShrinkBy
+                int sliderLowerBound = SliderPadding / 2;
+                int sliderUpperBound = superViewDimension - SliderPadding / 2 - Size;
+
+                int newLocation = currentLocation + offsetFromLastLocation;
+                Position = newLocation;
+
+                //if (location > 0 && location < sliderLowerBound)
+                //{
+                //    Position = 0;
+                //}
+                //else if (location > sliderUpperBound)
+                //{
+                //    Position = superViewDimension - Size;
+                //}
+                //else
+                //{
+                //    Position = currentLocation + offsetFromLastLocation;
+                //}
             }
             else if (mouseEvent.Flags == MouseFlags.Button1Released)
             {
@@ -400,22 +429,9 @@ public class ScrollSlider : View, IOrientation, IDesignable
     /// <inheritdoc/>
     public bool EnableForDesign ()
     {
-        OrientationChanged += (sender, args) =>
-                              {
-                                  if (args.CurrentValue == Orientation.Vertical)
-                                  {
-                                      Width = Dim.Fill ();
-                                      Size = 5;
-                                  }
-                                  else
-                                  {
-                                      Size = 5;
-                                      Height = Dim.Fill ();
-                                  }
-                              };
-
-        Orientation = Orientation.Horizontal;
+//        Orientation = Orientation.Horizontal;
         ShowPercent = true;
+        Size = 5;
 
         return true;
     }
