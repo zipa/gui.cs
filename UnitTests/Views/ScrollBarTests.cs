@@ -733,11 +733,14 @@ public class ScrollBarTests
 
         top.Add (scrollBar);
         RunState rs = Application.Begin (top);
-        scrollBar.ContentPosition = 5;
+
+        // Scroll to end
+        scrollBar.ContentPosition = 20;
+        Assert.Equal (10, scrollBar.ContentPosition);
         Application.RunIteration (ref rs);
 
-        Assert.Equal (5, scrollBar.GetSliderPosition ());
-        Assert.Equal (12, scrollBar.ContentPosition);
+        Assert.Equal (4, scrollBar.GetSliderPosition ());
+        Assert.Equal (10, scrollBar.ContentPosition);
         int initialPos = scrollBar.ContentPosition;
 
         Application.RaiseMouseEvent (new ()
@@ -774,6 +777,8 @@ public class ScrollBarTests
 
         top.Add (scrollBar);
         RunState rs = Application.Begin (top);
+
+        // Scroll to top
         scrollBar.ContentPosition = 0;
         Application.RunIteration (ref rs);
 
