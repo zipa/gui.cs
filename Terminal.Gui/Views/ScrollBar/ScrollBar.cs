@@ -26,6 +26,13 @@ public class ScrollBar : View, IOrientation, IDesignable
     /// <inheritdoc/>
     public ScrollBar ()
     {
+        // Set the default width and height based on the orientation - fill Viewport
+        Width = Dim.Auto (DimAutoStyle.Content,
+                          minimumContentDim: Dim.Func (() => Orientation == Orientation.Vertical ? 1 : SuperView?.Viewport.Width ?? 0));
+
+        Height = Dim.Auto (DimAutoStyle.Content,
+                           minimumContentDim: Dim.Func (() => Orientation == Orientation.Vertical ? SuperView?.Viewport.Height ?? 0 : 1));
+
         _decreaseButton = new ()
         {
             CanFocus = false,
@@ -85,11 +92,11 @@ public class ScrollBar : View, IOrientation, IDesignable
     {
         if (Orientation == Orientation.Vertical)
         {
-            Visible = Frame.Height < ScrollableContentSize;
+            Visible = VisibleContentSize < ScrollableContentSize;
         }
         else
         {
-            Visible = Frame.Width < ScrollableContentSize;
+            Visible = VisibleContentSize < ScrollableContentSize;
         }
 
         if (!AutoHide)
@@ -110,13 +117,7 @@ public class ScrollBar : View, IOrientation, IDesignable
         _sliderPosition = CalculateSliderPositionFromContentPosition (_position, NavigationDirection.Forward);
         _slider.Position = _sliderPosition.Value;
     }
-
-    /// <inheritdoc/>
-    protected override void OnSubviewLayout (LayoutEventArgs args)
-    {
-
-    }
-
+    
     private void PositionSubviews ()
     {
         if (Orientation == Orientation.Vertical)
@@ -179,25 +180,6 @@ public class ScrollBar : View, IOrientation, IDesignable
         TextDirection = Orientation == Orientation.Vertical ? TextDirection.TopBottom_LeftRight : TextDirection.LeftRight_TopBottom;
         TextAlignment = Alignment.Center;
         VerticalTextAlignment = Alignment.Center;
-
-        X = 0;
-        Y = 0;
-
-        if (Orientation == Orientation.Vertical)
-        {
-            Height = Dim.Func (() => SuperView?.Viewport.Height ?? 0);
-            Width = 1;
-            X = Pos.AnchorEnd ();
-            Y = 0;
-        }
-        else
-        {
-            Width = Dim.Func (() => SuperView?.Viewport.Width ?? 0);
-            Height = 1;
-            X = 0;
-            Y = Pos.AnchorEnd ();
-        }
-
         _slider.Orientation = newOrientation;
         PositionSubviews ();
 
@@ -214,12 +196,16 @@ public class ScrollBar : View, IOrientation, IDesignable
     /// </remarks>
     public int Increment { get; set; } = 1;
 
-    private bool _autoHide = true;
+    // AutoHide should be false by default. Views should not be hidden by default.
+    private bool _autoHide = false;
 
     /// <summary>
     ///     Gets or sets whether <see cref="View.Visible"/> will be set to <see langword="false"/> if the dimension of the
     ///     scroll bar is greater than or equal to <see cref="ScrollableContentSize"/>.
     /// </summary>
+    /// <remarks>
+    ///     The default is <see langword="false"/>.
+    /// </remarks>
     public bool AutoHide
     {
         get => _autoHide;

@@ -15,13 +15,13 @@ public class ScrollBarTests (ITestOutputHelper output)
         Assert.Equal (0, scrollBar.VisibleContentSize);
         Assert.Equal (0, scrollBar.GetSliderPosition ());
         Assert.Equal (0, scrollBar.Position);
-        Assert.True (scrollBar.AutoHide);
+        Assert.False (scrollBar.AutoHide);
     }
 
     #region AutoHide
     [Fact]
     [AutoInitShutdown]
-    public void AutoHide_True_Is_Default_CorrectlyHidesAndShows ()
+    public void AutoHide_False_Is_Default_CorrectlyHidesAndShows ()
     {
         var super = new Toplevel ()
         {
@@ -34,8 +34,12 @@ public class ScrollBarTests (ITestOutputHelper output)
         {
         };
         super.Add (scrollBar);
+        Assert.False (scrollBar.AutoHide);
+        Assert.True (scrollBar.Visible);
+
+        scrollBar.AutoHide = true;
         Assert.True (scrollBar.AutoHide);
-        Assert.True (scrollBar.Visible); // Before Init
+        Assert.True (scrollBar.Visible);
 
         RunState rs = Application.Begin (super);
 
@@ -82,7 +86,7 @@ public class ScrollBarTests (ITestOutputHelper output)
 
     [Fact]
     [AutoInitShutdown]
-    public void AutoHide_Change_AutoSize_CorrectlyHidesAndShows ()
+    public void AutoHide_True_Changing_ScrollableContentSize_CorrectlyHidesAndShows ()
     {
         var super = new Toplevel ()
         {
@@ -96,8 +100,10 @@ public class ScrollBarTests (ITestOutputHelper output)
             ScrollableContentSize = 20,
         };
         super.Add (scrollBar);
-        Assert.True (scrollBar.AutoHide);
-        Assert.True (scrollBar.Visible); // Before Init
+        Assert.False (scrollBar.AutoHide);
+        Assert.True (scrollBar.Visible);
+
+        scrollBar.AutoHide = true;
 
         RunState rs = Application.Begin (super);
 
@@ -110,12 +116,15 @@ public class ScrollBarTests (ITestOutputHelper output)
         Assert.False (scrollBar.Visible);
 
         scrollBar.ScrollableContentSize = 30;
+        Application.RunIteration (ref rs);
         Assert.True (scrollBar.Visible);
 
         scrollBar.AutoHide = false;
+        Application.RunIteration (ref rs);
         Assert.True (scrollBar.Visible);
 
         scrollBar.ScrollableContentSize = 10;
+        Application.RunIteration (ref rs);
         Assert.True (scrollBar.Visible);
 
         super.Dispose ();
@@ -123,7 +132,7 @@ public class ScrollBarTests (ITestOutputHelper output)
 
     [Fact]
     [AutoInitShutdown]
-    public void AutoHide_Change_Size_CorrectlyHidesAndShows ()
+    public void AutoHide_Change_VisibleContentSize_CorrectlyHidesAndShows ()
     {
         var super = new Toplevel ()
         {
@@ -135,42 +144,42 @@ public class ScrollBarTests (ITestOutputHelper output)
         var scrollBar = new ScrollBar
         {
             ScrollableContentSize = 20,
+            VisibleContentSize = 20
         };
         super.Add (scrollBar);
+        Assert.False (scrollBar.AutoHide);
+        Assert.True (scrollBar.Visible);
+
+        scrollBar.AutoHide = true;
 
         RunState rs = Application.Begin (super);
 
         Assert.Equal (Orientation.Vertical, scrollBar.Orientation);
         Assert.Equal (20, scrollBar.VisibleContentSize);
-        //Assert.True (scrollBar.ShowScrollIndicator);
         Assert.False (scrollBar.Visible);
-        Assert.Equal (1, scrollBar.Frame.Width);
-        Assert.Equal (20, scrollBar.Frame.Height);
 
-        scrollBar.ScrollableContentSize = 10;
+        scrollBar.VisibleContentSize = 10;
         Application.RunIteration (ref rs);
-        //Assert.False (scrollBar.ShowScrollIndicator);
-        Assert.False (scrollBar.Visible);
-
-        scrollBar.ScrollableContentSize = 30;
-        //Assert.True (scrollBar.ShowScrollIndicator);
         Assert.True (scrollBar.Visible);
 
-        scrollBar.ScrollableContentSize = 10;
+        scrollBar.VisibleContentSize = 30;
         Application.RunIteration (ref rs);
-        //Assert.False (scrollBar.ShowScrollIndicator);
         Assert.False (scrollBar.Visible);
 
-        scrollBar.ScrollableContentSize = 21;
-        //Assert.True (scrollBar.ShowScrollIndicator);
+        scrollBar.VisibleContentSize = 10;
+        Application.RunIteration (ref rs);
         Assert.True (scrollBar.Visible);
+
+        scrollBar.VisibleContentSize = 21;
+        Application.RunIteration (ref rs);
+        Assert.False (scrollBar.Visible);
 
         scrollBar.AutoHide = false;
-        //Assert.True (scrollBar.ShowScrollIndicator);
+        Application.RunIteration (ref rs);
         Assert.True (scrollBar.Visible);
 
-        scrollBar.ScrollableContentSize = 10;
-        //Assert.True (scrollBar.ShowScrollIndicator);
+        scrollBar.VisibleContentSize = 10;
+        Application.RunIteration (ref rs);
         Assert.True (scrollBar.Visible);
 
         super.Dispose ();
@@ -833,19 +842,15 @@ public class ScrollBarTests (ITestOutputHelper output)
         int initialPos = scrollBar.Position;
 
         Point btnPoint = orientation == Orientation.Vertical
-                             ? new (scrollBar.Frame.X, 0)
-                             : new (0, scrollBar.Frame.Y);
+                             ? new (0, 0)
+                             : new (0, 0);
 
         Application.RaiseMouseEvent (new ()
         {
             ScreenPosition = btnPoint,
             Flags = MouseFlags.Button1Clicked
         });
-        Application.RaiseMouseEvent (new ()
-        {
-            ScreenPosition = new (0, 0),
-            Flags = MouseFlags.Button1Clicked
-        });
+
         Application.RunIteration (ref rs);
 
         Assert.Equal (initialPos - increment, scrollBar.Position);
