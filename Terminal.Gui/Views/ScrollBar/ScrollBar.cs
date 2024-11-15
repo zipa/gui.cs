@@ -6,15 +6,15 @@ using System.Drawing;
 namespace Terminal.Gui;
 
 /// <summary>
-///     Indicates the size of scrollable content and provides a visible element, referred to as the "ScrollSlider" that
-///     that is sized to
-///     show the proportion of the scrollable content to the size of the <see cref="View.Viewport"/>. The ScrollSlider
-///     can be dragged with the mouse. A Scroll can be oriented either vertically or horizontally and is used within a
-///     <see cref="ScrollBar"/>.
+///     Indicates the size of scrollable content and controls the position of the visible content, either vertically or horizontally.
+///     Two <see cref="Button"/>s are provided, one to scroll up or left and one to scroll down or right. Between the buttons is a <see cref="ScrollSlider"/> that can be dragged to
+///     control the position of the visible content. The ScrollSlier is sized to show the proportion of the scrollable content to the size of the <see cref="View.Viewport"/>.
 /// </summary>
 /// <remarks>
 ///     <para>
-///         By default, this view cannot be focused and does not support keyboard.
+///     </para>
+///     <para>
+///         By default, this view cannot be focused and does not support keyboard input.
 ///     </para>
 /// </remarks>
 public class ScrollBar : View, IOrientation, IDesignable
@@ -58,8 +58,6 @@ public class ScrollBar : View, IOrientation, IDesignable
 
         _orientationHelper = new (this); // Do not use object initializer!
         _orientationHelper.Orientation = Orientation.Vertical;
-        //_orientationHelper.OrientationChanging += (sender, e) => OrientationChanging?.Invoke (this, e);
-        //_orientationHelper.OrientationChanged += (sender, e) => OrientationChanged?.Invoke (this, e);
 
         // This sets the width/height etc...
         OnOrientationChanged (Orientation);
@@ -80,26 +78,13 @@ public class ScrollBar : View, IOrientation, IDesignable
     /// <inheritdoc/>
     protected override void OnFrameChanged (in Rectangle frame)
     {
-        if (Orientation == Orientation.Vertical)
-        {
-            _slider.VisibleContentSize = Viewport.Height;
-        }
-        else
-        {
-            _slider.VisibleContentSize = Viewport.Width;
-        }
 
-        _slider.Size = CalculateSliderSize ();
+
         ShowHide ();
     }
 
     private void ShowHide ()
     {
-        if (!AutoHide)
-        {
-            return;
-        }
-
         if (Orientation == Orientation.Vertical)
         {
             Visible = Frame.Height < ScrollableContentSize;
@@ -107,6 +92,20 @@ public class ScrollBar : View, IOrientation, IDesignable
         else
         {
             Visible = Frame.Width < ScrollableContentSize;
+        }
+
+        if (!AutoHide)
+        {
+            Visible = true;
+        }
+
+        if (Orientation == Orientation.Vertical)
+        {
+            _slider.VisibleContentSize = Viewport.Height;
+        }
+        else
+        {
+            _slider.VisibleContentSize = Viewport.Width;
         }
 
         _slider.Size = CalculateSliderSize ();
@@ -188,13 +187,17 @@ public class ScrollBar : View, IOrientation, IDesignable
 
         if (Orientation == Orientation.Vertical)
         {
+            Height = Dim.Func (() => SuperView?.Viewport.Height ?? 0);
             Width = 1;
-            Height = Dim.Fill ();
+            X = Pos.AnchorEnd ();
+            Y = 0;
         }
         else
         {
-            Width = Dim.Fill ();
+            Width = Dim.Func (() => SuperView?.Viewport.Width ?? 0);
             Height = 1;
+            X = 0;
+            Y = Pos.AnchorEnd ();
         }
 
         _slider.Orientation = newOrientation;
@@ -279,17 +282,26 @@ public class ScrollBar : View, IOrientation, IDesignable
         {
             _visibleContentSize = value;
             _slider.Size = CalculateSliderSize ();
+            ShowHide ();
         }
     }
 
-    private int _scrollableContentSize;
+    private int? _scrollableContentSize;
 
     /// <summary>
     ///     Gets or sets the size of the content that can be scrolled. This is typically set to <see cref="View.GetContentSize()"/>.
     /// </summary>
     public int ScrollableContentSize
     {
-        get => _scrollableContentSize;
+        get
+        {
+            if (_scrollableContentSize.HasValue)
+            {
+                return _scrollableContentSize.Value;
+            }
+            return Orientation == Orientation.Vertical ? SuperView?.GetContentSize().Height ?? 0 : SuperView?.GetContentSize ().Width ?? 0;
+
+        }
         set
         {
             if (value == _scrollableContentSize || value < 0)
@@ -299,8 +311,9 @@ public class ScrollBar : View, IOrientation, IDesignable
 
             _scrollableContentSize = value;
             _slider.Size = CalculateSliderSize ();
-            OnSizeChanged (_scrollableContentSize);
-            ScrollableContentSizeChanged?.Invoke (this, new (in _scrollableContentSize));
+            ShowHide();
+            OnSizeChanged (value);
+            ScrollableContentSizeChanged?.Invoke (this, new (in value));
             SetNeedsLayout ();
         }
     }
@@ -370,6 +383,7 @@ public class ScrollBar : View, IOrientation, IDesignable
 
             OnScrolled (distance);
             Scrolled?.Invoke (this, new (in distance));
+            SetNeedsLayout ();
         }
     }
 

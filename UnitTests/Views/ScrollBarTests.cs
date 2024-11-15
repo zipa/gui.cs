@@ -32,7 +32,6 @@ public class ScrollBarTests (ITestOutputHelper output)
 
         var scrollBar = new ScrollBar
         {
-            ScrollableContentSize = 20,
         };
         super.Add (scrollBar);
         Assert.True (scrollBar.AutoHide);
@@ -213,274 +212,6 @@ public class ScrollBarTests (ITestOutputHelper output)
 
     #endregion Orientation
 
-    #region Slider
-
-    [Theory]
-    [InlineData (-1, 10, 1)]
-    [InlineData (0, 10, 1)]
-    [InlineData (10, 15, 5)]
-    [InlineData (10, 5, 8)]
-    [InlineData (10, 3, 8)]
-    [InlineData (10, 2, 8)]
-    [InlineData (10, 1, 8)]
-    [InlineData (10, 0, 8)]
-    [InlineData (10, 10, 8)]
-    [InlineData (10, 20, 4)]
-    [InlineData (10, 100, 1)]
-    [InlineData (15, 0, 13)]
-    [InlineData (15, 1, 13)]
-    [InlineData (15, 2, 13)]
-    [InlineData (15, 3, 13)]
-    [InlineData (15, 5, 13)]
-    [InlineData (15, 10, 13)]
-    [InlineData (15, 14, 13)]
-    [InlineData (15, 15, 13)]
-    [InlineData (15, 16, 12)]
-    [InlineData (20, 10, 18)]
-    [InlineData (100, 10, 98)]
-    public void CalculateSliderSize_Width_Is_VisibleContentSize_CalculatesCorrectly (int visibleContentSize, int scrollableContentSize, int expectedSliderSize)
-    {
-        // Arrange
-        var scrollBar = new ScrollBar
-        {
-            VisibleContentSize = visibleContentSize,
-            ScrollableContentSize = scrollableContentSize,
-            Orientation = Orientation.Horizontal // Assuming horizontal for simplicity
-        };
-        scrollBar.Width = visibleContentSize;
-
-        // Act
-        var sliderSize = scrollBar.CalculateSliderSize ();
-
-        // Assert
-        Assert.Equal (expectedSliderSize, sliderSize);
-    }
-
-    [Theory]
-    // 0123456789
-    //  -
-    // **********
-    // ◄███►
-    [InlineData (5, 10, 1, 3)]
-
-    // 01234567890
-    //  ----------
-    // **********
-    // ◄██░►
-    [InlineData (5, 10, 11, 2)]
-
-
-    [InlineData (20, 10, 1, 18)]
-
-    //// ◄█░░░░░░░►
-    //[InlineData (1, 10, 1)]
-
-    ////  ---------
-    //// ◄████░░░░►
-    //[InlineData (5, 10, 4)]
-
-    ////  ----------
-    //// ◄███░░░░░►
-    //[InlineData (5, 11, 3)]
-    //[InlineData (5, 12, 3)]
-    //[InlineData (5, 13, 3)]
-
-    //// 012345678901234
-    ////  --------------
-    //// ◄██░░░░░░►
-    //[InlineData (5, 14, 2)]
-    //[InlineData (5, 15, 2)]
-    //[InlineData (5, 16, 2)]
-
-    //// 012345678901234567890
-    ////  ----------------
-    //// ◄██░░░░░░►
-    //[InlineData (5, 18, 2)]
-    //[InlineData (5, 19, 2)]
-    //[InlineData (5, 20, 2)]
-
-
-    //// 012345678901234567890
-    ////  --------------------
-    //// ◄█░░░░░░░►
-    //[InlineData (5, 21, 1)]
-    //[InlineData (5, 22, 1)]
-    //[InlineData (5, 23, 1)]
-    public void CalculateSliderSize_Width_Is_LT_VisibleContentSize_CalculatesCorrectly (int width, int visibleContentSize, int scrollableContentSize, int expectedSliderSize)
-    {
-        // Arrange
-        var scrollBar = new ScrollBar
-        {
-            VisibleContentSize = visibleContentSize,
-            ScrollableContentSize = scrollableContentSize,
-            Orientation = Orientation.Horizontal // Assuming horizontal for simplicity
-        };
-        scrollBar.Width = width;
-
-        // Act
-        var sliderSize = scrollBar.CalculateSliderSize ();
-
-        // Assert
-        Assert.Equal (expectedSliderSize, sliderSize);
-    }
-
-
-    [Theory]
-    // 0123456789
-    //  ---------
-    // ◄█░░░░░░░►
-    [InlineData (0, 10, 1)]
-    // ◄█░░░░░░░►
-    [InlineData (1, 10, 1)]
-
-    //  ---------
-    // ◄████░░░░►
-    [InlineData (5, 10, 4)]
-
-    //  ----------
-    // ◄███░░░░░►
-    [InlineData (5, 11, 3)]
-    [InlineData (5, 12, 3)]
-    [InlineData (5, 13, 3)]
-
-    // 012345678901234
-    //  --------------
-    // ◄██░░░░░░►
-    [InlineData (5, 14, 2)]
-    [InlineData (5, 15, 2)]
-    [InlineData (5, 16, 2)]
-
-    // 012345678901234567890
-    //  ----------------
-    // ◄██░░░░░░►
-    [InlineData (5, 18, 2)]
-    [InlineData (5, 19, 2)]
-    [InlineData (5, 20, 2)]
-
-
-    // 012345678901234567890
-    //  --------------------
-    // ◄█░░░░░░░►
-    [InlineData (5, 21, 1)]
-    [InlineData (5, 22, 1)]
-    [InlineData (5, 23, 1)]
-
-    public void CalculateSliderSize_Width_Is_GT_VisibleContentSize_CalculatesCorrectly (int visibleContentSize, int scrollableContentSize, int expectedSliderSize)
-    {
-        // Arrange
-        var scrollBar = new ScrollBar
-        {
-            VisibleContentSize = visibleContentSize,
-            ScrollableContentSize = scrollableContentSize,
-            Orientation = Orientation.Horizontal // Assuming horizontal for simplicity
-        };
-        scrollBar.Width = 10;
-
-        // Act
-        var sliderSize = scrollBar.CalculateSliderSize ();
-
-        // Assert
-        Assert.Equal (expectedSliderSize, sliderSize);
-    }
-
-    [Theory]
-    // 0123456789
-    //  ---------
-    // ◄█►
-    [InlineData (3, 3, 0, 0)]
-    [InlineData (3, 3, 1, 0)]
-    [InlineData (3, 3, 2, 0)]
-
-    // 0123456789
-    //  ---------
-    // ◄██►
-    [InlineData (4, 4, 0, 0)]
-    [InlineData (4, 4, 1, 0)]
-    [InlineData (4, 4, 2, 0)]
-    [InlineData (4, 4, 3, 0)]
-    [InlineData (4, 4, 4, 0)]
-
-
-    // 012345
-    //  ^----
-    // ◄█░►
-    [InlineData (4, 5, 0, 0)]
-    //  -^---
-    // ◄█░►
-    [InlineData (4, 5, 1, 0)]
-    //  --^--
-    // ◄░█►
-    [InlineData (4, 5, 2, 1)]
-    //  ---^-
-    // ◄░█►
-    [InlineData (4, 5, 3, 1)]
-    //  ----^
-    // ◄░█►
-    [InlineData (4, 5, 4, 1)]
-
-    // 01234
-    // ^---------
-    // ◄█░░►
-    [InlineData (5, 10, 0, 0)]
-    // -^--------
-    // ◄█░░►
-    [InlineData (5, 10, 1, 0)]
-    // --^-------
-    // ◄█░░►
-    [InlineData (5, 10, 2, 0)]
-    // ---^------
-    // ◄█░░►
-    [InlineData (5, 10, 3, 0)]
-    // ----^----
-    // ◄░█░►
-    [InlineData (5, 10, 4, 1)]
-    // -----^---
-    // ◄░█░►
-    [InlineData (5, 10, 5, 1)]
-    // ------^--
-    // ◄░░█►
-    [InlineData (5, 10, 6, 2)]
-    // ------^--
-    // ◄░░█►
-    [InlineData (5, 10, 7, 2)]
-    // -------^-
-    // ◄░░█►
-    [InlineData (5, 10, 8, 2)]
-    // --------^
-    // ◄░░█►
-    [InlineData (5, 10, 9, 2)]
-
-
-    [InlineData (10, 20, 0, 0)]
-    [InlineData (10, 20, 1, 0)]
-    [InlineData (10, 20, 2, 0)]
-    [InlineData (10, 20, 3, 1)]
-    [InlineData (10, 20, 4, 2)]
-    [InlineData (10, 20, 5, 2)]
-    [InlineData (10, 20, 6, 3)]
-    [InlineData (10, 20, 7, 4)]
-    [InlineData (10, 20, 8, 4)]
-
-    public void CalculateSliderPosition_Calculates_Correctly (int visibleContentSize, int scrollableContentSize,  int contentPosition, int expectedSliderPosition)
-    {
-        // Arrange
-        var scrollBar = new ScrollBar
-        {
-            ScrollableContentSize = scrollableContentSize,
-            VisibleContentSize = visibleContentSize,
-            Orientation = Orientation.Horizontal // Assuming horizontal for simplicity
-        };
-        scrollBar.Width = visibleContentSize;
-
-        // Act
-        var sliderPosition= scrollBar.CalculateSliderPositionFromContentPosition (contentPosition, NavigationDirection.Forward);
-
-        // Assert
-        Assert.Equal (expectedSliderPosition, sliderPosition);
-    }
-
-
-    #endregion Slider
 
     #region Size
 
@@ -489,97 +220,6 @@ public class ScrollBarTests (ITestOutputHelper output)
     #endregion Size
 
     #region Position
-
-    // 012345678901
-    // ◄█░░░░░░░░░►
-    [Theory]
-    // ◄█►
-    [InlineData (3, 3, -1, 0)]
-    [InlineData (3, 3, 0, 0)]
-    // 012
-    // ---
-    // ◄█►
-    [InlineData (3, 3, 1, 0)]
-    [InlineData (3, 3, 2, 0)]
-
-    // ◄██►
-    [InlineData (4, 2, 1, 0)]
-    [InlineData (4, 2, 2, 0)]
-
-    // 0123
-    //  ---
-    // ◄██►
-    [InlineData (4, 3, 0, 0)] // scrollBarWidth/VisibleContentSize > size - scrolling doesn't make sense. Size should clamp to scrollSlider.Size.
-    // ◄██►
-    [InlineData (4, 3, 1, 0)]
-    // ◄██►
-    [InlineData (4, 3, 2, 0)]
-
-
-    // 01234
-    //  ----
-    // ◄██►
-    [InlineData (4, 4, 0, 0)] // scrollBarWidth/VisibleContentSize == size - scrolling doesn't make sense. Size should clamp to scrollSlider.Size.
-    // ◄██►
-    [InlineData (4, 4, 1, 0)]
-    // ◄██►
-    [InlineData (4, 4, 2, 0)]
-
-    // 012345
-    // ◄███►
-    //  -----
-    [InlineData (5, 5, 3, 0)]
-    [InlineData (5, 5, 4, 0)]
-
-    // 0123456
-    // ◄██░►
-    //  ^-----
-    [InlineData (5, 6, 0, 0)]
-    // ◄░██►
-    //  -^----
-    [InlineData (5, 6, 1, 1)]
-    [InlineData (5, 6, 2, 1)]
-
-    // 012346789
-    // ◄█░░►
-    //  ^--------
-    [InlineData (5, 10, -1, 0)]
-    [InlineData (5, 10, 0, 0)]
-
-    // 0123456789
-    // ◄░█░►
-    //  --^-------
-    [InlineData (5, 10, 1, 3)]
-
-    // ◄░░█►
-    //  ----^----
-    [InlineData (5, 10, 2, 5)]
-
-    // ◄░░█►
-    //  ------^---
-    [InlineData (5, 10, 4, 5)]
-
-    // ◄░████░░░►
-    //  --------------------
-    [InlineData (10, 20, 0, 0)]
-
-    public void CalculatePosition_Calculates (int visibleContentSize, int scrollableContentSize, int sliderPosition, int expectedContentPosition)
-    {
-        // Arrange
-        var scrollBar = new ScrollBar
-        {
-            VisibleContentSize = visibleContentSize,
-            ScrollableContentSize = scrollableContentSize,
-            Orientation = Orientation.Horizontal // Use Horizontal because it's easier to visualize
-        };
-        scrollBar.Frame = new (0, 0, visibleContentSize, 0);
-
-        // Act
-        var contentPosition = scrollBar.CalculatePositionFromSliderPosition (sliderPosition);
-
-        // Assert
-        Assert.Equal (expectedContentPosition, contentPosition);
-    }
     [Fact]
     public void Position_Event_Cancelables ()
     {
@@ -694,7 +334,7 @@ public class ScrollBarTests (ITestOutputHelper output)
                     Orientation.Horizontal,
                     @"
 ┌──────────┐
-│◄████░░░░►│
+│◄░████░░░►│
 └──────────┘
 ")]
 
@@ -741,7 +381,7 @@ public class ScrollBarTests (ITestOutputHelper output)
                     Orientation.Horizontal,
                     @"
 ┌──────────┐
-│◄░░░████░►│
+│◄░░████░░►│
 └──────────┘
 ")]
 
@@ -766,7 +406,7 @@ public class ScrollBarTests (ITestOutputHelper output)
                     Orientation.Horizontal,
                     @"
 ┌──────────┐
-│◄░░░░████►│
+│◄░░░████░►│
 └──────────┘
 ")]
 
@@ -885,7 +525,7 @@ public class ScrollBarTests (ITestOutputHelper output)
                     Orientation.Horizontal,
                     @"
 ┌────────────┐
-│◄░██████░░░►│
+│◄░░██████░░►│
 └────────────┘
 ")]
 
@@ -908,7 +548,7 @@ public class ScrollBarTests (ITestOutputHelper output)
                     Orientation.Horizontal,
                     @"
 ┌────────────┐
-│◄░░░██████░►│
+│◄░░██████░░►│
 └────────────┘
 ")]
 
@@ -1087,13 +727,13 @@ public class ScrollBarTests (ITestOutputHelper output)
 │▲│
 │░│
 │░│
+│█│
+│█│
+│█│
+│█│
+│█│
+│█│
 │░│
-│█│
-│█│
-│█│
-│█│
-│█│
-│█│
 │░│
 │▼│
 └─┘")]
@@ -1121,39 +761,35 @@ public class ScrollBarTests (ITestOutputHelper output)
     #endregion Vertical
 
 
-    public void Draws_Correctly (int width, int height, int contentSize, int contentPosition, Orientation orientation, string expected)
+    public void Draws_Correctly_Default_Settings (int width, int height, int contentSize, int contentPosition, Orientation orientation, string expected)
     {
         var super = new Window
         {
             Id = "super",
             Width = width + 2,
-            Height = height + 2
+            Height = height + 2,
         };
 
         var scrollBar = new ScrollBar
         {
+            AutoHide = false,
             Orientation = orientation,
         };
 
         if (orientation == Orientation.Vertical)
         {
-            scrollBar.Width = 1;
-            scrollBar.Height = height;
+            super.SetContentSize (new (width, contentSize));
+            scrollBar.Width = width;
         }
         else
         {
-            scrollBar.Width = width;
-            scrollBar.Height = 1;
+            super.SetContentSize (new (contentSize, height));
+            scrollBar.Height = height;
         }
         super.Add (scrollBar);
 
-        scrollBar.ScrollableContentSize = contentSize;
         scrollBar.Position = contentPosition;
 
-        int sliderPos = scrollBar.CalculateSliderPositionFromContentPosition (contentPosition, NavigationDirection.Forward);
-
-        super.BeginInit ();
-        super.EndInit ();
         super.Layout ();
         super.Draw ();
 
@@ -1188,7 +824,7 @@ public class ScrollBarTests (ITestOutputHelper output)
         RunState rs = Application.Begin (top);
 
         // Scroll to end
-        scrollBar.Position = 20;
+        scrollBar.Position = 19;
         Assert.Equal (10, scrollBar.Position);
         Application.RunIteration (ref rs);
 
@@ -1196,6 +832,15 @@ public class ScrollBarTests (ITestOutputHelper output)
         Assert.Equal (10, scrollBar.Position);
         int initialPos = scrollBar.Position;
 
+        Point btnPoint = orientation == Orientation.Vertical
+                             ? new (scrollBar.Frame.X, 0)
+                             : new (0, scrollBar.Frame.Y);
+
+        Application.RaiseMouseEvent (new ()
+        {
+            ScreenPosition = btnPoint,
+            Flags = MouseFlags.Button1Clicked
+        });
         Application.RaiseMouseEvent (new ()
         {
             ScreenPosition = new (0, 0),
@@ -1239,9 +884,13 @@ public class ScrollBarTests (ITestOutputHelper output)
         Assert.Equal (0, scrollBar.Position);
         int initialPos = scrollBar.Position;
 
+        Point btnPoint = orientation == Orientation.Vertical
+                             ? new (scrollBar.Frame.X, scrollBar.Frame.Height - 1)
+                             : new (scrollBar.Frame.Width - 1, scrollBar.Frame.Y);
+
         Application.RaiseMouseEvent (new ()
         {
-            ScreenPosition = orientation == Orientation.Vertical ? new (0, scrollBar.Frame.Height - 1) : new (scrollBar.Frame.Width - 1, 0),
+            ScreenPosition = btnPoint,
             Flags = MouseFlags.Button1Clicked
         });
         Application.RunIteration (ref rs);

@@ -303,8 +303,8 @@ public class ScrollSliderTests (ITestOutputHelper output)
     // █░
     [InlineData (2, 5, 1, 0)]
     // --^--
-    // █░
-    [InlineData (2, 5, 2, 0)]
+    // ░█
+    [InlineData (2, 5, 2, 1)]
     // ---^-
     // ░█
     [InlineData (2, 5, 3, 1)]
@@ -336,7 +336,7 @@ public class ScrollSliderTests (ITestOutputHelper output)
     [InlineData (3, 6, 0, 0)]
     // -^----
     // █░░
-    [InlineData (3, 6, 1, 0)]
+    [InlineData (3, 6, 1, 1)]
     // --^---
     // ░█░
     [InlineData (3, 6, 2, 1)]
@@ -442,11 +442,11 @@ public class ScrollSliderTests (ITestOutputHelper output)
     // ░███░░░░
     // --^---------------
     [InlineData (8, 18, 2, 1)]
-    [InlineData (8, 18, 3, 1)]
+    [InlineData (8, 18, 3, 2)]
     [InlineData (8, 18, 4, 2)]
     [InlineData (8, 18, 5, 2)]
     [InlineData (8, 18, 6, 3)]
-    [InlineData (8, 18, 7, 3)]
+    [InlineData (8, 18, 7, 4)]
     [InlineData (8, 18, 8, 4)]
     [InlineData (8, 18, 9, 4)]
 
@@ -457,7 +457,7 @@ public class ScrollSliderTests (ITestOutputHelper output)
     [InlineData (8, 18, 11, 5)]
     [InlineData (8, 18, 12, 5)]
     [InlineData (8, 18, 13, 5)]
-    [InlineData (8, 18, 14, 4)]
+    [InlineData (8, 18, 14, 5)]
     [InlineData (8, 18, 15, 5)]
     [InlineData (8, 18, 16, 5)]
     [InlineData (8, 18, 17, 5)]
