@@ -78,8 +78,6 @@ public class ScrollBar : View, IOrientation, IDesignable
     /// <inheritdoc/>
     protected override void OnFrameChanged (in Rectangle frame)
     {
-
-
         ShowHide ();
     }
 
@@ -235,7 +233,7 @@ public class ScrollBar : View, IOrientation, IDesignable
                 {
                     Visible = true;
                 }
-
+                ShowHide ();
                 SetNeedsLayout ();
             }
         }
@@ -299,7 +297,7 @@ public class ScrollBar : View, IOrientation, IDesignable
             {
                 return _scrollableContentSize.Value;
             }
-            return Orientation == Orientation.Vertical ? SuperView?.GetContentSize().Height ?? 0 : SuperView?.GetContentSize ().Width ?? 0;
+            return Orientation == Orientation.Vertical ? SuperView?.GetContentSize ().Height ?? 0 : SuperView?.GetContentSize ().Width ?? 0;
 
         }
         set
@@ -311,7 +309,12 @@ public class ScrollBar : View, IOrientation, IDesignable
 
             _scrollableContentSize = value;
             _slider.Size = CalculateSliderSize ();
-            ShowHide();
+            ShowHide ();
+
+            if (!Visible)
+            {
+                return;
+            }
             OnSizeChanged (value);
             ScrollableContentSizeChanged?.Invoke (this, new (in value));
             SetNeedsLayout ();
@@ -345,7 +348,7 @@ public class ScrollBar : View, IOrientation, IDesignable
         get => _position;
         set
         {
-            if (value == _position)
+            if (value == _position || !Visible)
             {
                 return;
             }
@@ -369,6 +372,11 @@ public class ScrollBar : View, IOrientation, IDesignable
 
             int distance = newContentPosition - _position;
 
+            if (_position == newContentPosition)
+            {
+                return;
+
+            }
             _position = newContentPosition;
 
             _sliderPosition = CalculateSliderPositionFromContentPosition (_position, direction);
