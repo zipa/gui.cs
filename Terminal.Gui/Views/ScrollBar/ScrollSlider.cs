@@ -1,6 +1,8 @@
 ﻿#nullable enable
 
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Drawing;
 
 namespace Terminal.Gui;
 
@@ -254,7 +256,7 @@ public class ScrollSlider : View, IOrientation, IDesignable
     /// <returns></returns>
     internal int ClampPosition (int newPosition)
     {
-        return Math.Clamp (newPosition, 0, Math.Max (0, VisibleContentSize - SliderPadding - Size));
+        return Math.Clamp (newPosition, 0, Math.Max (SliderPadding / 2, VisibleContentSize - SliderPadding - Size));
     }
 
     private void RaisePositionChangeEvents (int newPosition)
@@ -390,6 +392,8 @@ public class ScrollSlider : View, IOrientation, IDesignable
                     currentLocation = Frame.X;
                 }
 
+                currentLocation -= SliderPadding / 2;
+
                 // location does not account for the ShrinkBy
                 int sliderLowerBound = SliderPadding / 2;
                 int sliderUpperBound = superViewDimension - SliderPadding / 2 - Size;
@@ -429,10 +433,94 @@ public class ScrollSlider : View, IOrientation, IDesignable
     /// <inheritdoc/>
     public bool EnableForDesign ()
     {
-//        Orientation = Orientation.Horizontal;
+        //        Orientation = Orientation.Horizontal;
         ShowPercent = true;
         Size = 5;
 
         return true;
+    }
+
+    /// <summary>
+    ///     Gets the slider size.
+    /// </summary>
+    /// <param name="scrollableContentSize">The size of the content.</param>
+    /// <param name="visibleContentSize">The size of the visible content.</param>
+    /// <param name="sliderBounds">The bounds of the area the slider moves in (e.g. the size of the <see cref="ScrollBar"/> minus 2).</param>
+    public static int CalculateSize (
+        int scrollableContentSize,
+        int visibleContentSize,
+        int sliderBounds
+    )
+    {
+        if (scrollableContentSize <= 0 || sliderBounds <= 0)
+        {
+            return 1;   // Slider must be at least 1
+        }
+
+        if (visibleContentSize <= 0 || scrollableContentSize <= visibleContentSize)
+        {
+            return sliderBounds;
+        }
+
+        double sliderSizeD = ((double)visibleContentSize / scrollableContentSize) * sliderBounds;
+
+        int sliderSize = (int)Math.Floor (sliderSizeD);
+
+        return Math.Clamp (sliderSize, 1, sliderBounds);
+    }
+
+    /// <summary>
+    ///     Gets the slider position.
+    /// </summary>
+    /// <param name="scrollableContentSize">The size of the content.</param>
+    /// <param name="visibleContentSize">The size of the visible content.</param>
+    /// <param name="contentPosition">The position in the content (between 0 and <paramref name="scrollableContentSize"/>).</param>
+    /// <param name="sliderBounds">The bounds of the area the slider moves in (e.g. the size of the <see cref="ScrollBar"/> minus 2).</param>
+    /// <param name="direction">The direction the slider is moving.</param>
+    public static int CalculatePosition (
+        int scrollableContentSize,
+        int visibleContentSize,
+        int contentPosition,
+        int sliderBounds,
+        NavigationDirection direction
+    )
+    {
+        if (scrollableContentSize - visibleContentSize <= 0 || sliderBounds <= 0)
+        {
+            return 0;
+        }
+
+        int calculatedSliderSize = CalculateSize (scrollableContentSize, visibleContentSize, sliderBounds);
+
+        double newSliderPosition = ((double)contentPosition / (scrollableContentSize - visibleContentSize)) * (sliderBounds - calculatedSliderSize);
+
+        return Math.Clamp ((int)Math.Round (newSliderPosition), 0, sliderBounds - calculatedSliderSize);
+    }
+
+    /// <summary>
+    ///     Gets the content position.
+    /// </summary>
+    /// <param name="scrollableContentSize">The size of the content.</param>
+    /// <param name="visibleContentSize">The size of the visible content.</param>
+    /// <param name="sliderPosition">The position of the slider.</param>
+    /// <param name="sliderBounds">The bounds of the area the slider moves in (e.g. the size of the <see cref="ScrollBar"/> minus 2).</param>
+    public static int CalculateContentPosition (
+        int scrollableContentSize,
+        int visibleContentSize,
+        int sliderPosition,
+        int sliderBounds
+    )
+    {
+        int sliderSize = CalculateSize (scrollableContentSize, visibleContentSize, sliderBounds);
+
+        double pos = ((double)(sliderPosition) / (sliderBounds - sliderSize)) * (scrollableContentSize - visibleContentSize);
+
+        if (pos is double.NaN)
+        {
+            return 0;
+        }
+        double rounded = Math.Ceiling (pos);
+
+        return (int)Math.Clamp (rounded, 0, Math.Max (0, scrollableContentSize - sliderSize));
     }
 }

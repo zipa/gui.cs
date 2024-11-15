@@ -66,7 +66,17 @@ public class CharacterMap : Scenario
         };
         top.Add (jumpEdit);
 
-        _charMap.SelectedCodePointChanged += (sender, args) => jumpEdit.Text = ((Rune)args.CurrentValue).ToString ();
+        _charMap.SelectedCodePointChanged += (sender, args) =>
+                                             {
+                                                 if (Rune.IsValid (args.CurrentValue))
+                                                 {
+                                                     jumpEdit.Text = ((Rune)args.CurrentValue).ToString ();
+                                                 }
+                                                 else
+                                                 {
+                                                     jumpEdit.Text = $"U+{args.CurrentValue:x5}";
+                                                 }
+                                             };
 
         _errorLabel = new ()
         {

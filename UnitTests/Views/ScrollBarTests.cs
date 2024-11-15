@@ -473,7 +473,7 @@ public class ScrollBarTests (ITestOutputHelper output)
         scrollBar.Width = visibleContentSize;
 
         // Act
-        var sliderPosition= scrollBar.CalculateSliderPosition (contentPosition, NavigationDirection.Forward);
+        var sliderPosition= scrollBar.CalculateSliderPositionFromContentPosition (contentPosition, NavigationDirection.Forward);
 
         // Assert
         Assert.Equal (expectedSliderPosition, sliderPosition);
@@ -575,7 +575,7 @@ public class ScrollBarTests (ITestOutputHelper output)
         scrollBar.Frame = new (0, 0, visibleContentSize, 0);
 
         // Act
-        var contentPosition = scrollBar.CalculatePosition (sliderPosition);
+        var contentPosition = scrollBar.CalculatePositionFromSliderPosition (sliderPosition);
 
         // Assert
         Assert.Equal (expectedContentPosition, contentPosition);
@@ -1150,7 +1150,7 @@ public class ScrollBarTests (ITestOutputHelper output)
         scrollBar.ScrollableContentSize = contentSize;
         scrollBar.Position = contentPosition;
 
-        int sliderPos = scrollBar.CalculateSliderPosition (contentPosition, NavigationDirection.Forward);
+        int sliderPos = scrollBar.CalculateSliderPositionFromContentPosition (contentPosition, NavigationDirection.Forward);
 
         super.BeginInit ();
         super.EndInit ();

@@ -86,9 +86,10 @@ public class ScrollBar : View, IOrientation, IDesignable
         }
         else
         {
-            _slider.VisibleContentSize = Viewport.Width ;
+            _slider.VisibleContentSize = Viewport.Width;
         }
 
+        _slider.Size = CalculateSliderSize ();
         ShowHide ();
     }
 
@@ -109,7 +110,8 @@ public class ScrollBar : View, IOrientation, IDesignable
         }
 
         _slider.Size = CalculateSliderSize ();
-        _slider.Position = CalculateSliderPosition (_position, NavigationDirection.Forward);
+        _sliderPosition = CalculateSliderPositionFromContentPosition (_position, NavigationDirection.Forward);
+        _slider.Position = _sliderPosition.Value;
     }
 
     /// <inheritdoc/>
@@ -210,7 +212,7 @@ public class ScrollBar : View, IOrientation, IDesignable
     ///     The default is 1.
     /// </remarks>
     public int Increment { get; set; } = 1;
-    
+
     private bool _autoHide = true;
 
     /// <summary>
@@ -356,25 +358,18 @@ public class ScrollBar : View, IOrientation, IDesignable
 
             _position = newContentPosition;
 
+            _sliderPosition = CalculateSliderPositionFromContentPosition (_position, direction);
+
+            if (_slider.Position != _sliderPosition)
+            {
+                _slider.Position = _sliderPosition.Value;
+            }
+
             OnPositionChanged (_position);
             PositionChanged?.Invoke (this, new (in _position));
 
             OnScrolled (distance);
             Scrolled?.Invoke (this, new (in distance));
-
-            int currentSliderPosition = _slider.Position;
-
-            //_slider.Size = CalculateSliderSize ();
-
-            //int calculatedSliderPosition = CalculateSliderPosition (_position, direction);
-
-            //_slider.MoveToPosition (calculatedSliderPosition);
-
-            _slider.Size = CalculateSliderSize ();
-            int calculatedSliderPosition = CalculateSliderPosition (_position, direction);
-
-            RaiseSliderPositionChangeEvents (calculatedSliderPosition, currentSliderPosition);
-
         }
     }
 
@@ -411,29 +406,19 @@ public class ScrollBar : View, IOrientation, IDesignable
     /// </remarks>
     /// <param name="sliderPosition"></param>
     /// <returns></returns>
-    internal int CalculatePosition (int sliderPosition)
+    internal int CalculatePositionFromSliderPosition (int sliderPosition)
     {
-        // Clamp the slider 
-        int clampedSliderPosition = _slider.ClampPosition (sliderPosition);
         int scrollBarSize = Orientation == Orientation.Vertical ? Viewport.Height : Viewport.Width;
-        double pos = (double)(clampedSliderPosition) /
-                     (scrollBarSize - _slider.Size - _slider.SliderPadding) * (ScrollableContentSize - VisibleContentSize);
-
-        if (pos is double.NaN)
-        {
-            return 0;
-        }
-        double rounded = Math.Ceiling (pos);
-
-        // Clamp between 0 and Size - SliderSize
-        return (int)Math.Clamp (rounded, 0, Math.Max (0, ScrollableContentSize - _slider.Size));
+        return ScrollSlider.CalculateContentPosition (ScrollableContentSize, VisibleContentSize, sliderPosition, scrollBarSize - _slider.SliderPadding);
     }
 
     #endregion ContentPosition
 
 
     #region Slider Management
-    
+
+    private int? _sliderPosition;
+
     /// <summary>
     ///     INTERNAL (for unit tests). Calculates the size of the slider based on the Orientation, VisibleContentSize, the actual Viewport, and Size.
     /// </summary>
@@ -441,19 +426,7 @@ public class ScrollBar : View, IOrientation, IDesignable
     internal int CalculateSliderSize ()
     {
         int maxSliderSize = (Orientation == Orientation.Vertical ? Viewport.Height : Viewport.Width) - 2;
-
-        if (maxSliderSize < 1 || VisibleContentSize == 0)
-        {
-            return 1;
-        }
-
-        //if (ScrollableContentSize < VisibleContentSize)
-        //{
-        //    return maxSliderSize ;
-        //}
-        
-        int size = (int)Math.Clamp (Math.Floor ((double)VisibleContentSize / ScrollableContentSize * (maxSliderSize)), 1, VisibleContentSize);
-        return Math.Clamp (size, 1, maxSliderSize);
+        return ScrollSlider.CalculateSize (ScrollableContentSize, VisibleContentSize, maxSliderSize);
     }
 
     private void SliderOnPositionChanged (object? sender, EventArgs<int> e)
@@ -463,9 +436,7 @@ public class ScrollBar : View, IOrientation, IDesignable
             return;
         }
 
-        int pos = e.CurrentValue;
-
-        RaiseSliderPositionChangeEvents (_slider.Position, pos);
+        RaiseSliderPositionChangeEvents (_sliderPosition, e.CurrentValue);
     }
 
     private void SliderOnScroll (object? sender, EventArgs<int> e)
@@ -475,29 +446,31 @@ public class ScrollBar : View, IOrientation, IDesignable
             return;
         }
 
-        int calculatedSliderPos = CalculateSliderPosition (_position, e.CurrentValue >= 0 ? NavigationDirection.Forward : NavigationDirection.Backward);
+        int calculatedSliderPos = CalculateSliderPositionFromContentPosition (_position, e.CurrentValue >= 0 ? NavigationDirection.Forward : NavigationDirection.Backward);
+
+        if (calculatedSliderPos == _sliderPosition)
+        {
+            return;
+        }
         int sliderScrolledAmount = e.CurrentValue;
-        int scrolledAmount = CalculatePosition (sliderScrolledAmount);
+        int calculatedPosition = CalculatePositionFromSliderPosition (calculatedSliderPos + sliderScrolledAmount);
 
-        RaiseSliderPositionChangeEvents (calculatedSliderPos, _slider.Position);
-
-        Position = _position + scrolledAmount;
+        Position = calculatedPosition;
     }
 
     /// <summary>
     ///     Gets or sets the position of the start of the Scroll slider, within the Viewport.
     /// </summary>
-    public int GetSliderPosition () => CalculateSliderPosition (_position);
+    public int GetSliderPosition () => CalculateSliderPositionFromContentPosition (_position);
 
-    private void RaiseSliderPositionChangeEvents (int calculatedSliderPosition, int newSliderPosition)
+    private void RaiseSliderPositionChangeEvents (int? currentSliderPosition, int newSliderPosition)
     {
-        if (calculatedSliderPosition == newSliderPosition)
+        if (currentSliderPosition == newSliderPosition)
         {
             return;
         }
 
-        // This sets the slider position and clamps the value
-        _slider.Position = newSliderPosition;
+        _sliderPosition = newSliderPosition;
 
         OnSliderPositionChanged (newSliderPosition);
         SliderPositionChanged?.Invoke (this, new (in newSliderPosition));
@@ -515,17 +488,10 @@ public class ScrollBar : View, IOrientation, IDesignable
     /// <param name="contentPosition"></param>
     /// <param name="direction"></param>
     /// <returns></returns>
-    internal int CalculateSliderPosition (int contentPosition, NavigationDirection direction = NavigationDirection.Forward)
+    internal int CalculateSliderPositionFromContentPosition (int contentPosition, NavigationDirection direction = NavigationDirection.Forward)
     {
         int scrollBarSize = Orientation == Orientation.Vertical ? Viewport.Height : Viewport.Width;
-        if (scrollBarSize < 3 || ScrollableContentSize - VisibleContentSize == 0)
-        {
-            return 0;
-        }
-
-        double newSliderPosition = (double)(contentPosition - 1) / (ScrollableContentSize - VisibleContentSize) * (scrollBarSize - _slider.Size - _slider.SliderPadding);
-
-        return Math.Clamp (direction == NavigationDirection.Forward ? (int)Math.Floor (newSliderPosition) : (int)Math.Ceiling (newSliderPosition), 0, scrollBarSize - _slider.Size - _slider.SliderPadding);
+        return ScrollSlider.CalculatePosition (ScrollableContentSize, VisibleContentSize, contentPosition, scrollBarSize - 2, direction);
     }
 
 
@@ -542,7 +508,7 @@ public class ScrollBar : View, IOrientation, IDesignable
         {
             FillRect (Viewport with { X = Viewport.X + 1, Width = Viewport.Width - 2 }, Glyphs.Stipple);
         }
-
+        SetNeedsDraw ();
         return true;
     }
 

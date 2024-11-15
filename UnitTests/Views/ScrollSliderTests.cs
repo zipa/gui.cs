@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.TestPlatform.Utilities;
 using Xunit.Abstractions;
 using static Unix.Terminal.Delegates;
@@ -131,6 +132,73 @@ public class ScrollSliderTests (ITestOutputHelper output)
         Assert.True (scrollSlider.Size <= dimension);
     }
 
+
+    [Theory]
+    [CombinatorialData]
+
+    public void CalculateSize_ScrollBounds_0_Returns_1 ([CombinatorialRange (-1, 5, 1)] int visibleContentSize, [CombinatorialRange (-1, 5, 1)] int scrollableContentSize)
+    {
+        // Arrange
+
+        // Act
+        var sliderSize = ScrollSlider.CalculateSize (scrollableContentSize, visibleContentSize, 0);
+
+        // Assert
+        Assert.Equal (1, sliderSize);
+    }
+
+    [Theory]
+    [CombinatorialData]
+
+    public void CalculateSize_ScrollableContentSize_0_Returns_1 ([CombinatorialRange (-1, 5, 1)] int visibleContentSize, [CombinatorialRange (-1, 5, 1)] int sliderBounds)
+    {
+        // Arrange
+
+        // Act
+        var sliderSize = ScrollSlider.CalculateSize (0, visibleContentSize, sliderBounds);
+
+        // Assert
+        Assert.Equal (1, sliderSize);
+    }
+
+
+    //[Theory]
+    //[CombinatorialData]
+
+    //public void CalculateSize_VisibleContentSize_0_Returns_0 ([CombinatorialRange (-1, 5, 1)] int scrollableContentSize, [CombinatorialRange (-1, 5, 1)] int sliderBounds)
+    //{
+    //    // Arrange
+
+    //    // Act
+    //    var sliderSize = ScrollSlider.CalculateSize (scrollableContentSize, 0, sliderBounds);
+
+    //    // Assert
+    //    Assert.Equal (0, sliderSize);
+    //}
+
+
+    [Theory]
+    [InlineData (0, 1, 1, 1)]
+    [InlineData (1, 1, 1, 1)]
+    [InlineData (1, 2, 1, 1)]
+    [InlineData (0, 5, 5, 5)]
+    [InlineData (1, 5, 5, 1)]
+    [InlineData (2, 5, 5, 2)]
+    [InlineData (3, 5, 5, 3)]
+    [InlineData (4, 5, 5, 4)]
+    [InlineData (5, 5, 5, 5)]
+    [InlineData (6, 5, 5, 5)]
+    public void CalculateSize_Calculates_Correctly (int visibleContentSize, int scrollableContentSize, int scrollBounds, int expectedSliderSize)
+    {
+        // Arrange
+
+        // Act
+        var sliderSize = ScrollSlider.CalculateSize (scrollableContentSize, visibleContentSize, scrollBounds);
+
+        // Assert
+        Assert.Equal (expectedSliderSize, sliderSize);
+    }
+
     [Fact]
     public void VisibleContentSize_Not_Set_Uses_SuperView ()
     {
@@ -211,6 +279,269 @@ public class ScrollSliderTests (ITestOutputHelper output)
     }
 
     [Theory]
+    //// 0123456789
+    ////  ---------
+    //// ◄█►
+    //[InlineData (3, 3, 0, 1, 0)]
+    //[InlineData (3, 3, 1, 1, 0)]
+    //[InlineData (3, 3, 2, 1, 0)]
+
+    //// 0123456789
+    ////  ---------
+    //// ◄██►
+    //[InlineData (4, 4, 0, 2, 0)]
+    //[InlineData (4, 4, 1, 2, 0)]
+    //[InlineData (4, 4, 2, 2, 0)]
+    //[InlineData (4, 4, 3, 2, 0)]
+    //[InlineData (4, 4, 4, 2, 0)]
+
+    // 012345
+    // ^----
+    // █░
+    [InlineData (2, 5, 0, 0)]
+    // -^---
+    // █░
+    [InlineData (2, 5, 1, 0)]
+    // --^--
+    // █░
+    [InlineData (2, 5, 2, 0)]
+    // ---^-
+    // ░█
+    [InlineData (2, 5, 3, 1)]
+    // ----^
+    // ░█
+    [InlineData (2, 5, 4, 1)]
+
+    // 012345
+    // ^----
+    // █░░
+    [InlineData (3, 5, 0, 0)]
+    // -^---
+    // ░█░
+    [InlineData (3, 5, 1, 1)]
+    // --^--
+    // ░░█
+    [InlineData (3, 5, 2, 2)]
+    // ---^-
+    // ░░█
+    [InlineData (3, 5, 3, 2)]
+    // ----^
+    // ░░█
+    [InlineData (3, 5, 4, 2)]
+
+
+    // 0123456789
+    // ^-----
+    // █░░
+    [InlineData (3, 6, 0, 0)]
+    // -^----
+    // █░░
+    [InlineData (3, 6, 1, 0)]
+    // --^---
+    // ░█░
+    [InlineData (3, 6, 2, 1)]
+    // ---^--
+    // ░░█
+    [InlineData (3, 6, 3, 2)]
+    // ----^-
+    // ░░█
+    [InlineData (3, 6, 4, 2)]
+
+    // -----^
+    // ░░█
+    [InlineData (3, 6, 5, 2)]
+
+    // 012345
+    // ^----
+    // ███░
+    [InlineData (4, 5, 0, 0)]
+    // -^---
+    // ░███
+    [InlineData (4, 5, 1, 1)]
+    // --^--
+    // ░███
+    [InlineData (4, 5, 2, 1)]
+    // ---^-
+    // ░███
+    [InlineData (4, 5, 3, 1)]
+    // ----^
+    // ░███
+    [InlineData (4, 5, 4, 1)]
+
+    //// 01234
+    //// ^---------
+    //// ◄█░░►
+    //[InlineData (5, 10, 0, 1, 0)]
+    //// -^--------
+    //// ◄█░░►
+    //[InlineData (5, 10, 1, 1, 0)]
+    //// --^-------
+    //// ◄█░░►
+    //[InlineData (5, 10, 2, 1, 0)]
+    //// ---^------
+    //// ◄█░░►
+    //[InlineData (5, 10, 3, 1, 0)]
+    //// ----^----
+    //// ◄░█░►
+    //[InlineData (5, 10, 4, 1, 1)]
+    //// -----^---
+    //// ◄░█░►
+    //[InlineData (5, 10, 5, 1, 1)]
+    //// ------^--
+    //// ◄░░█►
+    //[InlineData (5, 10, 6, 1, 2)]
+    //// ------^--
+    //// ◄░░█►
+    //[InlineData (5, 10, 7, 1, 2)]
+    //// -------^-
+    //// ◄░░█►
+    //[InlineData (5, 10, 8, 1, 2)]
+    //// --------^
+    //// ◄░░█►
+    //[InlineData (5, 10, 9, 1, 2)]
+
+    // 0123456789
+    // ████░░░░
+    // ^-----------------
+    // 012345678901234567890123456789
+    // ░████░░░
+    // ----^-------------
+    // 012345678901234567890123456789
+    // ░░████░░
+    // --------^---------
+    // 012345678901234567890123456789
+    // ░░░████░
+    // ------------^-----
+    // 012345678901234567890123456789
+    // ░░░░████
+    // ----------------^--
+
+
+
+    // 0123456789
+    // ███░░░░░
+    // ^-----------------
+
+    // 012345678901234567890123456789
+    // ░░███░░░
+    // --------^---------
+    // 012345678901234567890123456789
+    // ░░░███░░
+    // ------------^-----
+    // 012345678901234567890123456789
+    // ░░░░███░
+    // ----------------^--
+    // 012345678901234567890123456789
+    // ░░░░░███
+    // ----------------^--
+
+
+    [InlineData (8, 18, 0, 0)]
+    [InlineData (8, 18, 1, 0)]
+    // 012345678901234567890123456789
+    // ░███░░░░
+    // --^---------------
+    [InlineData (8, 18, 2, 1)]
+    [InlineData (8, 18, 3, 1)]
+    [InlineData (8, 18, 4, 2)]
+    [InlineData (8, 18, 5, 2)]
+    [InlineData (8, 18, 6, 3)]
+    [InlineData (8, 18, 7, 3)]
+    [InlineData (8, 18, 8, 4)]
+    [InlineData (8, 18, 9, 4)]
+
+    // 012345678901234567890123456789
+    // ░░░░░███
+    // ----------^--------
+    [InlineData (8, 18, 10, 5)]
+    [InlineData (8, 18, 11, 5)]
+    [InlineData (8, 18, 12, 5)]
+    [InlineData (8, 18, 13, 5)]
+    [InlineData (8, 18, 14, 4)]
+    [InlineData (8, 18, 15, 5)]
+    [InlineData (8, 18, 16, 5)]
+    [InlineData (8, 18, 17, 5)]
+    [InlineData (8, 18, 18, 5)]
+    [InlineData (8, 18, 19, 5)]
+    [InlineData (8, 18, 20, 5)]
+    [InlineData (8, 18, 21, 5)]
+    [InlineData (8, 18, 22, 5)]
+    [InlineData (8, 18, 23, 5)]
+    // ------------------   ^
+    [InlineData (8, 18, 24, 5)]
+    [InlineData (8, 18, 25, 5)]
+
+    //// 0123456789
+    //// ◄████░░░░►
+    //// ^-----------------
+    //[InlineData (10, 20, 0, 5, 0)]
+    //[InlineData (10, 20, 1, 5, 0)]
+    //[InlineData (10, 20, 2, 5, 0)]
+    //[InlineData (10, 20, 3, 5, 0)]
+    //[InlineData (10, 20, 4, 5, 1)]
+    //[InlineData (10, 20, 5, 5, 1)]
+    //[InlineData (10, 20, 6, 5, 1)]
+    //[InlineData (10, 20, 7, 5, 2)]
+    //[InlineData (10, 20, 8, 5, 2)]
+    //[InlineData (10, 20, 9, 5, 2)]
+    //[InlineData (10, 20, 10, 5, 3)]
+    //[InlineData (10, 20, 11, 5, 3)]
+    //[InlineData (10, 20, 12, 5, 3)]
+    //[InlineData (10, 20, 13, 5, 3)]
+    //[InlineData (10, 20, 14, 5, 4)]
+    //[InlineData (10, 20, 15, 5, 4)]
+    //[InlineData (10, 20, 16, 5, 4)]
+    //[InlineData (10, 20, 17, 5, 5)]
+    //[InlineData (10, 20, 18, 5, 5)]
+    //[InlineData (10, 20, 19, 5, 5)]
+    //[InlineData (10, 20, 20, 5, 6)]
+    //[InlineData (10, 20, 21, 5, 6)]
+    //[InlineData (10, 20, 22, 5, 6)]
+    //[InlineData (10, 20, 23, 5, 6)]
+    //[InlineData (10, 20, 24, 5, 6)]
+    //[InlineData (10, 20, 25, 5, 6)]
+
+    public void CalculatePosition_Calculates_Correctly (int visibleContentSize, int scrollableContentSize, int contentPosition, int expectedSliderPosition)
+    {
+        // Arrange
+
+        // Act
+        var sliderPosition = ScrollSlider.CalculatePosition (
+                                                                 scrollableContentSize: scrollableContentSize,
+                                                                 visibleContentSize: visibleContentSize,
+                                                                 contentPosition: contentPosition,
+                                                                 sliderBounds: visibleContentSize,
+                                                                 NavigationDirection.Forward);
+
+        // Assert
+        Assert.Equal (expectedSliderPosition, sliderPosition);
+    }
+
+    [Theory]
+    [InlineData (8, 18, 0, 0)]
+
+    public void CalculateContentPosition_Calculates_Correctly (
+        int visibleContentSize,
+        int scrollableContentSize,
+        int sliderPosition,
+        int expectedContentPosition
+    )
+    {
+        // Arrange
+
+        // Act
+        var contentPosition = ScrollSlider.CalculateContentPosition (
+                                                             scrollableContentSize: scrollableContentSize,
+                                                             visibleContentSize: visibleContentSize,
+                                                             sliderPosition: sliderPosition,
+                                                             sliderBounds: visibleContentSize);
+
+        // Assert
+        Assert.Equal (expectedContentPosition, contentPosition);
+    }
+
+
+    [Theory]
     [CombinatorialData]
     public void ClampPosition_WithSuperView_Clamps_To_ViewPort_Minus_Size_If_VisibleContentSize_Not_Set ([CombinatorialRange (10, 10, 1)] int dimension, [CombinatorialRange (1, 5, 1)] int sliderSize, [CombinatorialRange (-1, 10, 2)] int sliderPosition, Orientation orientation)
     {
@@ -228,7 +559,7 @@ public class ScrollSliderTests (ITestOutputHelper output)
         super.Add (scrollSlider);
         super.Layout ();
 
-        Assert.Equal(dimension, scrollSlider.VisibleContentSize);
+        Assert.Equal (dimension, scrollSlider.VisibleContentSize);
 
         int clampedPosition = scrollSlider.ClampPosition (sliderPosition);
 
@@ -277,7 +608,7 @@ public class ScrollSliderTests (ITestOutputHelper output)
 
     [Theory]
     [CombinatorialData]
-    public void Position_Clamps_To_VisibleContentSize ([CombinatorialRange (0, 5, 1)] int dimension, [CombinatorialRange(1, 5, 1)] int sliderSize, [CombinatorialRange (-1, 10, 2)] int sliderPosition, Orientation orientation)
+    public void Position_Clamps_To_VisibleContentSize ([CombinatorialRange (0, 5, 1)] int dimension, [CombinatorialRange (1, 5, 1)] int sliderSize, [CombinatorialRange (-1, 10, 2)] int sliderPosition, Orientation orientation)
     {
         var scrollSlider = new ScrollSlider
         {
