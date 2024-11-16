@@ -230,7 +230,7 @@ public class ListView : View, IDesignable
 
     private void ListView_LayoutComplete (object sender, LayoutEventArgs e)
     {
-        SetContentSize (new Size (_source?.Length ?? Viewport.Width, _source?.Count ?? Viewport.Width));
+        SetContentSize (new Size (MaxLength, _source?.Count ?? Viewport.Height));
     }
 
     /// <summary>Gets or sets whether this <see cref="ListView"/> allows items to be marked.</summary>

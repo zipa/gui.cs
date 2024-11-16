@@ -42,7 +42,10 @@ public class Scrolling : Scenario
 
         app.Add (demoView);
 
-        demoView.HorizontalScrollBar.Visible = true;
+        //// NOTE: This call to EnableScrollBar is technically not needed because the reference
+        //// NOTE: to demoView.HorizontalScrollBar below will cause it to be lazy created.
+        //// NOTE: The call included in this sample to for illustration purposes.
+        //demoView.EnableScrollBar (Orientation.Horizontal);
         var hCheckBox = new CheckBox
         {
             X = Pos.X (demoView),
@@ -56,7 +59,10 @@ public class Scrolling : Scenario
                                              demoView.HorizontalScrollBar.Visible = args.CurrentValue == CheckState.Checked;
                                          };
 
-        demoView.VerticalScrollBar.Visible = true;
+        //// NOTE: This call to EnableScrollBar is technically not needed because the reference
+        //// NOTE: to demoView.HorizontalScrollBar below will cause it to be lazy created.
+        //// NOTE: The call included in this sample to for illustration purposes.
+        //demoView.EnableScrollBar (Orientation.Vertical);
         var vCheckBox = new CheckBox
         {
             X = Pos.Right (hCheckBox) + 3,

@@ -20,6 +20,26 @@ public partial class View
         _horizontalScrollBar = new (() => CreateScrollBar (Orientation.Horizontal));
     }
 
+    ///// <summary>
+    /////     Causes the scrollbar associated with <paramref name="orientation"/> to be explicitly created.
+    ///// </summary>
+    ///// <remarks>
+    /////     The built-in scrollbars are lazy-created internally. To enable them, the <see cref="VerticalScrollBar"/> or <see cref="HorizontalScrollBar"/>
+    /////     need to be referenced. All this method does is reference the associated property.
+    ///// </remarks>
+    ///// <param name="orientation"></param>
+    //public void EnableScrollBar (Orientation orientation)
+    //{
+    //    if (orientation == Orientation.Vertical)
+    //    {
+    //        _ = VerticalScrollBar; // Explicitly create the vertical scroll bar
+    //    }
+    //    else
+    //    {
+    //        _ = HorizontalScrollBar; // Explicitly create the horizontal scroll bar
+    //    }
+    //}
+
     private ScrollBar CreateScrollBar (Orientation orientation)
     {
         var scrollBar = new ScrollBar
@@ -37,16 +57,23 @@ public partial class View
             ConfigureHorizontalScrollBar (scrollBar);
         }
 
-        Padding?.Add (scrollBar);
         scrollBar.Initialized += OnScrollBarInitialized;
 
+        Padding?.Add (scrollBar);
         return scrollBar;
     }
 
     private void ConfigureVerticalScrollBar (ScrollBar scrollBar)
     {
         scrollBar.X = Pos.AnchorEnd ();
-        scrollBar.Height = Dim.Fill (Dim.Func (() => _horizontalScrollBar is { IsValueCreated: true, Value.Visible: true } ? 1 : 0));
+        scrollBar.Height = Dim.Fill (Dim.Func (() =>
+                                               {
+                                                   if (_horizontalScrollBar.IsValueCreated)
+                                                   {
+                                                       return _horizontalScrollBar.Value.Visible ? 1 : 0;
+                                                   }
+                                                   return 0;
+                                               }));
         scrollBar.ScrollableContentSize = GetContentSize ().Height;
 
         ViewportChanged += (_, _) =>
@@ -64,7 +91,13 @@ public partial class View
     private void ConfigureHorizontalScrollBar (ScrollBar scrollBar)
     {
         scrollBar.Y = Pos.AnchorEnd ();
-        scrollBar.Width = Dim.Fill (Dim.Func (() => _verticalScrollBar is { IsValueCreated: true, Value.Visible: true } ? 1 : 0));
+        scrollBar.Width = Dim.Fill (Dim.Func (() => {
+                                                  if (_verticalScrollBar.IsValueCreated)
+                                                  {
+                                                      return _verticalScrollBar.Value.Visible ? 1 : 0;
+                                                  }
+                                                  return 0;
+                                              }));
         scrollBar.ScrollableContentSize = GetContentSize ().Width;
 
         ViewportChanged += (_, _) =>
