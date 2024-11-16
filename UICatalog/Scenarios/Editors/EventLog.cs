@@ -18,7 +18,7 @@ public class EventLog : ListView
     public EventLog ()
     {
         Title = "Event Log";
-        CanFocus = false;
+        CanFocus = true;
 
         X = Pos.AnchorEnd ();
         Y = 0;
@@ -38,6 +38,20 @@ public class EventLog : ListView
         };
 
         Initialized += EventLog_Initialized;
+
+        HorizontalScrollBar.AutoHide = true;
+        VerticalScrollBar.AutoHide = true;
+
+        AddCommand (Command.DeleteAll,
+                   () =>
+                   {
+                       _eventSource.Clear ();
+
+                       return true;
+                   });
+
+        KeyBindings.Add (Key.Delete, Command.DeleteAll);
+
     }
     public ExpanderButton? ExpandButton { get; }
 
@@ -94,10 +108,8 @@ public class EventLog : ListView
 
     private void EventLog_Initialized (object? _, EventArgs e)
     {
-
         Border?.Add (ExpandButton!);
         Source = new ListWrapper<string> (_eventSource);
-
     }
     private string GetIdentifyingString (View? view)
     {

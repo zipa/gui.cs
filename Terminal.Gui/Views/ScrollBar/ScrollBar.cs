@@ -109,6 +109,13 @@ public class ScrollBar : View, IOrientation, IDesignable
 
         _slider.Size = CalculateSliderSize ();
         _sliderPosition = CalculateSliderPositionFromContentPosition (_position);
+
+        // This keeps the position constant while slider is moving
+        if (_sliderPosition.Value != _slider.Position)
+        {
+            //Position = CalculatePositionFromSliderPosition (_sliderPosition.Value);
+        }
+
         _slider.Position = _sliderPosition.Value;
     }
 

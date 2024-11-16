@@ -37,7 +37,7 @@ public class ScrollBarDemo : Scenario
             X = Pos.AnchorEnd () - 5,
             AutoHide = false,
             ScrollableContentSize = 100,
-            //ShowPercent = true
+            Height = Dim.Fill()
         };
         demoFrame.Add (scrollBar);
 
@@ -394,7 +394,7 @@ public class ScrollBarDemo : Scenario
 
             controlledList.ViewportChanged += (s, e) =>
                                               {
-                                                  eventLog.Log ($"ViewportChanged: {e.NewViewport.Y}");
+                                                  eventLog.Log ($"ViewportChanged: {e.NewViewport}");
                                                   scrollBar.Position = e.NewViewport.Y;
                                               };
 

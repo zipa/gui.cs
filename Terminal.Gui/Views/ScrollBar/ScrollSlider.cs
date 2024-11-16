@@ -200,7 +200,7 @@ public class ScrollSlider : View, IOrientation, IDesignable
             }
             _visibleContentSize = int.Max (1, value);
 
-            if (_position > _visibleContentSize - _size)
+            if (_position >= _visibleContentSize - _size)
             {
                 Position = _position;
             }
