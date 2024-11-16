@@ -5,6 +5,8 @@ using System.Drawing;
 
 namespace Terminal.Gui;
 
+// TODO: When scrollbars autohide, reset viewport to 0
+
 /// <summary>
 ///     Indicates the size of scrollable content and controls the position of the visible content, either vertically or horizontally.
 ///     Two <see cref="Button"/>s are provided, one to scroll up or left and one to scroll down or right. Between the buttons is a <see cref="ScrollSlider"/> that can be dragged to
