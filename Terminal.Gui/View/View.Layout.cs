@@ -98,6 +98,11 @@ public partial class View // Layout APIs
         // BUGBUG: When SetFrame is called from Frame_set, this event gets raised BEFORE OnResizeNeeded. Is that OK?
         OnFrameChanged (in frame);
         FrameChanged?.Invoke (this, new (in frame));
+
+        if (oldViewport != Viewport)
+        {
+            RaiseViewportChangedEvent (oldViewport);
+        }
         return true;
     }
 
