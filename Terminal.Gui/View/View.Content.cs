@@ -313,7 +313,7 @@ public partial class View
                 //SetSubViewNeedsDraw();
             }
 
-            OnViewportChanged (new (IsInitialized ? Viewport : Rectangle.Empty, oldViewport));
+            RaiseViewportChangedEvent (oldViewport);
 
             return;
         }
@@ -326,7 +326,7 @@ public partial class View
             Size = newSize
         };
 
-        OnViewportChanged (new (IsInitialized ? Viewport : Rectangle.Empty, oldViewport));
+        // Note, setting the Frame will cause ViewportChanged to be raised.
 
         return;
 
@@ -368,6 +368,13 @@ public partial class View
         }
     }
 
+    private void RaiseViewportChangedEvent (Rectangle oldViewport)
+    {
+        var args = new DrawEventArgs (IsInitialized ? Viewport : Rectangle.Empty, oldViewport);
+        OnViewportChanged (args);
+        ViewportChanged?.Invoke (this, args);
+    }
+
     /// <summary>
     ///     Fired when the <see cref="Viewport"/> changes. This event is fired after the <see cref="Viewport"/> has been
     ///     updated.
@@ -378,7 +385,7 @@ public partial class View
     ///     Called when the <see cref="Viewport"/> changes. Invokes the <see cref="ViewportChanged"/> event.
     /// </summary>
     /// <param name="e"></param>
-    protected virtual void OnViewportChanged (DrawEventArgs e) { ViewportChanged?.Invoke (this, e); }
+    protected virtual void OnViewportChanged (DrawEventArgs e) { }
 
     /// <summary>
     ///     Converts a <see cref="Viewport"/>-relative location and size to a screen-relative location and size.

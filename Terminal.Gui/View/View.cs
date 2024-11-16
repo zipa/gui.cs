@@ -150,7 +150,6 @@ public partial class View : IDisposable, ISupportInitializeNotification
         //SetupMouse ();
 
         SetupText ();
-
         SetupScrollBars ();
     }
 

@@ -4,6 +4,8 @@ using System.ComponentModel;
 
 namespace Terminal.Gui;
 
+// TODO: When scrollbars autohide, reset viewport to 0
+
 /// <summary>
 ///     Indicates the size of scrollable content and controls the position of the visible content, either vertically or
 ///     horizontally.
@@ -91,14 +93,7 @@ public class ScrollBar : View, IOrientation, IDesignable
 
     private void ShowHide ()
     {
-        if (Orientation == Orientation.Vertical)
-        {
-            Visible = VisibleContentSize < ScrollableContentSize;
-        }
-        else
-        {
-            Visible = VisibleContentSize < ScrollableContentSize;
-        }
+        Visible = VisibleContentSize < ScrollableContentSize;
 
         if (!AutoHide)
         {
