@@ -11,145 +11,145 @@ public partial class View
     /// </summary>
     private void SetupScrollBars ()
     {
-        _horizontalScrollBar = new Lazy<ScrollBar> (
-                                                    () =>
-                                                    {
-                                                        var scrollBar = new ScrollBar
-                                                        {
-                                                            Orientation = Orientation.Horizontal,
-                                                            X = 0,
-                                                            Y = Pos.AnchorEnd (),
-                                                            Width = Dim.Fill (
-                                                                              Dim.Func (
-                                                                                        () =>
-                                                                                        {
-                                                                                            if (_verticalScrollBar.IsValueCreated)
-                                                                                            {
-                                                                                                return _verticalScrollBar.Value.Visible ? 1 : 0;
-                                                                                            }
+        if (this is Adornment)
+        {
+            return;
+        }
 
-                                                                                            return 0;
-                                                                                        })),
-                                                            ScrollableContentSize = GetContentSize ().Width,
-                                                            Visible = false
-                                                        };
-
-                                                        Padding?.Add (scrollBar);
-
-                                                        scrollBar.Initialized += (_, _) =>
-                                                                                 {
-                                                                                     Padding!.Thickness = Padding.Thickness with
-                                                                                     {
-                                                                                         Bottom = scrollBar.Visible ? Padding.Thickness.Bottom + 1 : 0
-                                                                                     };
-
-                                                                                     scrollBar.PositionChanged += (_, args) =>
-                                                                                                                  {
-                                                                                                                      Viewport = Viewport with
-                                                                                                                      {
-                                                                                                                          X = Math.Min (
-                                                                                                                                        args.CurrentValue,
-                                                                                                                                        GetContentSize ().Width - (Viewport.Width))
-                                                                                                                      };
-                                                                                                                  };
-
-                                                                                     scrollBar.VisibleChanged += (_, _) =>
-                                                                                                                 {
-                                                                                                                     Padding.Thickness = Padding.Thickness with
-                                                                                                                     {
-                                                                                                                         Bottom = scrollBar.Visible
-                                                                                                                                      ? Padding.Thickness.Bottom + 1
-                                                                                                                                      : Padding.Thickness.Bottom - 1
-                                                                                                                     };
-                                                                                                                 };
-                                                                                 };
-
-                                                        return scrollBar;
-                                                    });
-
-        _verticalScrollBar = new Lazy<ScrollBar> (
-                                                  () =>
-                                                  {
-                                                      var scrollBar = new ScrollBar
-                                                      {
-                                                          Orientation = Orientation.Vertical,
-                                                          X = Pos.AnchorEnd (),
-                                                          Y = Pos.Func (() => Padding.Thickness.Top),
-                                                          Height = Dim.Fill (
-                                                                             Dim.Func (
-                                                                                       () =>
-                                                                                       {
-                                                                                           if (_horizontalScrollBar.IsValueCreated)
-                                                                                           {
-                                                                                               return _horizontalScrollBar.Value.Visible ? 1 : 0;
-                                                                                           }
-
-                                                                                           return 0;
-                                                                                       })),
-                                                          ScrollableContentSize = GetContentSize ().Height,
-                                                          Visible = false
-                                                      };
-
-                                                      Padding?.Add (scrollBar);
-
-                                                      scrollBar.Initialized += (_, _) =>
-                                                                               {
-                                                                                   if (Padding is { })
-                                                                                   {
-                                                                                       Padding.Thickness = Padding.Thickness with
-                                                                                       {
-                                                                                           Right = scrollBar.Visible ? Padding.Thickness.Right + 1 : 0
-                                                                                       };
-
-                                                                                       scrollBar.PositionChanged += (_, args) =>
-                                                                                                                    {
-                                                                                                                        Viewport = Viewport with
-                                                                                                                        {
-                                                                                                                            Y = Math.Min (args.CurrentValue, GetContentSize ().Height - (Viewport.Height - 1))
-                                                                                                                        };
-                                                                                                                    };
-
-                                                                                       scrollBar.VisibleChanged += (_, _) =>
-                                                                                                                   {
-                                                                                                                       Padding.Thickness = Padding.Thickness with
-                                                                                                                       {
-                                                                                                                           Right = scrollBar.Visible
-                                                                                                                                       ? Padding.Thickness.Right + 1
-                                                                                                                                       : Padding.Thickness.Right - 1
-                                                                                                                       };
-                                                                                                                   };
-                                                                                   }
-                                                                               };
-
-                                                      return scrollBar;
-                                                  });
+        _verticalScrollBar = new (() => ScrollBarFactory (Orientation.Vertical));
+        _horizontalScrollBar = new (() => ScrollBarFactory (Orientation.Horizontal));
 
         ViewportChanged += (_, _) =>
-        {
-            if (_verticalScrollBar.IsValueCreated)
-            {
-                _verticalScrollBar.Value.VisibleContentSize = Viewport.Height;
-                _verticalScrollBar.Value.Position = Viewport.Y;
-            }
+                           {
+                               if (_verticalScrollBar.IsValueCreated)
+                               {
+                                   _verticalScrollBar.Value.VisibleContentSize = Viewport.Height;
+                                   _verticalScrollBar.Value.Position = Viewport.Y;
+                               }
 
-            if (_horizontalScrollBar.IsValueCreated)
-            {
-                _horizontalScrollBar.Value.VisibleContentSize = Viewport.Width;
-                _horizontalScrollBar.Value.Position = Viewport.X;
-            }
-        };
+                               if (_horizontalScrollBar.IsValueCreated)
+                               {
+                                   _horizontalScrollBar.Value.VisibleContentSize = Viewport.Width;
+                                   _horizontalScrollBar.Value.Position = Viewport.X;
+                               }
+                           };
 
         ContentSizeChanged += (_, _) =>
+                              {
+                                  if (_verticalScrollBar.IsValueCreated)
+                                  {
+                                      _verticalScrollBar.Value.ScrollableContentSize = GetContentSize ().Height;
+                                  }
+
+                                  if (_horizontalScrollBar.IsValueCreated)
+                                  {
+                                      _horizontalScrollBar.Value.ScrollableContentSize = GetContentSize ().Width;
+                                  }
+                              };
+    }
+
+    private ScrollBar ScrollBarFactory (Orientation orientation)
+    {
+        var scrollBar = new ScrollBar
         {
-            if (_verticalScrollBar.IsValueCreated)
-            {
-                _verticalScrollBar.Value.ScrollableContentSize = GetContentSize ().Height;
-            }
-            if (_horizontalScrollBar.IsValueCreated)
-            {
-                _horizontalScrollBar.Value.ScrollableContentSize = GetContentSize ().Width;
-            }
+            Orientation = orientation,
+            AutoHide = true
         };
+
+        if (orientation == Orientation.Vertical)
+        {
+            scrollBar.X = Pos.AnchorEnd ();
+
+            // Ensure the scrollbar's length accomodates for the opposite scrollbar's visibility
+            scrollBar.Height = Dim.Fill (
+                                         Dim.Func (
+                                                   () =>
+                                                   {
+                                                       if (_horizontalScrollBar.IsValueCreated)
+                                                       {
+                                                           return _horizontalScrollBar.Value.Visible ? 1 : 0;
+                                                       }
+
+                                                       return 0;
+                                                   }));
+            scrollBar.ScrollableContentSize = GetContentSize ().Height;
+        }
+        else
+        {
+            scrollBar.Y = Pos.AnchorEnd ();
+
+            // Ensure the scrollbar's length accomodates for the opposite scrollbar's visibility
+            scrollBar.Width = Dim.Fill (
+                                        Dim.Func (
+                                                  () =>
+                                                  {
+                                                      if (_verticalScrollBar.IsValueCreated)
+                                                      {
+                                                          return _verticalScrollBar.Value.Visible ? 1 : 0;
+                                                      }
+
+                                                      return 0;
+                                                  }));
+            scrollBar.ScrollableContentSize = GetContentSize ().Width;
+        }
+
+        Padding?.Add (scrollBar);
+
+        scrollBar.Initialized += OnScrollBarOnInitialized;
+
+        return scrollBar;
+
+        void OnScrollBarOnInitialized (object? o, EventArgs eventArgs)
+        {
+            if (orientation == Orientation.Vertical)
+            {
+                Padding!.Thickness = Padding.Thickness with { Right = scrollBar.Visible ? Padding.Thickness.Right + 1 : 0 };
+
+                scrollBar.PositionChanged += (_, args) =>
+                                             {
+                                                 Viewport = Viewport with
+                                                 {
+                                                     Y = Math.Min (
+                                                                   args.CurrentValue,
+                                                                   GetContentSize ().Height - Viewport.Height)
+                                                 };
+                                             };
+
+                scrollBar.VisibleChanged += (_, _) =>
+                                            {
+                                                Padding.Thickness = Padding.Thickness with
+                                                {
+                                                    Right = scrollBar.Visible
+                                                                ? Padding.Thickness.Right + 1
+                                                                : Padding.Thickness.Right - 1
+                                                };
+                                            };
+            }
+            else
+            {
+                Padding!.Thickness = Padding.Thickness with { Bottom = scrollBar.Visible ? Padding.Thickness.Bottom + 1 : 0 };
+
+                scrollBar.PositionChanged += (_, args) =>
+                                             {
+                                                 Viewport = Viewport with
+                                                 {
+                                                     X = Math.Min (
+                                                                   args.CurrentValue,
+                                                                   GetContentSize ().Width - Viewport.Width)
+                                                 };
+                                             };
+
+                scrollBar.VisibleChanged += (_, _) =>
+                                            {
+                                                Padding.Thickness = Padding.Thickness with
+                                                {
+                                                    Bottom = scrollBar.Visible
+                                                                 ? Padding.Thickness.Bottom + 1
+                                                                 : Padding.Thickness.Bottom - 1
+                                                };
+                                            };
+            }
+        }
     }
 
     /// <summary>
@@ -165,6 +165,11 @@ public partial class View
     /// </summary>
     private void DisposeScrollBars ()
     {
+        if (this is Adornment)
+        {
+            return;
+        }
+
         if (_horizontalScrollBar.IsValueCreated)
         {
             Padding?.Remove (_horizontalScrollBar.Value);
