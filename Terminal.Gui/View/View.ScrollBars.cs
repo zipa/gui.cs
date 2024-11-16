@@ -187,8 +187,8 @@ public partial class View
     {
         if (viewportSettings == ViewportSettings.None)
         {
-            _horizontalScrollBar.Value.KeepContentInAllViewport = true;
-            _verticalScrollBar.Value.KeepContentInAllViewport = true;
+            //_horizontalScrollBar.Value.KeepContentInAllViewport = true;
+            //_verticalScrollBar.Value.KeepContentInAllViewport = true;
         }
         else if (viewportSettings.HasFlag (ViewportSettings.AllowNegativeX))
         {
@@ -205,16 +205,16 @@ public partial class View
         }
         else if (viewportSettings.HasFlag (ViewportSettings.AllowXGreaterThanContentWidth))
         {
-            _horizontalScrollBar.Value.KeepContentInAllViewport = false;
+            //_horizontalScrollBar.Value.KeepContentInAllViewport = false;
         }
         else if (viewportSettings.HasFlag (ViewportSettings.AllowYGreaterThanContentHeight))
         {
-            _verticalScrollBar.Value.KeepContentInAllViewport = false;
+            //_verticalScrollBar.Value.KeepContentInAllViewport = false;
         }
         else if (viewportSettings.HasFlag (ViewportSettings.AllowLocationGreaterThanContentSize))
         {
-            _horizontalScrollBar.Value.KeepContentInAllViewport = false;
-            _verticalScrollBar.Value.KeepContentInAllViewport = false;
+            //_horizontalScrollBar.Value.KeepContentInAllViewport = false;
+            //_verticalScrollBar.Value.KeepContentInAllViewport = false;
         }
     }
 }

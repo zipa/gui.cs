@@ -93,11 +93,9 @@ public class ScrollBar : View, IOrientation, IDesignable
 
     private void ShowHide ()
     {
-        Visible = VisibleContentSize < ScrollableContentSize;
-
-        if (!AutoHide)
+        if (AutoHide)
         {
-            Visible = true;
+            Visible = VisibleContentSize < ScrollableContentSize;
         }
 
         if (Orientation == Orientation.Vertical)

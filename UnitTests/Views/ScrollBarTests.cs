@@ -922,15 +922,15 @@ public class ScrollBarTests (ITestOutputHelper output)
         top.Add (view);
         Application.Begin (top);
 
-        Assert.False (scrollBar.KeepContentInAllViewport);
-        scrollBar.KeepContentInAllViewport = true;
+        //Assert.False (scrollBar.KeepContentInAllViewport);
+        //scrollBar.KeepContentInAllViewport = true;
         Assert.Equal (80, view.Padding.Viewport.Width);
         Assert.Equal (25, view.Padding.Viewport.Height);
         Assert.Equal (2, scrollBar.Viewport.Width);
         Assert.Equal (25, scrollBar.Viewport.Height);
         Assert.Equal (30, scrollBar.ScrollableContentSize);
 
-        scrollBar.KeepContentInAllViewport = false;
+        //scrollBar.KeepContentInAllViewport = false;
         scrollBar.Position = 50;
         Assert.Equal (scrollBar.GetSliderPosition (), scrollBar.ScrollableContentSize - 1);
         Assert.Equal (scrollBar.GetSliderPosition (), view.Viewport.Y);
