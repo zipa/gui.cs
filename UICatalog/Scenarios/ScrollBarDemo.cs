@@ -140,8 +140,8 @@ public class ScrollBarDemo : Scenario
                                                      scrollBar.Orientation = Orientation.Vertical;
                                                      scrollBar.X = Pos.AnchorEnd () - 5;
                                                      scrollBar.Y = 0;
-                                                     //scrollWidthHeight.Value = Math.Min (scrollWidthHeight.Value, scrollBar.SuperView!.GetContentSize ().Width);
                                                      scrollBar.Width = scrollWidthHeight.Value;
+                                                     scrollBar.Height = Dim.Fill ();
                                                      controlledList.Visible = true;
                                                  }
                                                  else
@@ -149,8 +149,8 @@ public class ScrollBarDemo : Scenario
                                                      scrollBar.Orientation = Orientation.Horizontal;
                                                      scrollBar.X = 0;
                                                      scrollBar.Y = Pos.AnchorEnd ();
-                                                     //scrollWidthHeight.Value = Math.Min (scrollWidthHeight.Value, scrollBar.SuperView!.GetContentSize ().Height);
                                                      scrollBar.Height = scrollWidthHeight.Value;
+                                                     scrollBar.Width = Dim.Fill ();
                                                      controlledList.Visible = false;
 
                                                  }
