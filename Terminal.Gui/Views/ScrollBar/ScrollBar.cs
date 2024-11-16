@@ -16,6 +16,10 @@ namespace Terminal.Gui;
 /// </summary>
 /// <remarks>
 ///     <para>
+///         ScrollBars can be enabled on any View calling <see cref="View.EnableScrollBar"/>. By default, the built-in View scrollbars have
+///         see <see cref="AutoHide"/> set to <see langword="true"/> thus will only be visible if the content size (see <see cref="View.SetContentSize"/> is
+///         larger than see <see cref="View.Viewport"/>
+///      
 ///     </para>
 ///     <para>
 ///         By default, this view cannot be focused and does not support keyboard input.

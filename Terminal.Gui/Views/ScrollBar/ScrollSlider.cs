@@ -39,27 +39,6 @@ public class ScrollSlider : View, IOrientation, IDesignable
         OnOrientationChanged (Orientation);
 
         HighlightStyle = HighlightStyle.Hover;
-
-        FrameChanged += (sender, args) =>
-                        {
-                            //if (Orientation == Orientation.Vertical)
-                            //{
-                            //    Size = Frame.Height;
-                            //}
-                            //else
-                            //{
-                            //    Size = Frame.Width;
-                            //}
-                        };
-
-        SubviewLayout += (sender, args) =>
-                         {
-                         };
-
-        SubviewsLaidOut += (sender, args) =>
-                           {
-
-                           };
     }
 
     #region IOrientation members
@@ -393,26 +372,8 @@ public class ScrollSlider : View, IOrientation, IDesignable
                 }
 
                 currentLocation -= SliderPadding / 2;
-
-                // location does not account for the ShrinkBy
-                int sliderLowerBound = SliderPadding / 2;
-                int sliderUpperBound = superViewDimension - SliderPadding / 2 - Size;
-
                 int newLocation = currentLocation + offsetFromLastLocation;
                 Position = newLocation;
-
-                //if (location > 0 && location < sliderLowerBound)
-                //{
-                //    Position = 0;
-                //}
-                //else if (location > sliderUpperBound)
-                //{
-                //    Position = superViewDimension - Size;
-                //}
-                //else
-                //{
-                //    Position = currentLocation + offsetFromLastLocation;
-                //}
             }
             else if (mouseEvent.Flags == MouseFlags.Button1Released)
             {
@@ -428,16 +389,6 @@ public class ScrollSlider : View, IOrientation, IDesignable
         }
 
         return false;
-    }
-
-    /// <inheritdoc/>
-    public bool EnableForDesign ()
-    {
-        //        Orientation = Orientation.Horizontal;
-        ShowPercent = true;
-        Size = 5;
-
-        return true;
     }
 
     /// <summary>
@@ -470,14 +421,14 @@ public class ScrollSlider : View, IOrientation, IDesignable
     }
 
     /// <summary>
-    ///     Gets the slider position.
+    ///     Calculates the slider position.
     /// </summary>
     /// <param name="scrollableContentSize">The size of the content.</param>
     /// <param name="visibleContentSize">The size of the visible content.</param>
     /// <param name="contentPosition">The position in the content (between 0 and <paramref name="scrollableContentSize"/>).</param>
     /// <param name="sliderBounds">The bounds of the area the slider moves in (e.g. the size of the <see cref="ScrollBar"/> minus 2).</param>
     /// <param name="direction">The direction the slider is moving.</param>
-    public static int CalculatePosition (
+    internal static int CalculatePosition (
         int scrollableContentSize,
         int visibleContentSize,
         int contentPosition,
@@ -498,13 +449,13 @@ public class ScrollSlider : View, IOrientation, IDesignable
     }
 
     /// <summary>
-    ///     Gets the content position.
+    ///     Calculates the content position.
     /// </summary>
     /// <param name="scrollableContentSize">The size of the content.</param>
     /// <param name="visibleContentSize">The size of the visible content.</param>
     /// <param name="sliderPosition">The position of the slider.</param>
     /// <param name="sliderBounds">The bounds of the area the slider moves in (e.g. the size of the <see cref="ScrollBar"/> minus 2).</param>
-    public static int CalculateContentPosition (
+    internal static int CalculateContentPosition (
         int scrollableContentSize,
         int visibleContentSize,
         int sliderPosition,
@@ -523,4 +474,14 @@ public class ScrollSlider : View, IOrientation, IDesignable
 
         return (int)Math.Clamp (rounded, 0, Math.Max (0, scrollableContentSize - sliderSize));
     }
+
+    /// <inheritdoc/>
+    public bool EnableForDesign ()
+    {
+        ShowPercent = true;
+        Size = 5;
+
+        return true;
+    }
+
 }
