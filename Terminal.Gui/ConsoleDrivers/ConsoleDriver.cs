@@ -14,7 +14,7 @@ namespace Terminal.Gui;
 public abstract class ConsoleDriver
 {
     private readonly ManualResetEventSlim _waitAnsiRequest = new (false);
-    private readonly ManualResetEventSlim _waitAnsiResponse = new (false);
+    private readonly ManualResetEventSlim _ansiResponseReady = new (false);
     private readonly CancellationTokenSource? _ansiRequestTokenSource = new ();
     private readonly ConcurrentQueue<AnsiEscapeSequenceRequest> _requestQueue = new ();
     private readonly ConcurrentQueue<AnsiEscapeSequenceRequest> _responseQueue = new ();
@@ -55,7 +55,7 @@ public abstract class ConsoleDriver
 
                                                                  _responseQueue.Enqueue (request);
 
-                                                                 _waitAnsiResponse.Set ();
+                                                                 _ansiResponseReady.Set ();
                                                              };
 
                             AnsiEscapeSequenceRequests.Add (ansiRequest);
@@ -127,9 +127,9 @@ public abstract class ConsoleDriver
 
         try
         {
-            _waitAnsiResponse.Wait (_ansiRequestTokenSource!.Token);
+            _ansiResponseReady.Wait (_ansiRequestTokenSource!.Token);
 
-            _waitAnsiResponse.Reset ();
+            _ansiResponseReady.Reset ();
 
             _responseQueue.TryDequeue (out _);
 
