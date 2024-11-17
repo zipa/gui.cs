@@ -21,8 +21,6 @@ public class CharMap : View, IDesignable
     private int _rowHeight = 1; // Height of each row of 16 glyphs - changing this is not tested
 
     private ContextMenu _contextMenu = new ();
-    private readonly ScrollBar _vScrollBar;
-    private readonly ScrollBar _hScrollBar;
 
     /// <summary>
     ///     Initalizes a new instance.
@@ -142,74 +140,56 @@ public class CharMap : View, IDesignable
 
         SetContentSize (new (COLUMN_WIDTH * 16 + RowLabelWidth, MAX_CODE_POINT / 16 * _rowHeight + 1)); // +1 for Header
 
-        _hScrollBar = new ()
-        {
-            AutoShow = false,
-            X = RowLabelWidth,
-            Y = Pos.AnchorEnd (),
-            Orientation = Orientation.Horizontal,
-            Width = Dim.Fill (1),
-            ScrollableContentSize = GetContentSize ().Width - RowLabelWidth,
-            Increment = COLUMN_WIDTH,
-        };
+        HorizontalScrollBar.AutoShow = false;
+        HorizontalScrollBar.Increment = COLUMN_WIDTH;
+        HorizontalScrollBar.ScrollableContentSize = GetContentSize ().Width - RowLabelWidth;
+        HorizontalScrollBar.X = RowLabelWidth;
+        HorizontalScrollBar.Y = Pos.AnchorEnd ();
+        HorizontalScrollBar.Width = Dim.Fill (1);
 
-        _vScrollBar = new ()
-        {
-            AutoShow = false,
-            X = Pos.AnchorEnd (),
-            Y = 1, // Header
-            Height = Dim.Fill (Dim.Func (() => Padding.Thickness.Bottom)),
-            ScrollableContentSize = GetContentSize ().Height
-        };
+        VerticalScrollBar.AutoShow = false;
+        VerticalScrollBar.Visible = true;
+        VerticalScrollBar.ScrollableContentSize = GetContentSize ().Height;
+        VerticalScrollBar.X = Pos.AnchorEnd ();
+        VerticalScrollBar.Y = 1; // Header
+        VerticalScrollBar.Height = Dim.Fill (Dim.Func (() => Padding.Thickness.Bottom));
 
-        Padding.Add (_vScrollBar, _hScrollBar);
+        //VerticalScrollBar.PositionChanged += (sender, args) =>
+        //                                      {
+        //                                          if (Viewport.Height > 0)
+        //                                          {
+        //                                              Viewport = Viewport with
+        //                                              {
+        //                                                  Y = Math.Min (args.CurrentValue, GetContentSize ().Height - (Viewport.Height - 1))
+        //                                              };
+        //                                          }
+        //                                      };
 
-        _vScrollBar.PositionChanged += (sender, args) =>
-                                              {
-                                                  if (Viewport.Height > 0)
-                                                  {
-                                                      Viewport = Viewport with
-                                                      {
-                                                          Y = Math.Min (args.CurrentValue, GetContentSize ().Height - (Viewport.Height - 1))
-                                                      };
-                                                  }
-                                              };
+        //HorizontalScrollBar.PositionChanged += (sender, args) =>
+        //                                      {
+        //                                          if (Viewport.Width > 0)
+        //                                          {
+        //                                              Viewport = Viewport with
+        //                                              {
+        //                                                  X = Math.Min (args.CurrentValue, GetContentSize ().Width - Viewport.Width)
+        //                                              };
+        //                                          }
+        //                                      };
 
-        _vScrollBar.Scrolled += (sender, args) =>
-                                              {
-                                                  //ScrollVertical (args.CurrentValue);
-                                              };
-        _hScrollBar.PositionChanged += (sender, args) =>
-                                              {
-                                                  if (Viewport.Width > 0)
-                                                  {
-                                                      Viewport = Viewport with
-                                                      {
-                                                          X = Math.Min (args.CurrentValue, GetContentSize ().Width - Viewport.Width)
-                                                      };
-                                                  }
-                                              };
-
-        FrameChanged += (sender, args) =>
+        ViewportChanged += (sender, args) =>
                         {
                             if (Viewport.Width < GetContentSize ().Width)
                             {
-                                Padding.Thickness = Padding.Thickness with { Bottom = 1 };
+                                HorizontalScrollBar.Visible = true;
                             }
                             else
                             {
-                                Padding.Thickness = Padding.Thickness with { Bottom = 0 };
+                                HorizontalScrollBar.Visible = false;
                             }
 
-                            //_hScrollBar.ContentPosition = Viewport.X;
-                            //_vScrollBar.ContentPosition = Viewport.Y;
+                            VerticalScrollBar.VisibleContentSize = Viewport.Height - 1;
+                            HorizontalScrollBar.VisibleContentSize = Viewport.Width - RowLabelWidth;
                         };
-
-        SubviewsLaidOut += (sender, args) =>
-                         {
-                             //_vScrollBar.ContentPosition = Viewport.Y;
-                             //_hScrollBar.ContentPosition = Viewport.X;
-                         };
     }
 
     private void ScrollToMakeCursorVisible (Point newCursor)
@@ -234,8 +214,8 @@ public class CharMap : View, IDesignable
             ScrollHorizontal (newCursor.X - Viewport.Width + 1);
         }
 
-        _vScrollBar.Position = Viewport.Y;
-        _hScrollBar.Position = Viewport.X;
+        //VerticalScrollBar.Position = Viewport.Y;
+        //HorizontalScrollBar.Position = Viewport.X;
     }
 
     #region Cursor
@@ -524,7 +504,7 @@ public class CharMap : View, IDesignable
         if (e.Flags == MouseFlags.WheeledDown)
         {
             ScrollVertical (1);
-            _vScrollBar.Position = Viewport.Y;
+//            _vScrollBar.Position = Viewport.Y;
             e.Handled = true;
 
             return;
@@ -533,7 +513,7 @@ public class CharMap : View, IDesignable
         if (e.Flags == MouseFlags.WheeledUp)
         {
             ScrollVertical (-1);
-            _vScrollBar.Position = Viewport.Y;
+  //          _vScrollBar.Position = Viewport.Y;
             e.Handled = true;
 
             return;
@@ -542,7 +522,7 @@ public class CharMap : View, IDesignable
         if (e.Flags == MouseFlags.WheeledRight)
         {
             ScrollHorizontal (1);
-            _hScrollBar.Position = Viewport.X;
+           // _hScrollBar.Position = Viewport.X;
             e.Handled = true;
 
             return;
@@ -551,7 +531,7 @@ public class CharMap : View, IDesignable
         if (e.Flags == MouseFlags.WheeledLeft)
         {
             ScrollHorizontal (-1);
-            _hScrollBar.Position = Viewport.X;
+       //     _hScrollBar.Position = Viewport.X;
             e.Handled = true;
         }
     }
