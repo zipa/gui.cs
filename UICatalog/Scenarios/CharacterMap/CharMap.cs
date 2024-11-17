@@ -144,7 +144,7 @@ public class CharMap : View, IDesignable
 
         _hScrollBar = new ()
         {
-            AutoHide = false,
+            AutoShow = false,
             X = RowLabelWidth,
             Y = Pos.AnchorEnd (),
             Orientation = Orientation.Horizontal,
@@ -155,7 +155,7 @@ public class CharMap : View, IDesignable
 
         _vScrollBar = new ()
         {
-            AutoHide = false,
+            AutoShow = false,
             X = Pos.AnchorEnd (),
             Y = 1, // Header
             Height = Dim.Fill (Dim.Func (() => Padding.Thickness.Bottom)),

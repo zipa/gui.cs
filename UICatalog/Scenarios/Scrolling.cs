@@ -50,7 +50,7 @@ public class Scrolling : Scenario
         {
             X = Pos.X (demoView),
             Y = Pos.Bottom (demoView),
-            Text = "Horizontal Scrollbar",
+            Text = "_HorizontalScrollBar.Visible",
             CheckedState = demoView.HorizontalScrollBar.Visible ? CheckState.Checked : CheckState.UnChecked
         };
         app.Add (hCheckBox);
@@ -67,7 +67,7 @@ public class Scrolling : Scenario
         {
             X = Pos.Right (hCheckBox) + 3,
             Y = Pos.Bottom (demoView),
-            Text = "Vertical Scrollbar",
+            Text = "_VerticalScrollBar.Visible",
             CheckedState = demoView.VerticalScrollBar.Visible ? CheckState.Checked : CheckState.UnChecked
         };
         app.Add (vCheckBox);
@@ -76,22 +76,30 @@ public class Scrolling : Scenario
                                              demoView.VerticalScrollBar.Visible = args.CurrentValue == CheckState.Checked;
                                          };
 
-        var t = "Auto Hide Scrollbars";
-
         var ahCheckBox = new CheckBox
         {
-            X = Pos.Left (demoView), Y = Pos.Bottom (hCheckBox), Text = t,
-            CheckedState = demoView.HorizontalScrollBar.AutoHide ? CheckState.Checked : CheckState.UnChecked
+            X = Pos.Left (demoView),
+            Y = Pos.Bottom (hCheckBox),
+            Text = "_AutoHide (both)",
+            CheckedState = demoView.HorizontalScrollBar.AutoShow ? CheckState.Checked : CheckState.UnChecked
         };
 
         ahCheckBox.CheckedStateChanging += (s, e) =>
                               {
-                                  demoView.HorizontalScrollBar.AutoHide = e.NewValue == CheckState.Checked;
-                                  demoView.VerticalScrollBar.AutoHide = e.NewValue == CheckState.Checked;
-                                  hCheckBox.CheckedState = CheckState.Checked;
-                                  vCheckBox.CheckedState = CheckState.Checked;
+                                  demoView.HorizontalScrollBar.AutoShow = e.NewValue == CheckState.Checked;
+                                  demoView.VerticalScrollBar.AutoShow = e.NewValue == CheckState.Checked;
                               };
         app.Add (ahCheckBox);
+
+        demoView.VerticalScrollBar.VisibleChanging += (sender, args) =>
+                                                     {
+                                                         vCheckBox.CheckedState = args.NewValue ? CheckState.Checked : CheckState.UnChecked; 
+                                                     };
+
+        demoView.HorizontalScrollBar.VisibleChanging += (sender, args) =>
+                                                      {
+                                                          hCheckBox.CheckedState = args.NewValue ? CheckState.Checked : CheckState.UnChecked;
+                                                      };
 
         var count = 0;
 

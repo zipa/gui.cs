@@ -39,8 +39,8 @@ public class EventLog : ListView
 
         Initialized += EventLog_Initialized;
 
-        HorizontalScrollBar.AutoHide = true;
-        VerticalScrollBar.AutoHide = true;
+        HorizontalScrollBar.AutoShow = true;
+        VerticalScrollBar.AutoShow = true;
 
         AddCommand (Command.DeleteAll,
                    () =>

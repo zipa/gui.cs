@@ -45,7 +45,7 @@ public partial class View
         var scrollBar = new ScrollBar
         {
             Orientation = orientation,
-            AutoHide = true
+            Visible = false, // Initially hidden until needed
         };
 
         if (orientation == Orientation.Vertical)
@@ -207,16 +207,16 @@ public partial class View
         }
         else if (viewportSettings.HasFlag (ViewportSettings.AllowNegativeX))
         {
-            _horizontalScrollBar.Value.AutoHide = false;
+            _horizontalScrollBar.Value.AutoShow = false;
         }
         else if (viewportSettings.HasFlag (ViewportSettings.AllowNegativeY))
         {
-            _verticalScrollBar.Value.AutoHide = false;
+            _verticalScrollBar.Value.AutoShow = false;
         }
         else if (viewportSettings.HasFlag (ViewportSettings.AllowNegativeLocation))
         {
-            _horizontalScrollBar.Value.AutoHide = false;
-            _verticalScrollBar.Value.AutoHide = false;
+            _horizontalScrollBar.Value.AutoShow = false;
+            _verticalScrollBar.Value.AutoShow = false;
         }
         else if (viewportSettings.HasFlag (ViewportSettings.AllowXGreaterThanContentWidth))
         {

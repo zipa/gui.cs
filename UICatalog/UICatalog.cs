@@ -800,7 +800,7 @@ public class UICatalogApp
             CategoryList.SelectedItemChanged += CategoryView_SelectedChanged;
 
             // This enables the scrollbar by causing lazy instantiation to happen
-            _ = CategoryList.VerticalScrollBar;
+            CategoryList.VerticalScrollBar.AutoShow = true;
 
             // Create the scenario list. The contents of the scenario list changes whenever the
             // Category list selection changes (to show just the scenarios that belong to the selected

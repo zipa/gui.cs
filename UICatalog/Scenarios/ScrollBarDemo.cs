@@ -35,7 +35,7 @@ public class ScrollBarDemo : Scenario
         var scrollBar = new ScrollBar
         {
             X = Pos.AnchorEnd () - 5,
-            AutoHide = false,
+            AutoShow = false,
             ScrollableContentSize = 100,
             Height = Dim.Fill()
         };
@@ -158,7 +158,7 @@ public class ScrollBarDemo : Scenario
 
         var lblSize = new Label
         {
-            Text = "_Content Size:",
+            Text = "Scrollable_ContentSize:",
             TextAlignment = Alignment.End,
             Y = Pos.Align (Alignment.Start, groupId: 1),
             Width = Dim.Func (() => GetMaxLabelWidth (1))
@@ -191,7 +191,7 @@ public class ScrollBarDemo : Scenario
 
         var lblVisibleContentSize = new Label
         {
-            Text = "_VisibleContentSize::",
+            Text = "_VisibleContentSize:",
             TextAlignment = Alignment.End,
             Y = Pos.Align (Alignment.Start, groupId: 1),
             Width = Dim.Func (() => GetMaxLabelWidth (1))
@@ -221,38 +221,6 @@ public class ScrollBarDemo : Scenario
                                                }
                                            };
 
-        var lblSliderPosition = new Label
-        {
-            Text = "_SliderPosition:",
-            TextAlignment = Alignment.End,
-            Y = Pos.Align (Alignment.Start, groupId: 1),
-            Width = Dim.Func (() => GetMaxLabelWidth (1))
-        };
-        demoFrame.Add (lblSliderPosition);
-
-        Label scrollSliderPosition = new ()
-        {
-            Text = scrollBar.GetSliderPosition ().ToString (),
-            X = Pos.Right (lblSliderPosition) + 1,
-            Y = Pos.Top (lblSliderPosition)
-        };
-        demoFrame.Add (scrollSliderPosition);
-
-        var lblScrolled = new Label
-        {
-            Text = "_Scrolled:",
-            TextAlignment = Alignment.End,
-            Y = Pos.Align (Alignment.Start, groupId: 1),
-            Width = Dim.Func (() => GetMaxLabelWidth (1))
-
-        };
-        demoFrame.Add (lblScrolled);
-        Label scrolled = new ()
-        {
-            X = Pos.Right (lblScrolled) + 1,
-            Y = Pos.Top (lblScrolled)
-        };
-        demoFrame.Add (scrolled);
 
         var lblPosition = new Label
         {
@@ -294,35 +262,68 @@ public class ScrollBarDemo : Scenario
 
         var lblOptions = new Label
         {
-            Text = "_Options:",
+            Text = "Options:",
             TextAlignment = Alignment.End,
             Y = Pos.Align (Alignment.Start, groupId: 1),
             Width = Dim.Func (() => GetMaxLabelWidth (1))
         };
         demoFrame.Add (lblOptions);
-        var ckbAutoHide = new CheckBox
+        var autoShow = new CheckBox
         {
             Y = Pos.Top (lblOptions),
             X = Pos.Right (lblOptions) + 1,
-            Text = $"Auto_Hide",
-            CheckedState = scrollBar.AutoHide ? CheckState.Checked : CheckState.UnChecked
+            Text = $"_AutoShow",
+            CheckedState = scrollBar.AutoShow ? CheckState.Checked : CheckState.UnChecked
         };
-        ckbAutoHide.CheckedStateChanging += (s, e) => scrollBar.AutoHide = e.NewValue == CheckState.Checked;
-        demoFrame.Add (ckbAutoHide);
+        autoShow.CheckedStateChanging += (s, e) => scrollBar.AutoShow = e.NewValue == CheckState.Checked;
+        demoFrame.Add (autoShow);
 
         var ckbShowPercent = new CheckBox
         {
             Y = Pos.Top (lblOptions),
-            X = Pos.Right (ckbAutoHide) + 1,
-            Text = "Sho_wPercent",
+            X = Pos.Right (autoShow) + 1,
+            Text = "ShowP_ercent",
             CheckedState = scrollBar.ShowPercent ? CheckState.Checked : CheckState.UnChecked
         };
         ckbShowPercent.CheckedStateChanging += (s, e) => scrollBar.ShowPercent = e.NewValue == CheckState.Checked;
         demoFrame.Add (ckbShowPercent);
 
+        var lblSliderPosition = new Label
+        {
+            Text = "SliderPosition:",
+            TextAlignment = Alignment.End,
+            Y = Pos.Align (Alignment.Start, groupId: 1),
+            Width = Dim.Func (() => GetMaxLabelWidth (1))
+        };
+        demoFrame.Add (lblSliderPosition);
+
+        Label scrollSliderPosition = new ()
+        {
+            Text = scrollBar.GetSliderPosition ().ToString (),
+            X = Pos.Right (lblSliderPosition) + 1,
+            Y = Pos.Top (lblSliderPosition)
+        };
+        demoFrame.Add (scrollSliderPosition);
+
+        var lblScrolled = new Label
+        {
+            Text = "Scrolled:",
+            TextAlignment = Alignment.End,
+            Y = Pos.Align (Alignment.Start, groupId: 1),
+            Width = Dim.Func (() => GetMaxLabelWidth (1))
+
+        };
+        demoFrame.Add (lblScrolled);
+        Label scrolled = new ()
+        {
+            X = Pos.Right (lblScrolled) + 1,
+            Y = Pos.Top (lblScrolled)
+        };
+        demoFrame.Add (scrolled);
+
         var lblScrollFrame = new Label
         {
-            Y = Pos.Bottom (lblOptions) + 1
+            Y = Pos.Bottom (lblScrolled) + 1
         };
         demoFrame.Add (lblScrollFrame);
 

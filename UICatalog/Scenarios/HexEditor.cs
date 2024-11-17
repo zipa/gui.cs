@@ -44,7 +44,7 @@ public class HexEditor : Scenario
         _hexView.Arrangement = ViewArrangement.Resizable;
         _hexView.Edited += _hexView_Edited;
         _hexView.PositionChanged += _hexView_PositionChanged;
-        _hexView.VerticalScrollBar.AutoHide = false;
+        _hexView.VerticalScrollBar.AutoShow = false;
 
         app.Add (_hexView);
 

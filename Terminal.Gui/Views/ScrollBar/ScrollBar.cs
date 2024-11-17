@@ -4,8 +4,6 @@ using System.ComponentModel;
 
 namespace Terminal.Gui;
 
-// TODO: When scrollbars autohide, reset viewport to 0
-
 /// <summary>
 ///     Indicates the size of scrollable content and controls the position of the visible content, either vertically or
 ///     horizontally.
@@ -16,10 +14,11 @@ namespace Terminal.Gui;
 /// </summary>
 /// <remarks>
 ///     <para>
-///         ScrollBars can be enabled on any View calling <see cref="View.EnableScrollBar"/>. By default, the built-in View scrollbars have
-///         see <see cref="AutoHide"/> set to <see langword="true"/> thus will only be visible if the content size (see <see cref="View.SetContentSize"/> is
-///         larger than see <see cref="View.Viewport"/>
-///      
+///         By default, the built-in View scrollbars have both <see cref="View.Visible"/> and <see cref="AutoShow"/> set to
+///         <see langword="false"/>.
+///         To enable them, either  set <see cref="AutoShow"/> set to <see langword="true"/> or explictly set
+///         <see cref="View.Visible"/>
+///         to <see langword="true"/>.
 ///     </para>
 ///     <para>
 ///         By default, this view cannot be focused and does not support keyboard input.
@@ -97,7 +96,7 @@ public class ScrollBar : View, IOrientation, IDesignable
 
     private void ShowHide ()
     {
-        if (AutoHide)
+        if (AutoShow)
         {
             Visible = VisibleContentSize < ScrollableContentSize;
         }
@@ -202,26 +201,27 @@ public class ScrollBar : View, IOrientation, IDesignable
     /// </remarks>
     public int Increment { get; set; } = 1;
 
-    // AutoHide should be false by default. Views should not be hidden by default.
-    private bool _autoHide;
+    // AutoShow should be false by default. Views should not be hidden by default.
+    private bool _autoShow;
 
     /// <summary>
-    ///     Gets or sets whether <see cref="View.Visible"/> will be set to <see langword="false"/> if the dimension of the
-    ///     scroll bar is greater than or equal to <see cref="ScrollableContentSize"/>.
+    ///     Gets or sets whether <see cref="View.Visible"/> will be set to <see langword="true"/> if the dimension of the
+    ///     scroll bar is less than  <see cref="ScrollableContentSize"/> and <see langword="false"/> if greater than or equal
+    ///     to.
     /// </summary>
     /// <remarks>
     ///     The default is <see langword="false"/>.
     /// </remarks>
-    public bool AutoHide
+    public bool AutoShow
     {
-        get => _autoHide;
+        get => _autoShow;
         set
         {
-            if (_autoHide != value)
+            if (_autoShow != value)
             {
-                _autoHide = value;
+                _autoShow = value;
 
-                if (!AutoHide)
+                if (!AutoShow)
                 {
                     Visible = true;
                 }
