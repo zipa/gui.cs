@@ -68,8 +68,6 @@ public abstract class ConsoleDriver
                         if (!_ansiRequestTokenSource.IsCancellationRequested)
                         {
                             _mainLoopDriver.WaitForInput.Set ();
-
-                            _waitAnsiRequest.Wait (_ansiRequestTokenSource.Token);
                         }
                     }
                     catch (OperationCanceledException)
