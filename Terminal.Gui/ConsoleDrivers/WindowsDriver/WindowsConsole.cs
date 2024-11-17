@@ -120,7 +120,7 @@ internal class WindowsConsole
                                     {
                                         readingSequence = false;
                                         raisedResponse = true;
-                                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (ansiSequence.ToString ());
+                                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (ansiSequence.ToString (), seqReqStatus.AnsiRequest);
                                         // Clear the terminator for not be enqueued
                                         inputRecord = default (InputRecord);
                                         // Clear numberEventsRead to not exit
@@ -145,7 +145,7 @@ internal class WindowsConsole
 
                     lock (seqReqStatus!.AnsiRequest._responseLock)
                     {
-                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (ansiSequence.ToString ());
+                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (ansiSequence.ToString (), seqReqStatus.AnsiRequest);
                         // Clear the terminator for not be enqueued
                         inputRecord = default (InputRecord);
                     }
@@ -162,7 +162,7 @@ internal class WindowsConsole
                             {
                                 AnsiEscapeSequenceRequests.Statuses.TryDequeue (out _);
 
-                                seqReqStatus.AnsiRequest.RaiseResponseFromInput (null);
+                                seqReqStatus.AnsiRequest.RaiseResponseFromInput (null, seqReqStatus.AnsiRequest);
                                 // Clear the terminator for not be enqueued
                                 inputRecord = default (InputRecord);
                             }

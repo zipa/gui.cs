@@ -53,9 +53,9 @@ public class AnsiEscapeSequenceRequest
     /// </summary>
     public required string Terminator { get; init; }
 
-    internal void RaiseResponseFromInput (string? response)
+    internal void RaiseResponseFromInput (string? response, AnsiEscapeSequenceRequest? request)
     {
-        ProcessResponse (response);
+        ProcessResponse (response, request);
 
         ResponseFromInput?.Invoke (this, AnsiEscapeSequenceResponse);
     }
@@ -69,7 +69,7 @@ public class AnsiEscapeSequenceRequest
     ///     Process the <see cref="AnsiEscapeSequenceResponse"/> of an ANSI escape sequence request.
     /// </summary>
     /// <param name="response">The response.</param>
-    private void ProcessResponse (string? response)
+    private void ProcessResponse (string? response, AnsiEscapeSequenceRequest? request)
     {
         var error = new StringBuilder ();
         var values = new string? [] { null };
@@ -107,6 +107,11 @@ public class AnsiEscapeSequenceRequest
             if (string.IsNullOrEmpty (error.ToString ()))
             {
                 (string? _, string? _, values, string? _) = AnsiEscapeSequenceRequestUtils.GetEscapeResult (response?.ToCharArray ());
+            }
+
+            if (request is { } && !string.IsNullOrEmpty (request.ExpectedResponseValue) && request.ExpectedResponseValue != values [0])
+            {
+                error.AppendLine ($"Error executing ANSI request:\nValue ends with '{values [0]}'\nand doesn't end with: '{ExpectedResponseValue! [^1]}'");
             }
         }
 

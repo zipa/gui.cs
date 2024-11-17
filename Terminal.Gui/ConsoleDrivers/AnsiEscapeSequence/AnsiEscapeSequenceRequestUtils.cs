@@ -347,7 +347,7 @@ public static class AnsiEscapeSequenceRequestUtils
 
                     lock (seqReqStatus?.AnsiRequest._responseLock!)
                     {
-                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (ckiString);
+                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (ckiString, seqReqStatus.AnsiRequest);
                     }
 
                     return;
@@ -382,7 +382,7 @@ public static class AnsiEscapeSequenceRequestUtils
                         {
                             lock (result.AnsiRequest._responseLock)
                             {
-                                result.AnsiRequest.RaiseResponseFromInput (ToString (cki));
+                                result.AnsiRequest.RaiseResponseFromInput (ToString (cki), result.AnsiRequest);
                             }
                         }
                     }

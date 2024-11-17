@@ -102,7 +102,7 @@ internal class NetEvents : IDisposable
                     {
                         AnsiEscapeSequenceRequests.Statuses.TryDequeue (out _);
 
-                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (null);
+                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (null, seqReqStatus.AnsiRequest);
                     }
                 }
 

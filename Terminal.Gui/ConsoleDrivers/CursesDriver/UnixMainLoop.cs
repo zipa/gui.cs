@@ -264,7 +264,7 @@ internal class UnixMainLoop (ConsoleDriver consoleDriver) : IMainLoopDriver
                             {
                                 AnsiEscapeSequenceRequests.Statuses.TryDequeue (out _);
 
-                                seqReqStatus.AnsiRequest.RaiseResponseFromInput (null);
+                                seqReqStatus.AnsiRequest.RaiseResponseFromInput (null, seqReqStatus.AnsiRequest);
                             }
                         }
 
