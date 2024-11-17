@@ -121,10 +121,8 @@ internal class WindowsConsole
                                         readingSequence = false;
                                         raisedResponse = true;
                                         seqReqStatus.AnsiRequest.RaiseResponseFromInput (ansiSequence.ToString (), seqReqStatus.AnsiRequest);
-                                        // Clear the terminator for not be enqueued
-                                        inputRecord = default (InputRecord);
-                                        // Clear numberEventsRead to not exit
-                                        numberEventsRead = 0;
+                                        ClearInputRecord ();
+
                                         // Clear the ansiSequence to avoid insert another Esc character
                                         ansiSequence.Clear ();
                                     }
@@ -146,8 +144,7 @@ internal class WindowsConsole
                     lock (seqReqStatus!.AnsiRequest._responseLock)
                     {
                         seqReqStatus.AnsiRequest.RaiseResponseFromInput (ansiSequence.ToString (), seqReqStatus.AnsiRequest);
-                        // Clear the terminator for not be enqueued
-                        inputRecord = default (InputRecord);
+                        ClearInputRecord();
                     }
 
                     _retries = 0;
@@ -163,8 +160,7 @@ internal class WindowsConsole
                                 AnsiEscapeSequenceRequests.Statuses.TryDequeue (out _);
 
                                 seqReqStatus.AnsiRequest.RaiseResponseFromInput (null, seqReqStatus.AnsiRequest);
-                                // Clear the terminator for not be enqueued
-                                inputRecord = default (InputRecord);
+                                ClearInputRecord();
                             }
                         }
 
@@ -209,6 +205,15 @@ internal class WindowsConsole
         }
 
         return null;
+
+        void ClearInputRecord ()
+        {
+            // Clear the terminator for not be enqueued
+            inputRecord = default (InputRecord);
+
+            // Clear numberEventsRead to not exit
+            numberEventsRead = 0;
+        }
     }
 
     internal bool _forceRead;
