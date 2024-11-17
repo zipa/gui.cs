@@ -15,7 +15,7 @@ public class Scrolling : Scenario
 
         var app = new Window
         {
-            Title = GetQuitKeyAndName (),
+            Title = GetQuitKeyAndName ()
         };
 
         var label = new Label { X = 0, Y = 0 };
@@ -27,7 +27,7 @@ public class Scrolling : Scenario
             X = 2,
             Y = Pos.Bottom (label) + 1,
             Width = 60,
-            Height = 20,
+            Height = 20
         };
         demoView.SetContentSize (new (80, 25));
 
@@ -35,10 +35,10 @@ public class Scrolling : Scenario
             $"{demoView}\nContentSize: {demoView.GetContentSize ()}\nViewport.Location: {demoView.Viewport.Location}";
 
         demoView.ViewportChanged += (_, _) =>
-                                      {
-                                          label.Text =
-                                              $"{demoView}\nContentSize: {demoView.GetContentSize ()}\nViewport.Location: {demoView.Viewport.Location}";
-                                      };
+                                    {
+                                        label.Text =
+                                            $"{demoView}\nContentSize: {demoView.GetContentSize ()}\nViewport.Location: {demoView.Viewport.Location}";
+                                    };
 
         app.Add (demoView);
 
@@ -54,10 +54,7 @@ public class Scrolling : Scenario
             CheckedState = demoView.HorizontalScrollBar.Visible ? CheckState.Checked : CheckState.UnChecked
         };
         app.Add (hCheckBox);
-        hCheckBox.CheckedStateChanged += (sender, args) =>
-                                         {
-                                             demoView.HorizontalScrollBar.Visible = args.CurrentValue == CheckState.Checked;
-                                         };
+        hCheckBox.CheckedStateChanged += (sender, args) => { demoView.HorizontalScrollBar.Visible = args.CurrentValue == CheckState.Checked; };
 
         //// NOTE: This call to EnableScrollBar is technically not needed because the reference
         //// NOTE: to demoView.HorizontalScrollBar below will cause it to be lazy created.
@@ -71,35 +68,29 @@ public class Scrolling : Scenario
             CheckedState = demoView.VerticalScrollBar.Visible ? CheckState.Checked : CheckState.UnChecked
         };
         app.Add (vCheckBox);
-        vCheckBox.CheckedStateChanged += (sender, args) =>
-                                         {
-                                             demoView.VerticalScrollBar.Visible = args.CurrentValue == CheckState.Checked;
-                                         };
+        vCheckBox.CheckedStateChanged += (sender, args) => { demoView.VerticalScrollBar.Visible = args.CurrentValue == CheckState.Checked; };
 
         var ahCheckBox = new CheckBox
         {
             X = Pos.Left (demoView),
             Y = Pos.Bottom (hCheckBox),
-            Text = "_AutoHide (both)",
+            Text = "_AutoShow (both)",
             CheckedState = demoView.HorizontalScrollBar.AutoShow ? CheckState.Checked : CheckState.UnChecked
         };
 
         ahCheckBox.CheckedStateChanging += (s, e) =>
-                              {
-                                  demoView.HorizontalScrollBar.AutoShow = e.NewValue == CheckState.Checked;
-                                  demoView.VerticalScrollBar.AutoShow = e.NewValue == CheckState.Checked;
-                              };
+                                           {
+                                               demoView.HorizontalScrollBar.AutoShow = e.NewValue == CheckState.Checked;
+                                               demoView.VerticalScrollBar.AutoShow = e.NewValue == CheckState.Checked;
+                                           };
         app.Add (ahCheckBox);
 
-        demoView.VerticalScrollBar.VisibleChanging += (sender, args) =>
-                                                     {
-                                                         vCheckBox.CheckedState = args.NewValue ? CheckState.Checked : CheckState.UnChecked; 
-                                                     };
+        demoView.VerticalScrollBar.VisibleChanging += (sender, args) => { vCheckBox.CheckedState = args.NewValue ? CheckState.Checked : CheckState.UnChecked; };
 
         demoView.HorizontalScrollBar.VisibleChanging += (sender, args) =>
-                                                      {
-                                                          hCheckBox.CheckedState = args.NewValue ? CheckState.Checked : CheckState.UnChecked;
-                                                      };
+                                                        {
+                                                            hCheckBox.CheckedState = args.NewValue ? CheckState.Checked : CheckState.UnChecked;
+                                                        };
 
         var count = 0;
 
@@ -130,19 +121,16 @@ public class Scrolling : Scenario
 
         Application.AddTimeout (TimeSpan.FromMilliseconds (300), timer);
 
-        app.Unloaded += app_Unloaded;
+        app.Unloaded += AppUnloaded;
 
         Application.Run (app);
-        app.Unloaded -= app_Unloaded;
+        app.Unloaded -= AppUnloaded;
         app.Dispose ();
         Application.Shutdown ();
 
         return;
 
-        void app_Unloaded (object sender, EventArgs args)
-        {
-            pulsing = false;
-        }
+        void AppUnloaded (object sender, EventArgs args) { pulsing = false; }
     }
 }
 
@@ -154,18 +142,17 @@ public class DemoView : View
         CanFocus = true;
         BorderStyle = LineStyle.Heavy;
         Arrangement = ViewArrangement.Resizable;
-
         Initialized += OnInitialized;
-
-
+        HorizontalScrollBar.AutoShow = true;
+        VerticalScrollBar.AutoShow = true;
     }
 
     private void OnInitialized (object sender, EventArgs e)
     {
-        View rulerView = new View ()
+        var rulerView = new View
         {
             Height = Dim.Fill (),
-            Width = Dim.Fill (),
+            Width = Dim.Fill ()
         };
         rulerView.Border!.Thickness = new (1);
         rulerView.Border.LineStyle = LineStyle.None;
@@ -173,7 +160,6 @@ public class DemoView : View
         rulerView.Border.ColorScheme = Colors.ColorSchemes ["Error"];
 
         Add (rulerView);
-
 
         var pressMeButton = new Button
         {
@@ -195,37 +181,37 @@ public class DemoView : View
         Add (aLongButton);
 
         Add (
-                        new TextField
-                        {
-                            X = Pos.Left (pressMeButton),
-                            Y = Pos.Bottom (aLongButton) + 1,
-                            Width = 50,
-                            ColorScheme = Colors.ColorSchemes ["Dialog"],
-                            Text = "This is a test of..."
-                        }
-                       );
+             new TextField
+             {
+                 X = Pos.Left (pressMeButton),
+                 Y = Pos.Bottom (aLongButton) + 1,
+                 Width = 50,
+                 ColorScheme = Colors.ColorSchemes ["Dialog"],
+                 Text = "This is a test of..."
+             }
+            );
 
         Add (
-                        new TextField
-                        {
-                            X = Pos.Left (pressMeButton),
-                            Y = Pos.Bottom (aLongButton) + 3,
-                            Width = 50,
-                            ColorScheme = Colors.ColorSchemes ["Dialog"],
-                            Text = "... the emergency broadcast system."
-                        }
-                       );
+             new TextField
+             {
+                 X = Pos.Left (pressMeButton),
+                 Y = Pos.Bottom (aLongButton) + 3,
+                 Width = 50,
+                 ColorScheme = Colors.ColorSchemes ["Dialog"],
+                 Text = "... the emergency broadcast system."
+             }
+            );
 
         Add (
-                        new TextField
-                        {
-                            X = Pos.Left (pressMeButton),
-                            Y = 40,
-                            Width = 50,
-                            ColorScheme = Colors.ColorSchemes ["Error"],
-                            Text = "Last line"
-                        }
-                       );
+             new TextField
+             {
+                 X = Pos.Left (pressMeButton),
+                 Y = 40,
+                 Width = 50,
+                 ColorScheme = Colors.ColorSchemes ["Error"],
+                 Text = "Last line"
+             }
+            );
 
         // Demonstrate AnchorEnd - Button is anchored to bottom/right
         var anchorButton = new Button
@@ -236,13 +222,11 @@ public class DemoView : View
         };
 
         anchorButton.Accepting += (s, e) =>
-        {
-            // This demonstrates how to have a dynamically sized button
-            // Each time the button is clicked the button's text gets longer
-            anchorButton.Text += "!";
-
-        };
+                                  {
+                                      // This demonstrates how to have a dynamically sized button
+                                      // Each time the button is clicked the button's text gets longer
+                                      anchorButton.Text += "!";
+                                  };
         Add (anchorButton);
-
     }
 }

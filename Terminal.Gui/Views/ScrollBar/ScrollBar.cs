@@ -14,6 +14,9 @@ namespace Terminal.Gui;
 /// </summary>
 /// <remarks>
 ///     <para>
+///         See the <see href="https://gui-cs.github.io/Terminal.GuiV2Docs/docs/scrolling.html">Scrolling Deep Dive</see>.
+///     </para>
+///     <para>
 ///         By default, the built-in View scrollbars have both <see cref="View.Visible"/> and <see cref="AutoShow"/> set to
 ///         <see langword="false"/>.
 ///         To enable them, either  set <see cref="AutoShow"/> set to <see langword="true"/> or explictly set
@@ -103,11 +106,11 @@ public class ScrollBar : View, IOrientation, IDesignable
 
         if (Orientation == Orientation.Vertical)
         {
-            _slider.VisibleContentSize = Viewport.Height;
+            _slider.VisibleContentSize = VisibleContentSize;
         }
         else
         {
-            _slider.VisibleContentSize = Viewport.Width;
+            _slider.VisibleContentSize = VisibleContentSize;
         }
 
         _slider.Size = CalculateSliderSize ();
@@ -194,7 +197,7 @@ public class ScrollBar : View, IOrientation, IDesignable
     #endregion
 
     /// <summary>
-    ///     Gets or sets the amount each mouse wheel event will incremenet/decrement the <see cref="Position"/>.
+    ///     Gets or sets the amount each mouse wheel event, or click on the increment/decrement buttons, will incremenet/decrement the <see cref="Position"/>.
     /// </summary>
     /// <remarks>
     ///     The default is 1.
@@ -249,7 +252,7 @@ public class ScrollBar : View, IOrientation, IDesignable
     ///     <see cref="ScrollableContentSize"/>.
     /// </summary>
     /// <remarks>
-    ///     If not explicitly set, will be the appropriate dimension of the Scroll's Frame.
+    ///     If not explicitly set, the visible content size will be appropriate dimension of the ScrollBar's Frame.
     /// </remarks>
     public int VisibleContentSize
     {
@@ -555,9 +558,9 @@ public class ScrollBar : View, IOrientation, IDesignable
         }
 
 #if PROPORTIONAL_SCROLL_JUMP
-        // BUGBUG: This logic mostly works to provide a proportional jump. However, the math
-        // BUGBUG: falls apart in edge cases. Most other scroll bars (e.g. Windows) do not do proportional
-        // BUGBUG: Thus, this is disabled and we just jump a page each click.
+        // TODO: This logic mostly works to provide a proportional jump. However, the math
+        // TODO: falls apart in edge cases. Most other scroll bars (e.g. Windows) do not do proportional
+        // TODO: Thus, this is disabled; we just jump a page each click.
         // Ratio of the distance to the viewport dimension
         double ratio = (double)Math.Abs (distanceFromCenter) / (VisibleContentSize);
         // Jump size based on the ratio and the total content size

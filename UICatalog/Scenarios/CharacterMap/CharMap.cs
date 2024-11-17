@@ -18,12 +18,13 @@ namespace UICatalog.Scenarios;
 public class CharMap : View, IDesignable
 {
     private const int COLUMN_WIDTH = 3; // Width of each column of glyphs
+    private const int HEADER_HEIGHT = 1; // Height of the header
     private int _rowHeight = 1; // Height of each row of 16 glyphs - changing this is not tested
 
     private ContextMenu _contextMenu = new ();
 
     /// <summary>
-    ///     Initalizes a new instance.
+    ///     Initializes a new instance.
     /// </summary>
     public CharMap ()
     {
@@ -75,7 +76,7 @@ public class CharMap : View, IDesignable
                     Command.PageUp,
                     () =>
                     {
-                        int page = (Viewport.Height - 1 / _rowHeight) * 16;
+                        int page = (Viewport.Height - HEADER_HEIGHT / _rowHeight) * 16;
                         SelectedCodePoint -= page;
 
                         return true;
@@ -86,7 +87,7 @@ public class CharMap : View, IDesignable
                     Command.PageDown,
                     () =>
                     {
-                        int page = (Viewport.Height - 1 / _rowHeight) * 16;
+                        int page = (Viewport.Height - HEADER_HEIGHT / _rowHeight) * 16;
                         SelectedCodePoint += page;
 
                         return true;
@@ -135,120 +136,92 @@ public class CharMap : View, IDesignable
         MouseClick += Handle_MouseClick;
         MouseEvent += Handle_MouseEvent;
 
-        // Add scrollbars
-        Padding!.Thickness = new (0, 0, 1, 0);
+        SetContentSize (new (COLUMN_WIDTH * 16 + RowLabelWidth, MAX_CODE_POINT / 16 * _rowHeight + HEADER_HEIGHT));
 
-        SetContentSize (new (COLUMN_WIDTH * 16 + RowLabelWidth, MAX_CODE_POINT / 16 * _rowHeight + 1)); // +1 for Header
-
+        // Set up the horizontal scrollbar. Turn off AutoShow since we do it manually.
         HorizontalScrollBar.AutoShow = false;
         HorizontalScrollBar.Increment = COLUMN_WIDTH;
+
+        // This prevents scrolling past the last column
         HorizontalScrollBar.ScrollableContentSize = GetContentSize ().Width - RowLabelWidth;
         HorizontalScrollBar.X = RowLabelWidth;
         HorizontalScrollBar.Y = Pos.AnchorEnd ();
         HorizontalScrollBar.Width = Dim.Fill (1);
 
-        VerticalScrollBar.AutoShow = false;
-        VerticalScrollBar.Visible = true;
-        VerticalScrollBar.ScrollableContentSize = GetContentSize ().Height;
-        VerticalScrollBar.X = Pos.AnchorEnd ();
-        VerticalScrollBar.Y = 1; // Header
-        VerticalScrollBar.Height = Dim.Fill (Dim.Func (() => Padding.Thickness.Bottom));
-
-        //VerticalScrollBar.PositionChanged += (sender, args) =>
-        //                                      {
-        //                                          if (Viewport.Height > 0)
-        //                                          {
-        //                                              Viewport = Viewport with
-        //                                              {
-        //                                                  Y = Math.Min (args.CurrentValue, GetContentSize ().Height - (Viewport.Height - 1))
-        //                                              };
-        //                                          }
-        //                                      };
-
-        //HorizontalScrollBar.PositionChanged += (sender, args) =>
-        //                                      {
-        //                                          if (Viewport.Width > 0)
-        //                                          {
-        //                                              Viewport = Viewport with
-        //                                              {
-        //                                                  X = Math.Min (args.CurrentValue, GetContentSize ().Width - Viewport.Width)
-        //                                              };
-        //                                          }
-        //                                      };
-
+        // We want the horizontal scrollbar to only show when needed.
+        // We can't use ScrollBar.AutoShow because we are using custom ContentSize
+        // So, we do it manually on ViewportChanged events.
         ViewportChanged += (sender, args) =>
-                        {
-                            if (Viewport.Width < GetContentSize ().Width)
-                            {
-                                HorizontalScrollBar.Visible = true;
-                            }
-                            else
-                            {
-                                HorizontalScrollBar.Visible = false;
-                            }
+                           {
+                               if (Viewport.Width < GetContentSize ().Width)
+                               {
+                                   HorizontalScrollBar.Visible = true;
+                               }
+                               else
+                               {
+                                   HorizontalScrollBar.Visible = false;
+                               }
+                           };
 
-                            VerticalScrollBar.VisibleContentSize = Viewport.Height - 1;
-                            HorizontalScrollBar.VisibleContentSize = Viewport.Width - RowLabelWidth;
-                        };
+        // Set up the vertical scrollbar. Turn off AutoShow since it's always visible.
+        VerticalScrollBar.AutoShow = false;
+        VerticalScrollBar.Visible = true; // Force always visible
+        VerticalScrollBar.X = Pos.AnchorEnd ();
+        VerticalScrollBar.Y = HEADER_HEIGHT; // Header
     }
 
-    private void ScrollToMakeCursorVisible (Point newCursor)
+    private void ScrollToMakeCursorVisible (Point offsetToNewCursor)
     {
         // Adjust vertical scrolling
-        if (newCursor.Y < 1) // Header is at Y = 0
+        if (offsetToNewCursor.Y < 1) // Header is at Y = 0
         {
-            ScrollVertical (newCursor.Y - 1);
+            ScrollVertical (offsetToNewCursor.Y - HEADER_HEIGHT);
         }
-        else if (newCursor.Y >= Viewport.Height)
+        else if (offsetToNewCursor.Y >= Viewport.Height)
         {
-            ScrollVertical (newCursor.Y - Viewport.Height + 1);
+            ScrollVertical (offsetToNewCursor.Y - Viewport.Height + HEADER_HEIGHT);
         }
 
         // Adjust horizontal scrolling
-        if (newCursor.X < RowLabelWidth + 1)
+        if (offsetToNewCursor.X < RowLabelWidth + 1)
         {
-            ScrollHorizontal (newCursor.X - (RowLabelWidth + 1));
+            ScrollHorizontal (offsetToNewCursor.X - (RowLabelWidth + 1));
         }
-        else if (newCursor.X >= Viewport.Width)
+        else if (offsetToNewCursor.X >= Viewport.Width)
         {
-            ScrollHorizontal (newCursor.X - Viewport.Width + 1);
+            ScrollHorizontal (offsetToNewCursor.X - Viewport.Width + 1);
         }
-
-        //VerticalScrollBar.Position = Viewport.Y;
-        //HorizontalScrollBar.Position = Viewport.X;
     }
 
     #region Cursor
 
-    /// <summary>Gets or sets the coordinates of the Cursor based on the SelectedCodePoint in Viewport-relative coordinates</summary>
-    public Point Cursor
+    private Point GetCursor (int codePoint)
     {
-        get
-        {
-            int row = SelectedCodePoint / 16 * _rowHeight + 1 - Viewport.Y; // + 1 for header
-            int col = SelectedCodePoint % 16 * COLUMN_WIDTH + RowLabelWidth + 1 - Viewport.X; // + 1 for padding between label and first column
+        // + 1 for padding between label and first column
+        int x = codePoint % 16 * COLUMN_WIDTH + RowLabelWidth + 1 - Viewport.X;
+        int y = codePoint / 16 * _rowHeight + HEADER_HEIGHT - Viewport.Y;
 
-            return new (col, row);
-        }
-        set => throw new NotImplementedException ();
+        return new (x, y);
     }
 
     public override Point? PositionCursor ()
     {
+        Point cursor = GetCursor (SelectedCodePoint);
+
         if (HasFocus
-            && Cursor.X >= RowLabelWidth
-            && Cursor.X < Viewport.Width
-            && Cursor.Y > 0
-            && Cursor.Y < Viewport.Height)
+            && cursor.X >= RowLabelWidth
+            && cursor.X < Viewport.Width
+            && cursor.Y > 0
+            && cursor.Y < Viewport.Height)
         {
-            Move (Cursor.X, Cursor.Y);
+            Move (cursor.X, cursor.Y);
         }
         else
         {
             return null;
         }
 
-        return Cursor;
+        return cursor;
     }
 
     #endregion Cursor
@@ -274,16 +247,12 @@ public class CharMap : View, IDesignable
 
             int newSelectedCodePoint = Math.Clamp (value, 0, MAX_CODE_POINT);
 
-            Point newCursor = new ()
-            {
-                X = newSelectedCodePoint % 16 * COLUMN_WIDTH + RowLabelWidth + 1 - Viewport.X,
-                Y = newSelectedCodePoint / 16 * _rowHeight + 1 - Viewport.Y
-            };
+            Point offsetToNewCursor = GetCursor (newSelectedCodePoint);
 
             _selectedCodepoint = newSelectedCodePoint;
 
             // Ensure the new cursor position is visible
-            ScrollToMakeCursorVisible (newCursor);
+            ScrollToMakeCursorVisible (offsetToNewCursor);
 
             SetNeedsDraw ();
             SelectedCodePointChanged?.Invoke (this, new (SelectedCodePoint));
@@ -336,8 +305,8 @@ public class CharMap : View, IDesignable
             return true;
         }
 
-        int cursorCol = Cursor.X + Viewport.X - RowLabelWidth - 1;
-        int cursorRow = Cursor.Y + Viewport.Y - 1;
+        int cursorCol = GetCursor (SelectedCodePoint).X + Viewport.X - RowLabelWidth - 1;
+        int cursorRow = GetCursor (SelectedCodePoint).Y + Viewport.Y - 1;
 
         SetAttribute (GetHotNormalColor ());
         Move (0, 0);
@@ -504,7 +473,6 @@ public class CharMap : View, IDesignable
         if (e.Flags == MouseFlags.WheeledDown)
         {
             ScrollVertical (1);
-//            _vScrollBar.Position = Viewport.Y;
             e.Handled = true;
 
             return;
@@ -513,7 +481,6 @@ public class CharMap : View, IDesignable
         if (e.Flags == MouseFlags.WheeledUp)
         {
             ScrollVertical (-1);
-  //          _vScrollBar.Position = Viewport.Y;
             e.Handled = true;
 
             return;
@@ -522,7 +489,6 @@ public class CharMap : View, IDesignable
         if (e.Flags == MouseFlags.WheeledRight)
         {
             ScrollHorizontal (1);
-           // _hScrollBar.Position = Viewport.X;
             e.Handled = true;
 
             return;
@@ -531,7 +497,6 @@ public class CharMap : View, IDesignable
         if (e.Flags == MouseFlags.WheeledLeft)
         {
             ScrollHorizontal (-1);
-       //     _hScrollBar.Position = Viewport.X;
             e.Handled = true;
         }
     }
@@ -545,12 +510,12 @@ public class CharMap : View, IDesignable
 
         if (me.Position.Y == 0)
         {
-            me.Position = me.Position with { Y = Cursor.Y };
+            me.Position = me.Position with { Y = GetCursor (SelectedCodePoint).Y };
         }
 
         if (me.Position.X < RowLabelWidth || me.Position.X > RowLabelWidth + 16 * COLUMN_WIDTH - 1)
         {
-            me.Position = me.Position with { X = Cursor.X };
+            me.Position = me.Position with { X = GetCursor (SelectedCodePoint).X };
         }
 
         int row = (me.Position.Y - 1 - -Viewport.Y) / _rowHeight; // -1 for header
@@ -659,6 +624,7 @@ public class CharMap : View, IDesignable
             Height = Dim.Fill (3),
             TextAlignment = Alignment.Center
         };
+
         var spinner = new SpinnerView
         {
             X = Pos.Center (),

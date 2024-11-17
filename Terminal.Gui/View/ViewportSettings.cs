@@ -101,23 +101,4 @@ public enum ViewportSettings
     ///     disabled).
     /// </summary>
     ClearContentOnly = 32,
-
-    /// <summary>
-    ///     If set, the vertical scroll bar (see <see cref="View.HorizontalScrollBar"/>) will be enabled and automatically made visible
-    ///     when the dimension of the <see cref="View.Viewport"/> is smaller than the dimension of <see cref="View.GetContentSize()"/>.
-    /// </summary>
-    EnableHorizontalScrollBar = 64,
-
-    /// <summary>
-    ///     If set, the vertical scroll bar (see <see cref="View.VerticalScrollBar"/>) will be enabled and automatically made visible
-    ///     when the dimension of the <see cref="View.Viewport"/> is smaller than the dimension of <see cref="View.GetContentSize()"/>.
-    /// </summary>
-    EnableVerticalScrollBar = 128,
-
-    /// <summary>
-    ///     If set, the horizontal and vertical scroll bars (see cref="View.HorizontalScrollBar"/> and <see cref="View.VerticalScrollBar"/>)
-    ///     will be enabled and automatically made visible when the dimension of the <see cref="View.Viewport"/> is smaller than the
-    ///     dimension of <see cref="View.GetContentSize()"/>.
-    /// </summary>
-    EnableScrollBars = EnableHorizontalScrollBar | EnableVerticalScrollBar
 }
