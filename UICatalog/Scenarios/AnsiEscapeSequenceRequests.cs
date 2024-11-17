@@ -217,7 +217,7 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         var tfValue = new TextField { X = Pos.Left (label), Y = Pos.Bottom (label), Width = 6 };
         w.Add (label, tfValue);
 
-        label = new () { X = Pos.Right (tfValue) + 1, Y = Pos.Top (tfValue) - 1, Text = "_Terminator:" };
+        label = new () { X = Pos.Left (tfValue) + label.Text.Length, Y = Pos.Top (tfValue) - 1, Text = "_Terminator:" };
         var tfTerminator = new TextField { X = Pos.Left (label), Y = Pos.Bottom (label), Width = 4 };
         w.Add (label, tfTerminator);
 
@@ -270,7 +270,7 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
         var tvError = new TextView { X = Pos.Left (label), Y = Pos.Bottom (label), Width = 40, Height = 4, ReadOnly = true };
         w.Add (label, tvError);
 
-        label = new () { X = Pos.Right (tvError) + 1, Y = Pos.Top (tvError) - 1, Text = "E_xpectedResponseValue:" };
+        label = new () { X = Pos.Right (tvError) + 1, Y = Pos.Top (tvError) - 1, Text = "_Value:" };
         var tvValue = new TextView { X = Pos.Left (label), Y = Pos.Bottom (label), Width = 6, Height = 4, ReadOnly = true };
         w.Add (label, tvValue);
 
