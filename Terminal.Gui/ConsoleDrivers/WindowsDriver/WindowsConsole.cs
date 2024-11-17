@@ -123,6 +123,8 @@ internal class WindowsConsole
                                         seqReqStatus.AnsiRequest.RaiseResponseFromInput (ansiSequence.ToString ());
                                         // Clear the terminator for not be enqueued
                                         inputRecord = default (InputRecord);
+                                        // Clear numberEventsRead to not exit
+                                        numberEventsRead = 0;
                                         // Clear the ansiSequence to avoid insert another Esc character
                                         ansiSequence.Clear ();
                                     }
