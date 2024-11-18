@@ -149,6 +149,7 @@ public class HexEditor : Scenario
         app.Add (_statusBar);
 
         _hexView.VerticalScrollBar.AutoShow = true;
+        _hexView.HorizontalScrollBar.AutoShow = true;
 
         _hexView.Source = LoadFile ();
 

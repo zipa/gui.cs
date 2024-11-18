@@ -109,7 +109,7 @@ public class HexView : View, IDesignable
     private void HexViewSubviewsLaidOut (object? sender, LayoutEventArgs e)
     {
         SetBytesPerLine ();
-        SetContentSize (new (GetLeftSideStartColumn () + BytesPerLine / NUM_BYTES_PER_HEX_COLUMN * HEX_COLUMN_WIDTH, (int)((GetEditedSize ()) / BytesPerLine) + 1));
+        SetContentSize (new (GetLeftSideStartColumn () + BytesPerLine / NUM_BYTES_PER_HEX_COLUMN * HEX_COLUMN_WIDTH + BytesPerLine - 1, (int)((GetEditedSize ()) / BytesPerLine) + 1));
     }
 
     /// <summary>Initializes a <see cref="HexView"/> class.</summary>
@@ -142,6 +142,19 @@ public class HexView : View, IDesignable
     public Point GetCursor (long address)
     {
         Point position = GetPosition (address);
+        if (_leftSideHasFocus)
+        {
+            int block = position.X / NUM_BYTES_PER_HEX_COLUMN;
+            int column = position.X % NUM_BYTES_PER_HEX_COLUMN;
+
+            position.X = block * HEX_COLUMN_WIDTH + column * 3 + (_firstNibble ? 0 : 1);
+        }
+        else
+        {
+            position.X += BytesPerLine / NUM_BYTES_PER_HEX_COLUMN * HEX_COLUMN_WIDTH - 1;
+        }
+        position.X += GetLeftSideStartColumn ();
+
         position.Offset (-Viewport.X, -Viewport.Y);
         return position;
     }
@@ -149,7 +162,7 @@ public class HexView : View, IDesignable
     private void ScrollToMakeCursorVisible (Point offsetToNewCursor)
     {
         // Adjust vertical scrolling
-        if (offsetToNewCursor.Y < 1) // Header is at Y = 0
+        if (offsetToNewCursor.Y < 1)
         {
             ScrollVertical (offsetToNewCursor.Y);
         }
@@ -157,33 +170,31 @@ public class HexView : View, IDesignable
         {
             ScrollVertical (offsetToNewCursor.Y);
         }
-    }
 
+        if (offsetToNewCursor.X < 1)
+        {
+            ScrollHorizontal(offsetToNewCursor.X);
+        }
+        else if (offsetToNewCursor.X >= Viewport.Width)
+        {
+            ScrollHorizontal (offsetToNewCursor.X);
+        }
+    }
 
     ///<inheritdoc/>
     public override Point? PositionCursor ()
     {
         Point position = GetCursor (Address);
 
-        int block = position.X / NUM_BYTES_PER_HEX_COLUMN;
-        int column = position.X % NUM_BYTES_PER_HEX_COLUMN * 3;
-
-        int x = GetLeftSideStartColumn () + block * HEX_COLUMN_WIDTH + column + (_firstNibble ? 0 : 1);
-        int y = position.Y;
-
-        if (!_leftSideHasFocus)
-        {
-            x = GetLeftSideStartColumn () + BytesPerLine / NUM_BYTES_PER_HEX_COLUMN * HEX_COLUMN_WIDTH + position.X - 1;
-        }
-
         if (HasFocus
-            && x >= 0
-            && x < Viewport.Width - AddressWidth + 1
-            && y >= 0
-            && y < Viewport.Height)
+            && position.X >= 0
+            && position.X < Viewport.Width
+            && position.Y >= 0
+            && position.Y < Viewport.Height)
         {
-            Move (x, y);
-            return new (x, y);
+            Move (position.X, position.Y);
+
+            return position;
         }
         return null;
     }
@@ -438,7 +449,7 @@ public class HexView : View, IDesignable
         Attribute currentAttribute = Attribute.Default;
         Attribute current = GetFocusColor ();
         SetAttribute (current);
-        Move (0, 0);
+        Move (-Viewport.X, 0);
 
         long addressOfFirstLine = Viewport.Y * BytesPerLine;
 
@@ -453,7 +464,7 @@ public class HexView : View, IDesignable
         Attribute addressAttribute = new Attribute (GetNormalColor ().Foreground.GetHighlightColor (), GetNormalColor ().Background);
         for (var line = 0; line < Viewport.Height; line++)
         {
-            Move (0, line);
+            Move (-Viewport.X, line);
             long addressOfLine = addressOfFirstLine + line * nBlocks * NUM_BYTES_PER_HEX_COLUMN;
 
             if (addressOfLine <= GetEditedSize ())
