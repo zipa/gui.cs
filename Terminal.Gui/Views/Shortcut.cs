@@ -483,11 +483,10 @@ public class Shortcut : View, IOrientation, IDesignable
                 if (e.Context.Data != this)
                 {
                     // Forward command to ourselves
-                    e.Cancel = InvokeCommand (Command.Select, new (Command.Select, null, null, this)) is true;
-
-                    return;
+                    InvokeCommand (Command.Select, new (Command.Select, null, null, this));
                 }
 
+                // BUGBUG: This prevents NumericUpDown on statusbar in HexEditor from working
                 e.Cancel = true;
             }
         }
