@@ -112,7 +112,7 @@ public class TabView : View
         set
         {
             Tab? old = _selectedTab;
-            _selectedTabHasFocus = old?.HasFocus == true || !_contentView.CanFocus;
+            _selectedTabHasFocus = old is { } && (old.HasFocus == true || !_contentView.CanFocus);
 
             if (_selectedTab is { })
             {
@@ -140,7 +140,7 @@ public class TabView : View
 
             if (old != _selectedTab)
             {
-                if (_selectedTabHasFocus)
+                if (_selectedTabHasFocus || !_contentView.CanFocus)
                 {
                     SelectedTab?.SetFocus ();
                 }
