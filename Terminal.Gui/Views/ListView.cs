@@ -165,13 +165,13 @@ public class ListView : View, IDesignable
         // Use the form of Add that lets us pass context to the handler
         KeyBindings.Add (Key.A.WithCtrl, new KeyBinding ([Command.SelectAll], KeyBindingScope.Focused, true));
         KeyBindings.Add (Key.U.WithCtrl, new KeyBinding ([Command.SelectAll], KeyBindingScope.Focused, false));
-
-        SubviewsLaidOut += ListView_LayoutComplete;
     }
 
-    private void ListView_LayoutComplete (object sender, LayoutEventArgs e)
+    /// <inheritdoc />
+    protected override void OnFrameChanged (in Rectangle frame)
     {
         SetContentSize (new Size (MaxLength, _source?.Count ?? Viewport.Height));
+        EnsureSelectedItemVisible ();
     }
 
     /// <summary>Gets or sets whether this <see cref="ListView"/> allows items to be marked.</summary>
@@ -394,23 +394,13 @@ public class ListView : View, IDesignable
     /// <summary>Ensures the selected item is always visible on the screen.</summary>
     public void EnsureSelectedItemVisible ()
     {
-        // TODO: This check is not needed.
-        if (SuperView?.IsInitialized == true)
+        if (_selected < Viewport.Y)
         {
-            if (_selected <= Viewport.Y)
-            {
-                Viewport = Viewport with { Y = _selected };
-            }
-            else if (Viewport.Height > 0 && _selected >= Viewport.Y + Viewport.Height)
-            {
-                Viewport = Viewport with { Y = _selected - Viewport.Height + 1 };
-            }
-
-            SubviewLayout -= ListView_LayoutStarted;
+            Viewport = Viewport with { Y = _selected };
         }
-        else
+        else if (Viewport.Height > 0 && _selected >= Viewport.Y + Viewport.Height)
         {
-            SubviewLayout += ListView_LayoutStarted;
+            Viewport = Viewport with { Y = _selected - Viewport.Height + 1 };
         }
     }
 
