@@ -17,7 +17,8 @@ namespace Terminal.Gui;
 ///         See the <see href="https://gui-cs.github.io/Terminal.GuiV2Docs/docs/scrolling.html">Scrolling Deep Dive</see>.
 ///     </para>
 ///     <para>
-///         By default, the built-in View scrollbars (<see cref="View.VerticalScrollBar"/>/<see cref="View.HorizontalScrollBar"/>) have both <see cref="View.Visible"/> and <see cref="AutoShow"/> set to
+///         By default, the built-in View scrollbars (<see cref="View.VerticalScrollBar"/>/
+///         <see cref="View.HorizontalScrollBar"/>) have both <see cref="View.Visible"/> and <see cref="AutoShow"/> set to
 ///         <see langword="false"/>.
 ///         To enable them, either set <see cref="AutoShow"/> set to <see langword="true"/> or explicitly set
 ///         <see cref="View.Visible"/>
@@ -184,7 +185,8 @@ public class ScrollBar : View, IOrientation, IDesignable
     #endregion
 
     /// <summary>
-    ///     Gets or sets the amount each mouse wheel event, or click on the increment/decrement buttons, will incremenet/decrement the <see cref="Position"/>.
+    ///     Gets or sets the amount each mouse wheel event, or click on the increment/decrement buttons, will
+    ///     incremenet/decrement the <see cref="Position"/>.
     /// </summary>
     /// <remarks>
     ///     The default is 1.

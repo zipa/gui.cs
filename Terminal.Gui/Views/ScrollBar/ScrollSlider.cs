@@ -1,8 +1,6 @@
 ﻿#nullable enable
 
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Drawing;
 
 namespace Terminal.Gui;
 
@@ -12,11 +10,6 @@ namespace Terminal.Gui;
 ///     oriented either vertically or horizontally.
 /// </summary>
 /// <remarks>
-///     <para>
-///         If <see cref="View.Text"/> is set, it will be displayed centered within the slider. Set
-///         <see cref="ShowPercent"/> to automatically have the Text
-///         be show what percent the slider is to the Superview's Viewport size.
-///     </para>
 ///     <para>
 ///         Used to represent the proportion of the visible content to the Viewport in a <see cref="Scrolled"/>.
 ///     </para>
@@ -105,7 +98,7 @@ public class ScrollSlider : View, IOrientation, IDesignable
     /// <summary>
     ///     Gets or sets the size of the ScrollSlider. This is a helper that gets or sets Width or Height depending
     ///     on  <see cref="Orientation"/>. The size will be clamped between 1 and the dimension of
-    ///     the <see cref="View.SuperView"/>'s Viewport. 
+    ///     the <see cref="View.SuperView"/>'s Viewport.
     /// </summary>
     /// <remarks>
     ///     <para>
