@@ -168,9 +168,14 @@ public class ListView : View, IDesignable
     }
 
     /// <inheritdoc />
-    protected override void OnFrameChanged (in Rectangle frame)
+    protected override void OnViewportChanged (DrawEventArgs e)
     {
         SetContentSize (new Size (MaxLength, _source?.Count ?? Viewport.Height));
+    }
+
+    /// <inheritdoc />
+    protected override void OnFrameChanged (in Rectangle frame)
+    {
         EnsureSelectedItemVisible ();
     }
 
@@ -394,6 +399,10 @@ public class ListView : View, IDesignable
     /// <summary>Ensures the selected item is always visible on the screen.</summary>
     public void EnsureSelectedItemVisible ()
     {
+        if (_selected == -1)
+        {
+            return;
+        }
         if (_selected < Viewport.Y)
         {
             Viewport = Viewport with { Y = _selected };
