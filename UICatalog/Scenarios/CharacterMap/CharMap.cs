@@ -472,7 +472,10 @@ public class CharMap : View, IDesignable
     {
         if (mouseEvent.Flags == MouseFlags.WheeledDown)
         {
-            ScrollVertical (1);
+            if (Viewport.Y + Viewport.Height - HEADER_HEIGHT < GetContentSize ().Height)
+            {
+                ScrollVertical (1);
+            }
             return mouseEvent.Handled = true;
         }
 
@@ -484,7 +487,10 @@ public class CharMap : View, IDesignable
 
         if (mouseEvent.Flags == MouseFlags.WheeledRight)
         {
-            ScrollHorizontal (1);
+            if (Viewport.X + Viewport.Width < GetContentSize ().Width)
+            {
+                ScrollHorizontal (1);
+            }
             return mouseEvent.Handled = true;
         }
 
@@ -496,7 +502,7 @@ public class CharMap : View, IDesignable
 
         return false;
     }
-    
+
     private void Handle_MouseClick (object? sender, MouseEventArgs me)
     {
         if (me.Flags != MouseFlags.ReportMousePosition && me.Flags != MouseFlags.Button1Clicked && me.Flags != MouseFlags.Button1DoubleClicked)
