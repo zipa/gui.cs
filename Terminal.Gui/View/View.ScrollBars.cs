@@ -3,8 +3,8 @@ namespace Terminal.Gui;
 
 public partial class View
 {
-    private Lazy<ScrollBar> _horizontalScrollBar;
-    private Lazy<ScrollBar> _verticalScrollBar;
+    private Lazy<ScrollBar> _horizontalScrollBar = null!;
+    private Lazy<ScrollBar> _verticalScrollBar = null!;
 
     /// <summary>
     ///     Initializes the ScrollBars of the View. Called by the View constructor.
