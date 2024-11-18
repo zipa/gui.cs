@@ -112,14 +112,14 @@ public class Scrolling : Scenario
 
         var pulsing = true;
 
-        bool timer ()
+        bool TimerFn ()
         {
             progress.Pulse ();
 
             return pulsing;
         }
 
-        Application.AddTimeout (TimeSpan.FromMilliseconds (300), timer);
+        Application.AddTimeout (TimeSpan.FromMilliseconds (300), TimerFn);
 
         app.Unloaded += AppUnloaded;
 

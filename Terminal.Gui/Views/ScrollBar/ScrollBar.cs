@@ -30,7 +30,7 @@ namespace Terminal.Gui;
 public class ScrollBar : View, IOrientation, IDesignable
 {
     private readonly Button _decreaseButton;
-    internal readonly ScrollSlider _slider;
+    private readonly ScrollSlider _slider;
     private readonly Button _increaseButton;
 
     /// <inheritdoc/>
