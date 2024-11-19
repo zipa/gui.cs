@@ -109,7 +109,7 @@ public class TabView : View
         set
         {
             Tab? old = _selectedTab;
-            _selectedTabHasFocus = old is { } && (old.HasFocus == true || !_containerView.CanFocus);
+            _selectedTabHasFocus = old is { } && (old.HasFocus || !_containerView.CanFocus);
 
             if (_selectedTab is { })
             {
@@ -450,8 +450,6 @@ public class TabView : View
             // while there is space for the tab
             int tabTextWidth = tab.DisplayText.EnumerateRunes ().Sum (c => c.GetColumns ());
 
-            string text = tab.DisplayText;
-
             // The maximum number of characters to use for the tab name as specified
             // by the user (MaxTabTextWidth).  But not more than the width of the view
             // or we won't even be able to render a single tab!
@@ -467,19 +465,19 @@ public class TabView : View
                 tab.MouseClick += Tab_MouseClick!;
                 tab.Border!.MouseClick += Tab_MouseClick!;
 
-                yield return new (tab, string.Empty, Equals (SelectedTab, tab));
+                yield return new (tab, Equals (SelectedTab, tab));
 
                 break;
             }
 
             if (tabTextWidth > maxWidth)
             {
-                text = tab.Text = tab.DisplayText.Substring (0, (int)maxWidth);
+                tab.Text = tab.DisplayText.Substring (0, (int)maxWidth);
                 tabTextWidth = (int)maxWidth;
             }
             else
             {
-                tab.Text = text;
+                tab.Text = tab.DisplayText;
             }
 
             tab.Width = Math.Max (tabTextWidth + 2, 1);
@@ -498,7 +496,7 @@ public class TabView : View
             tab.MouseClick += Tab_MouseClick!;
             tab.Border!.MouseClick += Tab_MouseClick!;
 
-            yield return new (tab, text, Equals (SelectedTab, tab));
+            yield return new (tab, Equals (SelectedTab, tab));
 
             prevTab = tab;
 
@@ -616,7 +614,7 @@ public class TabView : View
 
             if (me.IsSingleClicked)
             {
-                _host.OnTabClicked (new TabMouseEventArgs (hit, me));
+                _host.OnTabClicked (new TabMouseEventArgs (hit!, me));
 
                 // user canceled click
                 if (me.Handled)
@@ -1368,11 +1366,10 @@ public class TabView : View
 
     private class TabToRender
     {
-        public TabToRender (Tab tab, string textToRender, bool isSelected)
+        public TabToRender (Tab tab, bool isSelected)
         {
             Tab = tab;
             IsSelected = isSelected;
-            TextToRender = textToRender;
         }
 
         /// <summary>True if the tab that is being rendered is the selected one.</summary>
@@ -1380,6 +1377,5 @@ public class TabView : View
         public bool IsSelected { get; }
 
         public Tab Tab { get; }
-        public string TextToRender { get; }
     }
 }
