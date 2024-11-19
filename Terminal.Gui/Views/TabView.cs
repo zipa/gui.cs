@@ -469,6 +469,7 @@ public class TabView : View
             {
                 tab.Visible = true;
                 tab.MouseClick += Tab_MouseClick!;
+                tab.Border!.MouseClick += Tab_MouseClick!;
 
                 yield return new (tab, string.Empty, Equals (SelectedTab, tab));
 
@@ -553,6 +554,7 @@ public class TabView : View
                 if (tab.Visible)
                 {
                     tab.MouseClick -= Tab_MouseClick!;
+                    tab.Border!.MouseClick -= Tab_MouseClick!;
                     tab.Visible = false;
                 }
             }
@@ -562,6 +564,7 @@ public class TabView : View
             foreach (TabToRender tabToRender in _tabLocations)
             {
                 tabToRender.Tab.MouseClick -= Tab_MouseClick!;
+                tabToRender.Tab.Border!.MouseClick -= Tab_MouseClick!;
                 tabToRender.Tab.Visible = false;
             }
 
