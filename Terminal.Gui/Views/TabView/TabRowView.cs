@@ -143,17 +143,17 @@ internal class TabRowView : View
             return;
         }
 
-        TabToRender [] tabLocations = _host._tabLocations;
+        Tab [] tabLocations = _host._tabLocations;
         int selectedTab = -1;
         var lc = new LineCanvas ();
 
         for (var i = 0; i < tabLocations.Length; i++)
         {
-            View tab = tabLocations [i].Tab;
+            View tab = tabLocations [i];
             Rectangle vts = tab.ViewportToScreen (tab.Viewport);
-            int selectedOffset = _host.Style.ShowTopLine && tabLocations [i].IsSelected ? 0 : 1;
+            int selectedOffset = _host.Style.ShowTopLine && tabLocations [i] == _host.SelectedTab ? 0 : 1;
 
-            if (tabLocations [i].IsSelected)
+            if (tabLocations [i] == _host.SelectedTab)
             {
                 selectedTab = i;
 
@@ -691,11 +691,11 @@ internal class TabRowView : View
         View? selected = null;
         int topLine = _host.Style.ShowTopLine ? 1 : 0;
 
-        foreach (TabToRender toRender in _host._tabLocations)
+        foreach (Tab toRender in _host._tabLocations)
         {
-            Tab tab = toRender.Tab;
+            Tab tab = toRender;
 
-            if (toRender.IsSelected)
+            if (toRender == _host.SelectedTab)
             {
                 selected = tab;
 
@@ -748,7 +748,7 @@ internal class TabRowView : View
     {
         int y = GetUnderlineYPosition ();
 
-        TabToRender? selected = _host._tabLocations?.FirstOrDefault (t => t.IsSelected);
+        Tab? selected = _host._tabLocations?.FirstOrDefault (t => t == _host.SelectedTab);
 
         if (selected is null)
         {
@@ -792,5 +792,5 @@ internal class TabRowView : View
         }
     }
 
-    private bool ShouldDrawRightScrollIndicator () { return _host._tabLocations!.LastOrDefault ()?.Tab != _host.Tabs.LastOrDefault (); }
+    private bool ShouldDrawRightScrollIndicator () { return _host._tabLocations!.LastOrDefault () != _host.Tabs.LastOrDefault (); }
 }

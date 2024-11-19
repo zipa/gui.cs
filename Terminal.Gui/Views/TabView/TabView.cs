@@ -20,8 +20,7 @@ public class TabView : View
 
     private Tab? _selectedTab;
 
-    // BUGBUG: Horrible containment design.
-    internal TabToRender []? _tabLocations;
+    internal Tab []? _tabLocations;
     private int _tabScrollOffset;
 
     /// <summary>Initializes a <see cref="TabView"/> class.</summary>
@@ -287,7 +286,7 @@ public class TabView : View
         }
 
         // if current viewport does not include the selected tab
-        if (!CalculateViewport (Viewport).Any (r => Equals (SelectedTab, r.Tab)))
+        if (!CalculateViewport (Viewport).Any (t => Equals (SelectedTab, t)))
         {
             // Set scroll offset so the first tab rendered is the
             TabScrollOffset = Math.Max (0, Tabs.IndexOf (SelectedTab));
@@ -428,7 +427,7 @@ public class TabView : View
 
     /// <summary>Returns which tabs to render at each x location.</summary>
     /// <returns></returns>
-    internal IEnumerable<TabToRender> CalculateViewport (Rectangle bounds)
+    internal IEnumerable<Tab> CalculateViewport (Rectangle bounds)
     {
         UnSetCurrentTabs ();
 
@@ -467,7 +466,7 @@ public class TabView : View
                 tab.MouseClick += Tab_MouseClick!;
                 tab.Border!.MouseClick += Tab_MouseClick!;
 
-                yield return new (tab, Equals (SelectedTab, tab));
+                yield return tab;
 
                 break;
             }
@@ -498,7 +497,7 @@ public class TabView : View
             tab.MouseClick += Tab_MouseClick!;
             tab.Border!.MouseClick += Tab_MouseClick!;
 
-            yield return new (tab, Equals (SelectedTab, tab));
+            yield return tab;
 
             prevTab = tab;
 
@@ -557,11 +556,11 @@ public class TabView : View
         }
         else if (_tabLocations is { })
         {
-            foreach (TabToRender tabToRender in _tabLocations)
+            foreach (Tab tabToRender in _tabLocations)
             {
-                tabToRender.Tab.MouseClick -= Tab_MouseClick!;
-                tabToRender.Tab.Border!.MouseClick -= Tab_MouseClick!;
-                tabToRender.Tab.Visible = false;
+                tabToRender.MouseClick -= Tab_MouseClick!;
+                tabToRender.Border!.MouseClick -= Tab_MouseClick!;
+                tabToRender.Visible = false;
             }
 
             _tabLocations = null;
