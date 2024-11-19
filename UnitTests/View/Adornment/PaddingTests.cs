@@ -33,7 +33,5 @@ PPP",
                                              output
                                             );
         TestHelpers.AssertDriverAttributesAre ("0", output, null, view.GetNormalColor ());
-
-        ((FakeDriver)Application.Driver!).End ();
     }
 }
