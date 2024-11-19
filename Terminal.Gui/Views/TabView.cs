@@ -11,7 +11,7 @@ public class TabView : View
     ///     This sub view is the main client area of the current tab.  It hosts the <see cref="Tab.View"/> of the tab, the
     ///     <see cref="SelectedTab"/>.
     /// </summary>
-    private readonly View _contentView;
+    private readonly View _containerView;
 
     private readonly List<Tab> _tabs = new ();
 
@@ -28,14 +28,11 @@ public class TabView : View
         CanFocus = true;
         TabStop = TabBehavior.TabStop; // Because TabView has focusable subviews, it must be a TabGroup
         _tabsBar = new TabRowView (this);
-        _contentView = new View ()
-        {
-            //Id = "TabView._contentView",
-        };
+        _containerView = new ();
         ApplyStyleChanges ();
 
         base.Add (_tabsBar);
-        base.Add (_contentView);
+        base.Add (_containerView);
 
         // Things this view knows how to do
         AddCommand (Command.Left, () => SwitchTabBy (-1));
@@ -112,15 +109,15 @@ public class TabView : View
         set
         {
             Tab? old = _selectedTab;
-            _selectedTabHasFocus = old is { } && (old.HasFocus == true || !_contentView.CanFocus);
+            _selectedTabHasFocus = old is { } && (old.HasFocus == true || !_containerView.CanFocus);
 
             if (_selectedTab is { })
             {
                 if (_selectedTab.View is { })
                 {
-                    _selectedTab.View.CanFocusChanged -= ContentViewCanFocus!;
+                    _selectedTab.View.CanFocusChanged -= ContainerViewCanFocus!;
                     // remove old content
-                    _contentView.Remove (_selectedTab.View);
+                    _containerView.Remove (_selectedTab.View);
                 }
             }
 
@@ -129,18 +126,17 @@ public class TabView : View
             // add new content
             if (_selectedTab?.View != null)
             {
-                _selectedTab.View.CanFocusChanged += ContentViewCanFocus!;
-                _contentView.Add (_selectedTab.View);
-                // _contentView.Id = $"_contentView for {_selectedTab.DisplayText}";
+                _selectedTab.View.CanFocusChanged += ContainerViewCanFocus!;
+                _containerView.Add (_selectedTab.View);
             }
 
-            ContentViewCanFocus (null!, null!);
+            ContainerViewCanFocus (null!, null!);
 
             EnsureSelectedTabIsVisible ();
 
             if (old != _selectedTab)
             {
-                if (_selectedTabHasFocus || !_contentView.CanFocus)
+                if (_selectedTabHasFocus || !_containerView.CanFocus)
                 {
                     SelectedTab?.SetFocus ();
                 }
@@ -151,9 +147,9 @@ public class TabView : View
         }
     }
 
-    private void ContentViewCanFocus (object sender, EventArgs eventArgs)
+    private void ContainerViewCanFocus (object sender, EventArgs eventArgs)
     {
-        _contentView.CanFocus = _contentView.Subviews.Count (v => v.CanFocus) > 0;
+        _containerView.CanFocus = _containerView.Subviews.Count (v => v.CanFocus) > 0;
     }
 
     private TabStyle _style = new ();
@@ -222,34 +218,34 @@ public class TabView : View
     /// </summary>
     public void ApplyStyleChanges ()
     {
-        _contentView.BorderStyle = Style.ShowBorder ? LineStyle.Single : LineStyle.None;
-        _contentView.Width = Dim.Fill ();
+        _containerView.BorderStyle = Style.ShowBorder ? LineStyle.Single : LineStyle.None;
+        _containerView.Width = Dim.Fill ();
 
         if (Style.TabsOnBottom)
         {
             // Tabs are along the bottom so just dodge the border
             if (Style.ShowBorder)
             {
-                _contentView.Border.Thickness = new Thickness (1, 1, 1, 0);
+                _containerView.Border!.Thickness = new Thickness (1, 1, 1, 0);
             }
 
-            _contentView.Y = 0;
+            _containerView.Y = 0;
 
             int tabHeight = GetTabHeight (false);
 
             // Fill client area leaving space at bottom for tabs
-            _contentView.Height = Dim.Fill (tabHeight);
+            _containerView.Height = Dim.Fill (tabHeight);
 
             _tabsBar.Height = tabHeight;
 
-            _tabsBar.Y = Pos.Bottom (_contentView);
+            _tabsBar.Y = Pos.Bottom (_containerView);
         }
         else
         {
             // Tabs are along the top
             if (Style.ShowBorder)
             {
-                _contentView.Border.Thickness = new Thickness (1, 0, 1, 1);
+                _containerView.Border!.Thickness = new Thickness (1, 0, 1, 1);
             }
 
             _tabsBar.Y = 0;
@@ -257,10 +253,10 @@ public class TabView : View
             int tabHeight = GetTabHeight (true);
 
             //move content down to make space for tabs
-            _contentView.Y = Pos.Bottom (_tabsBar);
+            _containerView.Y = Pos.Bottom (_tabsBar);
 
             // Fill client area leaving space at bottom for border
-            _contentView.Height = Dim.Fill ();
+            _containerView.Height = Dim.Fill ();
 
             // The top tab should be 2 or 3 rows high and on the top
 
@@ -305,7 +301,7 @@ public class TabView : View
     /// <inheritdoc />
     protected override void OnHasFocusChanged (bool newHasFocus, View? previousFocusedView, View? focusedView)
     {
-        if (SelectedTab is { HasFocus: false } && !_contentView.CanFocus && focusedView == this)
+        if (SelectedTab is { HasFocus: false } && !_containerView.CanFocus && focusedView == this)
         {
             SelectedTab?.SetFocus ();
 
