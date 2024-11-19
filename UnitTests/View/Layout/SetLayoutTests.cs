@@ -813,6 +813,11 @@ public class SetLayoutTests (ITestOutputHelper output)
         t.Dispose ();
     }
 
+
+    // BUGBUG: This is NOT a SetLayoutTest but a Border and SuperViewRendersLineCanvas test
+    // BUGBUG: Please move this to a more appropriate test class
+    // BUGBUG: It also tests multiple things and it's not clear what it's really testing.
+    // BUGBUG: Simplfiy it and break it into separate tests that each test ONE thing.
     [Fact]
     [SetupFakeDriver]
     public void Pos_Right_With_Adornments ()
