@@ -113,17 +113,14 @@ internal class TabRowView : View
         base.OnHasFocusChanged (newHasFocus, previousFocusedView, focusedView);
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     protected override void OnSubviewLayout (LayoutEventArgs args)
     {
-        if (NeedsLayout)
-        {
-            _host._tabLocations = _host.CalculateViewport (Viewport).ToArray ();
+        _host._tabLocations = _host.CalculateViewport (Viewport).ToArray ();
 
-            RenderTabLine ();
+        RenderTabLine ();
 
-            RenderUnderline ();
-        }
+        RenderUnderline ();
 
         base.OnSubviewLayout (args);
     }
