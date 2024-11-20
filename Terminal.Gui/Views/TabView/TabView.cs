@@ -109,6 +109,11 @@ public class TabView : View
         get => _selectedTab;
         set
         {
+            if (value == _selectedTab)
+            {
+                return;
+            }
+
             Tab? old = _selectedTab;
             _selectedTabHasFocus = old is { } && (old.HasFocus || !_containerView.CanFocus);
 

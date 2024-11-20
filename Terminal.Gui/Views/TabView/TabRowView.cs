@@ -86,15 +86,12 @@ internal class TabRowView : View
             {
                 _host.SwitchTabBy (scrollIndicatorHit);
 
-                SetNeedsLayout ();
-
                 return true;
             }
 
             if (hit is { })
             {
                 _host.SelectedTab = hit;
-                SetNeedsLayout ();
 
                 return true;
             }
@@ -119,11 +116,14 @@ internal class TabRowView : View
     /// <inheritdoc />
     protected override void OnSubviewLayout (LayoutEventArgs args)
     {
-        _host._tabLocations = _host.CalculateViewport (Viewport).ToArray ();
+        if (NeedsLayout)
+        {
+            _host._tabLocations = _host.CalculateViewport (Viewport).ToArray ();
 
-        RenderTabLine ();
+            RenderTabLine ();
 
-        RenderUnderline ();
+            RenderUnderline ();
+        }
 
         base.OnSubviewLayout (args);
     }
