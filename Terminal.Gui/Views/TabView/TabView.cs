@@ -142,7 +142,7 @@ public class TabView : View
 
             if (old != _selectedTab)
             {
-                if (_selectedTabHasFocus || !_containerView.CanFocus)
+                if (TabCanSetFocus ())
                 {
                     SelectedTab?.SetFocus ();
                 }
@@ -151,6 +151,11 @@ public class TabView : View
             }
             SetNeedsLayout ();
         }
+    }
+
+    private bool TabCanSetFocus ()
+    {
+        return IsInitialized && SelectedTab is { } && (_selectedTabHasFocus || !_containerView.CanFocus);
     }
 
     private void ContainerViewCanFocus (object sender, EventArgs eventArgs)
@@ -509,7 +514,7 @@ public class TabView : View
             i += tabTextWidth + 1;
         }
 
-        if (_selectedTabHasFocus)
+        if (TabCanSetFocus ())
         {
             SelectedTab?.SetFocus ();
         }
