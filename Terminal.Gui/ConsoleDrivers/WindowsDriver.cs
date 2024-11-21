@@ -1731,13 +1731,7 @@ internal class WindowsDriver : ConsoleDriver
             {
                 return (KeyCode)keyInfo.Key;
             }
-            else
-            {
-                return (KeyCode)keyInfo.KeyChar;
-            }
-
-            // Return the Key (not KeyChar!)
-            return (KeyCode)keyInfo.Key;
+            return (KeyCode)keyInfo.KeyChar;
         }
 
         // Handle control keys whose VK codes match the related ASCII value (those below ASCII 33) like ESC
