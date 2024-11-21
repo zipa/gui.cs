@@ -1725,6 +1725,17 @@ internal class WindowsDriver : ConsoleDriver
                 }
             }
 
+            // If KeyInfo.Key is A...Z and KeyInfo.KeyChar is not a...z then we have an accent.
+            // See https://github.com/gui-cs/Terminal.Gui/issues/3807#issuecomment-2455997595
+            if (keyInfo.KeyChar <= (char)'z')
+            {
+                return (KeyCode)keyInfo.Key;
+            }
+            else
+            {
+                return (KeyCode)keyInfo.KeyChar;
+            }
+
             // Return the Key (not KeyChar!)
             return (KeyCode)keyInfo.Key;
         }
