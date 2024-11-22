@@ -388,14 +388,22 @@ public class KeyBindings
     /// <returns><see langword="true"/> if the Key is bound; otherwise <see langword="false"/>.</returns>
     public bool TryGet (Key key, KeyBindingScope scope, out KeyBinding binding)
     {
-        binding = new (Array.Empty<Command> (), KeyBindingScope.Disabled, null);
+        if (!key.IsValid)
+        {
+            binding = new (Array.Empty<Command> (), KeyBindingScope.Disabled, null);
+            return false;
+        }
 
-        if (key.IsValid && Bindings.TryGetValue (key, out binding))
+        if (Bindings.TryGetValue (key, out binding))
         {
             if (scope.HasFlag (binding.Scope))
             {
                 return true;
             }
+        }
+        else
+        {
+            binding = new (Array.Empty<Command> (), KeyBindingScope.Disabled, null);
         }
 
         return false;

@@ -1,4 +1,5 @@
 ﻿using Xunit.Abstractions;
+using static Terminal.Gui.ConfigurationManager;
 
 // Alias Console to MockConsole so we don't accidentally use Console
 
@@ -10,7 +11,7 @@ public class ApplicationTests
     {
         _output = output;
         ConsoleDriver.RunningUnitTests = true;
-        ConfigurationManager.Locations = ConfigurationManager.ConfigLocations.None;
+        ConfigurationManager.Locations = ConfigLocations.Default;
 
 #if DEBUG_IDISPOSABLE
         View.Instances.Clear ();
@@ -518,6 +519,47 @@ public class ApplicationTests
         Application.Init ();
         Assert.IsType<FakeDriver> (Application.Driver);
         Application.ResetState ();
+    }
+
+    [Fact]
+    public void Init_KeyBindings_Set_To_Defaults ()
+    {
+        // arrange
+        Locations = ConfigLocations.All;
+        ThrowOnJsonErrors = true;
+
+        Application.QuitKey = Key.Q;
+
+        Application.Init (new FakeDriver ());
+
+        Assert.Equal (Key.Esc, Application.QuitKey);
+
+        Application.Shutdown ();
+    }
+
+    [Fact]
+    public void Init_KeyBindings_Set_To_Custom ()
+    {
+        // arrange
+        Locations = ConfigLocations.Memory;
+        ThrowOnJsonErrors = true;
+
+        Memory = """
+                       
+                               {
+                                     "Application.QuitKey": "Ctrl-Q"
+                               }
+                       """;
+
+        Assert.Equal (Key.Esc, Application.QuitKey);
+
+        // Act
+        Application.Init (new FakeDriver ());
+
+        Assert.Equal (Key.Q.WithCtrl, Application.QuitKey);
+
+        Application.Shutdown ();
+        Locations = ConfigLocations.Default;
     }
 
     [Fact]

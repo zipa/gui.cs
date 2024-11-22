@@ -24,7 +24,7 @@ namespace Terminal.Gui;
 ///     </para>
 ///     <para>
 ///         Settings are defined in JSON format, according to this schema:
-///        https://gui-cs.github.io/Terminal.GuiV2Docs/schemas/tui-config-schema.json
+///         https://gui-cs.github.io/Terminal.GuiV2Docs/schemas/tui-config-schema.json
 ///     </para>
 ///     <para>
 ///         Settings that will apply to all applications (global settings) reside in files named <c>config.json</c>.
@@ -53,30 +53,6 @@ namespace Terminal.Gui;
 [ComponentGuarantees (ComponentGuaranteesOptions.None)]
 public static class ConfigurationManager
 {
-    /// <summary>
-    ///     Describes the location of the configuration files. The constants can be combined (bitwise) to specify multiple
-    ///     locations.
-    /// </summary>
-    [Flags]
-    public enum ConfigLocations
-    {
-        /// <summary>No configuration will be loaded.</summary>
-        /// <remarks>
-        ///     Used for development and testing only. For Terminal,Gui to function properly, at least
-        ///     <see cref="DefaultOnly"/> should be set.
-        /// </remarks>
-        None = 0,
-
-        /// <summary>
-        ///     Global configuration in <c>Terminal.Gui.dll</c>'s resources (<c>Terminal.Gui.Resources.config.json</c>) --
-        ///     Lowest Precedence.
-        /// </summary>
-        DefaultOnly,
-
-        /// <summary>This constant is a combination of all locations</summary>
-        All = -1
-    }
-
     /// <summary>
     ///     A dictionary of all properties in the Terminal.Gui project that are decorated with the
     ///     <see cref="SerializableConfigurationProperty"/> attribute. The keys are the property names pre-pended with the
@@ -201,6 +177,7 @@ public static class ConfigurationManager
             {
                 // First start. Apply settings first. This ensures if a config sets Theme to something other than "Default", it gets used
                 settings = Settings?.Apply () ?? false;
+
                 themes = !string.IsNullOrEmpty (ThemeManager.SelectedTheme)
                          && (ThemeManager.Themes? [ThemeManager.SelectedTheme]?.Apply () ?? false);
             }
@@ -210,6 +187,7 @@ public static class ConfigurationManager
                 themes = ThemeManager.Themes? [ThemeManager.SelectedTheme]?.Apply () ?? false;
                 settings = Settings?.Apply () ?? false;
             }
+
             appSettings = AppSettings?.Apply () ?? false;
         }
         catch (JsonException e)
@@ -243,14 +221,23 @@ public static class ConfigurationManager
     }
 
     /// <summary>
-    ///     Loads all settings found in the various configuration storage locations to the
-    ///     <see cref="ConfigurationManager"/>. Optionally, resets all settings attributed with
+    ///     Gets or sets the in-memory config.json. See <see cref="ConfigLocations.Memory"/>.
+    /// </summary>
+    public static string? Memory { get; set; }
+
+    /// <summary>
+    ///     Loads all settings found in the configuration storage locations (<see cref="ConfigLocations"/>). Optionally, resets
+    ///     all settings attributed with
     ///     <see cref="SerializableConfigurationProperty"/> to the defaults.
     /// </summary>
-    /// <remarks>Use <see cref="Apply"/> to cause the loaded settings to be applied to the running application.</remarks>
+    /// <remarks>
+    /// <para>
+    ///     Use <see cref="Apply"/> to cause the loaded settings to be applied to the running application.
+    /// </para>
+    /// </remarks>
     /// <param name="reset">
     ///     If <see langword="true"/> the state of <see cref="ConfigurationManager"/> will be reset to the
-    ///     defaults.
+    ///     defaults (<see cref="ConfigLocations.Default"/>).
     /// </param>
     [RequiresUnreferencedCode ("AOT")]
     [RequiresDynamicCode ("AOT")]
@@ -263,8 +250,23 @@ public static class ConfigurationManager
             Reset ();
         }
 
-        // LibraryResources is always loaded by Reset
-        if (Locations == ConfigLocations.All)
+        // Deafult is always loaded by Reset, so only load it if reset is false
+        if (!reset && Locations.HasFlag (ConfigLocations.Default))
+        {
+            Settings?.UpdateFromResource (typeof (ConfigurationManager).Assembly, $"Terminal.Gui.Resources.{_configFilename}");
+        }
+
+        if (Locations.HasFlag (ConfigLocations.GlobalCurrent))
+        {
+            Settings?.Update ($"./.tui/{_configFilename}");
+        }
+
+        if (Locations.HasFlag (ConfigLocations.GlobalHome))
+        {
+            Settings?.Update ($"~/.tui/{_configFilename}");
+        }
+
+        if (Locations.HasFlag (ConfigLocations.AppResources))
         {
             string? embeddedStylesResourceName = Assembly.GetEntryAssembly ()
                                                          ?
@@ -276,26 +278,22 @@ public static class ConfigurationManager
                 embeddedStylesResourceName = _configFilename;
             }
 
-            Settings = Settings?
+            Settings?.UpdateFromResource (Assembly.GetEntryAssembly ()!, embeddedStylesResourceName!);
+        }
 
-                       // Global current directory
-                       .Update ($"./.tui/{_configFilename}")
-                       ?
+        if (Locations.HasFlag (ConfigLocations.AppCurrent))
+        {
+            Settings?.Update ($"./.tui/{AppName}.{_configFilename}");
+        }
 
-                       // Global home directory
-                       .Update ($"~/.tui/{_configFilename}")
-                       ?
+        if (Locations.HasFlag (ConfigLocations.AppHome))
+        {
+            Settings?.Update ($"~/.tui/{AppName}.{_configFilename}");
+        }
 
-                       // App resources
-                       .UpdateFromResource (Assembly.GetEntryAssembly ()!, embeddedStylesResourceName!)
-                       ?
-
-                       // App current directory
-                       .Update ($"./.tui/{AppName}.{_configFilename}")
-                       ?
-
-                       // App home directory
-                       .Update ($"~/.tui/{AppName}.{_configFilename}");
+        if (Locations.HasFlag (ConfigLocations.Memory) && !string.IsNullOrEmpty(Memory))
+        {
+            Settings?.Update (Memory, "ConfigurationManager.Memory");
         }
     }
 
@@ -314,12 +312,13 @@ public static class ConfigurationManager
     }
 
     /// <summary>
-    ///     Called when the configuration has been updated from a configuration file. Invokes the <see cref="Updated"/>
+    ///     Called when the configuration has been updated from a configuration file or reset. Invokes the
+    ///     <see cref="Updated"/>
     ///     event.
     /// </summary>
     public static void OnUpdated ()
     {
-        Debug.WriteLine (@"ConfigurationManager.OnApplied()");
+        Debug.WriteLine (@"ConfigurationManager.OnUpdated()");
         Updated?.Invoke (null, new ());
     }
 
@@ -359,7 +358,7 @@ public static class ConfigurationManager
         AppSettings = new ();
 
         // To enable some unit tests, we only load from resources if the flag is set
-        if (Locations.HasFlag (ConfigLocations.DefaultOnly))
+        if (Locations.HasFlag (ConfigLocations.Default))
         {
             Settings.UpdateFromResource (
                                          typeof (ConfigurationManager).Assembly,
@@ -367,12 +366,14 @@ public static class ConfigurationManager
                                         );
         }
 
+        OnUpdated ();
+
         Apply ();
         ThemeManager.Themes? [ThemeManager.SelectedTheme]?.Apply ();
         AppSettings?.Apply ();
     }
 
-    /// <summary>Event fired when the configuration has been updated from a configuration source. application.</summary>
+    /// <summary>Event fired when the configuration has been updated from a configuration source or reset.</summary>
     public static event EventHandler<ConfigurationManagerEventArgs>? Updated;
 
     internal static void AddJsonError (string error)
@@ -481,9 +482,9 @@ public static class ConfigurationManager
     }
 
     /// <summary>
-    ///     Retrieves the hard coded default settings from the Terminal.Gui library implementation. Used in development of
-    ///     the library to generate the default configuration file. Before calling Application.Init, make sure
-    ///     <see cref="Locations"/> is set to <see cref="ConfigLocations.None"/>.
+    ///     Retrieves the hard coded default settings (static properites) from the Terminal.Gui library implementation. Used in
+    ///     development of
+    ///     the library to generate the default configuration file.
     /// </summary>
     /// <remarks>
     ///     <para>
@@ -577,17 +578,13 @@ public static class ConfigurationManager
                                                scp.OmitClassName
                                                    ? ConfigProperty.GetJsonPropertyName (p)
                                                    : $"{p.DeclaringType?.Name}.{p.Name}",
-                                               new() { PropertyInfo = p, PropertyValue = null }
+                                               new () { PropertyInfo = p, PropertyValue = null }
                                               );
                 }
                 else
                 {
                     throw new (
-                               $"Property {
-                                   p.Name
-                               } in class {
-                                   p.DeclaringType?.Name
-                               } is not static. All SerializableConfigurationProperty properties must be static."
+                               $"Property {p.Name} in class {p.DeclaringType?.Name} is not static. All SerializableConfigurationProperty properties must be static."
                               );
                 }
             }

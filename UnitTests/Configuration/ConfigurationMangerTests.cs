@@ -21,7 +21,7 @@ public class ConfigurationManagerTests
     };
 
     [Fact]
-    public void Apply_FiresApplied ()
+    public void Apply_Raises_Applied ()
     {
         Reset ();
         Applied += ConfigurationManager_Applied;
@@ -147,45 +147,60 @@ public class ConfigurationManagerTests
     }
 
     [Fact]
-    public void Load_FiresUpdated ()
+    public void Load_Raises_Updated ()
     {
-        ConfigLocations savedLocations = Locations;
         Locations = ConfigLocations.All;
         Reset ();
-
-        Settings! ["Application.QuitKey"].PropertyValue = Key.Q;
-        Settings ["Application.NextTabGroupKey"].PropertyValue = Key.F;
-        Settings ["Application.PrevTabGroupKey"].PropertyValue = Key.B;
+        Assert.Equal (Key.Esc, (((Key)Settings! ["Application.QuitKey"].PropertyValue)!).KeyCode);
 
         Updated += ConfigurationManager_Updated;
         var fired = false;
 
-        void ConfigurationManager_Updated (object sender, ConfigurationManagerEventArgs obj)
+        void ConfigurationManager_Updated (object? sender, ConfigurationManagerEventArgs obj)
         {
             fired = true;
-
-            // assert
-            Assert.Equal (Key.Esc, (((Key)Settings! ["Application.QuitKey"].PropertyValue)!).KeyCode);
-
-            Assert.Equal (
-                          KeyCode.F6,
-                          (((Key)Settings ["Application.NextTabGroupKey"].PropertyValue)!).KeyCode
-                         );
-
-            Assert.Equal (
-                          KeyCode.F6 | KeyCode.ShiftMask,
-                          (((Key)Settings ["Application.PrevTabGroupKey"].PropertyValue)!).KeyCode
-                         );
         }
 
-        Load (true);
+        // Act
+        // Do NOT reset
+        Load (false);
 
         // assert
         Assert.True (fired);
 
         Updated -= ConfigurationManager_Updated;
+
+        // clean up
+        Locations = ConfigLocations.Default;
         Reset ();
-        Locations = savedLocations;
+    }
+
+
+    [Fact]
+    public void Load_Loads_Custom_Json ()
+    {
+        // arrange
+        Locations = ConfigLocations.All;
+        Reset ();
+        ThrowOnJsonErrors = true;
+
+        Assert.Equal (Key.Esc, (Key)Settings! ["Application.QuitKey"].PropertyValue);
+
+        // act
+        Memory = """
+                   
+                           {
+                                 "Application.QuitKey": "Ctrl-Q"
+                           }
+                   """;
+        Load (false);
+
+        // assert
+        Assert.Equal (Key.Q.WithCtrl, (Key)Settings ["Application.QuitKey"].PropertyValue);
+
+        // clean up
+        Locations = ConfigLocations.Default;
+        Reset ();
     }
 
     [Fact]
@@ -224,10 +239,40 @@ public class ConfigurationManagerTests
         //Assert.Equal ("AppSpecific", ConfigurationManager.Config.Settings.TestSetting);
     }
 
+
+    [Fact]
+    public void Reset_Raises_Updated ()
+    {
+        ConfigLocations savedLocations = Locations;
+        Locations = ConfigLocations.All;
+        Reset ();
+
+        Settings! ["Application.QuitKey"].PropertyValue = Key.Q;
+
+        Updated += ConfigurationManager_Updated;
+        var fired = false;
+
+        void ConfigurationManager_Updated (object? sender, ConfigurationManagerEventArgs obj)
+        {
+            fired = true;
+        }
+
+        // Act
+        Reset ();
+
+        // assert
+        Assert.True (fired);
+
+        Updated -= ConfigurationManager_Updated;
+        Reset ();
+        Locations = savedLocations;
+    }
+
+
     [Fact]
     public void Reset_and_ResetLoadWithLibraryResourcesOnly_are_same ()
     {
-        Locations = ConfigLocations.DefaultOnly;
+        Locations = ConfigLocations.Default;
 
         // arrange
         Reset ();
@@ -257,7 +302,7 @@ public class ConfigurationManagerTests
         Settings ["Application.PrevTabGroupKey"].PropertyValue = Key.B;
         Settings.Apply ();
 
-        Locations = ConfigLocations.DefaultOnly;
+        Locations = ConfigLocations.Default;
 
         // act
         Reset ();
@@ -275,7 +320,7 @@ public class ConfigurationManagerTests
     [Fact]
     public void Reset_Resets ()
     {
-        Locations = ConfigLocations.DefaultOnly;
+        Locations = ConfigLocations.Default;
         Reset ();
         Assert.NotEmpty (Themes!);
         Assert.Equal ("Default", Themes.Theme);
@@ -433,7 +478,7 @@ public class ConfigurationManagerTests
     }
 
     [Fact]
-    [AutoInitShutdown (configLocation: ConfigLocations.DefaultOnly)]
+    [AutoInitShutdown (configLocation: ConfigLocations.Default)]
     public void TestConfigurationManagerInitDriver ()
     {
         Assert.Equal ("Default", Themes!.Theme);
@@ -469,7 +514,10 @@ public class ConfigurationManagerTests
 
     [Fact]
     [AutoInitShutdown (configLocation: ConfigLocations.None)]
-    public void TestConfigurationManagerInitDriver_NoLocations () { }
+    public void TestConfigurationManagerInitDriver_NoLocations ()
+    {
+        // TODO: Write this test
+    }
 
     [Fact]
     public void TestConfigurationManagerInvalidJsonLogs ()

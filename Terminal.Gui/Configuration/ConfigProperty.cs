@@ -31,7 +31,7 @@ public class ConfigProperty
     /// </remarks>
     public object? PropertyValue { get; set; }
 
-    /// <summary>Applies the <see cref="PropertyValue"/> to the property described by <see cref="PropertyInfo"/>.</summary>
+    /// <summary>Applies the <see cref="PropertyValue"/> to the static property described by <see cref="PropertyInfo"/>.</summary>
     /// <returns></returns>
     public bool Apply ()
     {
@@ -94,6 +94,13 @@ public class ConfigProperty
     /// <returns></returns>
     public object? RetrieveValue () { return PropertyValue = PropertyInfo!.GetValue (null); }
 
+    /// <summary>
+    ///     Updates (using reflection) <see cref="PropertyValue"/> with
+    ///     the value in <paramref name="source"/>.
+    /// </summary>
+    /// <param name="source"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
     internal object? UpdateValueFrom (object source)
     {
         if (source is null)
