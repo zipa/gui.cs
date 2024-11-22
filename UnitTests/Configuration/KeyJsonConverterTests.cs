@@ -59,7 +59,7 @@ public class KeyJsonConverterTests
         Key key = Key.Q.WithCtrl;
 
         // Act
-        string json = """Ctrl+Q""";
+        string json = "\"Ctrl+Q\"";
         Key deserializedKey = JsonSerializer.Deserialize<Key> (json, ConfigurationManager._serializerOptions);
 
         // Assert

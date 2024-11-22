@@ -1,6 +1,7 @@
 #nullable enable
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Terminal.Gui;
@@ -16,7 +17,7 @@ public static partial class Application // Run (Begin, Run, End, Stop)
         get => _quitKey;
         set
         {
-            //if (_quitKey != value)
+            if (_quitKey != value)
             {
                 ReplaceKey (_quitKey, value);
                 _quitKey = value;

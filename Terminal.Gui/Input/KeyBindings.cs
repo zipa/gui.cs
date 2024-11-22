@@ -46,7 +46,11 @@ public class KeyBindings
             binding.BoundView = boundViewForAppScope;
         }
 
-        Bindings.Add (key, binding);
+        // IMPORTANT: Add a COPY of the key. This is needed because ConfigurationManager.Apply uses DeepMemberWiseCopy 
+        // IMPORTANT: update the memory referenced by the key, and Dictionary uses caching for performance, and thus 
+        // IMPORTANT: Apply will update the Dictionary with the new key, but the old key will still be in the dictionary.
+        // IMPORTANT: See the ConfigurationManager.Illustrate_DeepMemberWiseCopy_Breaks_Dictionary test for details.
+        Bindings.Add (new (key), binding);
     }
 
     /// <summary>
@@ -213,7 +217,7 @@ public class KeyBindings
     // TODO: Add a dictionary comparer that ignores Scope
     // TODO: This should not be public!
     /// <summary>The collection of <see cref="KeyBinding"/> objects.</summary>
-    public Dictionary<Key, KeyBinding> Bindings { get; } = new ();
+    public Dictionary<Key, KeyBinding> Bindings { get; } = new (new KeyEqualityComparer ());
 
     /// <summary>
     ///     The view that the <see cref="KeyBindings"/> are bound to.

@@ -405,13 +405,13 @@ public class Key : EventArgs, IEquatable<Key>
     bool IEquatable<Key>.Equals (Key other) { return Equals (other); }
 
     /// <inheritdoc/>
-    public override int GetHashCode () { return (int)_keyCode; }
+    public override int GetHashCode () { return _keyCode.GetHashCode (); }
 
     /// <summary>Compares two <see cref="Key"/>s for equality.</summary>
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
-    public static bool operator == (Key a, Key b) { return a!.Equals(b); }
+    public static bool operator == (Key a, Key b) { return a!.Equals (b); }
 
     /// <summary>Compares two <see cref="Key"/>s for not equality.</summary>
     /// <param name="a"></param>
