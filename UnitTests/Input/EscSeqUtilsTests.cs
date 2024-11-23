@@ -854,7 +854,7 @@ public class EscSeqUtilsTests
         Assert.False (_isKeyMouse);
         Assert.Equal (new () { 0 }, _mouseFlags);
         Assert.Equal (Point.Empty, _pos);
-        Assert.NotNull (_isResponse);
+        Assert.True (_isResponse);
         Assert.Equal (0, (int)_arg1);
         Assert.Equal (Point.Empty, _arg2);
 
@@ -1276,6 +1276,8 @@ public class EscSeqUtilsTests
         Assert.Equal ("5", _values [0]);
         Assert.Equal ("10", _values [^1]);
         Assert.Equal ("r", _terminating);
+
+        ClearAll ();
     }
 
     [Theory]
@@ -1301,6 +1303,8 @@ public class EscSeqUtilsTests
         Assert.Null (_code);
         Assert.Null (_values);
         Assert.Null (_terminating);
+
+        ClearAll ();
     }
 
     [Fact]
