@@ -6,12 +6,6 @@
 using System;
 using Terminal.Gui;
 
-ConfigurationManager.Memory = """
-                              {
-                              "Application.QuitKey" : "Ctrl+Q"
-                              }
-                              """;
-
 Application.Run<ExampleWindow> ().Dispose ();
 
 // Before the application exits, reset Terminal.Gui for clean shutdown
