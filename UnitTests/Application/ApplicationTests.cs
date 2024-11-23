@@ -539,10 +539,10 @@ public class ApplicationTests
     public void Init_KeyBindings_Set_To_Custom ()
     {
         // arrange
-        Locations = ConfigLocations.Memory;
+        Locations = ConfigLocations.Runtime;
         ThrowOnJsonErrors = true;
 
-        Memory = """
+        RuntimeConfig = """
                          {
                                "Application.QuitKey": "Ctrl-Q"
                          }

@@ -221,9 +221,9 @@ public static class ConfigurationManager
     }
 
     /// <summary>
-    ///     Gets or sets the in-memory config.json. See <see cref="ConfigLocations.Memory"/>.
+    ///     Gets or sets the in-memory config.json. See <see cref="ConfigLocations.Runtime"/>.
     /// </summary>
-    public static string? Memory { get; set; }
+    public static string? RuntimeConfig { get; set; }
 
     /// <summary>
     ///     Loads all settings found in the configuration storage locations (<see cref="ConfigLocations"/>). Optionally, resets
@@ -285,9 +285,9 @@ public static class ConfigurationManager
             Settings?.Update ($"~/.tui/{AppName}.{_configFilename}");
         }
 
-        if (Locations.HasFlag (ConfigLocations.Memory) && !string.IsNullOrEmpty (Memory))
+        if (Locations.HasFlag (ConfigLocations.Runtime) && !string.IsNullOrEmpty (RuntimeConfig))
         {
-            Settings?.Update (Memory, "ConfigurationManager.Memory");
+            Settings?.Update (RuntimeConfig, "ConfigurationManager.Memory");
         }
 
         ThemeManager.SelectedTheme = Settings!["Theme"].PropertyValue as string ?? "Default";

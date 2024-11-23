@@ -48,9 +48,9 @@ public enum ConfigLocations
     AppHome = 0b_0010_0000,
 
     /// <summary>
-    ///     Settings in <see cref="ConfigurationManager.MemoryConfig"/>.
+    ///     Settings in the <see cref="ConfigurationManager.RuntimeConfig"/> static property.
     /// </summary>
-    Memory = 0b_0100_0000,
+    Runtime = 0b_0100_0000,
 
     /// <summary>This constant is a combination of all locations</summary>
     All = 0b_1111_1111

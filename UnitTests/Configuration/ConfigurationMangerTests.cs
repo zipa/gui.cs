@@ -220,7 +220,7 @@ public class ConfigurationManagerTests
         Assert.Equal (Key.Esc, (Key)Settings! ["Application.QuitKey"].PropertyValue);
 
         // act
-        Memory = """
+        RuntimeConfig = """
                    
                            {
                                  "Application.QuitKey": "Ctrl-Q"
