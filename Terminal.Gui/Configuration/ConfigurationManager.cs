@@ -223,7 +223,7 @@ public static class ConfigurationManager
     /// <summary>
     ///     Gets or sets the in-memory config.json. See <see cref="ConfigLocations.Runtime"/>.
     /// </summary>
-    public static string? RuntimeConfig { get; set; }
+    public static string? RuntimeConfig { get; set; } = """{  }""";
 
     /// <summary>
     ///     Loads all settings found in the configuration storage locations (<see cref="ConfigLocations"/>). Optionally, resets
@@ -252,12 +252,12 @@ public static class ConfigurationManager
 
         if (Locations.HasFlag (ConfigLocations.GlobalCurrent))
         {
-            Settings?.Update ($"./.tui/{_configFilename}");
+            Settings?.Update ($"./.tui/{_configFilename}", ConfigLocations.GlobalCurrent);
         }
 
         if (Locations.HasFlag (ConfigLocations.GlobalHome))
         {
-            Settings?.Update ($"~/.tui/{_configFilename}");
+            Settings?.Update ($"~/.tui/{_configFilename}", ConfigLocations.GlobalHome);
         }
 
         if (Locations.HasFlag (ConfigLocations.AppResources))
@@ -272,22 +272,22 @@ public static class ConfigurationManager
                 embeddedStylesResourceName = _configFilename;
             }
 
-            Settings?.UpdateFromResource (Assembly.GetEntryAssembly ()!, embeddedStylesResourceName!);
+            Settings?.UpdateFromResource (Assembly.GetEntryAssembly ()!, embeddedStylesResourceName!, ConfigLocations.AppResources);
         }
 
         if (Locations.HasFlag (ConfigLocations.AppCurrent))
         {
-            Settings?.Update ($"./.tui/{AppName}.{_configFilename}");
+            Settings?.Update ($"./.tui/{AppName}.{_configFilename}", ConfigLocations.AppCurrent);
         }
 
         if (Locations.HasFlag (ConfigLocations.AppHome))
         {
-            Settings?.Update ($"~/.tui/{AppName}.{_configFilename}");
+            Settings?.Update ($"~/.tui/{AppName}.{_configFilename}", ConfigLocations.AppHome);
         }
 
         if (Locations.HasFlag (ConfigLocations.Runtime) && !string.IsNullOrEmpty (RuntimeConfig))
         {
-            Settings?.Update (RuntimeConfig, "ConfigurationManager.Memory");
+            Settings?.Update (RuntimeConfig, "ConfigurationManager.RuntimeConfig", ConfigLocations.Runtime);
         }
 
         ThemeManager.SelectedTheme = Settings!["Theme"].PropertyValue as string ?? "Default";
@@ -358,7 +358,8 @@ public static class ConfigurationManager
         {
             Settings.UpdateFromResource (
                                          typeof (ConfigurationManager).Assembly,
-                                         $"Terminal.Gui.Resources.{_configFilename}"
+                                         $"Terminal.Gui.Resources.{_configFilename}",
+                                         ConfigLocations.Default
                                         );
         }
 

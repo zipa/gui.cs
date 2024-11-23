@@ -23,6 +23,7 @@ public class ConfigurationEditor : Scenario
     };
 
     private static Action? _editorColorSchemeChanged;
+    private TabView? _tabView;
     private Shortcut? _lenShortcut;
 
     [SerializableConfigurationProperty (Scope = typeof (AppScope))]
@@ -44,13 +45,13 @@ public class ConfigurationEditor : Scenario
 
         _lenShortcut = new Shortcut ()
         {
-            Title = "Len: ",
+            Title = "",
         };
 
         var quitShortcut = new Shortcut ()
         {
             Key = Application.QuitKey,
-            Title = $"{Application.QuitKey} Quit",
+            Title = $"Quit",
             Action = Quit
         };
 
@@ -70,7 +71,13 @@ public class ConfigurationEditor : Scenario
 
         var statusBar = new StatusBar ([quitShortcut, reloadShortcut, saveShortcut, _lenShortcut]);
 
-        top.Add (statusBar);
+        _tabView = new ()
+        {
+            Width = Dim.Fill (),
+            Height = Dim.Fill (Dim.Func (() => statusBar.Frame.Height))
+        };
+
+        top.Add (_tabView, statusBar);
 
         top.Loaded += (s, a) =>
                       {
@@ -85,7 +92,7 @@ public class ConfigurationEditor : Scenario
                 return;
             }
 
-            foreach (ConfigTextView t in Application.Top!.Subviews.Where (v => v is ConfigTextView).Cast<ConfigTextView> ())
+            foreach (ConfigTextView t in _tabView.Subviews.Where (v => v is ConfigTextView).Cast<ConfigTextView> ())
             {
                 t.ColorScheme = EditorColorScheme;
             }
@@ -109,60 +116,65 @@ public class ConfigurationEditor : Scenario
 
     private void Open ()
     {
-        var subMenu = new MenuBarItem { Title = "_View" };
-
-        ConfigTextView? previous = null;
-        foreach (string configFile in ConfigurationManager.Settings!.Sources)
+        foreach (var config in ConfigurationManager.Settings!.Sources)
         {
             var homeDir = $"{Environment.GetFolderPath (Environment.SpecialFolder.UserProfile)}";
-            var fileInfo = new FileInfo (configFile.Replace ("~", homeDir));
+            var fileInfo = new FileInfo (config.Value.Replace ("~", homeDir));
 
             var editor = new ConfigTextView
             {
-                Title = configFile.StartsWith ("resource://") ? fileInfo.Name : configFile,
+                Title = config.Value.StartsWith ("resource://") ? fileInfo.Name : config.Value,
                 Width = Dim.Fill (),
+                Height = Dim.Fill(),
                 FileInfo = fileInfo,
-                BorderStyle = LineStyle.Rounded,
             };
-            editor.Height = Dim.Func (() => Math.Min (Application.Top!.Viewport.Height, editor.Lines) );
 
-            ExpanderButton expander = new ExpanderButton ();
-            editor.Border.Add (expander);
-
-            if (previous is null)
+            Tab tab = new Tab ()
             {
-                editor.Y = 0;
-            }
-            else
-            {
-                editor.Y = Pos.Bottom (previous);
-            }
+                View = editor,
+                DisplayText = config.Key.ToString ()
+            };
 
-            previous = editor;
-
-            Application.Top!.Add (editor);
+            _tabView!.AddTab (tab, false);
 
             editor.Read ();
 
-            editor.HasFocusChanged += (s, e) =>
+            editor.ContentsChanged += (sender, args) =>
                                       {
-                                          if (e.NewValue)
+                                          _lenShortcut!.Title = _lenShortcut!.Title.Replace ("*", "");
+                                          if (editor.IsDirty)
                                           {
-                                              _lenShortcut!.Title = $"Len:{editor.Text.Length}";
+                                              _lenShortcut!.Title += "*";
                                           }
                                       };
+
+            _lenShortcut!.Title = $"{editor.Title}";
         }
+
+        _tabView!.SelectedTabChanged += (sender, args) =>
+                                       {
+                                           _lenShortcut!.Title = $"{args.NewTab.View!.Title}";
+                                       };
+
     }
 
     private void Quit ()
     {
-        foreach (ConfigTextView editor in Application.Top!.Subviews.Where (v => v is ConfigTextView).Cast<ConfigTextView> ())
+        foreach (ConfigTextView editor in _tabView!.Tabs.Select(v =>
+                                                                {
+                                                                    if (v.View is ConfigTextView ctv)
+                                                                    {
+                                                                        return ctv;
+                                                                    }
+
+                                                                    return null;
+                                                                }).Cast<ConfigTextView> ())
         {
             if (editor.IsDirty)
             {
                 int result = MessageBox.Query (
                                                "Save Changes",
-                                               $"Save changes to {editor.FileInfo.FullName}",
+                                               $"Save changes to {editor.FileInfo!.Name}",
                                                "_Yes",
                                                "_No",
                                                "_Cancel"
@@ -195,22 +207,7 @@ public class ConfigurationEditor : Scenario
     {
         internal ConfigTextView ()
         {
-            ContentsChanged += (s, obj) =>
-                               {
-                                   if (IsDirty)
-                                   {
-                                       if (!Title.EndsWith ('*'))
-                                       {
-                                           Title += '*';
-                                       }
-                                       else
-                                       {
-                                           Title = Title.TrimEnd ('*');
-                                       }
-                                   }
-                               };
             TabStop = TabBehavior.TabGroup;
-
         }
 
         internal FileInfo? FileInfo { get; set; }
@@ -237,8 +234,8 @@ public class ConfigurationEditor : Scenario
                 if (!string.IsNullOrEmpty (name))
                 {
 
-                    using Stream stream = assembly.GetManifestResourceStream (name);
-                    using var reader = new StreamReader (stream);
+                    using Stream? stream = assembly.GetManifestResourceStream (name);
+                    using var reader = new StreamReader (stream!);
                     Text = reader.ReadToEnd ();
                     ReadOnly = true;
                     Enabled = true;
@@ -247,7 +244,11 @@ public class ConfigurationEditor : Scenario
                 return;
             }
 
-            if (!FileInfo.Exists)
+            if (FileInfo!.FullName.Contains ("RuntimeConfig"))
+            {
+                Text = ConfigurationManager.RuntimeConfig!;
+
+            } else if (!FileInfo.Exists)
             {
                 // Create empty config file
                 Text = ConfigurationManager.GetEmptyJson ();
@@ -256,12 +257,17 @@ public class ConfigurationEditor : Scenario
             {
                 Text = File.ReadAllText (FileInfo.FullName);
             }
-
-            Title = Title.TrimEnd ('*');
         }
 
         internal void Save ()
         {
+            if (FileInfo!.FullName.Contains ("RuntimeConfig"))
+            {
+                ConfigurationManager.RuntimeConfig = Text;
+                IsDirty = false;
+                return;
+            }
+
             if (!Directory.Exists (FileInfo.DirectoryName))
             {
                 // Create dir
@@ -271,7 +277,6 @@ public class ConfigurationEditor : Scenario
             using StreamWriter writer = File.CreateText (FileInfo.FullName);
             writer.Write (Text);
             writer.Close ();
-            Title = Title.TrimEnd ('*');
             IsDirty = false;
         }
     }
