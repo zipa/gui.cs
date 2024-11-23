@@ -87,18 +87,11 @@ public static class EscSeqRequests
                 return;
             }
 
+            found.NumOutstanding--;
+
             if (found.NumOutstanding == 0)
             {
                 Statuses.Remove (found);
-            }
-            else if (found.NumOutstanding > 0)
-            {
-                found.NumOutstanding--;
-
-                if (found.NumOutstanding == 0)
-                {
-                    Statuses.Remove (found);
-                }
             }
         }
     }
