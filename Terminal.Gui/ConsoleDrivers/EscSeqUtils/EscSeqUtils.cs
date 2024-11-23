@@ -20,7 +20,7 @@ namespace Terminal.Gui;
 ///     * https://invisible-island.net/xterm/ctlseqs/ctlseqs.html
 ///     * https://vt100.net/
 /// </remarks>
-public static class AnsiEscapeSequenceRequestUtils
+public static class EscSeqUtils
 {
     // TODO: One type per file - Move this enum to a separate file.
     /// <summary>
@@ -189,7 +189,7 @@ public static class AnsiEscapeSequenceRequestUtils
     /// <param name="isMouse">Indicates if the escape sequence is a mouse event.</param>
     /// <param name="buttonState">The <see cref="MouseFlags"/> button state.</param>
     /// <param name="pos">The <see cref="MouseFlags"/> position.</param>
-    /// <param name="seqReqStatus">The <see cref="AnsiEscapeSequenceRequestStatus"/> object.</param>
+    /// <param name="isResponse">Indicates if the escape sequence is a response to a request.</param>
     /// <param name="continuousButtonPressedHandler">The handler that will process the event.</param>
     public static void DecodeEscSeq (
         ref ConsoleKeyInfo newConsoleKeyInfo,
@@ -203,7 +203,7 @@ public static class AnsiEscapeSequenceRequestUtils
         out bool isMouse,
         out List<MouseFlags> buttonState,
         out Point pos,
-        out AnsiEscapeSequenceRequestStatus? seqReqStatus,
+        out bool isResponse,
         Action<MouseFlags, Point> continuousButtonPressedHandler
     )
     {
@@ -212,7 +212,7 @@ public static class AnsiEscapeSequenceRequestUtils
         isMouse = false;
         buttonState = [0];
         pos = default (Point);
-        seqReqStatus = null;
+        isResponse = false;
         var keyChar = '\0';
 
         switch (c1Control)
@@ -339,16 +339,10 @@ public static class AnsiEscapeSequenceRequestUtils
                     return;
                 }
 
-                if (AnsiEscapeSequenceRequests.HasResponse (terminator, out seqReqStatus))
+                if (EscSeqRequests.HasResponse (terminator))
                 {
-                    AnsiEscapeSequenceRequests.Remove (seqReqStatus);
-
-                    var ckiString = ToString (cki);
-
-                    lock (seqReqStatus?.AnsiRequest._responseLock!)
-                    {
-                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (ckiString, seqReqStatus.AnsiRequest);
-                    }
+                    isResponse = true;
+                    EscSeqRequests.Remove (terminator);
 
                     return;
                 }
@@ -376,15 +370,10 @@ public static class AnsiEscapeSequenceRequestUtils
                     else
                     {
                         // It's request response that wasn't handled by a valid request terminator
-                        System.Diagnostics.Debug.Assert (AnsiEscapeSequenceRequests.Statuses.Count > 0);
+                        System.Diagnostics.Debug.Assert (EscSeqRequests.Statuses.Count > 0);
 
-                        if (AnsiEscapeSequenceRequests.Statuses.TryDequeue (out AnsiEscapeSequenceRequestStatus? result))
-                        {
-                            lock (result.AnsiRequest._responseLock)
-                            {
-                                result.AnsiRequest.RaiseResponseFromInput (ToString (cki), result.AnsiRequest);
-                            }
-                        }
+                        isResponse = true;
+                        EscSeqRequests.Remove (terminator);
                     }
                 }
                 else
@@ -1804,7 +1793,12 @@ public static class AnsiEscapeSequenceRequestUtils
     ///     https://terminalguide.namepad.de/seq/csi_sn__p-6/
     ///     The terminal reply to <see cref="CSI_RequestCursorPositionReport"/>. ESC [ ? (y) ; (x) ; 1 R
     /// </summary>
-    public static readonly AnsiEscapeSequenceRequest CSI_RequestCursorPositionReport = new () { Request = CSI + "?6n", Terminator = "R" };
+    public static readonly string CSI_RequestCursorPositionReport = CSI + "?6n";
+
+    /// <summary>
+    ///     The terminal reply to <see cref="CSI_RequestCursorPositionReport"/>. ESC [ ? (y) ; (x) R
+    /// </summary>
+    public static readonly string CSI_RequestCursorPositionReport_Terminator = "R";
 
     /// <summary>
     ///     ESC [ 0 c - Send Device Attributes (Primary DA)
@@ -1826,7 +1820,7 @@ public static class AnsiEscapeSequenceRequestUtils
     ///     The terminator indicating a reply to <see cref="CSI_SendDeviceAttributes"/> or
     ///     <see cref="CSI_SendDeviceAttributes2"/>
     /// </summary>
-    public static readonly AnsiEscapeSequenceRequest CSI_SendDeviceAttributes = new () { Request = CSI + "0c", Terminator = "c" };
+    public static readonly string CSI_SendDeviceAttributes = CSI + "0c";
 
     /// <summary>
     ///     ESC [ > 0 c - Send Device Attributes (Secondary DA)
@@ -1834,7 +1828,7 @@ public static class AnsiEscapeSequenceRequestUtils
     ///     The terminator indicating a reply to <see cref="CSI_SendDeviceAttributes"/> or
     ///     <see cref="CSI_SendDeviceAttributes2"/>
     /// </summary>
-    public static readonly AnsiEscapeSequenceRequest CSI_SendDeviceAttributes2 = new () { Request = CSI + ">0c", Terminator = "c" };
+    public static readonly string CSI_SendDeviceAttributes2 = CSI + ">0c";
 
     /*
      TODO: depends on https://github.com/gui-cs/Terminal.Gui/pull/3768
@@ -1854,7 +1848,18 @@ public static class AnsiEscapeSequenceRequestUtils
     ///     https://terminalguide.namepad.de/seq/csi_st-18/
     ///     The terminator indicating a reply to <see cref="CSI_ReportTerminalSizeInChars"/> : ESC [ 8 ; height ; width t
     /// </summary>
-    public static readonly AnsiEscapeSequenceRequest CSI_ReportTerminalSizeInChars = new () { Request = CSI + "18t", Terminator = "t", ExpectedResponseValue = "8" };
+    public static readonly string CSI_ReportTerminalSizeInChars = CSI + "18t";
+
+    /// <summary>
+    ///     The terminator indicating a reply to <see cref="CSI_ReportTerminalSizeInChars"/> : ESC [ 8 ; height ; width t
+    /// </summary>
+    public static readonly string CSI_ReportTerminalSizeInChars_Terminator = "t";
+
+    /// <summary>
+    ///     The value of the response to <see cref="CSI_ReportTerminalSizeInChars"/> indicating value 1 and 2 are the terminal
+    ///     size in chars.
+    /// </summary>
+    public static readonly string CSI_ReportTerminalSizeInChars_ResponseValue = "8";
 
     #endregion
 }

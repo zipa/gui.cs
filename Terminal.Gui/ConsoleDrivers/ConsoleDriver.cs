@@ -1,6 +1,5 @@
 #nullable enable
 
-using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace Terminal.Gui;
@@ -13,77 +12,6 @@ namespace Terminal.Gui;
 /// </remarks>
 public abstract class ConsoleDriver
 {
-    private readonly ManualResetEventSlim _waitAnsiRequest = new (false);
-    private readonly ManualResetEventSlim _ansiResponseReady = new (false);
-    private readonly CancellationTokenSource? _ansiRequestTokenSource = new ();
-    private readonly ConcurrentQueue<AnsiEscapeSequenceRequest> _requestQueue = new ();
-    private readonly ConcurrentQueue<AnsiEscapeSequenceRequest> _responseQueue = new ();
-    private IMainLoopDriver? _mainLoopDriver;
-
-    internal void ProcessAnsiRequestHandler ()
-    {
-        while (_ansiRequestTokenSource is { IsCancellationRequested: false})
-        {
-            try
-            {
-                if (_requestQueue.Count == 0)
-                {
-                    try
-                    {
-                        _waitAnsiRequest.Wait (_ansiRequestTokenSource.Token);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        return;
-                    }
-
-                    _waitAnsiRequest.Reset ();
-                }
-
-                while (_requestQueue.TryDequeue (out AnsiEscapeSequenceRequest? ansiRequest))
-                {
-                    try
-                    {
-                        lock (ansiRequest._responseLock)
-                        {
-                            AnsiEscapeSequenceRequest request = ansiRequest;
-
-                            ansiRequest.ResponseFromInput += (s, e) =>
-                                                             {
-                                                                 Debug.Assert (s == request);
-                                                                 Debug.Assert (e == request.AnsiEscapeSequenceResponse);
-
-                                                                 _responseQueue.Enqueue (request);
-
-                                                                 _ansiResponseReady.Set ();
-                                                             };
-
-                            AnsiEscapeSequenceRequests.Add (ansiRequest);
-
-                            WriteRaw (ansiRequest.Request);
-
-                            _mainLoopDriver!.ForceRead = true;
-                        }
-
-                        if (!_ansiRequestTokenSource.IsCancellationRequested)
-                        {
-                            _mainLoopDriver.WaitForInput.Set ();
-                        }
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        return;
-                    }
-
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                return;
-            }
-        }
-    }
-
     /// <summary>
     ///     Set this to true in any unit tests that attempt to test drivers other than FakeDriver.
     ///     <code>
@@ -103,59 +31,6 @@ public abstract class ConsoleDriver
     public virtual string GetVersionInfo () { return GetType ().Name; }
 
     #region ANSI Esc Sequence Handling
-
-    /// <summary>
-    ///     Provide unique handling for all the terminal write ANSI escape sequence request.
-    /// </summary>
-    /// <param name="mainLoopDriver">The <see cref="IMainLoopDriver"/> object.</param>
-    /// <param name="ansiRequest">The <see cref="AnsiEscapeSequenceRequest"/> object.</param>
-    /// <returns><see languard="true"/> if the request response is valid, <see languard="false"/> otherwise.</returns>
-    public bool TryWriteAnsiRequest (IMainLoopDriver mainLoopDriver, ref AnsiEscapeSequenceRequest ansiRequest)
-    {
-        ArgumentNullException.ThrowIfNull (mainLoopDriver, nameof (mainLoopDriver));
-        ArgumentNullException.ThrowIfNull (ansiRequest, nameof (ansiRequest));
-
-        lock (ansiRequest._responseLock)
-        {
-            _mainLoopDriver = mainLoopDriver;
-            _requestQueue.Enqueue (ansiRequest);
-
-            _waitAnsiRequest.Set ();
-        }
-
-        try
-        {
-            _ansiResponseReady.Wait (_ansiRequestTokenSource!.Token);
-
-            _ansiResponseReady.Reset ();
-
-            _responseQueue.TryDequeue (out _);
-
-            lock (ansiRequest._responseLock)
-            {
-                _mainLoopDriver.ForceRead = false;
-
-                if (AnsiEscapeSequenceRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? request))
-                {
-                    if (AnsiEscapeSequenceRequests.Statuses.Count > 0
-                        && string.IsNullOrEmpty (request.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
-                    {
-                        lock (request.AnsiRequest._responseLock)
-                        {
-                            // Bad request or no response at all
-                            AnsiEscapeSequenceRequests.Statuses.TryDequeue (out _);
-                        }
-                    }
-                }
-
-                return ansiRequest.AnsiEscapeSequenceResponse is { Valid: true };
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            return false;
-        }
-    }
 
     // QUESTION: This appears to be an API to help in debugging. It's only implemented in CursesDriver and WindowsDriver.
     // QUESTION: Can it be factored such that it does not contaminate the ConsoleDriver API?

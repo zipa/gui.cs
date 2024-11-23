@@ -3,8 +3,6 @@
 internal class FakeMainLoop : IMainLoopDriver
 {
     public Action<ConsoleKeyInfo> MockKeyPressed;
-    public bool ForceRead { get; set; }
-    public ManualResetEventSlim WaitForInput { get; set; } = new ();
 
     public FakeMainLoop (ConsoleDriver consoleDriver = null)
     {

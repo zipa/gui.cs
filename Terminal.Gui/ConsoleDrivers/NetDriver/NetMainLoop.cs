@@ -19,10 +19,9 @@ internal class NetMainLoop : IMainLoopDriver
     private readonly ManualResetEventSlim _eventReady = new (false);
     private readonly CancellationTokenSource _eventReadyTokenSource = new ();
     private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
+    private readonly ManualResetEventSlim _waitForProbe = new (false);
     private readonly ConcurrentQueue<NetEvents.InputResult> _resultQueue = new ();
     private MainLoop? _mainLoop;
-    bool IMainLoopDriver.ForceRead { get; set; }
-    ManualResetEventSlim IMainLoopDriver.WaitForInput { get; set; } = new (false);
 
     /// <summary>Initializes the class with the console driver.</summary>
     /// <remarks>Passing a consoleDriver is provided to capture windows resizing.</remarks>
@@ -52,7 +51,12 @@ internal class NetMainLoop : IMainLoopDriver
 
     bool IMainLoopDriver.EventsPending ()
     {
-        ((IMainLoopDriver)this).WaitForInput.Set ();
+        if (ConsoleDriver.RunningUnitTests)
+        {
+            return true;
+        }
+
+        _waitForProbe.Set ();
 
         if (_resultQueue.Count > 0 || _mainLoop!.CheckTimersAndIdleHandlers (out int waitTimeout))
         {
@@ -66,13 +70,6 @@ internal class NetMainLoop : IMainLoopDriver
                 // Note: ManualResetEventSlim.Wait will wait indefinitely if the timeout is -1. The timeout is -1 when there
                 // are no timers, but there IS an idle handler waiting.
                 _eventReady.Wait (waitTimeout, _eventReadyTokenSource.Token);
-
-                _eventReadyTokenSource.Token.ThrowIfCancellationRequested ();
-
-                if (!_eventReadyTokenSource.IsCancellationRequested)
-                {
-                    return _resultQueue.Count > 0 || _mainLoop.CheckTimersAndIdleHandlers (out _);
-                }
             }
         }
         catch (OperationCanceledException)
@@ -84,13 +81,20 @@ internal class NetMainLoop : IMainLoopDriver
             _eventReady.Reset ();
         }
 
+        _eventReadyTokenSource.Token.ThrowIfCancellationRequested ();
+
+        if (!_eventReadyTokenSource.IsCancellationRequested)
+        {
+            return _resultQueue.Count > 0 || _mainLoop.CheckTimersAndIdleHandlers (out _);
+        }
+
         // If cancellation was requested then always return true
         return true;
     }
 
     void IMainLoopDriver.Iteration ()
     {
-        while (_resultQueue.TryDequeue (out NetEvents.InputResult inputRecords))
+        while (!ConsoleDriver.RunningUnitTests && _resultQueue.TryDequeue (out NetEvents.InputResult inputRecords))
         {
             ProcessInput?.Invoke (inputRecords);
         }
@@ -104,7 +108,7 @@ internal class NetMainLoop : IMainLoopDriver
         _eventReadyTokenSource.Dispose ();
 
         _eventReady.Dispose ();
-        ((IMainLoopDriver)this).WaitForInput.Dispose ();
+        _waitForProbe.Dispose ();
 
         _resultQueue.Clear ();
         _netEvents?.Dispose ();
@@ -119,11 +123,11 @@ internal class NetMainLoop : IMainLoopDriver
         {
             try
             {
-                if (!_inputHandlerTokenSource.IsCancellationRequested && !((IMainLoopDriver)this).ForceRead)
+                if (!_inputHandlerTokenSource.IsCancellationRequested)
                 {
                     try
                     {
-                        ((IMainLoopDriver)this).WaitForInput.Wait (_inputHandlerTokenSource.Token);
+                        _waitForProbe.Wait (_inputHandlerTokenSource.Token);
                     }
                     catch (Exception ex)
                     {
@@ -135,7 +139,7 @@ internal class NetMainLoop : IMainLoopDriver
                         throw;
                     }
 
-                    ((IMainLoopDriver)this).WaitForInput.Reset ();
+                    _waitForProbe.Reset ();
                 }
 
                 ProcessInputQueue ();
@@ -149,7 +153,7 @@ internal class NetMainLoop : IMainLoopDriver
 
     private void ProcessInputQueue ()
     {
-        if (_resultQueue.Count == 0 || ((IMainLoopDriver)this).ForceRead)
+        if (_resultQueue.Count == 0)
         {
             NetEvents.InputResult? result = _netEvents!.DequeueInput ();
 

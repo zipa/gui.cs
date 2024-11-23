@@ -77,46 +77,11 @@ internal class NetEvents : IDisposable
             // The delay must be here because it may have a request response after a while
             // In WSL it takes longer for keys to be available.
             Task.Delay (100, cancellationToken).Wait (cancellationToken);
-
-            ProcessResponse ();
         }
 
         cancellationToken.ThrowIfCancellationRequested ();
 
         return default (ConsoleKeyInfo);
-    }
-
-    //internal bool _forceRead;
-    private int _retries;
-
-    private void ProcessResponse ()
-    {
-        if (!Console.KeyAvailable && AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && AnsiEscapeSequenceRequests.Statuses.Count > 0)
-        {
-            if (_retries > 1)
-            {
-                if (AnsiEscapeSequenceRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? seqReqStatus)
-                    && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
-                {
-                    lock (seqReqStatus.AnsiRequest._responseLock)
-                    {
-                        AnsiEscapeSequenceRequests.Statuses.TryDequeue (out _);
-
-                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (null, seqReqStatus.AnsiRequest);
-                    }
-                }
-
-                _retries = 0;
-            }
-            else
-            {
-                _retries++;
-            }
-        }
-        else
-        {
-            _retries = 0;
-        }
     }
 
     private void ProcessInputQueue ()
@@ -144,13 +109,13 @@ internal class NetEvents : IDisposable
 
                     var ckiAlreadyResized = false;
 
-                    if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is { })
+                    if (EscSeqUtils.IncompleteCkInfos is { })
                     {
                         ckiAlreadyResized = true;
 
-                        _cki = AnsiEscapeSequenceRequestUtils.ResizeArray (consoleKeyInfo, _cki);
-                        _cki = AnsiEscapeSequenceRequestUtils.InsertArray (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos, _cki);
-                        AnsiEscapeSequenceRequestUtils.IncompleteCkInfos = null;
+                        _cki = EscSeqUtils.ResizeArray (consoleKeyInfo, _cki);
+                        _cki = EscSeqUtils.InsertArray (EscSeqUtils.IncompleteCkInfos, _cki);
+                        EscSeqUtils.IncompleteCkInfos = null;
 
                         if (_cki.Length > 1 && _cki [0].KeyChar == '\u001B')
                         {
@@ -163,7 +128,7 @@ internal class NetEvents : IDisposable
                     {
                         if (_cki is null && consoleKeyInfo.KeyChar != (char)KeyCode.Esc && _isEscSeq)
                         {
-                            _cki = AnsiEscapeSequenceRequestUtils.ResizeArray (
+                            _cki = EscSeqUtils.ResizeArray (
                                                                                new (
                                                                                     (char)KeyCode.Esc,
                                                                                     0,
@@ -190,7 +155,6 @@ internal class NetEvents : IDisposable
                             ProcessRequestResponse (ref newConsoleKeyInfo, ref key, _cki, ref mod);
                             _cki = null;
                             _isEscSeq = false;
-                            ProcessResponse ();
 
                             ProcessMapConsoleKeyInfo (consoleKeyInfo);
                         }
@@ -200,7 +164,7 @@ internal class NetEvents : IDisposable
 
                             if (!ckiAlreadyResized)
                             {
-                                _cki = AnsiEscapeSequenceRequestUtils.ResizeArray (consoleKeyInfo, _cki);
+                                _cki = EscSeqUtils.ResizeArray (consoleKeyInfo, _cki);
                             }
 
                             if (Console.KeyAvailable)
@@ -211,7 +175,6 @@ internal class NetEvents : IDisposable
                             ProcessRequestResponse (ref newConsoleKeyInfo, ref key, _cki!, ref mod);
                             _cki = null;
                             _isEscSeq = false;
-                            ProcessResponse ();
                         }
 
                         break;
@@ -221,11 +184,10 @@ internal class NetEvents : IDisposable
                     {
                         ProcessRequestResponse (ref newConsoleKeyInfo, ref key, _cki, ref mod);
                         _cki = null;
-                        ProcessResponse ();
 
                         if (Console.KeyAvailable)
                         {
-                            _cki = AnsiEscapeSequenceRequestUtils.ResizeArray (consoleKeyInfo, _cki);
+                            _cki = EscSeqUtils.ResizeArray (consoleKeyInfo, _cki);
                         }
                         else
                         {
@@ -236,11 +198,6 @@ internal class NetEvents : IDisposable
                     }
 
                     ProcessMapConsoleKeyInfo (consoleKeyInfo);
-
-                    if (_retries > 0)
-                    {
-                        _retries = 0;
-                    }
 
                     break;
                 }
@@ -261,7 +218,7 @@ internal class NetEvents : IDisposable
             _inputQueue.Enqueue (
                                  new ()
                                  {
-                                     EventType = EventType.Key, ConsoleKeyInfo = AnsiEscapeSequenceRequestUtils.MapConsoleKeyInfo (consoleKeyInfo)
+                                     EventType = EventType.Key, ConsoleKeyInfo = EscSeqUtils.MapConsoleKeyInfo (consoleKeyInfo)
                                  }
                                 );
             _isEscSeq = false;
@@ -357,7 +314,7 @@ internal class NetEvents : IDisposable
     )
     {
         // isMouse is true if it's CSI<, false otherwise
-        AnsiEscapeSequenceRequestUtils.DecodeEscSeq (
+        EscSeqUtils.DecodeEscSeq (
                                                      ref newConsoleKeyInfo,
                                                      ref key,
                                                      cki,
@@ -369,7 +326,7 @@ internal class NetEvents : IDisposable
                                                      out bool isMouse,
                                                      out List<MouseFlags> mouseFlags,
                                                      out Point pos,
-                                                     out AnsiEscapeSequenceRequestStatus? seqReqStatus,
+                                                     out bool isReq,
                                                      (f, p) => HandleMouseEvent (MapMouseFlags (f), p)
                                                     );
 
@@ -383,9 +340,9 @@ internal class NetEvents : IDisposable
             return;
         }
 
-        if (seqReqStatus is { })
+        if (isReq)
         {
-            //HandleRequestResponseEvent (c1Control, code, values, terminating);
+            HandleRequestResponseEvent (c1Control, code, values, terminating);
 
             return;
         }
@@ -530,66 +487,66 @@ internal class NetEvents : IDisposable
         return mbs;
     }
 
-    //private Point _lastCursorPosition;
+    private Point _lastCursorPosition;
 
-    //private void HandleRequestResponseEvent (string c1Control, string code, string [] values, string terminating)
-    //{
-    //    if (terminating ==
+    private void HandleRequestResponseEvent (string c1Control, string code, string [] values, string terminating)
+    {
+        if (terminating ==
 
-    //        // BUGBUG: I can't find where we send a request for cursor position (ESC[?6n), so I'm not sure if this is needed.
-    //        // The observation is correct because the response isn't immediate and this is useless
-    //        EscSeqUtils.CSI_RequestCursorPositionReport.Terminator)
-    //    {
-    //        var point = new Point { X = int.Parse (values [1]) - 1, Y = int.Parse (values [0]) - 1 };
+            // BUGBUG: I can't find where we send a request for cursor position (ESC[?6n), so I'm not sure if this is needed.
+            // The observation is correct because the response isn't immediate and this is useless
+            EscSeqUtils.CSI_RequestCursorPositionReport_Terminator)
+        {
+            var point = new Point { X = int.Parse (values [1]) - 1, Y = int.Parse (values [0]) - 1 };
 
-    //        if (_lastCursorPosition.Y != point.Y)
-    //        {
-    //            _lastCursorPosition = point;
-    //            var eventType = EventType.WindowPosition;
-    //            var winPositionEv = new WindowPositionEvent { CursorPosition = point };
+            if (_lastCursorPosition.Y != point.Y)
+            {
+                _lastCursorPosition = point;
+                var eventType = EventType.WindowPosition;
+                var winPositionEv = new WindowPositionEvent { CursorPosition = point };
 
-    //            _inputQueue.Enqueue (
-    //                                 new InputResult { EventType = eventType, WindowPositionEvent = winPositionEv }
-    //                                );
-    //        }
-    //        else
-    //        {
-    //            return;
-    //        }
-    //    }
-    //    else if (terminating == EscSeqUtils.CSI_ReportTerminalSizeInChars.Terminator)
-    //    {
-    //        if (values [0] == EscSeqUtils.CSI_ReportTerminalSizeInChars.Value)
-    //        {
-    //            EnqueueWindowSizeEvent (
-    //                                    Math.Max (int.Parse (values [1]), 0),
-    //                                    Math.Max (int.Parse (values [2]), 0),
-    //                                    Math.Max (int.Parse (values [1]), 0),
-    //                                    Math.Max (int.Parse (values [2]), 0)
-    //                                   );
-    //        }
-    //        else
-    //        {
-    //            EnqueueRequestResponseEvent (c1Control, code, values, terminating);
-    //        }
-    //    }
-    //    else
-    //    {
-    //        EnqueueRequestResponseEvent (c1Control, code, values, terminating);
-    //    }
+                _inputQueue.Enqueue (
+                                     new InputResult { EventType = eventType, WindowPositionEvent = winPositionEv }
+                                    );
+            }
+            else
+            {
+                return;
+            }
+        }
+        else if (terminating == EscSeqUtils.CSI_ReportTerminalSizeInChars_Terminator)
+        {
+            if (values [0] == EscSeqUtils.CSI_ReportTerminalSizeInChars_ResponseValue)
+            {
+                EnqueueWindowSizeEvent (
+                                        Math.Max (int.Parse (values [1]), 0),
+                                        Math.Max (int.Parse (values [2]), 0),
+                                        Math.Max (int.Parse (values [1]), 0),
+                                        Math.Max (int.Parse (values [2]), 0)
+                                       );
+            }
+            else
+            {
+                EnqueueRequestResponseEvent (c1Control, code, values, terminating);
+            }
+        }
+        else
+        {
+            EnqueueRequestResponseEvent (c1Control, code, values, terminating);
+        }
 
-    //    _inputReady.Set ();
-    //}
+        _inputReady.Set ();
+    }
 
-    //private void EnqueueRequestResponseEvent (string c1Control, string code, string [] values, string terminating)
-    //{
-    //    var eventType = EventType.RequestResponse;
-    //    var requestRespEv = new RequestResponseEvent { ResultTuple = (c1Control, code, values, terminating) };
+    private void EnqueueRequestResponseEvent (string c1Control, string code, string [] values, string terminating)
+    {
+        var eventType = EventType.RequestResponse;
+        var requestRespEv = new RequestResponseEvent { ResultTuple = (c1Control, code, values, terminating) };
 
-    //    _inputQueue.Enqueue (
-    //                         new InputResult { EventType = eventType, RequestResponseEvent = requestRespEv }
-    //                        );
-    //}
+        _inputQueue.Enqueue (
+                             new InputResult { EventType = eventType, RequestResponseEvent = requestRespEv }
+                            );
+    }
 
     private void HandleMouseEvent (MouseButtonState buttonState, Point pos)
     {

@@ -244,7 +244,7 @@ internal class WindowsDriver : ConsoleDriver
         else
         {
             var sb = new StringBuilder ();
-            sb.Append (AnsiEscapeSequenceRequestUtils.CSI_SetCursorPosition (position.Y + 1, position.X + 1));
+            sb.Append (EscSeqUtils.CSI_SetCursorPosition (position.Y + 1, position.X + 1));
             WinConsole?.WriteANSI (sb.ToString ());
         }
 
@@ -280,7 +280,7 @@ internal class WindowsDriver : ConsoleDriver
         else
         {
             var sb = new StringBuilder ();
-            sb.Append (visibility != CursorVisibility.Invisible ? AnsiEscapeSequenceRequestUtils.CSI_ShowCursor : AnsiEscapeSequenceRequestUtils.CSI_HideCursor);
+            sb.Append (visibility != CursorVisibility.Invisible ? EscSeqUtils.CSI_ShowCursor : EscSeqUtils.CSI_HideCursor);
             return WinConsole?.WriteANSI (sb.ToString ()) ?? false;
         }
     }
@@ -295,7 +295,7 @@ internal class WindowsDriver : ConsoleDriver
         else
         {
             var sb = new StringBuilder ();
-            sb.Append (_cachedCursorVisibility != CursorVisibility.Invisible ? AnsiEscapeSequenceRequestUtils.CSI_ShowCursor : AnsiEscapeSequenceRequestUtils.CSI_HideCursor);
+            sb.Append (_cachedCursorVisibility != CursorVisibility.Invisible ? EscSeqUtils.CSI_ShowCursor : EscSeqUtils.CSI_HideCursor);
             return WinConsole?.WriteANSI (sb.ToString ()) ?? false;
         }
 
@@ -420,7 +420,7 @@ internal class WindowsDriver : ConsoleDriver
         if (!RunningUnitTests && _isWindowsTerminal)
         {
             // Disable alternative screen buffer.
-            Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_RestoreCursorAndRestoreAltBufferWithBackscroll);
+            Console.Out.Write (EscSeqUtils.CSI_RestoreCursorAndRestoreAltBufferWithBackscroll);
         }
     }
 
@@ -446,7 +446,7 @@ internal class WindowsDriver : ConsoleDriver
 
                 if (_isWindowsTerminal)
                 {
-                    Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_SaveCursorAndActivateAltBufferNoBackscroll);
+                    Console.Out.Write (EscSeqUtils.CSI_SaveCursorAndActivateAltBufferNoBackscroll);
                 }
             }
             catch (Win32Exception e)
@@ -481,8 +481,6 @@ internal class WindowsDriver : ConsoleDriver
         if (!RunningUnitTests)
         {
             WinConsole?.SetInitialCursorVisibility ();
-
-            Task.Run (ProcessAnsiRequestHandler);
         }
 
         return new MainLoop (_mainLoopDriver);

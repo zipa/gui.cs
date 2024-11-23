@@ -62,9 +62,6 @@ internal class WindowsConsole
         const int BUFFER_SIZE = 1;
         InputRecord inputRecord = default;
         uint numberEventsRead = 0;
-        StringBuilder ansiSequence = new StringBuilder ();
-        bool readingSequence = false;
-        bool raisedResponse = false;
 
         while (!_inputReadyCancellationTokenSource!.IsCancellationRequested)
         {
@@ -79,101 +76,6 @@ internal class WindowsConsole
                                       out inputRecord,
                                       BUFFER_SIZE,
                                       out numberEventsRead);
-
-                    if (inputRecord.EventType == EventType.Key)
-                    {
-                        KeyEventRecord keyEvent = inputRecord.KeyEvent;
-
-                        if (keyEvent.bKeyDown)
-                        {
-                            char inputChar = keyEvent.UnicodeChar;
-
-                            // Check if input is part of an ANSI escape sequence
-                            if (inputChar == '\u001B') // Escape character
-                            {
-                                // Peek to check if there is any input available with key event and bKeyDown and not Escape character
-                                if (PeekConsoleInput (_inputHandle, out InputRecord peekRecord, BUFFER_SIZE, out eventsRead) && eventsRead > 0)
-                                {
-                                    if (peekRecord is { EventType: EventType.Key, KeyEvent.bKeyDown: true, KeyEvent.UnicodeChar: not '\u001B' })
-                                    {
-                                        // It's really an ANSI request response
-                                        readingSequence = true;
-                                        // Start a new sequence ensuring in the cases where wasn't clear by reading the terminator
-                                        ansiSequence.Clear ();
-                                        ansiSequence.Append (inputChar);
-
-                                        continue;
-                                    }
-                                }
-                            }
-                            else if (readingSequence)
-                            {
-                                ansiSequence.Append (inputChar);
-
-                                // Check if the sequence has ended with an expected command terminator
-                                if (AnsiEscapeSequenceRequests.HasResponse (inputChar.ToString (), out AnsiEscapeSequenceRequestStatus? seqReqStatus))
-                                {
-                                    // Finished reading the sequence and remove the enqueued request
-                                    AnsiEscapeSequenceRequests.Remove (seqReqStatus);
-
-                                    lock (seqReqStatus!.AnsiRequest._responseLock)
-                                    {
-                                        readingSequence = false;
-                                        raisedResponse = true;
-                                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (ansiSequence.ToString (), seqReqStatus.AnsiRequest);
-                                        ClearInputRecord ();
-
-                                        // Clear the ansiSequence to avoid insert another Esc character
-                                        ansiSequence.Clear ();
-                                    }
-                                }
-
-                                if (readingSequence)
-                                {
-                                    continue;
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if (readingSequence && !raisedResponse && AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && AnsiEscapeSequenceRequests.Statuses.Count > 0)
-                {
-                    AnsiEscapeSequenceRequests.Statuses.TryDequeue (out AnsiEscapeSequenceRequestStatus? seqReqStatus);
-
-                    lock (seqReqStatus!.AnsiRequest._responseLock)
-                    {
-                        seqReqStatus.AnsiRequest.RaiseResponseFromInput (ansiSequence.ToString (), seqReqStatus.AnsiRequest);
-                        ClearInputRecord();
-                    }
-
-                    _retries = 0;
-                }
-                else if (AnsiEscapeSequenceRequestUtils.IncompleteCkInfos is null && AnsiEscapeSequenceRequests.Statuses.Count > 0)
-                {
-                    if (_retries > 1)
-                    {
-                        if (AnsiEscapeSequenceRequests.Statuses.TryPeek (out AnsiEscapeSequenceRequestStatus? seqReqStatus) && string.IsNullOrEmpty (seqReqStatus.AnsiRequest.AnsiEscapeSequenceResponse?.Response))
-                        {
-                            lock (seqReqStatus.AnsiRequest._responseLock)
-                            {
-                                AnsiEscapeSequenceRequests.Statuses.TryDequeue (out _);
-
-                                seqReqStatus.AnsiRequest.RaiseResponseFromInput (null, seqReqStatus.AnsiRequest);
-                                ClearInputRecord();
-                            }
-                        }
-
-                        _retries = 0;
-                    }
-                    else
-                    {
-                        _retries++;
-                    }
-                }
-                else
-                {
-                    _retries = 0;
                 }
 
                 if (numberEventsRead > 0)
@@ -181,16 +83,13 @@ internal class WindowsConsole
                     return inputRecord;
                 }
 
-                if (!_forceRead)
+                try
                 {
-                    try
-                    {
-                        Task.Delay (100, _inputReadyCancellationTokenSource.Token).Wait (_inputReadyCancellationTokenSource.Token);
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        return null;
-                    }
+                    Task.Delay (100, _inputReadyCancellationTokenSource.Token).Wait (_inputReadyCancellationTokenSource.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    return null;
                 }
             }
             catch (Exception ex)
@@ -205,18 +104,7 @@ internal class WindowsConsole
         }
 
         return null;
-
-        void ClearInputRecord ()
-        {
-            // Clear the terminator for not be enqueued
-            inputRecord = default (InputRecord);
-
-            // Clear numberEventsRead to not exit
-            numberEventsRead = 0;
-        }
     }
-
-    internal bool _forceRead;
 
     private void ProcessInputQueue ()
     {
@@ -224,7 +112,7 @@ internal class WindowsConsole
         {
             try
             {
-                if (_inputQueue.Count == 0 || _forceRead)
+                if (_inputQueue.Count == 0)
                 {
                     while (_inputReadyCancellationTokenSource is { IsCancellationRequested: false })
                     {
@@ -252,7 +140,6 @@ internal class WindowsConsole
             }
         }
     }
-
 
     private CharInfo []? _originalStdOutChars;
 
@@ -288,8 +175,8 @@ internal class WindowsConsole
         {
             _stringBuilder.Clear ();
 
-            _stringBuilder.Append (AnsiEscapeSequenceRequestUtils.CSI_SaveCursorPosition);
-            _stringBuilder.Append (AnsiEscapeSequenceRequestUtils.CSI_SetCursorPosition (0, 0));
+            _stringBuilder.Append (EscSeqUtils.CSI_SaveCursorPosition);
+            _stringBuilder.Append (EscSeqUtils.CSI_SetCursorPosition (0, 0));
 
             Attribute? prev = null;
 
@@ -300,8 +187,8 @@ internal class WindowsConsole
                 if (attr != prev)
                 {
                     prev = attr;
-                    _stringBuilder.Append (AnsiEscapeSequenceRequestUtils.CSI_SetForegroundColorRGB (attr.Foreground.R, attr.Foreground.G, attr.Foreground.B));
-                    _stringBuilder.Append (AnsiEscapeSequenceRequestUtils.CSI_SetBackgroundColorRGB (attr.Background.R, attr.Background.G, attr.Background.B));
+                    _stringBuilder.Append (EscSeqUtils.CSI_SetForegroundColorRGB (attr.Foreground.R, attr.Foreground.G, attr.Foreground.B));
+                    _stringBuilder.Append (EscSeqUtils.CSI_SetBackgroundColorRGB (attr.Background.R, attr.Background.G, attr.Background.B));
                 }
 
                 if (info.Char != '\x1b')
@@ -317,8 +204,8 @@ internal class WindowsConsole
                 }
             }
 
-            _stringBuilder.Append (AnsiEscapeSequenceRequestUtils.CSI_RestoreCursorPosition);
-            _stringBuilder.Append (AnsiEscapeSequenceRequestUtils.CSI_HideCursor);
+            _stringBuilder.Append (EscSeqUtils.CSI_RestoreCursorPosition);
+            _stringBuilder.Append (EscSeqUtils.CSI_HideCursor);
 
             var s = _stringBuilder.ToString ();
 
@@ -1117,8 +1004,6 @@ internal class WindowsConsole
             Console.WriteLine ($"Error: {Marshal.GetLastWin32Error ()}");
         }
     }
-
-    private int _retries;
 
 #if false // Not needed on the constructor. Perhaps could be used on resizing. To study.
 		[DllImport ("kernel32.dll", ExactSpelling = true)]

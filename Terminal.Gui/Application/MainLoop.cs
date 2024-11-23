@@ -1,4 +1,5 @@
-﻿//
+﻿#nullable enable
+//
 // MainLoop.cs: IMainLoopDriver and MainLoop for Terminal.Gui
 //
 // Authors:
@@ -10,7 +11,7 @@ using System.Collections.ObjectModel;
 namespace Terminal.Gui;
 
 /// <summary>Interface to create a platform specific <see cref="MainLoop"/> driver.</summary>
-public interface IMainLoopDriver
+internal interface IMainLoopDriver
 {
     /// <summary>Must report whether there are any events pending, or even block waiting for events.</summary>
     /// <returns><c>true</c>, if there were pending events, <c>false</c> otherwise.</returns>
@@ -29,16 +30,6 @@ public interface IMainLoopDriver
 
     /// <summary>Wakes up the <see cref="MainLoop"/> that might be waiting on input, must be thread safe.</summary>
     void Wakeup ();
-
-    /// <summary>
-    ///     Flag <see cref="WaitForInput"/> to force reading input instead of call <see cref="ManualResetEventSlim.Wait ()"/>.
-    /// </summary>
-    bool ForceRead { get; set; }
-
-    /// <summary>
-    ///     Switch for waiting for input or signaled to resume.
-    /// </summary>
-    ManualResetEventSlim WaitForInput { get; set; }
 }
 
 /// <summary>The MainLoop monitors timers and idle handlers.</summary>
@@ -46,7 +37,7 @@ public interface IMainLoopDriver
 ///     Monitoring of file descriptors is only available on Unix, there does not seem to be a way of supporting this
 ///     on Windows.
 /// </remarks>
-public class MainLoop : IDisposable
+internal class MainLoop : IDisposable
 {
     internal List<Func<bool>> _idleHandlers = new ();
     internal SortedList<long, Timeout> _timeouts = new ();
@@ -82,7 +73,7 @@ public class MainLoop : IDisposable
 
     /// <summary>The current <see cref="IMainLoopDriver"/> in use.</summary>
     /// <value>The main loop driver.</value>
-    public IMainLoopDriver MainLoopDriver { get; private set; }
+    internal IMainLoopDriver? MainLoopDriver { get; private set; }
 
     /// <summary>Used for unit tests.</summary>
     internal bool Running { get; set; }
@@ -127,7 +118,7 @@ public class MainLoop : IDisposable
             _idleHandlers.Add (idleHandler);
         }
 
-        MainLoopDriver.Wakeup ();
+        MainLoopDriver?.Wakeup ();
 
         return idleHandler;
     }
@@ -198,7 +189,7 @@ public class MainLoop : IDisposable
     ///     You can use this method if you want to probe if events are pending. Typically used if you need to flush the
     ///     input queue while still running some of your own code in your main thread.
     /// </remarks>
-    internal bool EventsPending () { return MainLoopDriver.EventsPending (); }
+    internal bool EventsPending () { return MainLoopDriver!.EventsPending (); }
 
     /// <summary>Removes an idle handler added with <see cref="AddIdle(Func{bool})"/> from processing.</summary>
     /// <param name="token">A token returned by <see cref="AddIdle(Func{bool})"/></param>
@@ -232,7 +223,7 @@ public class MainLoop : IDisposable
     {
         lock (_timeoutsLockToken)
         {
-            int idx = _timeouts.IndexOfValue (token as Timeout);
+            int idx = _timeouts.IndexOfValue ((token as Timeout)!);
 
             if (idx == -1)
             {
@@ -277,7 +268,7 @@ public class MainLoop : IDisposable
             }
         }
 
-        MainLoopDriver.Iteration ();
+        MainLoopDriver?.Iteration ();
 
         bool runIdle;
 
@@ -303,8 +294,7 @@ public class MainLoop : IDisposable
     ///     Invoked when a new timeout is added. To be used in the case when
     ///     <see cref="Application.EndAfterFirstIteration"/> is <see langword="true"/>.
     /// </summary>
-    [CanBeNull]
-    internal event EventHandler<TimeoutEventArgs> TimeoutAdded;
+    internal event EventHandler<TimeoutEventArgs>? TimeoutAdded;
 
     /// <summary>Wakes up the <see cref="MainLoop"/> that might be waiting on input.</summary>
     internal void Wakeup () { MainLoopDriver?.Wakeup (); }

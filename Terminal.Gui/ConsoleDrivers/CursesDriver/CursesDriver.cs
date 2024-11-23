@@ -104,7 +104,7 @@ internal class CursesDriver : ConsoleDriver
     {
         if (!RunningUnitTests)
         {
-            Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_EnableMouseEvents);
+            Console.Out.Write (EscSeqUtils.CSI_EnableMouseEvents);
         }
     }
 
@@ -112,7 +112,7 @@ internal class CursesDriver : ConsoleDriver
     {
         if (!RunningUnitTests)
         {
-            Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_DisableMouseEvents);
+            Console.Out.Write (EscSeqUtils.CSI_DisableMouseEvents);
         }
     }
 
@@ -150,7 +150,7 @@ internal class CursesDriver : ConsoleDriver
             }
             else
             {
-                _mainLoopDriver?.WriteRaw (AnsiEscapeSequenceRequestUtils.CSI_SetCursorPosition (Row + 1, Col + 1));
+                _mainLoopDriver?.WriteRaw (EscSeqUtils.CSI_SetCursorPosition (Row + 1, Col + 1));
             }
         }
     }
@@ -299,7 +299,7 @@ internal class CursesDriver : ConsoleDriver
                             redrawAttr = attr;
 
                             output.Append (
-                                           AnsiEscapeSequenceRequestUtils.CSI_SetForegroundColorRGB (
+                                           EscSeqUtils.CSI_SetForegroundColorRGB (
                                                                                   attr.Foreground.R,
                                                                                   attr.Foreground.G,
                                                                                   attr.Foreground.B
@@ -307,7 +307,7 @@ internal class CursesDriver : ConsoleDriver
                                           );
 
                             output.Append (
-                                           AnsiEscapeSequenceRequestUtils.CSI_SetBackgroundColorRGB (
+                                           EscSeqUtils.CSI_SetBackgroundColorRGB (
                                                                                   attr.Background.R,
                                                                                   attr.Background.G,
                                                                                   attr.Background.B
@@ -554,11 +554,11 @@ internal class CursesDriver : ConsoleDriver
         if (visibility != CursorVisibility.Invisible)
         {
             _mainLoopDriver?.WriteRaw (
-                                       AnsiEscapeSequenceRequestUtils.CSI_SetCursorStyle (
-                                                                                          (AnsiEscapeSequenceRequestUtils.DECSCUSR_Style)
-                                                                                          (((int)visibility >> 24)
-                                                                                           & 0xFF)
-                                                                                         )
+                                       EscSeqUtils.CSI_SetCursorStyle (
+                                                                       (EscSeqUtils.DECSCUSR_Style)
+                                                                       (((int)visibility >> 24)
+                                                                        & 0xFF)
+                                                                      )
                                       );
         }
 
@@ -571,7 +571,7 @@ internal class CursesDriver : ConsoleDriver
     {
         // + 1 is needed because non-Windows is based on 1 instead of 0 and
         // Console.CursorTop/CursorLeft isn't reliable.
-        Console.Out.Write (AnsiEscapeSequenceRequestUtils.CSI_SetCursorPosition (row + 1, col + 1));
+        Console.Out.Write (EscSeqUtils.CSI_SetCursorPosition (row + 1, col + 1));
 
         return true;
     }
@@ -580,6 +580,7 @@ internal class CursesDriver : ConsoleDriver
 
     private Curses.Window? _window;
     private UnixMainLoop? _mainLoopDriver;
+    private object _processInputToken;
 
     internal override MainLoop Init ()
     {
@@ -638,6 +639,17 @@ internal class CursesDriver : ConsoleDriver
             {
                 Curses.timeout (0);
             }
+
+            _processInputToken = _mainLoopDriver.AddWatch (
+                                                           0,
+                                                           UnixMainLoop.Condition.PollIn,
+                                                           x =>
+                                                           {
+                                                               ProcessInput ();
+
+                                                               return true;
+                                                           }
+                                                          );
         }
 
         CurrentAttribute = new (ColorName16.White, ColorName16.Black);
@@ -678,58 +690,414 @@ internal class CursesDriver : ConsoleDriver
                 Curses.refresh ();
             }
 
-            Task.Run (ProcessAnsiRequestHandler);
+            EscSeqUtils.ContinuousButtonPressed += EscSeqUtils_ContinuousButtonPressed;
         }
 
         return new (_mainLoopDriver);
     }
 
-    internal void ProcessInput (UnixMainLoop.PollData inputEvent)
+    internal void ProcessInput ()
     {
-        switch (inputEvent.EventType)
+        int wch;
+        int code = Curses.get_wch (out wch);
+
+        //System.Diagnostics.Debug.WriteLine ($"code: {code}; wch: {wch}");
+        if (code == Curses.ERR)
         {
-            case UnixMainLoop.EventType.Key:
-                ConsoleKeyInfo consoleKeyInfo = inputEvent.KeyEvent;
+            return;
+        }
 
-                KeyCode map = AnsiEscapeSequenceRequestUtils.MapKey (consoleKeyInfo);
+        var k = KeyCode.Null;
 
-                if (map == KeyCode.Null)
+        if (code == Curses.KEY_CODE_YES)
+        {
+            while (code == Curses.KEY_CODE_YES && wch == Curses.KeyResize)
+            {
+                ProcessWinChange ();
+                code = Curses.get_wch (out wch);
+            }
+
+            if (wch == 0)
+            {
+                return;
+            }
+
+            if (wch == Curses.KeyMouse)
+            {
+                int wch2 = wch;
+
+                while (wch2 == Curses.KeyMouse)
                 {
-                    break;
+                    Key kea = null;
+
+                    ConsoleKeyInfo [] cki =
+                    {
+                        new ((char)KeyCode.Esc, 0, false, false, false),
+                        new ('[', 0, false, false, false),
+                        new ('<', 0, false, false, false)
+                    };
+                    code = 0;
+                    HandleEscSeqResponse (ref code, ref k, ref wch2, ref kea, ref cki);
                 }
 
-                OnKeyDown (new (map));
-                OnKeyUp (new (map));
+                return;
+            }
 
-                break;
-            case UnixMainLoop.EventType.Mouse:
-                var me = new MouseEventArgs { Position = inputEvent.MouseEvent.Position, Flags = inputEvent.MouseEvent.MouseFlags };
-                OnMouseEvent (me);
+            k = MapCursesKey (wch);
 
-                break;
-            case UnixMainLoop.EventType.WindowSize:
-                Size size = new (inputEvent.WindowSizeEvent.Size.Width, inputEvent.WindowSizeEvent.Size.Height);
-                ProcessWinChange (size);
+            if (wch >= 277 && wch <= 288)
+            {
+                // Shift+(F1 - F12)
+                wch -= 12;
+                k = KeyCode.ShiftMask | MapCursesKey (wch);
+            }
+            else if (wch >= 289 && wch <= 300)
+            {
+                // Ctrl+(F1 - F12)
+                wch -= 24;
+                k = KeyCode.CtrlMask | MapCursesKey (wch);
+            }
+            else if (wch >= 301 && wch <= 312)
+            {
+                // Ctrl+Shift+(F1 - F12)
+                wch -= 36;
+                k = KeyCode.CtrlMask | KeyCode.ShiftMask | MapCursesKey (wch);
+            }
+            else if (wch >= 313 && wch <= 324)
+            {
+                // Alt+(F1 - F12)
+                wch -= 48;
+                k = KeyCode.AltMask | MapCursesKey (wch);
+            }
+            else if (wch >= 325 && wch <= 327)
+            {
+                // Shift+Alt+(F1 - F3)
+                wch -= 60;
+                k = KeyCode.ShiftMask | KeyCode.AltMask | MapCursesKey (wch);
+            }
 
-                break;
-            default:
-                throw new ArgumentOutOfRangeException ();
+            OnKeyDown (new Key (k));
+            OnKeyUp (new Key (k));
+
+            return;
+        }
+
+        // Special handling for ESC, we want to try to catch ESC+letter to simulate alt-letter as well as Alt-Fkey
+        if (wch == 27)
+        {
+            Curses.timeout (10);
+
+            code = Curses.get_wch (out int wch2);
+
+            if (code == Curses.KEY_CODE_YES)
+            {
+                k = KeyCode.AltMask | MapCursesKey (wch);
+            }
+
+            Key key = null;
+
+            if (code == 0)
+            {
+                // The ESC-number handling, debatable.
+                // Simulates the AltMask itself by pressing Alt + Space.
+                // Needed for macOS
+                if (wch2 == (int)KeyCode.Space)
+                {
+                    k = KeyCode.AltMask | KeyCode.Space;
+                }
+                else if (wch2 - (int)KeyCode.Space >= (uint)KeyCode.A
+                         && wch2 - (int)KeyCode.Space <= (uint)KeyCode.Z)
+                {
+                    k = (KeyCode)((uint)KeyCode.AltMask + (wch2 - (int)KeyCode.Space));
+                }
+                else if (wch2 >= (uint)KeyCode.A - 64 && wch2 <= (uint)KeyCode.Z - 64)
+                {
+                    k = (KeyCode)((uint)(KeyCode.AltMask | KeyCode.CtrlMask) + (wch2 + 64));
+                }
+                else if (wch2 >= (uint)KeyCode.D0 && wch2 <= (uint)KeyCode.D9)
+                {
+                    k = (KeyCode)((uint)KeyCode.AltMask + (uint)KeyCode.D0 + (wch2 - (uint)KeyCode.D0));
+                }
+                else
+                {
+                    ConsoleKeyInfo [] cki =
+                    [
+                        new ((char)KeyCode.Esc, 0, false, false, false), new ((char)wch2, 0, false, false, false)
+                    ];
+                    HandleEscSeqResponse (ref code, ref k, ref wch2, ref key, ref cki);
+
+                    return;
+                }
+                //else if (wch2 == Curses.KeyCSI)
+                //{
+                //    ConsoleKeyInfo [] cki =
+                //    {
+                //        new ((char)KeyCode.Esc, 0, false, false, false), new ('[', 0, false, false, false)
+                //    };
+                //    HandleEscSeqResponse (ref code, ref k, ref wch2, ref key, ref cki);
+
+                //    return;
+                //}
+                //else
+                //{
+                //    // Unfortunately there are no way to differentiate Ctrl+Alt+alfa and Ctrl+Shift+Alt+alfa.
+                //    if (((KeyCode)wch2 & KeyCode.CtrlMask) != 0)
+                //    {
+                //        k = (KeyCode)((uint)KeyCode.CtrlMask + (wch2 & ~(int)KeyCode.CtrlMask));
+                //    }
+
+                //    if (wch2 == 0)
+                //    {
+                //        k = KeyCode.CtrlMask | KeyCode.AltMask | KeyCode.Space;
+                //    }
+                //    //else if (wch >= (uint)KeyCode.A && wch <= (uint)KeyCode.Z)
+                //    //{
+                //    //    k = KeyCode.ShiftMask | KeyCode.AltMask | KeyCode.Space;
+                //    //}
+                //    else if (wch2 < 256)
+                //    {
+                //        k = (KeyCode)wch2; // | KeyCode.AltMask;
+                //    }
+                //    else
+                //    {
+                //        k = (KeyCode)((uint)(KeyCode.AltMask | KeyCode.CtrlMask) + wch2);
+                //    }
+                //}
+
+                key = new Key (k);
+            }
+            else
+            {
+                key = Key.Esc;
+            }
+
+            OnKeyDown (key);
+            OnKeyUp (key);
+        }
+        else if (wch == Curses.KeyTab)
+        {
+            k = MapCursesKey (wch);
+            OnKeyDown (new Key (k));
+            OnKeyUp (new Key (k));
+        }
+        else if (wch == 127)
+        {
+            // Backspace needed for macOS
+            k = KeyCode.Backspace;
+            OnKeyDown (new Key (k));
+            OnKeyUp (new Key (k));
+        }
+        else
+        {
+            // Unfortunately there are no way to differentiate Ctrl+alfa and Ctrl+Shift+alfa.
+            k = (KeyCode)wch;
+
+            if (wch == 0)
+            {
+                k = KeyCode.CtrlMask | KeyCode.Space;
+            }
+            else if (wch >= (uint)KeyCode.A - 64 && wch <= (uint)KeyCode.Z - 64)
+            {
+                if ((KeyCode)(wch + 64) != KeyCode.J)
+                {
+                    k = KeyCode.CtrlMask | (KeyCode)(wch + 64);
+                }
+            }
+            else if (wch >= (uint)KeyCode.A && wch <= (uint)KeyCode.Z)
+            {
+                k = (KeyCode)wch | KeyCode.ShiftMask;
+            }
+
+            if (wch == '\n' || wch == '\r')
+            {
+                k = KeyCode.Enter;
+            }
+
+            // Strip the KeyCode.Space flag off if it's set
+            //if (k != KeyCode.Space && k.HasFlag (KeyCode.Space))
+            if (Key.GetIsKeyCodeAtoZ (k) && (k & KeyCode.Space) != 0)
+            {
+                k &= ~KeyCode.Space;
+            }
+
+            OnKeyDown (new Key (k));
+            OnKeyUp (new Key (k));
         }
     }
-    private void ProcessWinChange (Size size)
+
+    internal void ProcessWinChange ()
     {
-        if (!RunningUnitTests && Curses.ChangeWindowSize (size.Height, size.Width))
+        if (!RunningUnitTests && Curses.CheckWinChange ())
         {
             ClearContents ();
-            OnSizeChanged (new (new (Cols, Rows)));
+            OnSizeChanged (new SizeChangedEventArgs (new (Cols, Rows)));
+        }
+    }
+
+    private void HandleEscSeqResponse (
+        ref int code,
+        ref KeyCode k,
+        ref int wch2,
+        ref Key keyEventArgs,
+        ref ConsoleKeyInfo [] cki
+    )
+    {
+        ConsoleKey ck = 0;
+        ConsoleModifiers mod = 0;
+
+        while (code == 0)
+        {
+            code = Curses.get_wch (out wch2);
+            var consoleKeyInfo = new ConsoleKeyInfo ((char)wch2, 0, false, false, false);
+
+            if (wch2 == 0 || wch2 == 27 || wch2 == Curses.KeyMouse)
+            {
+                EscSeqUtils.DecodeEscSeq (
+                                          ref consoleKeyInfo,
+                                          ref ck,
+                                          cki,
+                                          ref mod,
+                                          out _,
+                                          out _,
+                                          out _,
+                                          out _,
+                                          out bool isKeyMouse,
+                                          out List<MouseFlags> mouseFlags,
+                                          out Point pos,
+                                          out _,
+                                          EscSeqUtils.ProcessMouseEvent
+                                         );
+
+                if (isKeyMouse)
+                {
+                    foreach (MouseFlags mf in mouseFlags)
+                    {
+                        OnMouseEvent (new () { Flags = mf, Position = pos });
+                    }
+
+                    cki = null;
+
+                    if (wch2 == 27)
+                    {
+                        cki = EscSeqUtils.ResizeArray (
+                                                       new ConsoleKeyInfo (
+                                                                           (char)KeyCode.Esc,
+                                                                           0,
+                                                                           false,
+                                                                           false,
+                                                                           false
+                                                                          ),
+                                                       cki
+                                                      );
+                    }
+                }
+                else
+                {
+                    k = ConsoleKeyMapping.MapConsoleKeyInfoToKeyCode (consoleKeyInfo);
+                    keyEventArgs = new Key (k);
+                    OnKeyDown (keyEventArgs);
+                }
+            }
+            else
+            {
+                cki = EscSeqUtils.ResizeArray (consoleKeyInfo, cki);
+            }
+        }
+    }
+
+    private void EscSeqUtils_ContinuousButtonPressed (object? sender, MouseEventArgs e)
+    {
+        OnMouseEvent (e);
+    }
+
+    private static KeyCode MapCursesKey (int cursesKey)
+    {
+        switch (cursesKey)
+        {
+            case Curses.KeyF1: return KeyCode.F1;
+            case Curses.KeyF2: return KeyCode.F2;
+            case Curses.KeyF3: return KeyCode.F3;
+            case Curses.KeyF4: return KeyCode.F4;
+            case Curses.KeyF5: return KeyCode.F5;
+            case Curses.KeyF6: return KeyCode.F6;
+            case Curses.KeyF7: return KeyCode.F7;
+            case Curses.KeyF8: return KeyCode.F8;
+            case Curses.KeyF9: return KeyCode.F9;
+            case Curses.KeyF10: return KeyCode.F10;
+            case Curses.KeyF11: return KeyCode.F11;
+            case Curses.KeyF12: return KeyCode.F12;
+            case Curses.KeyUp: return KeyCode.CursorUp;
+            case Curses.KeyDown: return KeyCode.CursorDown;
+            case Curses.KeyLeft: return KeyCode.CursorLeft;
+            case Curses.KeyRight: return KeyCode.CursorRight;
+            case Curses.KeyHome: return KeyCode.Home;
+            case Curses.KeyEnd: return KeyCode.End;
+            case Curses.KeyNPage: return KeyCode.PageDown;
+            case Curses.KeyPPage: return KeyCode.PageUp;
+            case Curses.KeyDeleteChar: return KeyCode.Delete;
+            case Curses.KeyInsertChar: return KeyCode.Insert;
+            case Curses.KeyTab: return KeyCode.Tab;
+            case Curses.KeyBackTab: return KeyCode.Tab | KeyCode.ShiftMask;
+            case Curses.KeyBackspace: return KeyCode.Backspace;
+            case Curses.ShiftKeyUp: return KeyCode.CursorUp | KeyCode.ShiftMask;
+            case Curses.ShiftKeyDown: return KeyCode.CursorDown | KeyCode.ShiftMask;
+            case Curses.ShiftKeyLeft: return KeyCode.CursorLeft | KeyCode.ShiftMask;
+            case Curses.ShiftKeyRight: return KeyCode.CursorRight | KeyCode.ShiftMask;
+            case Curses.ShiftKeyHome: return KeyCode.Home | KeyCode.ShiftMask;
+            case Curses.ShiftKeyEnd: return KeyCode.End | KeyCode.ShiftMask;
+            case Curses.ShiftKeyNPage: return KeyCode.PageDown | KeyCode.ShiftMask;
+            case Curses.ShiftKeyPPage: return KeyCode.PageUp | KeyCode.ShiftMask;
+            case Curses.AltKeyUp: return KeyCode.CursorUp | KeyCode.AltMask;
+            case Curses.AltKeyDown: return KeyCode.CursorDown | KeyCode.AltMask;
+            case Curses.AltKeyLeft: return KeyCode.CursorLeft | KeyCode.AltMask;
+            case Curses.AltKeyRight: return KeyCode.CursorRight | KeyCode.AltMask;
+            case Curses.AltKeyHome: return KeyCode.Home | KeyCode.AltMask;
+            case Curses.AltKeyEnd: return KeyCode.End | KeyCode.AltMask;
+            case Curses.AltKeyNPage: return KeyCode.PageDown | KeyCode.AltMask;
+            case Curses.AltKeyPPage: return KeyCode.PageUp | KeyCode.AltMask;
+            case Curses.CtrlKeyUp: return KeyCode.CursorUp | KeyCode.CtrlMask;
+            case Curses.CtrlKeyDown: return KeyCode.CursorDown | KeyCode.CtrlMask;
+            case Curses.CtrlKeyLeft: return KeyCode.CursorLeft | KeyCode.CtrlMask;
+            case Curses.CtrlKeyRight: return KeyCode.CursorRight | KeyCode.CtrlMask;
+            case Curses.CtrlKeyHome: return KeyCode.Home | KeyCode.CtrlMask;
+            case Curses.CtrlKeyEnd: return KeyCode.End | KeyCode.CtrlMask;
+            case Curses.CtrlKeyNPage: return KeyCode.PageDown | KeyCode.CtrlMask;
+            case Curses.CtrlKeyPPage: return KeyCode.PageUp | KeyCode.CtrlMask;
+            case Curses.ShiftCtrlKeyUp: return KeyCode.CursorUp | KeyCode.ShiftMask | KeyCode.CtrlMask;
+            case Curses.ShiftCtrlKeyDown: return KeyCode.CursorDown | KeyCode.ShiftMask | KeyCode.CtrlMask;
+            case Curses.ShiftCtrlKeyLeft: return KeyCode.CursorLeft | KeyCode.ShiftMask | KeyCode.CtrlMask;
+            case Curses.ShiftCtrlKeyRight: return KeyCode.CursorRight | KeyCode.ShiftMask | KeyCode.CtrlMask;
+            case Curses.ShiftCtrlKeyHome: return KeyCode.Home | KeyCode.ShiftMask | KeyCode.CtrlMask;
+            case Curses.ShiftCtrlKeyEnd: return KeyCode.End | KeyCode.ShiftMask | KeyCode.CtrlMask;
+            case Curses.ShiftCtrlKeyNPage: return KeyCode.PageDown | KeyCode.ShiftMask | KeyCode.CtrlMask;
+            case Curses.ShiftCtrlKeyPPage: return KeyCode.PageUp | KeyCode.ShiftMask | KeyCode.CtrlMask;
+            case Curses.ShiftAltKeyUp: return KeyCode.CursorUp | KeyCode.ShiftMask | KeyCode.AltMask;
+            case Curses.ShiftAltKeyDown: return KeyCode.CursorDown | KeyCode.ShiftMask | KeyCode.AltMask;
+            case Curses.ShiftAltKeyLeft: return KeyCode.CursorLeft | KeyCode.ShiftMask | KeyCode.AltMask;
+            case Curses.ShiftAltKeyRight: return KeyCode.CursorRight | KeyCode.ShiftMask | KeyCode.AltMask;
+            case Curses.ShiftAltKeyNPage: return KeyCode.PageDown | KeyCode.ShiftMask | KeyCode.AltMask;
+            case Curses.ShiftAltKeyPPage: return KeyCode.PageUp | KeyCode.ShiftMask | KeyCode.AltMask;
+            case Curses.ShiftAltKeyHome: return KeyCode.Home | KeyCode.ShiftMask | KeyCode.AltMask;
+            case Curses.ShiftAltKeyEnd: return KeyCode.End | KeyCode.ShiftMask | KeyCode.AltMask;
+            case Curses.AltCtrlKeyNPage: return KeyCode.PageDown | KeyCode.AltMask | KeyCode.CtrlMask;
+            case Curses.AltCtrlKeyPPage: return KeyCode.PageUp | KeyCode.AltMask | KeyCode.CtrlMask;
+            case Curses.AltCtrlKeyHome: return KeyCode.Home | KeyCode.AltMask | KeyCode.CtrlMask;
+            case Curses.AltCtrlKeyEnd: return KeyCode.End | KeyCode.AltMask | KeyCode.CtrlMask;
+            default: return KeyCode.Null;
         }
     }
 
     internal override void End ()
     {
+        EscSeqUtils.ContinuousButtonPressed -= EscSeqUtils_ContinuousButtonPressed;
 
         StopReportingMouseMoves ();
         SetCursorVisibility (CursorVisibility.Default);
+
+        if (_mainLoopDriver is { })
+        {
+            _mainLoopDriver.RemoveWatch (_processInputToken);
+        }
 
         if (RunningUnitTests)
         {

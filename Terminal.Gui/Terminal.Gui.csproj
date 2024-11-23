@@ -11,9 +11,9 @@
   <!-- Assembly name. -->
   <!-- Referenced throughout this file for consistency. -->
   <!-- =================================================================== -->
-  <PropertyGroup>
-    <AssemblyName>Terminal.Gui</AssemblyName>
-  </PropertyGroup>
+<PropertyGroup>
+  <AssemblyName>Terminal.Gui</AssemblyName>
+</PropertyGroup>
 
   <!-- =================================================================== -->
   <!-- .NET Build Settings -->
@@ -151,39 +151,22 @@
           <PackageOutputPath>$(MSBuildThisFileDirectory)bin\$(Configuration)\</PackageOutputPath>
       </PropertyGroup>
 
-	  <!-- Ensure the local_packages folder exists -->
-	  <Message Text="Checking if $(LocalPackagesPath) exists, creating if necessary." Importance="high" />
-	  <MakeDir Directories="$(LocalPackagesPath)" />
+      <!-- Ensure the local_packages folder exists -->
+      <Message Text="Checking if $(LocalPackagesPath) exists, creating if necessary." Importance="high" />
+      <MakeDir Directories="$(LocalPackagesPath)" />
 
-	  <!-- Collect .nupkg and .snupkg files into an item group -->
-	  <ItemGroup>
-		  <NuGetPackages Include="$(PackageOutputPath)*.nupkg;$(PackageOutputPath)*.snupkg" />
-	  </ItemGroup>
+      <!-- Collect .nupkg and .snupkg files into an item group -->
+      <ItemGroup>
+          <NuGetPackages Include="$(PackageOutputPath)*.nupkg;$(PackageOutputPath)*.snupkg" />
+      </ItemGroup>
 
-	  <!-- Check if any packages were found -->
-	  <Message Text="Found packages: @(NuGetPackages)" Importance="high" />
+      <!-- Check if any packages were found -->
+      <Message Text="Found packages: @(NuGetPackages)" Importance="high" />
 
       <!-- Copy files only if found -->
       <Copy SourceFiles="@(NuGetPackages)" DestinationFolder="$(LocalPackagesPath)" SkipUnchangedFiles="false" Condition="@(NuGetPackages) != ''" />
 
-	  <!-- Log success -->
-	  <Message Text="Copy completed successfully." Importance="high" />
+      <!-- Log success -->
+      <Message Text="Copy completed successfully." Importance="high" />
   </Target>
-
-  <ItemGroup>
-	   <!--Include the executable in the NuGet package and set it to copy to output directories-->
-	   <!-- Include the Linux shared library -->
-	  <None Include="$(ProjectDir)compiled-binaries\libGetTIOCGWINSZ.so">
-		  <Pack>true</Pack>
-		  <PackagePath>compiled-binaries/</PackagePath>
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </None>
-
-	   <!-- Include the macOS shared library -->
-	   <None Include="$(ProjectDir)compiled-binaries/libGetTIOCGWINSZ.dylib">
-		   <Pack>true</Pack>
-		   <PackagePath>compiled-binaries/</PackagePath>
-		   <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	   </None>
-  </ItemGroup>
 </Project>

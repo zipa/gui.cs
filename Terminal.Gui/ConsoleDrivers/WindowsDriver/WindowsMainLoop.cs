@@ -23,7 +23,7 @@ internal class WindowsMainLoop : IMainLoopDriver
 
     // The records that we keep fetching
     private readonly ConcurrentQueue<WindowsConsole.InputRecord> _resultQueue = new ();
-    ManualResetEventSlim IMainLoopDriver.WaitForInput { get; set; } = new (false);
+    private readonly ManualResetEventSlim _waitForProbe = new (false);
     private readonly WindowsConsole? _winConsole;
     private CancellationTokenSource _eventReadyTokenSource = new ();
     private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
@@ -59,7 +59,12 @@ internal class WindowsMainLoop : IMainLoopDriver
 
     bool IMainLoopDriver.EventsPending ()
     {
-        ((IMainLoopDriver)this).WaitForInput.Set ();
+        if (ConsoleDriver.RunningUnitTests)
+        {
+            return true;
+        }
+
+        _waitForProbe.Set ();
 #if HACK_CHECK_WINCHANGED
         _winChange.Set ();
 #endif
@@ -83,7 +88,10 @@ internal class WindowsMainLoop : IMainLoopDriver
         }
         finally
         {
-            _eventReady.Reset ();
+            if (!_eventReadyTokenSource.IsCancellationRequested)
+            {
+                _eventReady.Reset ();
+            }
         }
 
         if (!_eventReadyTokenSource.IsCancellationRequested)
@@ -104,7 +112,7 @@ internal class WindowsMainLoop : IMainLoopDriver
 
     void IMainLoopDriver.Iteration ()
     {
-        while (_resultQueue.TryDequeue (out WindowsConsole.InputRecord inputRecords))
+        while (!ConsoleDriver.RunningUnitTests && _resultQueue.TryDequeue (out WindowsConsole.InputRecord inputRecords))
         {
             ((WindowsDriver)_consoleDriver).ProcessInput (inputRecords);
         }
@@ -133,7 +141,7 @@ internal class WindowsMainLoop : IMainLoopDriver
             }
         }
 
-        ((IMainLoopDriver)this).WaitForInput?.Dispose ();
+        _waitForProbe.Dispose ();
 
         _resultQueue.Clear ();
 
@@ -148,19 +156,17 @@ internal class WindowsMainLoop : IMainLoopDriver
         _mainLoop = null;
     }
 
-    public bool ForceRead { get; set; }
-
     private void WindowsInputHandler ()
     {
         while (_mainLoop is { })
         {
             try
             {
-                if (_inputHandlerTokenSource.IsCancellationRequested && !ForceRead)
+                if (_inputHandlerTokenSource.IsCancellationRequested)
                 {
                     try
                     {
-                        ((IMainLoopDriver)this).WaitForInput.Wait (_inputHandlerTokenSource.Token);
+                        _waitForProbe.Wait (_inputHandlerTokenSource.Token);
                     }
                     catch (Exception ex)
                     {
@@ -172,7 +178,7 @@ internal class WindowsMainLoop : IMainLoopDriver
                         throw;
                     }
 
-                    ((IMainLoopDriver)this).WaitForInput.Reset ();
+                    _waitForProbe.Reset ();
                 }
 
                 ProcessInputQueue ();
@@ -187,7 +193,7 @@ internal class WindowsMainLoop : IMainLoopDriver
 
     private void ProcessInputQueue ()
     {
-        if (_resultQueue?.Count == 0 || ForceRead)
+        if (_resultQueue?.Count == 0)
         {
             WindowsConsole.InputRecord? result = _winConsole!.DequeueInput ();
 
@@ -232,4 +238,3 @@ internal class WindowsMainLoop : IMainLoopDriver
     }
 #endif
 }
-
