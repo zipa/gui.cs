@@ -954,6 +954,8 @@ public class EscSeqUtilsTests
 
         ConsoleKeyInfo expectedCki = default;
 
+        Assert.Null (EscSeqUtils.IncompleteCkInfos);
+
         EscSeqUtils.DecodeEscSeq (
                                                      ref _newConsoleKeyInfo,
                                                      ref _key,
@@ -983,7 +985,9 @@ public class EscSeqUtilsTests
         Assert.False (_isResponse);
         Assert.Equal (0, (int)_arg1);
         Assert.Equal (Point.Empty, _arg2);
+        Assert.NotNull (EscSeqUtils.IncompleteCkInfos);
         Assert.Equal (_cki, EscSeqUtils.IncompleteCkInfos);
+        Assert.Contains (EscSeqUtils.ToString (EscSeqUtils.IncompleteCkInfos), EscSeqUtils.ToString (_cki));
 
         _cki = EscSeqUtils.InsertArray (
                                         EscSeqUtils.IncompleteCkInfos,
@@ -1032,8 +1036,8 @@ public class EscSeqUtilsTests
         Assert.True (_isResponse);
         Assert.Equal (0, (int)_arg1);
         Assert.Equal (Point.Empty, _arg2);
+        Assert.Null (EscSeqUtils.IncompleteCkInfos);
         Assert.NotEqual (_cki, EscSeqUtils.IncompleteCkInfos);
-        Assert.Contains (EscSeqUtils.ToString (EscSeqUtils.IncompleteCkInfos), EscSeqUtils.ToString (_cki));
 
         ClearAll ();
     }

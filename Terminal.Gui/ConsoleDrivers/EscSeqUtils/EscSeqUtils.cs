@@ -331,6 +331,12 @@ public static class EscSeqUtils
 
                 break;
             case "CSI":
+                // Reset always IncompleteCkInfos
+                if (IncompleteCkInfos is { })
+                {
+                    IncompleteCkInfos = null;
+                }
+
                 if (!string.IsNullOrEmpty (code) && code == "<")
                 {
                     GetMouse (cki, out buttonState, out pos, continuousButtonPressedHandler);
