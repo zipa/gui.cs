@@ -7,6 +7,7 @@ public class SyncrhonizationContextTests
     [Fact]
     public void SynchronizationContext_CreateCopy ()
     {
+        ConsoleDriver.RunningUnitTests = true;
         Application.Init ();
         SynchronizationContext context = SynchronizationContext.Current;
         Assert.NotNull (context);
@@ -61,6 +62,7 @@ public class SyncrhonizationContextTests
     [AutoInitShutdown]
     public void SynchronizationContext_Send ()
     {
+        ConsoleDriver.RunningUnitTests = true;
         Application.Init ();
         SynchronizationContext context = SynchronizationContext.Current;
 
