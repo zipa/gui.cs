@@ -683,12 +683,9 @@ internal class CursesDriver : ConsoleDriver
         if (!RunningUnitTests)
         {
             Curses.CheckWinChange ();
-            ClearContents ();
 
-            if (Force16Colors)
-            {
-                Curses.refresh ();
-            }
+            // On Init this call is needed no mater Force16Colors or not
+            Curses.refresh ();
 
             EscSeqUtils.ContinuousButtonPressed += EscSeqUtils_ContinuousButtonPressed;
         }
