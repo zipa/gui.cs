@@ -969,7 +969,7 @@ public class EscSeqUtilsTests
                                                      out _isResponse,
                                                      ProcessContinuousButtonPressed
                                                     );
-        Assert.Single (EscSeqRequests.Statuses);
+        Assert.Empty (EscSeqRequests.Statuses);
         Assert.Equal (expectedCki, _newConsoleKeyInfo);
         Assert.Equal (ConsoleKey.None, _key);
         Assert.Equal (ConsoleModifiers.None, _mod);
@@ -999,6 +999,7 @@ public class EscSeqUtilsTests
 
         // Add a request to avoid assert failure in the DecodeEscSeq method
         EscSeqRequests.Add ("t");
+        Assert.Single (EscSeqRequests.Statuses);
 
         EscSeqUtils.DecodeEscSeq (
                                                      ref _newConsoleKeyInfo,
