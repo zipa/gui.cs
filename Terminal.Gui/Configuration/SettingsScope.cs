@@ -152,10 +152,12 @@ public class SettingsScope : Scope<SettingsScope>
             return this;
         }
 
-        // BUG: Not trim-compatible
-        // Not a bug, per se, but it's easily fixable by just loading the file.
-        // Defaults can just be field initializers for involved types.
-        using Stream? stream = assembly.GetManifestResourceStream (resourceName)!;
+        using Stream? stream = assembly.GetManifestResourceStream (resourceName);
+
+        if (stream is null)
+        {
+            return null;
+        }
 
         return Update (stream, $"resource://[{assembly.GetName ().Name}]/{resourceName}", location);
     }
