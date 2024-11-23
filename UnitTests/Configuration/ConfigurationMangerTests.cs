@@ -181,6 +181,7 @@ public class ConfigurationManagerTests
     [Fact]
     public void Load_Raises_Updated ()
     {
+        ThrowOnJsonErrors = true;
         Locations = ConfigLocations.All;
         Reset ();
         Assert.Equal (Key.Esc, (((Key)Settings! ["Application.QuitKey"].PropertyValue)!).KeyCode);
@@ -194,8 +195,8 @@ public class ConfigurationManagerTests
         }
 
         // Act
-        // Do NOT reset
-        Load (false);
+        // Reset to cause load to raise event
+        Load (true);
 
         // assert
         Assert.True (fired);
