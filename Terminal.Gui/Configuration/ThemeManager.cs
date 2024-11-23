@@ -110,7 +110,9 @@ public class ThemeManager : IDictionary<string, ThemeScope>
             string oldTheme = _theme;
             _theme = value;
 
-            if ((oldTheme != _theme || oldTheme != Settings! ["Theme"].PropertyValue as string) && Settings! ["Themes"]?.PropertyValue is Dictionary<string, ThemeScope> themes && themes.ContainsKey (_theme))
+            if ((oldTheme != _theme
+                 || oldTheme != Settings! ["Theme"].PropertyValue as string)
+                 && Settings! ["Themes"]?.PropertyValue is Dictionary<string, ThemeScope> themes && themes.ContainsKey (_theme))
             {
                 Settings! ["Theme"].PropertyValue = _theme;
                 Instance.OnThemeChanged (oldTheme);
@@ -148,7 +150,7 @@ public class ThemeManager : IDictionary<string, ThemeScope>
     internal static void Reset ()
     {
         Debug.WriteLine ("Themes.Reset()");
-        Colors.Reset ();    
+        Colors.Reset ();
         Themes?.Clear ();
         SelectedTheme = string.Empty;
     }

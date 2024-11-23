@@ -250,12 +250,6 @@ public static class ConfigurationManager
             Reset ();
         }
 
-        // Deafult is always loaded by Reset, so only load it if reset is false
-        if (!reset && Locations.HasFlag (ConfigLocations.Default))
-        {
-            Settings?.UpdateFromResource (typeof (ConfigurationManager).Assembly, $"Terminal.Gui.Resources.{_configFilename}");
-        }
-
         if (Locations.HasFlag (ConfigLocations.GlobalCurrent))
         {
             Settings?.Update ($"./.tui/{_configFilename}");
@@ -295,6 +289,8 @@ public static class ConfigurationManager
         {
             Settings?.Update (Memory, "ConfigurationManager.Memory");
         }
+
+        ThemeManager.SelectedTheme = Settings!["Theme"].PropertyValue as string ?? "Default";
     }
 
     /// <summary>

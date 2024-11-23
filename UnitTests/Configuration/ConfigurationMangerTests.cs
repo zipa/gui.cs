@@ -161,7 +161,7 @@ public class ConfigurationManagerTests
         dict.Add (new (DeepCopyTest.key), "Esc");
         Assert.Contains (Key.Esc, dict);
 
-        DeepMemberWiseCopy (Key.Q.WithCtrl, DeepCopyTest.key);
+        DeepCopyTest.key = (Key)DeepMemberWiseCopy (Key.Q.WithCtrl, DeepCopyTest.key);
 
         Assert.Equal (Key.Q.WithCtrl, DeepCopyTest.key);
         Assert.Equal (Key.Esc, dict.Keys.ToArray () [0]);
@@ -177,19 +177,6 @@ public class ConfigurationManagerTests
         dict.Add (new (DeepCopyTest.key), "Ctrl+Q");
         Assert.True (dict.ContainsKey (Key.Q.WithCtrl));
     }
-
-    //[Fact]
-    //public void Illustrate_DeepMemberWiseCopy_ ()
-    //{
-    //    Assert.Equal (Key.Esc, Application.QuitKey);
-
-    //    var o = UpdateValueFrom (Application.QuitKey);
-    //    DeepMemberWiseCopy (Key.Q.WithCtrl, Application.QuitKey);
-
-    //    Assert.Equal (Key.Q.WithCtrl, Application.QuitKey);
-
-    //    Application.ResetState (true);
-    //}
 
     [Fact]
     public void Load_Raises_Updated ()
