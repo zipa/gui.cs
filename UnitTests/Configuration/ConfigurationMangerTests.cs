@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Diagnostics;
+using System.Reflection;
 using System.Text.Json;
 using Xunit.Abstractions;
 using static Terminal.Gui.ConfigurationManager;
@@ -145,6 +146,50 @@ public class ConfigurationManagerTests
         Assert.Equal (dictSrc ["Disabled"], dictCopy ["Disabled"]);
         Assert.Equal (dictDest ["Normal"], dictCopy ["Normal"]);
     }
+
+    public class DeepCopyTest ()
+    {
+        public static Key key = Key.Esc;
+    }
+
+    [Fact]
+    public void Illustrate_DeepMemberWiseCopy_Breaks_Dictionary ()
+    {
+        Assert.Equal (Key.Esc, DeepCopyTest.key);
+
+        Dictionary<Key, string> dict = new Dictionary<Key, string> (new KeyEqualityComparer ());
+        dict.Add (new (DeepCopyTest.key), "Esc");
+        Assert.Contains (Key.Esc, dict);
+
+        DeepMemberWiseCopy (Key.Q.WithCtrl, DeepCopyTest.key);
+
+        Assert.Equal (Key.Q.WithCtrl, DeepCopyTest.key);
+        Assert.Equal (Key.Esc, dict.Keys.ToArray () [0]);
+
+        var eq = new KeyEqualityComparer ();
+        Assert.True (eq.Equals (Key.Q.WithCtrl, DeepCopyTest.key));
+        Assert.Equal (Key.Q.WithCtrl.GetHashCode (), DeepCopyTest.key.GetHashCode ());
+        Assert.Equal (eq.GetHashCode (Key.Q.WithCtrl), eq.GetHashCode (DeepCopyTest.key));
+        Assert.Equal (Key.Q.WithCtrl.GetHashCode (), eq.GetHashCode (DeepCopyTest.key));
+        Assert.True (dict.ContainsKey (Key.Esc));
+
+        dict.Remove (Key.Esc);  
+        dict.Add (new (DeepCopyTest.key), "Ctrl+Q");
+        Assert.True (dict.ContainsKey (Key.Q.WithCtrl));
+    }
+
+    //[Fact]
+    //public void Illustrate_DeepMemberWiseCopy_ ()
+    //{
+    //    Assert.Equal (Key.Esc, Application.QuitKey);
+
+    //    var o = UpdateValueFrom (Application.QuitKey);
+    //    DeepMemberWiseCopy (Key.Q.WithCtrl, Application.QuitKey);
+
+    //    Assert.Equal (Key.Q.WithCtrl, Application.QuitKey);
+
+    //    Application.ResetState (true);
+    //}
 
     [Fact]
     public void Load_Raises_Updated ()

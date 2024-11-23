@@ -291,7 +291,7 @@ public static class ConfigurationManager
             Settings?.Update ($"~/.tui/{AppName}.{_configFilename}");
         }
 
-        if (Locations.HasFlag (ConfigLocations.Memory) && !string.IsNullOrEmpty(Memory))
+        if (Locations.HasFlag (ConfigLocations.Memory) && !string.IsNullOrEmpty (Memory))
         {
             Settings?.Update (Memory, "ConfigurationManager.Memory");
         }
@@ -415,7 +415,13 @@ public static class ConfigurationManager
         }
 
         // If value type, just use copy constructor.
-        if (source.GetType ().IsValueType || source.GetType () == typeof (string))
+        if (source.GetType ().IsValueType || source is string)
+        {
+            return source;
+        }
+
+        // HACK: Key is a class, but we want to treat it as a value type so just _keyCode gets copied.
+        if (source.GetType () == typeof (Key))
         {
             return source;
         }
@@ -426,9 +432,6 @@ public static class ConfigurationManager
         {
             foreach (object? srcKey in ((IDictionary)source).Keys)
             {
-                if (srcKey is string)
-                { }
-
                 if (((IDictionary)destination).Contains (srcKey))
                 {
                     ((IDictionary)destination) [srcKey] =
@@ -478,8 +481,9 @@ public static class ConfigurationManager
             }
         }
 
-        return destination!;
+        return destination;
     }
+
 
     /// <summary>
     ///     Retrieves the hard coded default settings (static properites) from the Terminal.Gui library implementation. Used in
@@ -553,9 +557,12 @@ public static class ConfigurationManager
                                     let props = c.Value
                                                  .GetProperties (
                                                                  BindingFlags.Instance
-                                                                 | BindingFlags.Static
-                                                                 | BindingFlags.NonPublic
-                                                                 | BindingFlags.Public
+                                                                 |
+                                                                 BindingFlags.Static
+                                                                 |
+                                                                 BindingFlags.NonPublic
+                                                                 |
+                                                                 BindingFlags.Public
                                                                 )
                                                  .Where (
                                                          prop =>
