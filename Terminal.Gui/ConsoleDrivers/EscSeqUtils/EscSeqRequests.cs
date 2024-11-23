@@ -1,7 +1,5 @@
 ﻿#nullable enable
 
-using System.Collections.Concurrent;
-
 namespace Terminal.Gui;
 
 /// <summary>
@@ -12,27 +10,32 @@ namespace Terminal.Gui;
 public static class EscSeqRequests
 {
     /// <summary>Gets the <see cref="EscSeqReqStatus"/> list.</summary>
-    public static List<EscSeqReqStatus> Statuses { get; } = new ();
+    public static List<EscSeqReqStatus> Statuses { get; } = [];
 
     /// <summary>
     ///     Adds a new request for the ANSI Escape Sequence defined by <paramref name="terminator"/>. Adds a
     ///     <see cref="EscSeqReqStatus"/> instance to <see cref="Statuses"/> list.
     /// </summary>
     /// <param name="terminator">The terminator.</param>
-    /// <param name="numReq">The number of requests.</param>
-    public static void Add (string terminator, int numReq = 1)
+    /// <param name="numRequests">The number of requests.</param>
+    public static void Add (string terminator, int numRequests = 1)
     {
+        ArgumentException.ThrowIfNullOrEmpty (terminator);
+
+        int numReq = Math.Max (numRequests, 1);
+
         lock (Statuses)
         {
             EscSeqReqStatus? found = Statuses.Find (x => x.Terminator == terminator);
 
             if (found is null)
             {
-                Statuses.Add (new EscSeqReqStatus (terminator, numReq));
+                Statuses.Add (new (terminator, numReq));
             }
-            else if (found.NumOutstanding < found.NumRequests)
+            else
             {
-                found.NumOutstanding = Math.Min (found.NumOutstanding + numReq, found.NumRequests);
+                found.NumRequests += numReq;
+                found.NumOutstanding += numReq;
             }
         }
     }
@@ -60,21 +63,7 @@ public static class EscSeqRequests
         {
             EscSeqReqStatus? found = Statuses.Find (x => x.Terminator == terminator);
 
-            if (found is null)
-            {
-                return false;
-            }
-
-            if (found is { NumOutstanding: > 0 })
-            {
-                return true;
-            }
-
-            // BUGBUG: Why does an API that returns a bool remove the entry from the list?
-            // NetDriver and Unit tests never exercise this line of code. Maybe Curses does?
-            Statuses.Remove (found);
-
-            return false;
+            return found is { };
         }
     }
 
@@ -87,6 +76,8 @@ public static class EscSeqRequests
     /// <param name="terminator">The terminating string.</param>
     public static void Remove (string terminator)
     {
+        ArgumentException.ThrowIfNullOrEmpty (terminator);
+
         lock (Statuses)
         {
             EscSeqReqStatus? found = Statuses.Find (x => x.Terminator == terminator);

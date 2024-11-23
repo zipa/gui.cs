@@ -18,10 +18,10 @@ public class EscSeqReqStatus
     }
 
     /// <summary>Gets the number of unfinished requests.</summary>
-    public int NumOutstanding { get; set; }
+    public int NumOutstanding { get; internal set; }
 
     /// <summary>Gets the number of requests.</summary>
-    public int NumRequests { get; }
+    public int NumRequests { get; internal set; }
 
     /// <summary>Gets the Escape Sequence Terminator (e.g. ESC[8t ... t is the terminator).</summary>
     public string Terminator { get; }

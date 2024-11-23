@@ -204,7 +204,7 @@ public static class EscSeqUtils
         out List<MouseFlags> buttonState,
         out Point pos,
         out bool isResponse,
-        Action<MouseFlags, Point> continuousButtonPressedHandler
+        Action<MouseFlags, Point>? continuousButtonPressedHandler
     )
     {
         char [] kChars = GetKeyCharArray (cki);
