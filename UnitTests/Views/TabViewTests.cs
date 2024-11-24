@@ -19,16 +19,12 @@ public class TabViewTests (ITestOutputHelper output)
         tv.AddTab (tab1, false);
 
         Assert.Equal (2, tv.Tabs.Count);
-
-        // Shutdown must be called to safely clean up Application if Init has been called
-        Application.Shutdown ();
     }
 
     [Fact]
+    [SetupFakeDriver]
     public void AddTwoTabs_SecondIsSelected ()
     {
-        InitFakeDriver ();
-
         var tv = new TabView ();
         Tab tab1;
         Tab tab2;
@@ -37,8 +33,6 @@ public class TabViewTests (ITestOutputHelper output)
 
         Assert.Equal (2, tv.Tabs.Count);
         Assert.Equal (tab2, tv.SelectedTab);
-
-        Application.Shutdown ();
     }
 
     [Fact]
@@ -57,9 +51,6 @@ public class TabViewTests (ITestOutputHelper output)
         // Asking to show tab2 should automatically move scroll offset accordingly
         tv.SelectedTab = tab2;
         Assert.Equal (1, tv.TabScrollOffset);
-
-        // Shutdown must be called to safely clean up Application if Init has been called
-        Application.Shutdown ();
     }
 
     [Fact]
@@ -76,8 +67,6 @@ public class TabViewTests (ITestOutputHelper output)
 
         Assert.Null (tv.SelectedTab);
         Assert.Equal (0, tv.TabScrollOffset);
-
-        Application.Shutdown ();
     }
 
     [Fact]
@@ -98,16 +87,13 @@ public class TabViewTests (ITestOutputHelper output)
         tv.TabScrollOffset = -1;
         tv.SelectedTab = tab1;
         Assert.Equal (0, tv.TabScrollOffset);
-
-        // Shutdown must be called to safely clean up Application if Init has been called
-        Application.Shutdown ();
     }
 
     [Fact]
     [AutoInitShutdown]
     public void MouseClick_ChangesTab ()
     {
-        TabView tv = GetTabView (out Tab tab1, out Tab tab2, false);
+        TabView tv = GetTabView (out Tab tab1, out Tab tab2);
 
         tv.Width = 20;
         tv.Height = 5;
@@ -190,7 +176,7 @@ public class TabViewTests (ITestOutputHelper output)
     [AutoInitShutdown]
     public void MouseClick_Right_Left_Arrows_ChangesTab ()
     {
-        TabView tv = GetTabView (out Tab tab1, out Tab tab2, false);
+        TabView tv = GetTabView (out Tab tab1, out Tab tab2);
 
         tv.Width = 7;
         tv.Height = 5;
@@ -274,7 +260,7 @@ public class TabViewTests (ITestOutputHelper output)
     [AutoInitShutdown]
     public void MouseClick_Right_Left_Arrows_ChangesTab_With_Border ()
     {
-        TabView tv = GetTabView (out Tab tab1, out Tab tab2, false);
+        TabView tv = GetTabView (out Tab tab1, out Tab tab2);
 
         tv.Width = 9;
         tv.Height = 7;
@@ -365,7 +351,7 @@ public class TabViewTests (ITestOutputHelper output)
     }
 
     [Fact]
-    [SetupFakeDriver]
+    [AutoInitShutdown]
     public void ProcessKey_Down_Up_Right_Left_Home_End_PageDown_PageUp_F6 ()
     {
         TabView tv = GetTabView (out Tab tab1, out Tab tab2);
@@ -541,9 +527,6 @@ public class TabViewTests (ITestOutputHelper output)
         tv.RemoveTab (tab2);
 
         Assert.Null (tv.SelectedTab);
-
-        // Shutdown must be called to safely clean up Application if Init has been called
-        Application.Shutdown ();
     }
 
     [Fact]
@@ -555,9 +538,6 @@ public class TabViewTests (ITestOutputHelper output)
         tv.RemoveTab (tab1);
 
         Assert.Equal (tab2, tv.SelectedTab);
-
-        // Shutdown must be called to safely clean up Application if Init has been called
-        Application.Shutdown ();
     }
 
     [Fact]
@@ -575,9 +555,6 @@ public class TabViewTests (ITestOutputHelper output)
         tv.RemoveTab (tab1);
 
         Assert.Equal (tab2, tv.SelectedTab);
-
-        // Shutdown must be called to safely clean up Application if Init has been called
-        Application.Shutdown ();
     }
 
     [Fact]
@@ -603,16 +580,13 @@ public class TabViewTests (ITestOutputHelper output)
         Assert.Equal (1, called);
         Assert.Equal (tab1, oldTab);
         Assert.Equal (tab2, newTab);
-
-        // Shutdown must be called to safely clean up Application if Init has been called
-        Application.Shutdown ();
     }
 
     [Fact]
     [SetupFakeDriver]
     public void ShowTopLine_False_TabsOnBottom_False_TestTabView_Width3 ()
     {
-        TabView tv = GetTabView (out _, out _, false);
+        TabView tv = GetTabView (out _, out _);
         tv.Width = 3;
         tv.Height = 5;
         tv.Style = new () { ShowTopLine = false };
@@ -636,7 +610,7 @@ public class TabViewTests (ITestOutputHelper output)
     [SetupFakeDriver]
     public void ShowTopLine_False_TabsOnBottom_False_TestTabView_Width4 ()
     {
-        TabView tv = GetTabView (out _, out _, false);
+        TabView tv = GetTabView (out _, out _);
         tv.Width = 4;
         tv.Height = 5;
         tv.Style = new () { ShowTopLine = false };
@@ -660,7 +634,7 @@ public class TabViewTests (ITestOutputHelper output)
     [SetupFakeDriver]
     public void ShowTopLine_False_TabsOnBottom_False_TestThinTabView_WithLongNames ()
     {
-        TabView tv = GetTabView (out Tab tab1, out Tab tab2, false);
+        TabView tv = GetTabView (out Tab tab1, out Tab tab2);
         tv.Width = 10;
         tv.Height = 5;
         tv.Style = new () { ShowTopLine = false };
@@ -759,7 +733,7 @@ public class TabViewTests (ITestOutputHelper output)
     [SetupFakeDriver]
     public void ShowTopLine_False_TabsOnBottom_True_TestTabView_Width3 ()
     {
-        TabView tv = GetTabView (out _, out _, false);
+        TabView tv = GetTabView (out _, out _);
         tv.Width = 3;
         tv.Height = 5;
         tv.Style = new () { ShowTopLine = false, TabsOnBottom = true };
@@ -783,7 +757,7 @@ public class TabViewTests (ITestOutputHelper output)
     [SetupFakeDriver]
     public void ShowTopLine_False_TabsOnBottom_True_TestTabView_Width4 ()
     {
-        TabView tv = GetTabView (out _, out _, false);
+        TabView tv = GetTabView (out _, out _);
         tv.Width = 4;
         tv.Height = 5;
         tv.Style = new () { ShowTopLine = false, TabsOnBottom = true };
@@ -807,7 +781,7 @@ public class TabViewTests (ITestOutputHelper output)
     [SetupFakeDriver]
     public void ShowTopLine_False_TabsOnBottom_True_TestThinTabView_WithLongNames ()
     {
-        TabView tv = GetTabView (out Tab tab1, out Tab tab2, false);
+        TabView tv = GetTabView (out Tab tab1, out Tab tab2);
         tv.Width = 10;
         tv.Height = 5;
         tv.Style = new () { ShowTopLine = false, TabsOnBottom = true };
@@ -908,7 +882,7 @@ public class TabViewTests (ITestOutputHelper output)
     [SetupFakeDriver]
     public void ShowTopLine_True_TabsOnBottom_False_TestTabView_Width3 ()
     {
-        TabView tv = GetTabView (out _, out _, false);
+        TabView tv = GetTabView (out _, out _);
         tv.Width = 3;
         tv.Height = 5;
         tv.Layout ();
@@ -930,7 +904,7 @@ public class TabViewTests (ITestOutputHelper output)
     [SetupFakeDriver]
     public void ShowTopLine_True_TabsOnBottom_False_TestTabView_Width4 ()
     {
-        TabView tv = GetTabView (out _, out _, false);
+        TabView tv = GetTabView (out _, out _);
         tv.Width = 4;
         tv.Height = 5;
         tv.Layout ();
@@ -953,7 +927,7 @@ public class TabViewTests (ITestOutputHelper output)
     [SetupFakeDriver]
     public void ShowTopLine_True_TabsOnBottom_False_TestThinTabView_WithLongNames ()
     {
-        TabView tv = GetTabView (out Tab tab1, out Tab tab2, false);
+        TabView tv = GetTabView (out Tab tab1, out Tab tab2);
         tv.Width = 10;
         tv.Height = 5;
 
@@ -1050,7 +1024,7 @@ public class TabViewTests (ITestOutputHelper output)
     [SetupFakeDriver]
     public void ShowTopLine_True_TabsOnBottom_False_With_Unicode ()
     {
-        TabView tv = GetTabView (out Tab tab1, out Tab tab2, false);
+        TabView tv = GetTabView (out Tab tab1, out Tab tab2);
         tv.Width = 20;
         tv.Height = 5;
 
@@ -1092,7 +1066,7 @@ public class TabViewTests (ITestOutputHelper output)
     [SetupFakeDriver]
     public void ShowTopLine_True_TabsOnBottom_True_TestTabView_Width3 ()
     {
-        TabView tv = GetTabView (out _, out _, false);
+        TabView tv = GetTabView (out _, out _);
         tv.Width = 3;
         tv.Height = 5;
         tv.Style = new () { TabsOnBottom = true };
@@ -1116,7 +1090,7 @@ public class TabViewTests (ITestOutputHelper output)
     [SetupFakeDriver]
     public void ShowTopLine_True_TabsOnBottom_True_TestTabView_Width4 ()
     {
-        TabView tv = GetTabView (out _, out _, false);
+        TabView tv = GetTabView (out _, out _);
         tv.Width = 4;
         tv.Height = 5;
         tv.Style = new () { TabsOnBottom = true };
@@ -1140,7 +1114,7 @@ public class TabViewTests (ITestOutputHelper output)
     [SetupFakeDriver]
     public void ShowTopLine_True_TabsOnBottom_True_TestThinTabView_WithLongNames ()
     {
-        TabView tv = GetTabView (out Tab tab1, out Tab tab2, false);
+        TabView tv = GetTabView (out Tab tab1, out Tab tab2);
         tv.Width = 10;
         tv.Height = 5;
         tv.Style = new () { TabsOnBottom = true };
@@ -1222,7 +1196,7 @@ public class TabViewTests (ITestOutputHelper output)
     [SetupFakeDriver]
     public void ShowTopLine_True_TabsOnBottom_True_With_Unicode ()
     {
-        TabView tv = GetTabView (out Tab tab1, out Tab tab2, false);
+        TabView tv = GetTabView (out Tab tab1, out Tab tab2);
         tv.Width = 20;
         tv.Height = 5;
         tv.Style = new () { TabsOnBottom = true };
@@ -1294,9 +1268,6 @@ public class TabViewTests (ITestOutputHelper output)
         // even though we go right 2 indexes the event should only be called once
         Assert.Equal (1, called);
         Assert.Equal (tab4, tv.SelectedTab);
-
-        // Shutdown must be called to safely clean up Application if Init has been called
-        Application.Shutdown ();
     }
 
     [Fact]
@@ -1312,9 +1283,6 @@ public class TabViewTests (ITestOutputHelper output)
         tv.SwitchTabBy (-500);
 
         Assert.Equal (tab1, tv.SelectedTab);
-
-        // Shutdown must be called to safely clean up Application if Init has been called
-        Application.Shutdown ();
     }
 
     [Fact]
@@ -1333,16 +1301,13 @@ public class TabViewTests (ITestOutputHelper output)
         }
 
         Assert.Empty (tv.Tabs);
-
-        // Shutdown must be called to safely clean up Application if Init has been called
-        Application.Shutdown ();
     }
 
     [Fact]
     [SetupFakeDriver]
     public void Add_Three_TabsOnTop_ChangesTab ()
     {
-        TabView tv = GetTabView (out Tab tab1, out Tab tab2, false);
+        TabView tv = GetTabView (out Tab tab1, out Tab tab2);
         Tab tab3;
 
         tv.AddTab (
@@ -1407,7 +1372,7 @@ public class TabViewTests (ITestOutputHelper output)
     [SetupFakeDriver]
     public void Add_Three_TabsOnBottom_ChangesTab ()
     {
-        TabView tv = GetTabView (out Tab tab1, out Tab tab2, false);
+        TabView tv = GetTabView (out Tab tab1, out Tab tab2);
         Tab tab3;
 
         tv.AddTab (
@@ -1471,7 +1436,7 @@ public class TabViewTests (ITestOutputHelper output)
     }
 
     [Fact]
-    [SetupFakeDriver]
+    [AutoInitShutdown]
     public void Tab_Get_Focus_By_Press_F6 ()
     {
         TabView tv = GetTabView (out Tab tab1, out Tab tab2);
@@ -1521,13 +1486,8 @@ public class TabViewTests (ITestOutputHelper output)
 
     private TabView GetTabView () { return GetTabView (out _, out _); }
 
-    private TabView GetTabView (out Tab tab1, out Tab tab2, bool initFakeDriver = true)
+    private TabView GetTabView (out Tab tab1, out Tab tab2)
     {
-        if (initFakeDriver)
-        {
-            InitFakeDriver ();
-        }
-
         var tv = new TabView () { Id = "tv " };
         tv.BeginInit ();
         tv.EndInit ();
@@ -1540,15 +1500,5 @@ public class TabViewTests (ITestOutputHelper output)
         tv.AddTab (tab2 = new () { Id = "tab2", DisplayText = "Tab2", View = new Label { Id = "tab1.Label", Text = "hi2" } }, false);
 
         return tv;
-    }
-
-    private void InitFakeDriver ()
-    {
-        ConfigurationManager.Locations = ConfigLocations.Default;
-        ConfigurationManager.Reset ();
-
-        var driver = new FakeDriver ();
-        Application.Init (driver);
-        driver.Init ();
     }
 }
