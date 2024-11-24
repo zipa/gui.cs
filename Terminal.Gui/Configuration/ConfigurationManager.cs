@@ -250,16 +250,6 @@ public static class ConfigurationManager
             Reset ();
         }
 
-        if (Locations.HasFlag (ConfigLocations.GlobalCurrent))
-        {
-            Settings?.Update ($"./.tui/{_configFilename}", ConfigLocations.GlobalCurrent);
-        }
-
-        if (Locations.HasFlag (ConfigLocations.GlobalHome))
-        {
-            Settings?.Update ($"~/.tui/{_configFilename}", ConfigLocations.GlobalHome);
-        }
-
         if (Locations.HasFlag (ConfigLocations.AppResources))
         {
             string? embeddedStylesResourceName = Assembly.GetEntryAssembly ()
@@ -275,6 +265,22 @@ public static class ConfigurationManager
             Settings?.UpdateFromResource (Assembly.GetEntryAssembly ()!, embeddedStylesResourceName!, ConfigLocations.AppResources);
         }
 
+        if (Locations.HasFlag (ConfigLocations.Runtime) && !string.IsNullOrEmpty (RuntimeConfig))
+        {
+            Settings?.Update (RuntimeConfig, "ConfigurationManager.RuntimeConfig", ConfigLocations.Runtime);
+        }
+
+        if (Locations.HasFlag (ConfigLocations.GlobalCurrent))
+        {
+            Settings?.Update ($"./.tui/{_configFilename}", ConfigLocations.GlobalCurrent);
+        }
+
+        if (Locations.HasFlag (ConfigLocations.GlobalHome))
+        {
+            Settings?.Update ($"~/.tui/{_configFilename}", ConfigLocations.GlobalHome);
+        }
+
+
         if (Locations.HasFlag (ConfigLocations.AppCurrent))
         {
             Settings?.Update ($"./.tui/{AppName}.{_configFilename}", ConfigLocations.AppCurrent);
@@ -283,11 +289,6 @@ public static class ConfigurationManager
         if (Locations.HasFlag (ConfigLocations.AppHome))
         {
             Settings?.Update ($"~/.tui/{AppName}.{_configFilename}", ConfigLocations.AppHome);
-        }
-
-        if (Locations.HasFlag (ConfigLocations.Runtime) && !string.IsNullOrEmpty (RuntimeConfig))
-        {
-            Settings?.Update (RuntimeConfig, "ConfigurationManager.RuntimeConfig", ConfigLocations.Runtime);
         }
 
         ThemeManager.SelectedTheme = Settings!["Theme"].PropertyValue as string ?? "Default";
