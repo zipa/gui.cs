@@ -64,11 +64,6 @@ internal class TabRowView : View
             return false;
         }
 
-        if (!HasFocus && CanFocus)
-        {
-            SetFocus ();
-        }
-
         if (me.IsSingleDoubleOrTripleClicked)
         {
             var scrollIndicatorHit = 0;

@@ -518,6 +518,10 @@ public class TabView : View
         {
             SelectedTab?.SetFocus ();
         }
+        else
+        {
+            SelectedTab?.View?.SetFocus ();
+        }
     }
 
     /// <summary>
