@@ -76,7 +76,7 @@ public class FakeDriver : ConsoleDriver
         }
     }
 
-    internal override void End ()
+    public override void End ()
     {
         FakeConsole.ResetColor ();
         FakeConsole.Clear ();
@@ -84,7 +84,7 @@ public class FakeDriver : ConsoleDriver
 
     private FakeMainLoop _mainLoopDriver;
 
-    internal override MainLoop Init ()
+    public override MainLoop Init ()
     {
         FakeConsole.MockKeyPresses.Clear ();
 
@@ -393,7 +393,7 @@ public class FakeDriver : ConsoleDriver
     }
 
     /// <inheritdoc />
-    internal override void WriteRaw (string ansi) { throw new NotImplementedException (); }
+    public override void WriteRaw (string ansi) { throw new NotImplementedException (); }
 
     public void SetBufferSize (int width, int height)
     {

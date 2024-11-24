@@ -226,7 +226,7 @@ internal class NetDriver : ConsoleDriver
 
     internal NetMainLoop? _mainLoopDriver;
 
-    internal override MainLoop Init ()
+    public override MainLoop Init ()
     {
         PlatformID p = Environment.OSVersion.Platform;
 
@@ -350,7 +350,7 @@ internal class NetDriver : ConsoleDriver
         }
     }
 
-    internal override void End ()
+    public override void End ()
     {
         if (IsWinPlatform)
         {
@@ -717,7 +717,7 @@ internal class NetDriver : ConsoleDriver
     #region Low-Level DotNet tuff
 
     /// <inheritdoc/>
-    internal override void WriteRaw (string ansi)
+    public override void WriteRaw (string ansi)
     {
         Console.Out.Write (ansi);
         Console.Out.Flush ();

@@ -10,7 +10,7 @@ namespace Terminal.Gui;
 ///     <see cref="WindowsDriver"/> - <see cref="NetDriver"/> that uses the .NET Console API - <see cref="FakeConsole"/>
 ///     for unit testing.
 /// </remarks>
-public abstract class ConsoleDriver
+public abstract class ConsoleDriver : IConsoleDriver
 {
     /// <summary>
     ///     Set this to true in any unit tests that attempt to test drivers other than FakeDriver.
@@ -38,7 +38,7 @@ public abstract class ConsoleDriver
     ///     Provide proper writing to send escape sequence recognized by the <see cref="ConsoleDriver"/>.
     /// </summary>
     /// <param name="ansi"></param>
-    internal abstract void WriteRaw (string ansi);
+    public abstract void WriteRaw (string ansi);
 
     #endregion ANSI Esc Sequence Handling
 
@@ -50,7 +50,7 @@ public abstract class ConsoleDriver
 
     // QUESTION: When non-full screen apps are supported, will this represent the app size, or will that be in Application?
     /// <summary>Gets the location and size of the terminal screen.</summary>
-    internal Rectangle Screen => new (0, 0, Cols, Rows);
+    public Rectangle Screen => new (0, 0, Cols, Rows);
 
     private Region? _clip;
 
@@ -59,7 +59,7 @@ public abstract class ConsoleDriver
     ///     to.
     /// </summary>
     /// <value>The rectangle describing the of <see cref="Clip"/> region.</value>
-    internal Region? Clip
+    public Region? Clip
     {
         get => _clip;
         set
@@ -83,10 +83,10 @@ public abstract class ConsoleDriver
     ///     Gets the column last set by <see cref="Move"/>. <see cref="Col"/> and <see cref="Row"/> are used by
     ///     <see cref="AddRune(Rune)"/> and <see cref="AddStr"/> to determine where to add content.
     /// </summary>
-    internal int Col { get; private set; }
+    public int Col { get; private set; }
 
     /// <summary>The number of columns visible in the terminal.</summary>
-    internal virtual int Cols
+    public virtual int Cols
     {
         get => _cols;
         set
@@ -101,10 +101,10 @@ public abstract class ConsoleDriver
     ///     <see cref="UpdateScreen"/> is called.
     ///     <remarks>The format of the array is rows, columns. The first index is the row, the second index is the column.</remarks>
     /// </summary>
-    internal Cell [,]? Contents { get; set; }
+    public Cell [,]? Contents { get; set; }
 
     /// <summary>The leftmost column in the terminal.</summary>
-    internal virtual int Left { get; set; } = 0;
+    public virtual int Left { get; set; } = 0;
 
     /// <summary>Tests if the specified rune is supported by the driver.</summary>
     /// <param name="rune"></param>
@@ -147,10 +147,10 @@ public abstract class ConsoleDriver
     ///     Gets the row last set by <see cref="Move"/>. <see cref="Col"/> and <see cref="Row"/> are used by
     ///     <see cref="AddRune(Rune)"/> and <see cref="AddStr"/> to determine where to add content.
     /// </summary>
-    internal int Row { get; private set; }
+    public int Row { get; private set; }
 
     /// <summary>The number of rows visible in the terminal.</summary>
-    internal virtual int Rows
+    public virtual int Rows
     {
         get => _rows;
         set
@@ -161,7 +161,7 @@ public abstract class ConsoleDriver
     }
 
     /// <summary>The topmost row in the terminal.</summary>
-    internal virtual int Top { get; set; } = 0;
+    public virtual int Top { get; set; } = 0;
 
     /// <summary>Adds the specified rune to the display at the current cursor position.</summary>
     /// <remarks>
@@ -177,7 +177,7 @@ public abstract class ConsoleDriver
     ///     </para>
     /// </remarks>
     /// <param name="rune">Rune to add.</param>
-    internal void AddRune (Rune rune)
+    public void AddRune (Rune rune)
     {
         int runeWidth = -1;
         bool validLocation = IsValidLocation (rune, Col, Row);
@@ -352,7 +352,7 @@ public abstract class ConsoleDriver
     ///     convenience method that calls <see cref="AddRune(Rune)"/> with the <see cref="Rune"/> constructor.
     /// </summary>
     /// <param name="c">Character to add.</param>
-    internal void AddRune (char c) { AddRune (new Rune (c)); }
+    public void AddRune (char c) { AddRune (new Rune (c)); }
 
     /// <summary>Adds the <paramref name="str"/> to the display at the cursor position.</summary>
     /// <remarks>
@@ -364,7 +364,7 @@ public abstract class ConsoleDriver
     ///     <para>If <paramref name="str"/> requires more columns than are available, the output will be clipped.</para>
     /// </remarks>
     /// <param name="str">String.</param>
-    internal void AddStr (string str)
+    public void AddStr (string str)
     {
         List<Rune> runes = str.EnumerateRunes ().ToList ();
 
@@ -380,7 +380,7 @@ public abstract class ConsoleDriver
     /// </remarks>
     /// <param name="rect">The Screen-relative rectangle.</param>
     /// <param name="rune">The Rune used to fill the rectangle</param>
-    internal void FillRect (Rectangle rect, Rune rune = default)
+    public void FillRect (Rectangle rect, Rune rune = default)
     {
         // BUGBUG: This should be a method on Region
         rect = Rectangle.Intersect (rect, Clip?.GetBounds () ?? Screen);
@@ -406,7 +406,7 @@ public abstract class ConsoleDriver
     }
 
     /// <summary>Clears the <see cref="Contents"/> of the driver.</summary>
-    internal void ClearContents ()
+    public void ClearContents ()
     {
         Contents = new Cell [Rows, Cols];
 
@@ -446,7 +446,7 @@ public abstract class ConsoleDriver
     /// Sets <see cref="Contents"/> as dirty for situations where views
     /// don't need layout and redrawing, but just refresh the screen.
     /// </summary>
-    internal void SetContentsAsDirty ()
+    public void SetContentsAsDirty ()
     {
         lock (Contents!)
         {
@@ -468,7 +468,7 @@ public abstract class ConsoleDriver
     /// </summary>
     /// <param name="rect"></param>
     /// <param name="c"></param>
-    internal void FillRect (Rectangle rect, char c) { FillRect (rect, new Rune (c)); }
+    public void FillRect (Rectangle rect, char c) { FillRect (rect, new Rune (c)); }
 
     #endregion Screen and Contents
 
@@ -491,7 +491,7 @@ public abstract class ConsoleDriver
     ///     <see langword="false"/> if the coordinate is outside the screen bounds or outside of <see cref="Clip"/>.
     ///     <see langword="true"/> otherwise.
     /// </returns>
-    internal bool IsValidLocation (Rune rune, int col, int row)
+    public bool IsValidLocation (Rune rune, int col, int row)
     {
         if (rune.GetColumns () < 2)
         {
@@ -506,10 +506,10 @@ public abstract class ConsoleDriver
 
     /// <summary>Called when the terminal size changes. Fires the <see cref="SizeChanged"/> event.</summary>
     /// <param name="args"></param>
-    internal void OnSizeChanged (SizeChangedEventArgs args) { SizeChanged?.Invoke (this, args); }
+    public void OnSizeChanged (SizeChangedEventArgs args) { SizeChanged?.Invoke (this, args); }
 
     /// <summary>Updates the screen to reflect all the changes that have been done to the display buffer</summary>
-    internal void Refresh ()
+    public void Refresh ()
     {
         bool updated = UpdateScreen ();
         UpdateCursor ();
@@ -547,10 +547,10 @@ public abstract class ConsoleDriver
 
     /// <summary>Initializes the driver</summary>
     /// <returns>Returns an instance of <see cref="MainLoop"/> using the <see cref="IMainLoopDriver"/> for the driver.</returns>
-    internal abstract MainLoop Init ();
+    public abstract MainLoop Init ();
 
     /// <summary>Ends the execution of the console driver.</summary>
-    internal abstract void End ();
+    public abstract void End ();
 
     #endregion
 
@@ -571,7 +571,7 @@ public abstract class ConsoleDriver
     ///         <see langword="false"/>, indicating that the <see cref="ConsoleDriver"/> cannot support TrueColor.
     ///     </para>
     /// </remarks>
-    internal virtual bool Force16Colors
+    public virtual bool Force16Colors
     {
         get => Application.Force16Colors || !SupportsTrueColor;
         set => Application.Force16Colors = value || !SupportsTrueColor;
@@ -605,7 +605,7 @@ public abstract class ConsoleDriver
     /// <summary>Selects the specified attribute as the attribute to use for future calls to AddRune and AddString.</summary>
     /// <remarks>Implementations should call <c>base.SetAttribute(c)</c>.</remarks>
     /// <param name="c">C.</param>
-    internal Attribute SetAttribute (Attribute c)
+    public Attribute SetAttribute (Attribute c)
     {
         Attribute prevAttribute = CurrentAttribute;
         CurrentAttribute = c;
@@ -615,7 +615,7 @@ public abstract class ConsoleDriver
 
     /// <summary>Gets the current <see cref="Attribute"/>.</summary>
     /// <returns>The current attribute.</returns>
-    internal Attribute GetAttribute () { return CurrentAttribute; }
+    public Attribute GetAttribute () { return CurrentAttribute; }
 
     // TODO: This is only overridden by CursesDriver. Once CursesDriver supports 24-bit color, this virtual method can be
     // removed (and Attribute can lose the platformColor property).
