@@ -14,9 +14,9 @@ internal class NetEvents : IDisposable
 #if PROCESS_REQUEST
     bool _neededProcessRequest;
 #endif
-    public NetEvents (IConsoleDriver IConsoleDriver)
+    public NetEvents (IConsoleDriver consoleDriver)
     {
-        _consoleDriver = IConsoleDriver ?? throw new ArgumentNullException (nameof (IConsoleDriver));
+        _consoleDriver = consoleDriver ?? throw new ArgumentNullException (nameof (consoleDriver));
         _inputReadyCancellationTokenSource = new ();
 
         Task.Run (ProcessInputQueue, _inputReadyCancellationTokenSource.Token);

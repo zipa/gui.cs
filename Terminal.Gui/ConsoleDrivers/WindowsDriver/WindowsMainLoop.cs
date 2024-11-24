@@ -29,13 +29,13 @@ internal class WindowsMainLoop : IMainLoopDriver
     private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
     private MainLoop? _mainLoop;
 
-    public WindowsMainLoop (IConsoleDriver IConsoleDriver)
+    public WindowsMainLoop (IConsoleDriver consoleDriver)
     {
-        _consoleDriver = IConsoleDriver ?? throw new ArgumentNullException (nameof (IConsoleDriver));
+        _consoleDriver = consoleDriver ?? throw new ArgumentNullException (nameof (consoleDriver));
 
         if (!ConsoleDriver.RunningUnitTests)
         {
-            _winConsole = ((WindowsDriver)IConsoleDriver).WinConsole;
+            _winConsole = ((WindowsDriver)consoleDriver).WinConsole;
             _winConsole!._mainLoop = this;
         }
     }

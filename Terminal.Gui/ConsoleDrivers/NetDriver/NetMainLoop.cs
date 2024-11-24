@@ -25,15 +25,15 @@ internal class NetMainLoop : IMainLoopDriver
 
     /// <summary>Initializes the class with the console driver.</summary>
     /// <remarks>Passing a IConsoleDriver is provided to capture windows resizing.</remarks>
-    /// <param name="IConsoleDriver">The console driver used by this Net main loop.</param>
+    /// <param name="consoleDriver">The console driver used by this Net main loop.</param>
     /// <exception cref="ArgumentNullException"></exception>
-    public NetMainLoop (IConsoleDriver IConsoleDriver)
+    public NetMainLoop (IConsoleDriver consoleDriver)
     {
-        ArgumentNullException.ThrowIfNull (IConsoleDriver);
+        ArgumentNullException.ThrowIfNull (consoleDriver);
 
         if (!ConsoleDriver.RunningUnitTests)
         {
-            _netEvents = new (IConsoleDriver);
+            _netEvents = new (consoleDriver);
         }
     }
 
