@@ -189,7 +189,7 @@ public class ConfigurationManagerTests
         Updated += ConfigurationManager_Updated;
         var fired = false;
 
-        void ConfigurationManager_Updated (object? sender, ConfigurationManagerEventArgs obj)
+        void ConfigurationManager_Updated (object sender, ConfigurationManagerEventArgs obj)
         {
             fired = true;
         }
@@ -285,7 +285,7 @@ public class ConfigurationManagerTests
         Updated += ConfigurationManager_Updated;
         var fired = false;
 
-        void ConfigurationManager_Updated (object? sender, ConfigurationManagerEventArgs obj)
+        void ConfigurationManager_Updated (object sender, ConfigurationManagerEventArgs obj)
         {
             fired = true;
         }
