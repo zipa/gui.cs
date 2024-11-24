@@ -8,15 +8,15 @@ internal class NetEvents : IDisposable
     private readonly ManualResetEventSlim _inputReady = new (false);
     private CancellationTokenSource? _inputReadyCancellationTokenSource;
     private readonly Queue<InputResult> _inputQueue = new ();
-    private readonly ConsoleDriver _consoleDriver;
+    private readonly IConsoleDriver _consoleDriver;
     private ConsoleKeyInfo []? _cki;
     private bool _isEscSeq;
 #if PROCESS_REQUEST
     bool _neededProcessRequest;
 #endif
-    public NetEvents (ConsoleDriver consoleDriver)
+    public NetEvents (IConsoleDriver IConsoleDriver)
     {
-        _consoleDriver = consoleDriver ?? throw new ArgumentNullException (nameof (consoleDriver));
+        _consoleDriver = IConsoleDriver ?? throw new ArgumentNullException (nameof (IConsoleDriver));
         _inputReadyCancellationTokenSource = new ();
 
         Task.Run (ProcessInputQueue, _inputReadyCancellationTokenSource.Token);

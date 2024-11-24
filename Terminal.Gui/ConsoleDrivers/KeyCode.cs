@@ -2,7 +2,7 @@
 namespace Terminal.Gui;
 
 /// <summary>
-///     The <see cref="KeyCode"/> enumeration encodes key information from <see cref="ConsoleDriver"/>s and provides a
+///     The <see cref="KeyCode"/> enumeration encodes key information from <see cref="IConsoleDriver"/>s and provides a
 ///     consistent way for application code to specify keys and receive key events.
 ///     <para>
 ///         The <see cref="Key"/> class provides a higher-level abstraction, with helper methods and properties for

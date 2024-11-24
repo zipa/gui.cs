@@ -48,11 +48,11 @@ internal class UnixMainLoop : IMainLoopDriver
     private Pollfd []? _pollMap;
     private bool _winChanged;
 
-    public UnixMainLoop (ConsoleDriver consoleDriver)
+    public UnixMainLoop (IConsoleDriver IConsoleDriver)
     {
-        ArgumentNullException.ThrowIfNull (consoleDriver);
+        ArgumentNullException.ThrowIfNull (IConsoleDriver);
 
-        _cursesDriver = (CursesDriver)consoleDriver;
+        _cursesDriver = (CursesDriver)IConsoleDriver;
     }
 
     void IMainLoopDriver.Wakeup ()

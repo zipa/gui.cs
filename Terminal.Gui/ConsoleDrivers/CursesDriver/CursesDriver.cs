@@ -14,7 +14,7 @@ internal class CursesDriver : ConsoleDriver
 {
     public override string GetVersionInfo () { return $"{Curses.curses_version ()}"; }
 
-    internal override int Cols
+    public override int Cols
     {
         get => Curses.Cols;
         set
@@ -24,7 +24,7 @@ internal class CursesDriver : ConsoleDriver
         }
     }
 
-    internal override int Rows
+    public override int Rows
     {
         get => Curses.Lines;
         set
@@ -582,7 +582,7 @@ internal class CursesDriver : ConsoleDriver
     private UnixMainLoop? _mainLoopDriver;
     private object _processInputToken;
 
-    internal override MainLoop Init ()
+    public override MainLoop Init ()
     {
         _mainLoopDriver = new (this);
 
@@ -1084,7 +1084,7 @@ internal class CursesDriver : ConsoleDriver
         }
     }
 
-    internal override void End ()
+    public override void End ()
     {
         EscSeqUtils.ContinuousButtonPressed -= EscSeqUtils_ContinuousButtonPressed;
 
@@ -1128,7 +1128,7 @@ internal class CursesDriver : ConsoleDriver
     }
 
     /// <inheritdoc/>
-    internal override void WriteRaw (string ansi) { _mainLoopDriver?.WriteRaw (ansi); }
+    public override void WriteRaw (string ansi) { _mainLoopDriver?.WriteRaw (ansi); }
 }
 
 // TODO: One type per file - move to another file

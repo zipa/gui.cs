@@ -187,7 +187,7 @@ internal class WindowsDriver : ConsoleDriver
         }
     }
 
-    internal override void WriteRaw (string ansi) { WinConsole?.WriteANSI (ansi); }
+    public override void WriteRaw (string ansi) { WinConsole?.WriteANSI (ansi); }
 
     #region Not Implemented
 
@@ -402,7 +402,7 @@ internal class WindowsDriver : ConsoleDriver
         return updated;
     }
 
-    internal override void End ()
+    public override void End ()
     {
         if (_mainLoopDriver is { })
         {
@@ -424,7 +424,7 @@ internal class WindowsDriver : ConsoleDriver
         }
     }
 
-    internal override MainLoop Init ()
+    public override MainLoop Init ()
     {
         _mainLoopDriver = new WindowsMainLoop (this);
 
@@ -867,7 +867,7 @@ internal class WindowsDriver : ConsoleDriver
         int delay = START_DELAY;
         while (_isButtonPressed)
         {
-            // TODO: This makes ConsoleDriver dependent on Application, which is not ideal. This should be moved to Application.
+            // TODO: This makes IConsoleDriver dependent on Application, which is not ideal. This should be moved to Application.
             View? view = Application.WantContinuousButtonPressedView;
 
             if (view is null)
@@ -890,7 +890,7 @@ internal class WindowsDriver : ConsoleDriver
             //Debug.WriteLine($"ProcessContinuousButtonPressedAsync: {view}");
             if (_isButtonPressed && (mouseFlag & MouseFlags.ReportMousePosition) == 0)
             {
-                // TODO: This makes ConsoleDriver dependent on Application, which is not ideal. This should be moved to Application.
+                // TODO: This makes IConsoleDriver dependent on Application, which is not ideal. This should be moved to Application.
                 Application.Invoke (() => OnMouseEvent (me));
             }
         }
@@ -945,7 +945,7 @@ internal class WindowsDriver : ConsoleDriver
 
         if (_isButtonDoubleClicked || _isOneFingerDoubleClicked)
         {
-            // TODO: This makes ConsoleDriver dependent on Application, which is not ideal. This should be moved to Application.
+            // TODO: This makes IConsoleDriver dependent on Application, which is not ideal. This should be moved to Application.
             Application.MainLoop!.AddIdle (
                                            () =>
                                            {
@@ -1017,7 +1017,7 @@ internal class WindowsDriver : ConsoleDriver
 
             if ((mouseFlag & MouseFlags.ReportMousePosition) == 0)
             {
-                // TODO: This makes ConsoleDriver dependent on Application, which is not ideal. This should be moved to Application.
+                // TODO: This makes IConsoleDriver dependent on Application, which is not ideal. This should be moved to Application.
                 Application.MainLoop!.AddIdle (
                                                () =>
                                                {

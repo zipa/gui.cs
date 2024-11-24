@@ -18,7 +18,7 @@ internal class WindowsMainLoop : IMainLoopDriver
     /// </summary>
     public EventHandler<SizeChangedEventArgs>? WinChanged;
 
-    private readonly ConsoleDriver _consoleDriver;
+    private readonly IConsoleDriver _consoleDriver;
     private readonly ManualResetEventSlim _eventReady = new (false);
 
     // The records that we keep fetching
@@ -29,13 +29,13 @@ internal class WindowsMainLoop : IMainLoopDriver
     private readonly CancellationTokenSource _inputHandlerTokenSource = new ();
     private MainLoop? _mainLoop;
 
-    public WindowsMainLoop (ConsoleDriver consoleDriver)
+    public WindowsMainLoop (IConsoleDriver IConsoleDriver)
     {
-        _consoleDriver = consoleDriver ?? throw new ArgumentNullException (nameof (consoleDriver));
+        _consoleDriver = IConsoleDriver ?? throw new ArgumentNullException (nameof (IConsoleDriver));
 
         if (!ConsoleDriver.RunningUnitTests)
         {
-            _winConsole = ((WindowsDriver)consoleDriver).WinConsole;
+            _winConsole = ((WindowsDriver)IConsoleDriver).WinConsole;
             _winConsole!._mainLoop = this;
         }
     }
