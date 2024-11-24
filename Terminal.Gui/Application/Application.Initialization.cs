@@ -193,7 +193,7 @@ public static partial class Application // Initialization (Init/Shutdown)
         {
             foreach (Type? type in asm.GetTypes ())
             {
-                if (type.IsSubclassOf (typeof (IConsoleDriver)) && !type.IsAbstract)
+                if (typeof (IConsoleDriver).IsAssignableFrom (type) && !type.IsAbstract && type.IsClass)
                 {
                     driverTypes.Add (type);
                 }
