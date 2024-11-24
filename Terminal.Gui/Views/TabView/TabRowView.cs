@@ -59,6 +59,11 @@ internal class TabRowView : View
             }
         }
 
+        if (me.IsWheel && !HasFocus && CanFocus)
+        {
+            SetFocus ();
+        }
+
         if (!me.IsSingleDoubleOrTripleClicked)
         {
             return false;
