@@ -13,6 +13,7 @@ internal class TabRowView : View
         Id = "tabRowView";
 
         CanFocus = true;
+        TabStop = TabBehavior.TabGroup;
         Width = Dim.Fill ();
 
         _rightScrollIndicator = new View
