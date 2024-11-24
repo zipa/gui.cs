@@ -65,20 +65,20 @@ internal class TabRowView : View
             SetFocus ();
         }
 
-        if (!me.IsSingleDoubleOrTripleClicked)
+        if (me is { IsSingleDoubleOrTripleClicked: false, IsWheel: false })
         {
             return false;
         }
 
-        if (me.IsSingleDoubleOrTripleClicked)
+        if (me.IsSingleDoubleOrTripleClicked || me.IsWheel)
         {
             var scrollIndicatorHit = 0;
 
-            if (me.View is { Id: "rightScrollIndicator" })
+            if (me.View is { Id: "rightScrollIndicator" } || me.Flags.HasFlag (MouseFlags.WheeledDown) || me.Flags.HasFlag (MouseFlags.WheeledRight))
             {
                 scrollIndicatorHit = 1;
             }
-            else if (me.View is { Id: "leftScrollIndicator" })
+            else if (me.View is { Id: "leftScrollIndicator" } || me.Flags.HasFlag (MouseFlags.WheeledUp) || me.Flags.HasFlag (MouseFlags.WheeledLeft))
             {
                 scrollIndicatorHit = -1;
             }

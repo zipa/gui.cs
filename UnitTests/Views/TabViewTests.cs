@@ -1490,6 +1490,35 @@ public class TabViewTests (ITestOutputHelper output)
         top.Dispose ();
     }
 
+    [Fact]
+    [SetupFakeDriver]
+    public void Mouse_Wheel_Changes_Tab ()
+    {
+        TabView tv = GetTabView (out Tab tab1, out Tab tab2);
+
+        tv.Width = 20;
+        tv.Height = 5;
+
+        Toplevel top = new ();
+        top.Add (tv);
+        Application.Begin (top);
+
+        Assert.False (tab1.HasFocus);
+
+        Application.RaiseMouseEvent (new () { Position = new (1, 1), Flags = MouseFlags.WheeledDown });
+        Assert.True (tab2.HasFocus);
+
+        Application.RaiseMouseEvent (new () { Position = new (1, 1), Flags = MouseFlags.WheeledUp });
+        Assert.True (tab1.HasFocus);
+
+        Application.RaiseMouseEvent (new () { Position = new (1, 1), Flags = MouseFlags.WheeledRight });
+        Assert.True (tab2.HasFocus);
+
+        Application.RaiseMouseEvent (new () { Position = new (1, 1), Flags = MouseFlags.WheeledLeft });
+        Assert.True (tab1.HasFocus);
+        top.Dispose ();
+    }
+
     private TabView GetTabView () { return GetTabView (out _, out _); }
 
     private TabView GetTabView (out Tab tab1, out Tab tab2, bool initFakeDriver = true)
