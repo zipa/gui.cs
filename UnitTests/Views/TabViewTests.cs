@@ -101,7 +101,7 @@ public class TabViewTests (ITestOutputHelper output)
         tv.Draw ();
 
         View tabRow = tv.Subviews [0];
-        Assert.Equal ("TabRowView", tabRow.GetType ().Name);
+        Assert.Equal ("TabRow", tabRow.GetType ().Name);
 
         TestHelpers.AssertDriverContentsAre (
                                              @"
@@ -184,7 +184,7 @@ public class TabViewTests (ITestOutputHelper output)
         tv.Draw ();
 
         View tabRow = tv.Subviews [0];
-        Assert.Equal ("TabRowView", tabRow.GetType ().Name);
+        Assert.Equal ("TabRow", tabRow.GetType ().Name);
 
         TestHelpers.AssertDriverContentsAre (
                                              @"
@@ -272,7 +272,7 @@ public class TabViewTests (ITestOutputHelper output)
         tv.Draw ();
 
         View tabRow = tv.Subviews [0];
-        Assert.Equal ("TabRowView", tabRow.GetType ().Name);
+        Assert.Equal ("TabRow", tabRow.GetType ().Name);
 
         TestHelpers.AssertDriverContentsAre (
                                              @"
@@ -433,7 +433,7 @@ public class TabViewTests (ITestOutputHelper output)
         Assert.Equal (btnSubView, top.MostFocused);
 
         Assert.True (Application.RaiseKeyDownEvent (Key.CursorUp));
-        // TabRowView now has TabGroup which only F6 is allowed
+        // TabRow now has TabGroup which only F6 is allowed
         Assert.NotEqual (tab2, top.MostFocused);
         Assert.Equal (btn, top.MostFocused);
 
@@ -660,7 +660,7 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
 
         tv.SelectedTab = tab2;
-        Assert.Equal (tab2, tv.Subviews.First (v => v.Id.Contains ("tabRowView")).MostFocused);
+        Assert.Equal (tab2, tv.Subviews.First (v => v.Id.Contains ("tabRow")).MostFocused);
 
         tv.Layout ();
         View.SetClipToScreen ();
@@ -806,7 +806,7 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
 
         tv.SelectedTab = tab2;
-        Assert.Equal (tab2, tv.Subviews.First (v => v.Id.Contains ("tabRowView")).MostFocused);
+        Assert.Equal (tab2, tv.Subviews.First (v => v.Id.Contains ("tabRow")).MostFocused);
 
         tv.Layout ();
         View.SetClipToScreen ();

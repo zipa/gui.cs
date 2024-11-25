@@ -1,16 +1,16 @@
 #nullable enable
 namespace Terminal.Gui;
 
-internal class TabRowView : View
+internal class TabRow : View
 {
     private readonly TabView _host;
     private readonly View _leftScrollIndicator;
     private readonly View _rightScrollIndicator;
 
-    public TabRowView (TabView host)
+    public TabRow (TabView host)
     {
         _host = host;
-        Id = "tabRowView";
+        Id = "tabRow";
 
         CanFocus = true;
         TabStop = TabBehavior.TabGroup;
