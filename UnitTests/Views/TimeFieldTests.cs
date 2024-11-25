@@ -147,6 +147,7 @@ public class TimeFieldTests
         Assert.True (tf.NewKeyDownEvent (Key.End));
         Assert.Equal (8, tf.CursorPosition);
         Assert.True (tf.NewKeyDownEvent (Key.A.WithCtrl));
+        Assert.Equal (9, tf.CursorPosition);
         Assert.Equal (tf.SelectedLength, tf.Text.Length);
         Assert.True (tf.NewKeyDownEvent (Key.E.WithCtrl));
         Assert.Equal (8, tf.CursorPosition);
