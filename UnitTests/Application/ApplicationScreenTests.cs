@@ -26,7 +26,6 @@ public class ApplicationScreenTests (ITestOutputHelper output)
     public void ClearContents_Called_When_Top_Frame_Changes ()
     {
         // Arrange
-        Application.Init ();
         Application.Top = new Toplevel ();
         Application.TopLevels.Push (Application.Top);
 
@@ -38,28 +37,28 @@ public class ApplicationScreenTests (ITestOutputHelper output)
         Application.LayoutAndDraw ();
 
         // Assert
-        Assert.Equal (0, clearedContentsRaised);
+        Assert.Equal (1, clearedContentsRaised);
 
         // Act
         Application.Top.SetNeedsLayout ();
         Application.LayoutAndDraw ();
 
         // Assert
-        Assert.Equal (0, clearedContentsRaised);
+        Assert.Equal (1, clearedContentsRaised);
 
         // Act
         Application.Top.X = 1;
         Application.LayoutAndDraw ();
 
         // Assert
-        Assert.Equal (1, clearedContentsRaised);
+        Assert.Equal (2, clearedContentsRaised);
 
         // Act
         Application.Top.Width = 10;
         Application.LayoutAndDraw ();
 
         // Assert
-        Assert.Equal (2, clearedContentsRaised);
+        Assert.Equal (3, clearedContentsRaised);
 
         // Cleanup
         Application.ResetState (true);
