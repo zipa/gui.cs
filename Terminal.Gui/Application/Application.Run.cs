@@ -508,7 +508,6 @@ public static partial class Application // Run (Begin, Run, End, Stop)
         if (ClearScreenNextIteration)
         {
             forceDraw = true;
-            ClearScreenNextIteration = false;
         }
         if (forceDraw)
         {
