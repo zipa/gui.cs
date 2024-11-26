@@ -563,7 +563,7 @@ public partial class View // Layout APIs
             }
             else
             {
-              //  Application.ClearScreenNextIteration = true;
+                Application.ClearScreenNextIteration = true;
             }
         }
 
