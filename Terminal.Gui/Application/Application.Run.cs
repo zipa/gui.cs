@@ -693,6 +693,6 @@ public static partial class Application // Run (Begin, Run, End, Stop)
         runState.Toplevel = null;
         runState.Dispose ();
 
-        LayoutAndDraw ();
+        LayoutAndDraw (true);
     }
 }
