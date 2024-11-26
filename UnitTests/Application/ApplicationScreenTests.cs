@@ -1,6 +1,6 @@
 ﻿using Xunit.Abstractions;
 
-namespace Terminal.Gui.ApplicationTests.NavigationTests;
+namespace Terminal.Gui.ApplicationTests;
 
 public class ApplicationScreenTests (ITestOutputHelper output)
 {
@@ -22,10 +22,10 @@ public class ApplicationScreenTests (ITestOutputHelper output)
     }
 
     [Fact]
-    [SetupFakeDriver]
     public void ClearContents_Called_When_Top_Frame_Changes ()
     {
         // Arrange
+        Application.Init (new FakeDriver ());
         Application.Top = new Toplevel ();
         Application.TopLevels.Push (Application.Top);
 
@@ -61,6 +61,8 @@ public class ApplicationScreenTests (ITestOutputHelper output)
         Assert.Equal (3, clearedContentsRaised);
 
         // Cleanup
-        Application.ResetState (true);
+        Application.Top.Dispose ();
+        Application.Top = null;
+        Application.Shutdown ();
     }
 }
