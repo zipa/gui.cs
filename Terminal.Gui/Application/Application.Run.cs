@@ -505,6 +505,11 @@ public static partial class Application // Run (Begin, Run, End, Stop)
     {
         bool neededLayout = View.Layout (TopLevels.Reverse (), Screen.Size);
 
+        if (ClearScreenNextIteration)
+        {
+            forceDraw = true;
+            ClearScreenNextIteration = false;
+        }
         if (forceDraw)
         {
             Driver?.ClearContents ();
@@ -688,6 +693,6 @@ public static partial class Application // Run (Begin, Run, End, Stop)
         runState.Toplevel = null;
         runState.Dispose ();
 
-        LayoutAndDraw ();
+        LayoutAndDraw (true);
     }
 }
