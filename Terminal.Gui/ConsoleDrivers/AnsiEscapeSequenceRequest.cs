@@ -52,7 +52,7 @@ public class AnsiEscapeSequenceRequest
     ///     Only call this method from the main UI thread. You should use <see cref="AnsiRequestScheduler"/> if
     ///     sending many requests.
     /// </summary>
-    public void Send () { Application.Driver?.RawWrite (Request); }
+    public void Send () { Application.Driver?.WriteRaw (Request); }
 
 
     /// <summary>

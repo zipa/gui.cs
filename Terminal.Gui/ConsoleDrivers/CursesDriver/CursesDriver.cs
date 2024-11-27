@@ -116,11 +116,6 @@ internal class CursesDriver : ConsoleDriver
         }
     }
 
-    /// <inheritdoc />
-    internal override void RawWrite (string str)
-    {
-        Console.Out.Write (str);
-    }
 
     public override void Suspend ()
     {

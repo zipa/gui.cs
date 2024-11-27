@@ -400,9 +400,6 @@ public class FakeDriver : ConsoleDriver
     /// <inheritdoc />
     internal override IAnsiResponseParser GetParser () => _parser;
 
-    /// <inheritdoc />
-    internal override void RawWrite (string str) { }
-
     public void SetBufferSize (int width, int height)
     {
         FakeConsole.SetBufferSize (width, height);

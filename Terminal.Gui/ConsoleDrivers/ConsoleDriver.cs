@@ -48,7 +48,7 @@ public abstract class ConsoleDriver : IConsoleDriver
     /// <summary>
     /// How long after Esc has been pressed before we give up on getting an Ansi escape sequence
     /// </summary>
-    internal TimeSpan EscTimeout = TimeSpan.FromMilliseconds (50);
+    public TimeSpan EscTimeout { get; } = TimeSpan.FromMilliseconds (50);
 
     // As performance is a concern, we keep track of the dirty lines and only refresh those.
     // This is in addition to the dirty flag on each cell.
@@ -710,16 +710,10 @@ public abstract class ConsoleDriver : IConsoleDriver
 
     internal abstract IAnsiResponseParser GetParser ();
 
-    internal AnsiRequestScheduler GetRequestScheduler ()
+    public AnsiRequestScheduler GetRequestScheduler ()
     {
         // Lazy initialization because GetParser is virtual
         return _scheduler ??= new (GetParser ());
     }
 
-    /// <summary>
-    /// Writes the given <paramref name="str"/> directly to the console (rather than the output
-    /// draw buffer).
-    /// </summary>
-    /// <param name="str"></param>
-    internal abstract void RawWrite (string str);
 }

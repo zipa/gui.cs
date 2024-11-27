@@ -11,11 +11,11 @@ internal class NetEvents : IDisposable
     //CancellationTokenSource _waitForStartCancellationTokenSource;
     private readonly ManualResetEventSlim _winChange = new (false);
     private readonly BlockingCollection<InputResult?> _inputQueue = new (new ConcurrentQueue<InputResult?> ());
-    private readonly ConsoleDriver _consoleDriver;
+    private readonly IConsoleDriver _consoleDriver;
 
     public AnsiResponseParser<ConsoleKeyInfo> Parser { get; private set; } = new ();
 
-    public NetEvents (ConsoleDriver consoleDriver)
+    public NetEvents (IConsoleDriver consoleDriver)
     {
         _consoleDriver = consoleDriver ?? throw new ArgumentNullException (nameof (consoleDriver));
 

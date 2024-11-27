@@ -386,7 +386,7 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
                                              new ()
                                              {
                                                  Request = EscSeqUtils.CSI_SendDeviceAttributes.Request,
-                                                 Terminator = EscSeqUtils.CSI_ReportDeviceAttributes_Terminator,
+                                                 Terminator = EscSeqUtils.CSI_SendDeviceAttributes.Terminator,
                                                  ResponseReceived = HandleResponse
                                              });
         sends.Add (DateTime.Now);
