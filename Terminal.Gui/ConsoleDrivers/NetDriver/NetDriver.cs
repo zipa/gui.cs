@@ -226,10 +226,8 @@ internal class NetDriver : ConsoleDriver
     /// <inheritdoc />
     internal override IAnsiResponseParser GetParser () => _mainLoopDriver._netEvents.Parser;
     internal NetMainLoop? _mainLoopDriver;
+
     /// <inheritdoc />
-
-    
-
     public override MainLoop Init ()
     {
         PlatformID p = Environment.OSVersion.Platform;
@@ -299,7 +297,6 @@ internal class NetDriver : ConsoleDriver
         _mainLoopDriver.ProcessInput = ProcessInput;
 
         return new (_mainLoopDriver);
-        return new MainLoop (_mainLoopDriver);
     }
 
     private void ProcessInput (InputResult inputEvent)
