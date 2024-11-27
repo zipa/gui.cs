@@ -581,6 +581,7 @@ internal class CursesDriver : ConsoleDriver
 
     private Curses.Window? _window;
     private UnixMainLoop? _mainLoopDriver;
+    // BUGBUG: Fix this nullable issue.
     private object _processInputToken;
 
     public override MainLoop Init ()
@@ -730,6 +731,7 @@ internal class CursesDriver : ConsoleDriver
 
                 while (wch2 == Curses.KeyMouse)
                 {
+                    // BUGBUG: Fix this nullable issue.
                     Key kea = null;
 
                     ConsoleKeyInfo [] cki =
@@ -739,6 +741,7 @@ internal class CursesDriver : ConsoleDriver
                         new ('<', 0, false, false, false)
                     };
                     code = 0;
+                    // BUGBUG: Fix this nullable issue.
                     HandleEscSeqResponse (ref code, ref k, ref wch2, ref kea, ref cki);
                 }
 
@@ -796,6 +799,7 @@ internal class CursesDriver : ConsoleDriver
                 k = KeyCode.AltMask | MapCursesKey (wch);
             }
 
+            // BUGBUG: Fix this nullable issue.
             Key key = null;
 
             if (code == 0)
@@ -826,6 +830,7 @@ internal class CursesDriver : ConsoleDriver
                     [
                         new ((char)KeyCode.Esc, 0, false, false, false), new ((char)wch2, 0, false, false, false)
                     ];
+                    // BUGBUG: Fix this nullable issue.
                     HandleEscSeqResponse (ref code, ref k, ref wch2, ref key, ref cki);
 
                     return;
@@ -954,6 +959,7 @@ internal class CursesDriver : ConsoleDriver
 
             if (wch2 == 0 || wch2 == 27 || wch2 == Curses.KeyMouse)
             {
+                // BUGBUG: Fix this nullable issue.
                 EscSeqUtils.DecodeEscSeq (
                                           ref consoleKeyInfo,
                                           ref ck,
@@ -977,6 +983,7 @@ internal class CursesDriver : ConsoleDriver
                         OnMouseEvent (new () { Flags = mf, Position = pos });
                     }
 
+                    // BUGBUG: Fix this nullable issue.
                     cki = null;
 
                     if (wch2 == 27)
