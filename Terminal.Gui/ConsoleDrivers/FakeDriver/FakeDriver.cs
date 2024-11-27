@@ -40,6 +40,9 @@ public class FakeDriver : ConsoleDriver
     public static Behaviors FakeBehaviors = new ();
     public override bool SupportsTrueColor => false;
 
+    /// <inheritdoc />
+    public override void WriteRaw (string ansi) { throw new NotImplementedException (); }
+
     public FakeDriver ()
     {
         Cols = FakeConsole.WindowWidth = FakeConsole.BufferWidth = FakeConsole.WIDTH;
