@@ -4,29 +4,29 @@ namespace Terminal.Gui;
 
 internal abstract class AnsiResponseParserBase : IAnsiResponseParser
 {
-    protected object lockExpectedResponses = new ();
+    protected object _lockExpectedResponses = new ();
 
-    protected object lockState = new ();
+    protected object _lockState = new ();
 
     /// <summary>
     ///     Responses we are expecting to come in.
     /// </summary>
-    protected readonly List<AnsiResponseExpectation> expectedResponses = new ();
+    protected readonly List<AnsiResponseExpectation> _expectedResponses = [];
 
     /// <summary>
     ///     Collection of responses that we <see cref="StopExpecting"/>.
     /// </summary>
-    protected readonly List<AnsiResponseExpectation> lateResponses = new ();
+    protected readonly List<AnsiResponseExpectation> _lateResponses = [];
 
     /// <summary>
     ///     Responses that you want to look out for that will come in continuously e.g. mouse events.
     ///     Key is the terminator.
     /// </summary>
-    protected readonly List<AnsiResponseExpectation> persistentExpectations = new ();
+    protected readonly List<AnsiResponseExpectation> _persistentExpectations = [];
 
     private AnsiResponseParserState _state = AnsiResponseParserState.Normal;
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public AnsiResponseParserState State
     {
         get => _state;
@@ -37,7 +37,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
         }
     }
 
-    protected readonly IHeld heldContent;
+    protected readonly IHeld _heldContent;
 
     /// <summary>
     ///     When <see cref="State"/> was last changed.
@@ -48,8 +48,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     // see CSI in https://invisible-island.net/xterm/ctlseqs/ctlseqs.html#h3-Functions-using-CSI-_-ordered-by-the-final-character_s
     // No - N or O
     protected readonly HashSet<char> _knownTerminators = new (
-                                                              new []
-                                                              {
+                                                              [
                                                                   '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
 
                                                                   // No - N or O
@@ -58,14 +57,18 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
                                                                   'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
                                                                   'l', 'm', 'n',
                                                                   'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'
-                                                              });
+                                                              ]);
 
-    protected AnsiResponseParserBase (IHeld heldContent) { this.heldContent = heldContent; }
+    protected AnsiResponseParserBase (IHeld heldContent) { _heldContent = heldContent; }
 
     protected void ResetState ()
     {
         State = AnsiResponseParserState.Normal;
-        heldContent.ClearHeld ();
+
+        lock (_lockState)
+        {
+            _heldContent.ClearHeld ();
+        }
     }
 
     /// <summary>
@@ -87,7 +90,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
         int inputLength
     )
     {
-        lock (lockState)
+        lock (_lockState)
         {
             ProcessInputBaseImpl (getCharAtIndex, getObjectAtIndex, appendOutput, inputLength);
         }
@@ -116,7 +119,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
                     {
                         // Escape character detected, move to ExpectingBracket state
                         State = AnsiResponseParserState.ExpectingBracket;
-                        heldContent.AddToHeld (currentObj); // Hold the escape character
+                        _heldContent.AddToHeld (currentObj); // Hold the escape character
                     }
                     else
                     {
@@ -131,13 +134,13 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
                     {
                         // Second escape so we must release first
                         ReleaseHeld (appendOutput, AnsiResponseParserState.ExpectingBracket);
-                        heldContent.AddToHeld (currentObj); // Hold the new escape
+                        _heldContent.AddToHeld (currentObj); // Hold the new escape
                     }
                     else if (currentChar == '[')
                     {
                         // Detected '[', transition to InResponse state
                         State = AnsiResponseParserState.InResponse;
-                        heldContent.AddToHeld (currentObj); // Hold the '['
+                        _heldContent.AddToHeld (currentObj); // Hold the '['
                     }
                     else
                     {
@@ -149,7 +152,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
                     break;
 
                 case AnsiResponseParserState.InResponse:
-                    heldContent.AddToHeld (currentObj);
+                    _heldContent.AddToHeld (currentObj);
 
                     // Check if the held content should be released
                     if (ShouldReleaseHeldContent ())
@@ -166,73 +169,76 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
 
     private void ReleaseHeld (Action<object> appendOutput, AnsiResponseParserState newState = AnsiResponseParserState.Normal)
     {
-        foreach (object o in heldContent.HeldToObjects ())
+        foreach (object o in _heldContent.HeldToObjects ())
         {
             appendOutput (o);
         }
 
         State = newState;
-        heldContent.ClearHeld ();
+        _heldContent.ClearHeld ();
     }
 
     // Common response handler logic
     protected bool ShouldReleaseHeldContent ()
     {
-        string cur = heldContent.HeldToString ();
-
-        lock (lockExpectedResponses)
+        lock (_lockState)
         {
-            // Look for an expected response for what is accumulated so far (since Esc)
-            if (MatchResponse (
-                               cur,
-                               expectedResponses,
-                               true,
-                               true))
+            string cur = _heldContent.HeldToString ();
+
+            lock (_lockExpectedResponses)
             {
-                return false;
+                // Look for an expected response for what is accumulated so far (since Esc)
+                if (MatchResponse (
+                                   cur,
+                                   _expectedResponses,
+                                   true,
+                                   true))
+                {
+                    return false;
+                }
+
+                // Also try looking for late requests - in which case we do not invoke but still swallow content to avoid corrupting downstream
+                if (MatchResponse (
+                                   cur,
+                                   _lateResponses,
+                                   false,
+                                   true))
+                {
+                    return false;
+                }
+
+                // Look for persistent requests
+                if (MatchResponse (
+                                   cur,
+                                   _persistentExpectations,
+                                   true,
+                                   false))
+                {
+                    return false;
+                }
             }
 
-            // Also try looking for late requests - in which case we do not invoke but still swallow content to avoid corrupting downstream
-            if (MatchResponse (
-                               cur,
-                               lateResponses,
-                               false,
-                               true))
+            // Finally if it is a valid ansi response but not one we are expect (e.g. its mouse activity)
+            // then we can release it back to input processing stream
+            if (_knownTerminators.Contains (cur.Last ()) && cur.StartsWith (EscSeqUtils.CSI))
             {
-                return false;
+                // We have found a terminator so bail
+                State = AnsiResponseParserState.Normal;
+
+                // Maybe swallow anyway if user has custom delegate
+                bool swallow = ShouldSwallowUnexpectedResponse ();
+
+                if (swallow)
+                {
+                    _heldContent.ClearHeld ();
+
+                    // Do not send back to input stream
+                    return false;
+                }
+
+                // Do release back to input stream
+                return true;
             }
-
-            // Look for persistent requests
-            if (MatchResponse (
-                               cur,
-                               persistentExpectations,
-                               true,
-                               false))
-            {
-                return false;
-            }
-        }
-
-        // Finally if it is a valid ansi response but not one we are expect (e.g. its mouse activity)
-        // then we can release it back to input processing stream
-        if (_knownTerminators.Contains (cur.Last ()) && cur.StartsWith (EscSeqUtils.CSI))
-        {
-            // We have found a terminator so bail
-            State = AnsiResponseParserState.Normal;
-
-            // Maybe swallow anyway if user has custom delegate
-            bool swallow = ShouldSwallowUnexpectedResponse ();
-
-            if (swallow)
-            {
-                heldContent.ClearHeld ();
-
-                // Do not send back to input stream
-                return false;
-            }
-
-            // Do release back to input stream
-            return true;
         }
 
         return false; // Continue accumulating
@@ -241,7 +247,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     /// <summary>
     ///     <para>
     ///         When overriden in a derived class, indicates whether the unexpected response
-    ///         currently in <see cref="heldContent"/> should be released or swallowed.
+    ///         currently in <see cref="_heldContent"/> should be released or swallowed.
     ///         Use this to enable default event for escape codes.
     ///     </para>
     ///     <remarks>
@@ -261,7 +267,7 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
         {
             if (invokeCallback)
             {
-                matchingResponse.Response.Invoke (heldContent);
+                matchingResponse.Response.Invoke (_heldContent);
             }
 
             ResetState ();
@@ -278,17 +284,17 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     }
 
     /// <inheritdoc/>
-    public void ExpectResponse (string terminator, Action<string> response,Action? abandoned, bool persistent)
+    public void ExpectResponse (string terminator, Action<string> response, Action? abandoned, bool persistent)
     {
-        lock (lockExpectedResponses)
+        lock (_lockExpectedResponses)
         {
             if (persistent)
             {
-                persistentExpectations.Add (new (terminator, h => response.Invoke (h.HeldToString ()), abandoned));
+                _persistentExpectations.Add (new (terminator, h => response.Invoke (h.HeldToString ()), abandoned));
             }
             else
             {
-                expectedResponses.Add (new (terminator, h => response.Invoke (h.HeldToString ()), abandoned));
+                _expectedResponses.Add (new (terminator, h => response.Invoke (h.HeldToString ()), abandoned));
             }
         }
     }
@@ -296,36 +302,36 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     /// <inheritdoc/>
     public bool IsExpecting (string terminator)
     {
-        lock (lockExpectedResponses)
+        lock (_lockExpectedResponses)
         {
             // If any of the new terminator matches any existing terminators characters it's a collision so true.
-            return expectedResponses.Any (r => r.Terminator.Intersect (terminator).Any ());
+            return _expectedResponses.Any (r => r.Terminator.Intersect (terminator).Any ());
         }
     }
 
     /// <inheritdoc/>
     public void StopExpecting (string terminator, bool persistent)
     {
-        lock (lockExpectedResponses)
+        lock (_lockExpectedResponses)
         {
             if (persistent)
             {
-                AnsiResponseExpectation [] removed = persistentExpectations.Where (r => r.Matches (terminator)).ToArray ();
+                AnsiResponseExpectation [] removed = _persistentExpectations.Where (r => r.Matches (terminator)).ToArray ();
 
-                foreach (var toRemove in removed)
+                foreach (AnsiResponseExpectation toRemove in removed)
                 {
-                    persistentExpectations.Remove (toRemove);
+                    _persistentExpectations.Remove (toRemove);
                     toRemove.Abandoned?.Invoke ();
                 }
             }
             else
             {
-                AnsiResponseExpectation [] removed = expectedResponses.Where (r => r.Terminator == terminator).ToArray ();
+                AnsiResponseExpectation [] removed = _expectedResponses.Where (r => r.Terminator == terminator).ToArray ();
 
                 foreach (AnsiResponseExpectation r in removed)
                 {
-                    expectedResponses.Remove (r);
-                    lateResponses.Add (r);
+                    _expectedResponses.Remove (r);
+                    _lateResponses.Add (r);
                     r.Abandoned?.Invoke ();
                 }
             }
@@ -333,10 +339,8 @@ internal abstract class AnsiResponseParserBase : IAnsiResponseParser
     }
 }
 
-internal class AnsiResponseParser<T> : AnsiResponseParserBase
+internal class AnsiResponseParser<T> () : AnsiResponseParserBase (new GenericHeld<T> ())
 {
-    public AnsiResponseParser () : base (new GenericHeld<T> ()) { }
-
     /// <inheritdoc cref="AnsiResponseParser.UnknownResponseHandler"/>
     public Func<IEnumerable<Tuple<char, T>>, bool> UnexpectedResponseHandler { get; set; } = _ => false;
 
@@ -353,10 +357,10 @@ internal class AnsiResponseParser<T> : AnsiResponseParserBase
         return output;
     }
 
-    public Tuple<char, T>[] Release ()
+    public Tuple<char, T> [] Release ()
     {
         // Lock in case Release is called from different Thread from parse
-        lock (lockState)
+        lock (_lockState)
         {
             Tuple<char, T> [] result = HeldToEnumerable ().ToArray ();
 
@@ -366,7 +370,7 @@ internal class AnsiResponseParser<T> : AnsiResponseParserBase
         }
     }
 
-    private IEnumerable<Tuple<char, T>> HeldToEnumerable () { return (IEnumerable<Tuple<char, T>>)heldContent.HeldToObjects (); }
+    private IEnumerable<Tuple<char, T>> HeldToEnumerable () { return (IEnumerable<Tuple<char, T>>)_heldContent.HeldToObjects (); }
 
     /// <summary>
     ///     'Overload' for specifying an expectation that requires the metadata as well as characters. Has
@@ -376,17 +380,17 @@ internal class AnsiResponseParser<T> : AnsiResponseParserBase
     /// <param name="response"></param>
     /// <param name="abandoned"></param>
     /// <param name="persistent"></param>
-    public void ExpectResponseT (string terminator, Action<IEnumerable<Tuple<char, T>>> response,Action? abandoned, bool persistent)
+    public void ExpectResponseT (string terminator, Action<IEnumerable<Tuple<char, T>>> response, Action? abandoned, bool persistent)
     {
-        lock (lockExpectedResponses)
+        lock (_lockExpectedResponses)
         {
             if (persistent)
             {
-                persistentExpectations.Add (new (terminator, h => response.Invoke (HeldToEnumerable ()), abandoned));
+                _persistentExpectations.Add (new (terminator, h => response.Invoke (HeldToEnumerable ()), abandoned));
             }
             else
             {
-                expectedResponses.Add (new (terminator, h => response.Invoke (HeldToEnumerable ()), abandoned));
+                _expectedResponses.Add (new (terminator, h => response.Invoke (HeldToEnumerable ()), abandoned));
             }
         }
     }
@@ -395,7 +399,7 @@ internal class AnsiResponseParser<T> : AnsiResponseParserBase
     protected override bool ShouldSwallowUnexpectedResponse () { return UnexpectedResponseHandler.Invoke (HeldToEnumerable ()); }
 }
 
-internal class AnsiResponseParser : AnsiResponseParserBase
+internal class AnsiResponseParser () : AnsiResponseParserBase (new StringHeld ())
 {
     /// <summary>
     ///     <para>
@@ -409,8 +413,6 @@ internal class AnsiResponseParser : AnsiResponseParserBase
     ///     </para>
     /// </summary>
     public Func<string, bool> UnknownResponseHandler { get; set; } = _ => false;
-
-    public AnsiResponseParser () : base (new StringHeld ()) { }
 
     public string ProcessInput (string input)
     {
@@ -427,9 +429,9 @@ internal class AnsiResponseParser : AnsiResponseParserBase
 
     public string Release ()
     {
-        lock (lockState)
+        lock (_lockState)
         {
-            string output = heldContent.HeldToString ();
+            string output = _heldContent.HeldToString ();
             ResetState ();
 
             return output;
@@ -437,5 +439,11 @@ internal class AnsiResponseParser : AnsiResponseParserBase
     }
 
     /// <inheritdoc/>
-    protected override bool ShouldSwallowUnexpectedResponse () { return UnknownResponseHandler.Invoke (heldContent.HeldToString ()); }
+    protected override bool ShouldSwallowUnexpectedResponse ()
+    {
+        lock (_lockState)
+        {
+            return UnknownResponseHandler.Invoke (_heldContent.HeldToString ());
+        }
+    }
 }

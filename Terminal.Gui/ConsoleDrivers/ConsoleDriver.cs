@@ -710,6 +710,10 @@ public abstract class ConsoleDriver : IConsoleDriver
 
     internal abstract IAnsiResponseParser GetParser ();
 
+    /// <summary>
+    ///     Gets the <see cref="AnsiRequestScheduler"/> for this <see cref="ConsoleDriver"/>.
+    /// </summary>
+    /// <returns></returns>
     public AnsiRequestScheduler GetRequestScheduler ()
     {
         // Lazy initialization because GetParser is virtual

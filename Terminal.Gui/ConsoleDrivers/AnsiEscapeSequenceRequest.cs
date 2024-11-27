@@ -16,6 +16,7 @@ public class AnsiEscapeSequenceRequest
     /// </summary>
     public required string Request { get; init; }
 
+    // BUGBUG: Nullable issue
     /// <summary>
     ///     Invoked when the console responds with an ANSI response code that matches the
     ///     <see cref="Terminator"/>
