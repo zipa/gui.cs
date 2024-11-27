@@ -104,7 +104,7 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
                                               }
 
                                               var selAnsiEscapeSequenceRequestName = scrRequests [cbRequests.SelectedItem];
-                                              AnsiEscapeSequenceRequest selAnsiEscapeSequenceRequest = null;
+                                              AnsiEscapeSequence selAnsiEscapeSequenceRequest = null;
 
                                               switch (selAnsiEscapeSequenceRequestName)
                                               {
@@ -157,7 +157,7 @@ public sealed class AnsiEscapeSequenceRequests : Scenario
 
         btnResponse.Accepting += (s, e) =>
                                  {
-                                     var ansiEscapeSequenceRequest = new AnsiEscapeSequenceRequest
+                                     var ansiEscapeSequenceRequest = new AnsiEscapeSequence
                                      {
                                          Request = tfRequest.Text,
                                          Terminator = tfTerminator.Text,

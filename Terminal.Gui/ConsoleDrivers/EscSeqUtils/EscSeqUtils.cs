@@ -1799,7 +1799,7 @@ public static class EscSeqUtils
     ///     https://terminalguide.namepad.de/seq/csi_sn__p-6/
     ///     The terminal reply to <see cref="CSI_RequestCursorPositionReport"/>. ESC [ ? (y) ; (x) ; 1 R
     /// </summary>
-    public static readonly AnsiEscapeSequenceRequest CSI_RequestCursorPositionReport = new () { Request = CSI + "?6n", Terminator = "R" };
+    public static readonly AnsiEscapeSequence CSI_RequestCursorPositionReport = new () { Request = CSI + "?6n", Terminator = "R" };
 
     /// <summary>
     ///     The terminal reply to <see cref="CSI_RequestCursorPositionReport"/>. ESC [ ? (y) ; (x) R
@@ -1826,30 +1826,30 @@ public static class EscSeqUtils
     ///     The terminator indicating a reply to <see cref="CSI_SendDeviceAttributes"/> or
     ///     <see cref="CSI_SendDeviceAttributes2"/>
     /// </summary>
-    public static readonly AnsiEscapeSequenceRequest CSI_SendDeviceAttributes = new () { Request = CSI + "0c", Terminator = "c" };
+    public static readonly AnsiEscapeSequence CSI_SendDeviceAttributes = new () { Request = CSI + "0c", Terminator = "c" };
 
     /// <summary>
     ///     ESC [ > 0 c - Send Device Attributes (Secondary DA)
     ///     Windows Terminal v1.18+ emits: "\x1b[>0;10;1c" (vt100, firmware version 1.0, vt220)
     /// </summary>
-    public static readonly AnsiEscapeSequenceRequest CSI_SendDeviceAttributes2 = new () { Request = CSI + ">0c", Terminator = "c" };
+    public static readonly AnsiEscapeSequence CSI_SendDeviceAttributes2 = new () { Request = CSI + ">0c", Terminator = "c" };
 
     /// <summary>
     ///     CSI 16 t - Request sixel resolution (width and height in pixels)
     /// </summary>
-    public static readonly AnsiEscapeSequenceRequest CSI_RequestSixelResolution = new () { Request = CSI + "16t", Terminator = "t" };
+    public static readonly AnsiEscapeSequence CSI_RequestSixelResolution = new () { Request = CSI + "16t", Terminator = "t" };
 
     /// <summary>
     ///     CSI 14 t - Request window size in pixels (width x height)
     /// </summary>
-    public static readonly AnsiEscapeSequenceRequest CSI_RequestWindowSizeInPixels = new () { Request = CSI + "14t", Terminator = "t" };
+    public static readonly AnsiEscapeSequence CSI_RequestWindowSizeInPixels = new () { Request = CSI + "14t", Terminator = "t" };
 
     /// <summary>
     ///     CSI 1 8 t  | yes | yes |  yes  | report window size in chars
     ///     https://terminalguide.namepad.de/seq/csi_st-18/
     ///     The terminator indicating a reply to <see cref="CSI_ReportTerminalSizeInChars"/> : ESC [ 8 ; height ; width t
     /// </summary>
-    public static readonly AnsiEscapeSequenceRequest CSI_ReportTerminalSizeInChars = new () { Request = CSI + "18t", Terminator = "t", Value = "8" };
+    public static readonly AnsiEscapeSequence CSI_ReportTerminalSizeInChars = new () { Request = CSI + "18t", Terminator = "t", Value = "8" };
 
 
     /// <summary>

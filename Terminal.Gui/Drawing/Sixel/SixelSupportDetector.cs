@@ -127,7 +127,7 @@ public class SixelSupportDetector
                       () => resultCallback (result));
     }
 
-    private static void QueueRequest (AnsiEscapeSequenceRequest req, Action<string> responseCallback, Action abandoned)
+    private static void QueueRequest (AnsiEscapeSequence req, Action<string> responseCallback, Action abandoned)
     {
         var newRequest = new AnsiEscapeSequenceRequest
         {

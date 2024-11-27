@@ -581,8 +581,7 @@ internal class CursesDriver : ConsoleDriver
 
     private Curses.Window? _window;
     private UnixMainLoop? _mainLoopDriver;
-    // BUGBUG: Fix this nullable issue.
-    private object _processInputToken;
+    private object? _processInputToken;
 
     public override MainLoop Init ()
     {
@@ -1111,7 +1110,7 @@ internal class CursesDriver : ConsoleDriver
         StopReportingMouseMoves ();
         SetCursorVisibility (CursorVisibility.Default);
 
-        if (_mainLoopDriver is { })
+        if (_mainLoopDriver is { } && _processInputToken != null)
         {
             _mainLoopDriver.RemoveWatch (_processInputToken);
         }
