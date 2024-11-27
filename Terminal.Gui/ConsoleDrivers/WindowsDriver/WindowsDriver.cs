@@ -590,7 +590,7 @@ internal class WindowsDriver : ConsoleDriver
             yield break;
         }
 
-        foreach (var i in ShouldRelease ())
+        foreach (var i in ShouldReleaseParserHeldKeys ())
         {
             yield return i;
         }
@@ -602,7 +602,7 @@ internal class WindowsDriver : ConsoleDriver
         }
     }
 
-    public IEnumerable<WindowsConsole.InputRecord> ShouldRelease ()
+    public IEnumerable<WindowsConsole.InputRecord> ShouldReleaseParserHeldKeys ()
     {
         if (_parser.State == AnsiResponseParserState.ExpectingBracket &&
             DateTime.Now - _parser.StateChangedAt > EscTimeout)

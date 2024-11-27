@@ -78,7 +78,7 @@ internal class NetEvents : IDisposable
         {
             Task.Delay (100, _netEventsDisposed.Token).Wait (_netEventsDisposed.Token);
 
-            foreach (var k in ShouldRelease ())
+            foreach (var k in ShouldReleaseParserHeldKeys ())
             {
                 ProcessMapConsoleKeyInfo (k);
             }
@@ -94,7 +94,7 @@ internal class NetEvents : IDisposable
         return default (ConsoleKeyInfo);
     }
 
-    public IEnumerable<ConsoleKeyInfo> ShouldRelease ()
+    public IEnumerable<ConsoleKeyInfo> ShouldReleaseParserHeldKeys ()
     {
         if (Parser.State == AnsiResponseParserState.ExpectingBracket &&
             DateTime.Now - Parser.StateChangedAt > _consoleDriver.EscTimeout)

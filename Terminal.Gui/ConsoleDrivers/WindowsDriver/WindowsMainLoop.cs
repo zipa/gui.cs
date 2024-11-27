@@ -112,7 +112,7 @@ internal class WindowsMainLoop : IMainLoopDriver
 
     void IMainLoopDriver.Iteration ()
     {
-        foreach (var i in ((WindowsDriver)_consoleDriver).ShouldRelease ())
+        foreach (var i in ((WindowsDriver)_consoleDriver).ShouldReleaseParserHeldKeys ())
         {
             ((WindowsDriver)_consoleDriver).ProcessInputAfterParsing (i);
         }
