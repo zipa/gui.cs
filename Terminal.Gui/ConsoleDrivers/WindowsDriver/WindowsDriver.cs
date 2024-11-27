@@ -36,12 +36,11 @@ internal class WindowsDriver : ConsoleDriver
 
     private WindowsConsole.ButtonState? _lastMouseButtonPressed;
     private WindowsMainLoop? _mainLoopDriver;
-    private WindowsConsole.ExtendedCharInfo [] _outputBuffer;
+    private WindowsConsole.ExtendedCharInfo [] _outputBuffer = new WindowsConsole.ExtendedCharInfo [0 * 0];
     private Point? _point;
     private Point _pointMove;
     private bool _processButtonClick;
 
-    // BUGBUG: Fix this nullable issue.
     public WindowsDriver ()
     {
         if (Environment.OSVersion.Platform == PlatformID.Win32NT)
