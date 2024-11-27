@@ -225,6 +225,11 @@ internal class WindowsDriver : ConsoleDriver
 
     public override void UpdateCursor ()
     {
+        if (RunningUnitTests)
+        {
+            return;
+        }
+
         if (Col < 0 || Row < 0 || Col >= Cols || Row >= Rows)
         {
             GetCursorVisibility (out CursorVisibility cursorVisibility);
