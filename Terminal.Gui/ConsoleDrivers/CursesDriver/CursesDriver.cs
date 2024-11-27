@@ -507,8 +507,8 @@ internal class CursesDriver : ConsoleDriver
     private CursorVisibility? _currentCursorVisibility;
     private CursorVisibility? _initialCursorVisibility;
 
-    /// <inheritdoc/>
-    public override bool EnsureCursorVisibility ()
+
+    private void EnsureCursorVisibility ()
     {
         if (!(Col >= 0 && Row >= 0 && Col < Cols && Row < Rows))
         {
@@ -516,12 +516,10 @@ internal class CursesDriver : ConsoleDriver
             _currentCursorVisibility = cursorVisibility;
             SetCursorVisibility (CursorVisibility.Invisible);
 
-            return false;
+            return;
         }
 
         SetCursorVisibility (_currentCursorVisibility ?? CursorVisibility.Default);
-
-        return _currentCursorVisibility == CursorVisibility.Default;
     }
 
     /// <inheritdoc/>

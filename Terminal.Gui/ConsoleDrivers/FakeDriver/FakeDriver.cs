@@ -377,7 +377,7 @@ public class FakeDriver : ConsoleDriver
     }
 
     /// <inheritdoc/>
-    public override bool EnsureCursorVisibility ()
+    private bool EnsureCursorVisibility ()
     {
         if (!(Col >= 0 && Row >= 0 && Col < Cols && Row < Rows))
         {

@@ -452,7 +452,7 @@ public abstract class ConsoleDriver : IConsoleDriver
     /// Sets <see cref="Contents"/> as dirty for situations where views
     /// don't need layout and redrawing, but just refresh the screen.
     /// </summary>
-    public void SetContentsAsDirty ()
+    protected void SetContentsAsDirty ()
     {
         lock (Contents!)
         {
@@ -479,10 +479,6 @@ public abstract class ConsoleDriver : IConsoleDriver
     #endregion Screen and Contents
 
     #region Cursor Handling
-
-    /// <summary>Determines if the terminal cursor should be visible or not and sets it accordingly.</summary>
-    /// <returns><see langword="true"/> upon success</returns>
-    public abstract bool EnsureCursorVisibility ();
 
     /// <summary>Gets the terminal cursor visibility.</summary>
     /// <param name="visibility">The current <see cref="CursorVisibility"/></param>

@@ -496,7 +496,7 @@ internal class NetDriver : ConsoleDriver
         return visibility == CursorVisibility.Default;
     }
 
-    public override bool EnsureCursorVisibility ()
+    private void EnsureCursorVisibility ()
     {
         if (!(Col >= 0 && Row >= 0 && Col < Cols && Row < Rows))
         {
@@ -504,12 +504,10 @@ internal class NetDriver : ConsoleDriver
             _cachedCursorVisibility = cursorVisibility;
             SetCursorVisibility (CursorVisibility.Invisible);
 
-            return false;
+            return;
         }
 
         SetCursorVisibility (_cachedCursorVisibility ?? CursorVisibility.Default);
-
-        return _cachedCursorVisibility == CursorVisibility.Default;
     }
 
     #endregion

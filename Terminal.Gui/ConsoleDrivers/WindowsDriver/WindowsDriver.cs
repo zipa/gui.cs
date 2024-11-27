@@ -293,35 +293,6 @@ internal class WindowsDriver : ConsoleDriver
             return WinConsole?.WriteANSI (sb.ToString ()) ?? false;
         }
     }
-
-    /// <inheritdoc/>
-    public override bool EnsureCursorVisibility ()
-    {
-        if (Force16Colors)
-        {
-            return WinConsole is null || WinConsole.EnsureCursorVisibility ();
-        }
-        else
-        {
-            var sb = new StringBuilder ();
-            sb.Append (_cachedCursorVisibility != CursorVisibility.Invisible ? EscSeqUtils.CSI_ShowCursor : EscSeqUtils.CSI_HideCursor);
-            return WinConsole?.WriteANSI (sb.ToString ()) ?? false;
-        }
-
-        //if (!(Col >= 0 && Row >= 0 && Col < Cols && Row < Rows))
-        //{
-        //    GetCursorVisibility (out CursorVisibility cursorVisibility);
-        //    _cachedCursorVisibility = cursorVisibility;
-        //    SetCursorVisibility (CursorVisibility.Invisible);
-
-        //    return false;
-        //}
-
-        //SetCursorVisibility (_cachedCursorVisibility ?? CursorVisibility.Default);
-
-        //return _cachedCursorVisibility == CursorVisibility.Default;
-    }
-
     #endregion Cursor Handling
 
     public override bool UpdateScreen ()

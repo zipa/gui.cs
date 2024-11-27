@@ -200,18 +200,6 @@ public interface IConsoleDriver
     /// </summary>
     event EventHandler<EventArgs>? ClearedContents;
 
-    // BUGBUG: This is not referenced. Can it be removed?
-    /// <summary>
-    ///     Sets <see cref="ConsoleDriver.Contents"/> as dirty for situations where views
-    ///     don't need layout and redrawing, but just refresh the screen.
-    /// </summary>
-    void SetContentsAsDirty ();
-
-    // BUGBUG: This is not referenced. Can it be removed?
-    /// <summary>Determines if the terminal cursor should be visible or not and sets it accordingly.</summary>
-    /// <returns><see langword="true"/> upon success</returns>
-    bool EnsureCursorVisibility ();
-
     /// <summary>Gets the terminal cursor visibility.</summary>
     /// <param name="visibility">The current <see cref="CursorVisibility"/></param>
     /// <returns><see langword="true"/> upon success</returns>
