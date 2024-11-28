@@ -937,6 +937,15 @@ internal class CursesDriver : ConsoleDriver
             OnSizeChanged (new SizeChangedEventArgs (new (Cols, Rows)));
         }
     }
+    static string ConvertToString (ConsoleKeyInfo [] keyInfos)
+    {
+        char [] chars = new char [keyInfos.Length];
+        for (int i = 0; i < keyInfos.Length; i++)
+        {
+            chars [i] = keyInfos [i].KeyChar;
+        }
+        return new string (chars);
+    }
 
     private void HandleEscSeqResponse (
         ref int code,
@@ -956,6 +965,17 @@ internal class CursesDriver : ConsoleDriver
 
             if (wch2 == 0 || wch2 == 27 || wch2 == Curses.KeyMouse)
             {
+                // Give ansi parser a chance to deal with the escape sequence
+                if (cki != null && string.IsNullOrEmpty(_parser.ProcessInput (ConvertToString(cki))))
+                {
+                    // Parser fully consumed all keys meaning keys are processed - job done
+                    return;
+                }
+
+                // Ansi parser could not deal with it either because it is not expecting
+                // the given terminator (e.g. mouse) or did not understand format somehow.
+                // Carry on with the older code for processing curses escape codes
+
                 // BUGBUG: Fix this nullable issue.
                 EscSeqUtils.DecodeEscSeq (
                                           ref consoleKeyInfo,
@@ -999,14 +1019,6 @@ internal class CursesDriver : ConsoleDriver
                 }
                 else
                 {
-                    if (cki != null)
-                    {
-                        foreach (var c in cki)
-                        {
-                            _parser.ProcessInput (c.KeyChar.ToString());
-                        }
-                    }
-
                     k = ConsoleKeyMapping.MapConsoleKeyInfoToKeyCode (consoleKeyInfo);
                     keyEventArgs = new Key (k);
                     OnKeyDown (keyEventArgs);
