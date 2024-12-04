@@ -198,6 +198,7 @@ public class SetupFakeDriverAttribute : BeforeAfterTestAttribute
         View.Diagnostics = ViewDiagnosticFlags.Off;
 
         Application.ResetState (true);
+        Assert.Null (Application.Driver);
         Assert.Equal (new (0, 0, 2048, 2048), Application.Screen);
         base.After (methodUnderTest);
     }
@@ -209,6 +210,9 @@ public class SetupFakeDriverAttribute : BeforeAfterTestAttribute
         Application.ResetState (true);
         Assert.Null (Application.Driver);
         Application.Driver = new FakeDriver { Rows = 25, Cols = 25 };
+        Assert.Equal (new (0, 0, 25, 25), Application.Screen);
+        // Ensures subscribing events, at least for the SizeChanged event
+        Application.InitState ();
 
         base.Before (methodUnderTest);
     }

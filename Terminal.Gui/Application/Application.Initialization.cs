@@ -163,10 +163,7 @@ public static partial class Application // Initialization (Init/Shutdown)
                                                 );
         }
 
-        Driver.SizeChanged += Driver_SizeChanged;
-        Driver.KeyDown += Driver_KeyDown;
-        Driver.KeyUp += Driver_KeyUp;
-        Driver.MouseEvent += Driver_MouseEvent;
+        InitState ();
 
         SynchronizationContext.SetSynchronizationContext (new MainLoopSyncContext ());
 
@@ -174,6 +171,16 @@ public static partial class Application // Initialization (Init/Shutdown)
         MainThreadId = Thread.CurrentThread.ManagedThreadId;
         bool init = Initialized = true;
         InitializedChanged?.Invoke (null, new (init));
+    }
+
+    internal static void InitState ()
+    {
+        ArgumentNullException.ThrowIfNull (Driver);
+
+        Driver.SizeChanged += Driver_SizeChanged;
+        Driver.KeyDown += Driver_KeyDown;
+        Driver.KeyUp += Driver_KeyUp;
+        Driver.MouseEvent += Driver_MouseEvent;
     }
 
     private static void Driver_SizeChanged (object? sender, SizeChangedEventArgs e) { OnSizeChanging (e); }
