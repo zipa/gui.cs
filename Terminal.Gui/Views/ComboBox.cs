@@ -80,7 +80,11 @@ public class ComboBox : View, IDesignable
         // Things this view knows how to do
         AddCommand (Command.Accept, (ctx) =>
                                     {
-                                        if (ctx.Data == _search)
+                                        if (ctx is not CommandContext<KeyBinding> keyCommandContext)
+                                        {
+                                            return false;
+                                        }
+                                        if (keyCommandContext.Binding.Data == _search)
                                         {
                                             return null;
                                         }

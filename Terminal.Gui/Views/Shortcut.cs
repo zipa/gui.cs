@@ -300,17 +300,18 @@ public class Shortcut : View, IOrientation, IDesignable
         AddCommand (Command.Select, DispatchCommand);
     }
 
-    private bool? DispatchCommand (ICommandContext commandContext)
+    private bool? DispatchCommand (ICommandContext? commandContext)
     {
         if (commandContext is not CommandContext<KeyBinding> ctx)
         {
             return false;
         }
-        if (ctx.Data != this)
+
+        if (ctx.Binding.Data != this)
         {
             // Invoke Select on the command view to cause it to change state if it wants to
             // If this causes CommandView to raise Accept, we eat it
-            ctx.Data = this;
+            ctx.Binding = ctx.Binding with { Data = this };
             CommandView.InvokeCommand (Command.Select, ctx);
         }
 
@@ -497,7 +498,7 @@ public class Shortcut : View, IOrientation, IDesignable
 
             void CommandViewOnSelecting (object? sender, CommandEventArgs e)
             {
-                if (e.Context.Data != this)
+                if (e.Context is CommandContext<KeyBinding> keyCommandContext && keyCommandContext.Binding.Data != this)
                 {
                     // Forward command to ourselves
                     InvokeCommand<KeyBinding> (Command.Select, new ([Command.Select], KeyBindingScope.Focused, null, this));

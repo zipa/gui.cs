@@ -133,16 +133,24 @@ public class MenuBar : View, IDesignable
                                                   {
                                                       CloseOtherOpenedMenuBar ();
 
-                                                      return Select (Menus.IndexOf (ctx.Data));
+                                                      if (ctx is not CommandContext<KeyBinding> keyCommandContext)
+                                                      {
+                                                          return false;
+                                                      }
+                                                      return Select (Menus.IndexOf (keyCommandContext.Binding.Data));
                                                   });
         AddCommand (Command.Select, ctx =>
                                     {
-                                        if (ctx.Data is MouseEventArgs)
+                                        if (ctx is not CommandContext<KeyBinding> keyCommandContext)
+                                        {
+                                            return false ;
+                                        }
+                                        if (keyCommandContext.Binding.Data is MouseEventArgs)
                                         {
                                             // HACK: Work around the fact that View.MouseClick always invokes Select
                                             return false;
                                         }
-                                        var res = Run ((ctx.Data as MenuItem)?.Action!);
+                                        var res = Run ((keyCommandContext.Binding.Data as MenuItem)?.Action!);
                                         CloseAllMenus ();
 
                                         return res;

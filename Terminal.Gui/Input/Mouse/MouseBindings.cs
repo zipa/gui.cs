@@ -2,7 +2,7 @@
 namespace Terminal.Gui;
 
 /// <summary>
-///     Provides a collection of <see cref="MouseBinding"/> objects bound to a combination of <see cref="MouseFlags"/>.
+///     Provides a collection of <see cref="MouseBinding"/> objects bound to a combination of <see cref="MouseEventArgs"/>.
 /// </summary>
 /// <seealso cref="View.MouseBindings"/>
 /// <seealso cref="Command"/>
@@ -15,15 +15,13 @@ public class MouseBindings
     public MouseBindings () { }
 
     /// <summary>Adds a <see cref="MouseBinding"/> to the collection.</summary>
-    /// <param name="mouseFlag"></param>
+    /// <param name="mouseEvent"></param>
     /// <param name="binding"></param>
-    public void Add (MouseFlags mouseFlag, MouseBinding binding)
+    public void Add (MouseEventArgs mouseEvent, MouseBinding binding)
     {
-        if (TryGet (mouseFlag, out MouseBinding _))
+        if (TryGet (mouseEvent, out MouseBinding _))
         {
-            throw new InvalidOperationException (@$"A binding for {mouseFlag} exists ({binding}).");
-
-            //Bindings [key] = binding;
+            throw new InvalidOperationException (@$"A binding for {mouseEvent} exists ({binding}).");
         }
 
 
@@ -31,7 +29,7 @@ public class MouseBindings
         // IMPORTANT: update the memory referenced by the key, and Dictionary uses caching for performance, and thus 
         // IMPORTANT: Apply will update the Dictionary with the new key, but the old key will still be in the dictionary.
         // IMPORTANT: See the ConfigurationManager.Illustrate_DeepMemberWiseCopy_Breaks_Dictionary test for details.
-        Bindings.Add (mouseFlag, binding);
+        Bindings.Add (mouseEvent, binding);
     }
 
     /// <summary>
@@ -45,15 +43,15 @@ public class MouseBindings
     ///     Commands are only ever applied to the current <see cref="View"/> (i.e. this feature cannot be used to switch
     ///     focus to another view and perform multiple commands there).
     /// </remarks>
-    /// <param name="mouseFlags">The mouse flags to check.</param>
+    /// <param name="mouseEvents">The mouse flags to check.</param>
     /// <param name="commands">
-    ///     The command to invoked on the <see cref="View"/> when <paramref name="mouseFlags"/> is received. When
-    ///     multiple commands are provided,they will be applied in sequence. The bound <paramref name="mouseFlags"/> event will be
+    ///     The command to invoked on the <see cref="View"/> when <paramref name="mouseEvents"/> is received. When
+    ///     multiple commands are provided,they will be applied in sequence. The bound <paramref name="mouseEvents"/> event will be
     ///     consumed if any took effect.
     /// </param>
-    public void Add (MouseFlags mouseFlags, params Command [] commands)
+    public void Add (MouseEventArgs mouseEvents, params Command [] commands)
     {
-        if (mouseFlags == MouseFlags.None)
+        if (mouseEvents.Flags == MouseFlags.None)
         {
             throw new ArgumentException (@"Invalid MouseFlag", nameof (commands));
         }
@@ -63,24 +61,24 @@ public class MouseBindings
             throw new ArgumentException (@"At least one command must be specified", nameof (commands));
         }
 
-        if (TryGet (mouseFlags, out MouseBinding binding))
+        if (TryGet (mouseEvents, out MouseBinding binding))
         {
-            throw new InvalidOperationException (@$"A binding for {mouseFlags} exists ({binding}).");
+            throw new InvalidOperationException (@$"A binding for {mouseEvents} exists ({binding}).");
         }
 
-        Add (mouseFlags, new MouseBinding (commands));
+        Add (mouseEvents, new MouseBinding (commands));
     }
 
     // TODO: Add a dictionary comparer that ignores Scope
     // TODO: This should not be public!
     /// <summary>The collection of <see cref="MouseBinding"/> objects.</summary>
-    public Dictionary<MouseFlags, MouseBinding> Bindings { get; } = new ();
+    public Dictionary<MouseEventArgs, MouseBinding> Bindings { get; } = new ();
 
     /// <summary>
-    ///     Gets the <see cref="MouseFlags"/> that are bound.
+    ///     Gets the <see cref="MouseEventArgs"/> that are bound.
     /// </summary>
     /// <returns></returns>
-    public IEnumerable<MouseFlags> GetBoundMouseFlags ()
+    public IEnumerable<MouseEventArgs> GetBoundMouseEventArgs ()
     {
         return Bindings.Keys;
     }
@@ -95,38 +93,38 @@ public class MouseBindings
     /// <param name="command"></param>
     public void Clear (params Command [] command)
     {
-        KeyValuePair<MouseFlags, MouseBinding> [] kvps = Bindings
+        KeyValuePair<MouseEventArgs, MouseBinding> [] kvps = Bindings
                                                 .Where (kvp => kvp.Value.Commands.SequenceEqual (command))
                                                 .ToArray ();
 
-        foreach (KeyValuePair<MouseFlags, MouseBinding> kvp in kvps)
+        foreach (KeyValuePair<MouseEventArgs, MouseBinding> kvp in kvps)
         {
             Remove (kvp.Key);
         }
     }
 
-    /// <summary>Gets the <see cref="MouseBinding"/> for the specified combination of <see cref="MouseFlags"/>.</summary>
-    /// <param name="mouseFlags"></param>
+    /// <summary>Gets the <see cref="MouseBinding"/> for the specified combination of <see cref="MouseEventArgs"/>.</summary>
+    /// <param name="mouseEvents"></param>
     /// <returns></returns>
-    public MouseBinding Get (MouseFlags mouseFlags)
+    public MouseBinding Get (MouseEventArgs mouseEvents)
     {
-        if (TryGet (mouseFlags, out MouseBinding binding))
+        if (TryGet (mouseEvents, out MouseBinding binding))
         {
             return binding;
         }
 
-        throw new InvalidOperationException ($"{mouseFlags} is not bound.");
+        throw new InvalidOperationException ($"{mouseEvents} is not bound.");
     }
 
-    /// <summary>Gets the array of <see cref="Command"/>s bound to <paramref name="mouseFlags"/> if it exists.</summary>
-    /// <param name="mouseFlags">The key to check.</param>
+    /// <summary>Gets the array of <see cref="Command"/>s bound to <paramref name="mouseEvents"/> if it exists.</summary>
+    /// <param name="mouseEvents">The key to check.</param>
     /// <returns>
-    ///     The array of <see cref="Command"/>s if <paramref name="mouseFlags"/> is bound. An empty <see cref="Command"/> array
+    ///     The array of <see cref="Command"/>s if <paramref name="mouseEvents"/> is bound. An empty <see cref="Command"/> array
     ///     if not.
     /// </returns>
-    public Command [] GetCommands (MouseFlags mouseFlags)
+    public Command [] GetCommands (MouseEventArgs mouseEvents)
     {
-        if (TryGet (mouseFlags, out MouseBinding bindings))
+        if (TryGet (mouseEvents, out MouseBinding bindings))
         {
             return bindings.Commands;
         }
@@ -134,83 +132,83 @@ public class MouseBindings
         return [];
     }
 
-    /// <summary>Gets the first combination of <see cref="MouseFlags"/> bound to the set of commands specified by <paramref name="commands"/>.</summary>
+    /// <summary>Gets the first combination of <see cref="MouseEventArgs"/> bound to the set of commands specified by <paramref name="commands"/>.</summary>
     /// <param name="commands">The set of commands to search.</param>
-    /// <returns>The first combination of <see cref="MouseFlags"/> bound to the set of commands specified by <paramref name="commands"/>. <see langword="null"/> if the set of caommands was not found.</returns>
-    public MouseFlags? GetMouseFlagsFromCommands (params Command [] commands)
+    /// <returns>The first combination of <see cref="MouseEventArgs"/> bound to the set of commands specified by <paramref name="commands"/>. <see langword="null"/> if the set of caommands was not found.</returns>
+    public MouseEventArgs? GetMouseEventArgsFromCommands (params Command [] commands)
     {
         return Bindings.FirstOrDefault (a => a.Value.Commands.SequenceEqual (commands)).Key;
     }
 
-    /// <summary>Gets combination of <see cref="MouseFlags"/> bound to the set of commands specified by <paramref name="commands"/>.</summary>
+    /// <summary>Gets combination of <see cref="MouseEventArgs"/> bound to the set of commands specified by <paramref name="commands"/>.</summary>
     /// <param name="commands">The set of commands to search.</param>
-    /// <returns>The combination of <see cref="MouseFlags"/> bound to the set of commands specified by <paramref name="commands"/>. An empty list if the set of caommands was not found.</returns>
-    public IEnumerable<MouseFlags> GetAllMouseFlagsFromCommands (params Command [] commands)
+    /// <returns>The combination of <see cref="MouseEventArgs"/> bound to the set of commands specified by <paramref name="commands"/>. An empty list if the set of caommands was not found.</returns>
+    public IEnumerable<MouseEventArgs> GetAllMouseEventArgsFromCommands (params Command [] commands)
     {
         return Bindings.Where (a => a.Value.Commands.SequenceEqual (commands)).Select (a => a.Key);
     }
 
     /// <summary>Removes a <see cref="MouseBinding"/> from the collection.</summary>
-    /// <param name="mouseFlags"></param>
-    public void Remove (MouseFlags mouseFlags)
+    /// <param name="mouseEvents"></param>
+    public void Remove (MouseEventArgs mouseEvents)
     {
-        if (!TryGet (mouseFlags, out MouseBinding _))
+        if (!TryGet (mouseEvents, out MouseBinding _))
         {
             return;
         }
 
-        Bindings.Remove (mouseFlags);
+        Bindings.Remove (mouseEvents);
     }
 
-    /// <summary>Replaces the commands already bound to a combination of <see cref="MouseFlags"/>.</summary>
+    /// <summary>Replaces the commands already bound to a combination of <see cref="MouseEventArgs"/>.</summary>
     /// <remarks>
     ///     <para>
-    ///         If the combination of <see cref="MouseFlags"/> is not already bound, it will be added.
+    ///         If the combination of <see cref="MouseEventArgs"/> is not already bound, it will be added.
     ///     </para>
     /// </remarks>
-    /// <param name="mouseFlags">The combination of <see cref="MouseFlags"/> bound to the command to be replaced.</param>
+    /// <param name="mouseEvents">The combination of <see cref="MouseEventArgs"/> bound to the command to be replaced.</param>
     /// <param name="commands">The set of commands to replace the old ones with.</param>
-    public void ReplaceCommands (MouseFlags mouseFlags, params Command [] commands)
+    public void ReplaceCommands (MouseEventArgs mouseEvents, params Command [] commands)
     {
-        if (TryGet (mouseFlags, out MouseBinding binding))
+        if (TryGet (mouseEvents, out MouseBinding binding))
         {
             binding.Commands = commands;
         }
         else
         {
-            Add (mouseFlags, commands);
+            Add (mouseEvents, commands);
         }
     }
 
-    /// <summary>Replaces a <see cref="MouseFlags"/> combination already bound to a set of <see cref="Command"/>s.</summary>
+    /// <summary>Replaces a <see cref="MouseEventArgs"/> combination already bound to a set of <see cref="Command"/>s.</summary>
     /// <remarks></remarks>
-    /// <param name="oldMouseFlags">The <see cref="MouseFlags"/> to be replaced.</param>
-    /// <param name="newMouseFlags">The new <see cref="MouseFlags"/> to be used. If <see cref="Key.Empty"/> no action will be taken.</param>
-    public void ReplaceKey (MouseFlags oldMouseFlags, MouseFlags newMouseFlags)
+    /// <param name="oldMouseEventArgs">The <see cref="MouseEventArgs"/> to be replaced.</param>
+    /// <param name="newMouseEventArgs">The new <see cref="MouseEventArgs"/> to be used. If <see cref="Key.Empty"/> no action will be taken.</param>
+    public void ReplaceKey (MouseEventArgs oldMouseEventArgs, MouseEventArgs newMouseEventArgs)
     {
-        if (!TryGet (oldMouseFlags, out MouseBinding _))
+        if (!TryGet (oldMouseEventArgs, out MouseBinding _))
         {
-            throw new InvalidOperationException ($"Key {oldMouseFlags} is not bound.");
+            throw new InvalidOperationException ($"Key {oldMouseEventArgs} is not bound.");
         }
 
-        MouseBinding value = Bindings [oldMouseFlags];
-        Remove (oldMouseFlags);
-        Add (newMouseFlags, value);
+        MouseBinding value = Bindings [oldMouseEventArgs];
+        Remove (oldMouseEventArgs);
+        Add (newMouseEventArgs, value);
     }
 
-    /// <summary>Gets the commands bound with the specified <see cref="MouseFlags"/>.</summary>
+    /// <summary>Gets the commands bound with the specified <see cref="MouseEventArgs"/>.</summary>
     /// <remarks></remarks>
-    /// <param name="mouseFlags">The key to check.</param>
+    /// <param name="mouseEvents">The key to check.</param>
     /// <param name="binding">
     ///     When this method returns, contains the commands bound with the specified mouse flags, if the mouse flags are
     ///     found; otherwise, null. This parameter is passed uninitialized.
     /// </param>
     /// <returns><see langword="true"/> if the mouse flags are bound; otherwise <see langword="false"/>.</returns>
-    public bool TryGet (MouseFlags mouseFlags, out MouseBinding binding)
+    public bool TryGet (MouseEventArgs mouseEvents, out MouseBinding binding)
     {
 
         binding = new ([]);
 
-        return Bindings.TryGetValue (mouseFlags, out binding);
+        return Bindings.TryGetValue (mouseEvents, out binding);
     }
 }

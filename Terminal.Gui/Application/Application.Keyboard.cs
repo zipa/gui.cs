@@ -321,7 +321,7 @@ public static partial class Application // Keyboard handling
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///         This version of AddCommand is for commands that do not require a <see cref="CommandContext"/>.
+    ///         This version of AddCommand is for commands that do not require a <see cref="ICommandContext"/>.
     ///     </para>
     /// </remarks>
     /// <param name="command">The command.</param>

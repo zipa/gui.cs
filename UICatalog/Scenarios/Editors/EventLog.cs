@@ -86,15 +86,24 @@ public class EventLog : ListView
 
                 _viewToLog.HandlingHotKey += (s, args) =>
                                         {
-                                            Log ($"HandlingHotKey: {args.Context.Command} {args.Context.Data}");
+                                            if (args.Context is CommandContext<KeyBinding> keyCommandContext)
+                                            {
+                                                Log ($"HandlingHotKey: {args.Context.Command} {keyCommandContext.Binding.Data}");
+                                            }
                                         };
                 _viewToLog.Selecting += (s, args) =>
                                         {
-                                            Log ($"Selecting: {args.Context.Command} {args.Context.Data}");
+                                            if (args.Context is CommandContext<KeyBinding> keyCommandContext)
+                                            {
+                                                Log ($"Selecting: {args.Context.Command} {keyCommandContext.Binding.Data}");
+                                            }
                                         };
                 _viewToLog.Accepting += (s, args) =>
                                         {
-                                            Log ($"Accepting: {args.Context.Command} {args.Context.Data}");
+                                            if (args.Context is CommandContext<KeyBinding> keyCommandContext)
+                                            {
+                                                Log ($"Accepting: {args.Context.Command} {keyCommandContext.Binding.Data}");
+                                            }
                                         };
             }
         }

@@ -3,14 +3,9 @@ namespace Terminal.Gui;
 
 #pragma warning disable CS1574 // XML comment has cref attribute that could not be resolved
 /// <summary>
-///     Provides context for a <see cref="Command"/> that is being invoked.
+///     Provides context for a <see cref="Command"/> invocation.
 /// </summary>
-/// <remarks>
-///     <para>
-///         To define a <see cref="Command"/> that is invoked with context,
-///         use <see cref="View.AddCommand(Command,Func{CommandContext,System.Nullable{bool}})"/>.
-///     </para>
-/// </remarks>
+/// <seealso cref="View.Invoke(Command)"/>.
 #pragma warning restore CS1574 // XML comment has cref attribute that could not be resolved
 public record struct CommandContext<TBindingType> : ICommandContext
 {
@@ -19,22 +14,17 @@ public record struct CommandContext<TBindingType> : ICommandContext
     /// </summary>
     /// <param name="command"></param>
     /// <param name="binding"></param>
-    /// <param name="data"></param>
-    public CommandContext (Command command, TBindingType? binding, object? data = null)
+    public CommandContext (Command command, TBindingType? binding)
     {
         Command = command;
         Binding = binding;
-        Data = data;
     }
+
+    /// <inheritdoc />
+    public Command Command { get; set; }
 
     /// <summary>
     /// The keyboard or mouse minding that was used to invoke the <see cref="Command"/>, if any.
     /// </summary>
     public TBindingType? Binding { get; set; }
-
-    /// <inheritdoc />
-    public Command Command { get; set; }
-
-    /// <inheritdoc />
-    public object? Data { get; set; }
 }

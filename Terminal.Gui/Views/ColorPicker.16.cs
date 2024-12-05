@@ -205,9 +205,10 @@ public class ColorPicker16 : View
         AddCommand (Command.Select, (ctx) =>
                                     {
                                         bool set = false;
-                                        if (ctx.Data is MouseEventArgs me)
+
+                                        if (ctx is CommandContext<MouseEventArgs> { Binding: { } } mouseCommandContext)
                                         {
-                                            Cursor = new (me.Position.X / _boxWidth, me.Position.Y / _boxHeight);
+                                            Cursor = new (mouseCommandContext.Binding.Position.X / _boxWidth, mouseCommandContext.Binding.Position.Y / _boxHeight);
                                             set = true;
                                         }
                                         return RaiseAccepting (ctx) == true || set;

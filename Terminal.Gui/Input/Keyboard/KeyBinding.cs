@@ -21,20 +21,20 @@ public record struct KeyBinding
     {
         Commands = commands;
         Scope = scope;
-        Context = context;
+        Data = context;
     }
 
     /// <summary>Initializes a new instance.</summary>
     /// <param name="commands">The commands this key binding will invoke.</param>
     /// <param name="scope">The scope of the <see cref="Commands"/>.</param>
     /// <param name="boundView">The view the key binding is bound to.</param>
-    /// <param name="context">Arbitrary context that can be associated with this key binding.</param>
-    public KeyBinding (Command [] commands, KeyBindingScope scope, View? boundView, object? context = null)
+    /// <param name="data">Arbitrary data that can be associated with this key binding.</param>
+    public KeyBinding (Command [] commands, KeyBindingScope scope, View? boundView, object? data = null)
     {
         Commands = commands;
         Scope = scope;
         BoundView = boundView;
-        Context = context;
+        Data = data;
     }
 
     /// <summary>The commands this key binding will invoke.</summary>
@@ -46,7 +46,7 @@ public record struct KeyBinding
     /// <summary>
     ///     The Key that is bound to the <see cref="Commands"/>.
     /// </summary>
-    public Key Key { get; set; }
+    public Key? Key { get; set; }
 
     /// <summary>The view the key binding is bound to.</summary>
     public View? BoundView { get; set; }
@@ -54,5 +54,5 @@ public record struct KeyBinding
     /// <summary>
     ///     Arbitrary context that can be associated with this key binding.
     /// </summary>
-    public object? Context { get; set; }
+    public object? Data { get; set; }
 }

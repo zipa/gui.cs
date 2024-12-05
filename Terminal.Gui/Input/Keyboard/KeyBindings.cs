@@ -431,6 +431,7 @@ public class KeyBindings
         {
             if (scope.HasFlag (binding.Scope))
             {
+                binding.Key = key;
                 return true;
             }
         }

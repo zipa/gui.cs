@@ -143,8 +143,12 @@ public class ListView : View, IDesignable
 
         AddCommand (Command.SelectAll, (ctx) =>
                                        {
-                                           // BUGBUG: This probably isn't right
-                                           return MarkAll ((bool)ctx!.Data);
+                                           if (ctx is not CommandContext<KeyBinding> keyCommandContext)
+                                           {
+                                               return false;
+                                           }
+
+                                           return keyCommandContext.Binding.Data is { } && MarkAll ((bool)keyCommandContext.Binding.Data);
                                        });
 
         // Default keybindings for all ListViews
