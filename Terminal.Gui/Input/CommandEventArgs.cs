@@ -11,5 +11,5 @@ public class CommandEventArgs : CancelEventArgs
     /// <summary>
     ///     The context for the command.
     /// </summary>
-    public CommandContext Context { get; init; }
+    public required ICommandContext Context { get; init; }
 }

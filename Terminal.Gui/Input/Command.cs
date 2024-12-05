@@ -5,7 +5,7 @@ namespace Terminal.Gui;
 
 /// <summary>
 ///     Actions which can be performed by a <see cref="View"/>. Commands are typically invoked via
-///     <see cref="View.KeyBindings"/> and mouse events.
+///     <see cref="KeyBindings"/> and <see cref="MouseBindings"/>.
 /// </summary>
 public enum Command
 {

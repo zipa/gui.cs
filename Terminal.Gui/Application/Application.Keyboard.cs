@@ -54,7 +54,7 @@ public static partial class Application // Keyboard handling
                     return false;
                 }
 
-                bool? handled = binding.Value.BoundView?.InvokeCommands (binding.Value.Commands, binding.Key, binding.Value);
+                bool? handled = binding.Value.BoundView?.InvokeCommands<KeyBinding> (binding.Value.Commands, binding.Value);
 
                 if (handled != null && (bool)handled)
                 {
@@ -92,7 +92,7 @@ public static partial class Application // Keyboard handling
 
             if (CommandImplementations.TryGetValue (command, out View.CommandImplementation? implementation))
             {
-                var context = new CommandContext (command, key, appBinding); // Create the context here
+                var context = new CommandContext<KeyBinding> (command, appBinding); // Create the context here
 
                 return implementation (context);
             }

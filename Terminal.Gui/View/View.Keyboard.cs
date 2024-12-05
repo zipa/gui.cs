@@ -705,7 +705,7 @@ public partial class View // Keyboard APIs
         }
 
 #endif
-        return InvokeCommands (binding.Commands, key, binding);
+        return InvokeCommands<KeyBinding> (binding.Commands, binding);
     }
 
     #endregion Key Bindings

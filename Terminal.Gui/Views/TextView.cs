@@ -3710,8 +3710,8 @@ public class TextView : View
     /// <summary>Invoke the <see cref="UnwrappedCursorPosition"/> event with the unwrapped <see cref="CursorPosition"/>.</summary>
     public virtual void OnUnwrappedCursorPosition (int? cRow = null, int? cCol = null)
     {
-        int? row = cRow is null ? CurrentRow : cRow;
-        int? col = cCol is null ? CurrentColumn : cCol;
+        int? row = cRow ?? CurrentRow;
+        int? col = cCol ?? CurrentColumn;
 
         if (cRow is null && cCol is null && _wordWrap)
         {
@@ -3719,7 +3719,7 @@ public class TextView : View
             col = _wrapManager.GetModelColFromWrappedLines (CurrentRow, CurrentColumn);
         }
 
-        UnwrappedCursorPosition?.Invoke (this, new (new ((int)col, (int)row)));
+        UnwrappedCursorPosition?.Invoke (this, new Point (row.Value, col.Value));
     }
 
     /// <summary>Paste the clipboard contents into the current selected position.</summary>
@@ -3956,7 +3956,7 @@ public class TextView : View
     }
 
     /// <summary>Invoked with the unwrapped <see cref="CursorPosition"/>.</summary>
-    public event EventHandler<PointEventArgs>? UnwrappedCursorPosition;
+    public event EventHandler<Point>? UnwrappedCursorPosition;
 
     /// <summary>
     ///     Sets the <see cref="View.Driver"/> to an appropriate color for rendering the given <paramref name="idxCol"/>
@@ -4465,12 +4465,12 @@ public class TextView : View
         }
         else
         {
-            _historyText.Add ([[.. currentLine]], CursorPosition);
+            _historyText.Add ([ [.. currentLine]], CursorPosition);
 
             currentLine.RemoveAt (CurrentColumn);
 
             _historyText.Add (
-                              [[.. currentLine]],
+                              [ [.. currentLine]],
                               CursorPosition,
                               HistoryText.LineStatus.Replaced
                              );
@@ -5057,7 +5057,7 @@ public class TextView : View
         }
 
         _historyText.Add (
-                          [[.. GetCurrentLine ()]],
+                          [ [.. GetCurrentLine ()]],
                           CursorPosition,
                           HistoryText.LineStatus.Replaced
                          );
@@ -5097,7 +5097,7 @@ public class TextView : View
             return;
         }
 
-        _historyText.Add ([[.. currentLine]], CursorPosition);
+        _historyText.Add ([ [.. currentLine]], CursorPosition);
 
         if (currentLine.Count == 0)
         {
@@ -5164,7 +5164,7 @@ public class TextView : View
         }
 
         _historyText.Add (
-                          [[.. GetCurrentLine ()]],
+                          [ [.. GetCurrentLine ()]],
                           CursorPosition,
                           HistoryText.LineStatus.Replaced
                          );
@@ -5188,14 +5188,14 @@ public class TextView : View
 
         List<Cell> currentLine = GetCurrentLine ();
 
-        _historyText.Add ([[.. GetCurrentLine ()]], CursorPosition);
+        _historyText.Add ([ [.. GetCurrentLine ()]], CursorPosition);
 
         if (CurrentColumn == 0)
         {
             DeleteTextBackwards ();
 
             _historyText.ReplaceLast (
-                                      [[.. GetCurrentLine ()]],
+                                      [ [.. GetCurrentLine ()]],
                                       CursorPosition,
                                       HistoryText.LineStatus.Replaced
                                      );
@@ -5234,7 +5234,7 @@ public class TextView : View
         }
 
         _historyText.Add (
-                          [[.. GetCurrentLine ()]],
+                          [ [.. GetCurrentLine ()]],
                           CursorPosition,
                           HistoryText.LineStatus.Replaced
                          );
@@ -5256,14 +5256,14 @@ public class TextView : View
 
         List<Cell> currentLine = GetCurrentLine ();
 
-        _historyText.Add ([[.. GetCurrentLine ()]], CursorPosition);
+        _historyText.Add ([ [.. GetCurrentLine ()]], CursorPosition);
 
         if (currentLine.Count == 0 || CurrentColumn == currentLine.Count)
         {
             DeleteTextForwards ();
 
             _historyText.ReplaceLast (
-                                      [[.. GetCurrentLine ()]],
+                                      [ [.. GetCurrentLine ()]],
                                       CursorPosition,
                                       HistoryText.LineStatus.Replaced
                                      );
@@ -5293,7 +5293,7 @@ public class TextView : View
         }
 
         _historyText.Add (
-                          [[.. GetCurrentLine ()]],
+                          [ [.. GetCurrentLine ()]],
                           CursorPosition,
                           HistoryText.LineStatus.Replaced
                          );
