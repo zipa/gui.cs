@@ -150,6 +150,7 @@ public static partial class Application // Initialization (Init/Shutdown)
         try
         {
             MainLoop = Driver!.Init ();
+            SubscribeDriverEvents ();
         }
         catch (InvalidOperationException ex)
         {
@@ -163,8 +164,6 @@ public static partial class Application // Initialization (Init/Shutdown)
                                                 );
         }
 
-        InitState ();
-
         SynchronizationContext.SetSynchronizationContext (new MainLoopSyncContext ());
 
         SupportedCultures = GetSupportedCultures ();
@@ -173,7 +172,7 @@ public static partial class Application // Initialization (Init/Shutdown)
         InitializedChanged?.Invoke (null, new (init));
     }
 
-    internal static void InitState ()
+    internal static void SubscribeDriverEvents ()
     {
         ArgumentNullException.ThrowIfNull (Driver);
 
@@ -181,6 +180,14 @@ public static partial class Application // Initialization (Init/Shutdown)
         Driver.KeyDown += Driver_KeyDown;
         Driver.KeyUp += Driver_KeyUp;
         Driver.MouseEvent += Driver_MouseEvent;
+    }
+
+    internal static void UnsubscribeDriverEvents ()
+    {
+        Driver.SizeChanged -= Driver_SizeChanged;
+        Driver.KeyDown -= Driver_KeyDown;
+        Driver.KeyUp -= Driver_KeyUp;
+        Driver.MouseEvent -= Driver_MouseEvent;
     }
 
     private static void Driver_SizeChanged (object? sender, SizeChangedEventArgs e) { OnSizeChanging (e); }

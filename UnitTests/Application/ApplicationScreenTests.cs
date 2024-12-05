@@ -73,7 +73,7 @@ public class ApplicationScreenTests (ITestOutputHelper output)
         Application.ResetState (true);
         Assert.Null (Application.Driver);
         Application.Driver = new FakeDriver { Rows = 25, Cols = 25 };
-        Application.InitState ();
+        Application.SubscribeDriverEvents ();
         Assert.Equal (new (0, 0, 25, 25), Application.Screen);
 
         // Act

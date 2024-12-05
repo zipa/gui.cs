@@ -644,7 +644,7 @@ public class ApplicationTests
     [Fact]
     public void InitState_Throws_If_Driver_Is_Null ()
     {
-        Assert.Throws<ArgumentNullException> (static () => Application.InitState ());
+        Assert.Throws<ArgumentNullException> (static () => Application.SubscribeDriverEvents ());
     }
 
     private void Init ()
