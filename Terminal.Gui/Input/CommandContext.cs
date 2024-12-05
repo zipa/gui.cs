@@ -38,16 +38,3 @@ public record struct CommandContext<TBindingType> : ICommandContext
     /// <inheritdoc />
     public object? Data { get; set; }
 }
-
-public interface ICommandContext
-{
-    /// <summary>
-    ///     The <see cref="Command"/> that is being invoked.
-    /// </summary>
-    public Command Command { get; set; }
-
-    /// <summary>
-    ///     Arbitrary data.
-    /// </summary>
-    public object? Data { get; set; }
-}
