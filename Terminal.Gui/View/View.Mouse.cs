@@ -360,7 +360,7 @@ public partial class View // Mouse APIs
 
         // Always invoke Select command on MouseClick
         // By default, this will raise Selecting/OnSelecting - Subclasses can override this via AddCommand (Command.Select ...).
-        args.Handled = InvokeCommand (Command.Select, ctx: new (Command.Select, key: null, data: args)) == true;
+        args.Handled = InvokeCommand<KeyBinding> (Command.Select, new ([Command.Select], KeyBindingScope.Focused, null, args)) == true;
 
         return args.Handled;
     }

@@ -300,8 +300,12 @@ public class Shortcut : View, IOrientation, IDesignable
         AddCommand (Command.Select, DispatchCommand);
     }
 
-    private bool? DispatchCommand (CommandContext ctx)
+    private bool? DispatchCommand (ICommandContext commandContext)
     {
+        if (commandContext is not CommandContext<KeyBinding> ctx)
+        {
+            return false;
+        }
         if (ctx.Data != this)
         {
             // Invoke Select on the command view to cause it to change state if it wants to
@@ -342,7 +346,7 @@ public class Shortcut : View, IOrientation, IDesignable
 
         if (_targetView is { })
         {
-            _targetView.InvokeCommand (Command);
+            _targetView.InvokeCommand (Command, ctx);
         }
 
         return cancel;
@@ -496,7 +500,7 @@ public class Shortcut : View, IOrientation, IDesignable
                 if (e.Context.Data != this)
                 {
                     // Forward command to ourselves
-                    InvokeCommand (Command.Select, new (Command.Select, null, null, this));
+                    InvokeCommand<KeyBinding> (Command.Select, new ([Command.Select], KeyBindingScope.Focused, null, this));
                 }
 
                 // BUGBUG: This prevents NumericUpDown on statusbar in HexEditor from working

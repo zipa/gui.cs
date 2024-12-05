@@ -165,17 +165,29 @@ public class KeyBindingsDemo : View
 
         AddCommand (Command.Save, ctx =>
                                  {
-                                     MessageBox.Query ($"{ctx.KeyBinding?.Scope}", $"Key: {ctx.Key}\nCommand: {ctx.Command}", buttons: "Ok");
+                                     if (ctx is not CommandContext<KeyBinding> keyCommandContext)
+                                     {
+                                         return false;
+                                     }
+                                     MessageBox.Query ($"{keyCommandContext.Binding.Scope}", $"Key: {keyCommandContext.Binding.Key}\nCommand: {ctx.Command}", buttons: "Ok");
                                      return true;
                                  });
         AddCommand (Command.New, ctx =>
                                 {
-                                    MessageBox.Query ($"{ctx.KeyBinding?.Scope}", $"Key: {ctx.Key}\nCommand: {ctx.Command}", buttons: "Ok");
+                                    if (ctx is not CommandContext<KeyBinding> keyCommandContext)
+                                    {
+                                        return false;
+                                    }
+                                    MessageBox.Query ($"{keyCommandContext.Binding.Scope}", $"Key: {keyCommandContext.Binding.Key}\nCommand: {ctx.Command}", buttons: "Ok");
                                     return true;
                                 });
         AddCommand (Command.HotKey, ctx =>
         {
-            MessageBox.Query ($"{ctx.KeyBinding?.Scope}", $"Key: {ctx.Key}\nCommand: {ctx.Command}", buttons: "Ok");
+            if (ctx is not CommandContext<KeyBinding> keyCommandContext)
+            {
+                return false;
+            }
+            MessageBox.Query ($"{keyCommandContext.Binding.Scope}", $"Key: {keyCommandContext.Binding.Key}\nCommand: {ctx.Command}", buttons: "Ok");
             SetFocus ();
             return true;
         });
@@ -186,7 +198,11 @@ public class KeyBindingsDemo : View
 
         AddCommand (Command.Quit, ctx =>
                                          {
-                                             MessageBox.Query ($"{ctx.KeyBinding?.Scope}", $"Key: {ctx.Key}\nCommand: {ctx.Command}", buttons: "Ok");
+                                             if (ctx is not CommandContext<KeyBinding> keyCommandContext)
+                                             {
+                                                 return false;
+                                             }
+                                             MessageBox.Query ($"{keyCommandContext.Binding.Scope}", $"Key: {keyCommandContext.Binding.Key}\nCommand: {ctx.Command}", buttons: "Ok");
                                              Application.RequestStop ();
                                              return true;
                                          });

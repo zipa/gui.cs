@@ -6143,8 +6143,12 @@ public class TextView : View
         Paste ();
     }
 
-    private bool ProcessEnterKey (CommandContext ctx)
+    private bool ProcessEnterKey (ICommandContext commandContext)
     {
+        if (commandContext is not CommandContext<KeyBinding> ctx)
+        {
+            return false;
+        }
         ResetColumnTrack ();
 
         if (_isReadOnly)

@@ -43,6 +43,11 @@ public record struct KeyBinding
     /// <summary>The scope of the <see cref="Commands"/>.</summary>
     public KeyBindingScope Scope { get; set; }
 
+    /// <summary>
+    ///     The Key that is bound to the <see cref="Commands"/>.
+    /// </summary>
+    public Key Key { get; set; }
+
     /// <summary>The view the key binding is bound to.</summary>
     public View? BoundView { get; set; }
 

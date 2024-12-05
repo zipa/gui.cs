@@ -67,8 +67,12 @@ public class ColorPicker16 : View
 
     /// <summary>Moves the selected item index to the next row.</summary>
     /// <returns></returns>
-    private bool MoveDown (CommandContext ctx)
+    private bool MoveDown (ICommandContext commandContext)
     {
+        if (commandContext is not CommandContext<KeyBinding> ctx)
+        {
+            return false;
+        }
         if (RaiseSelecting (ctx) == true)
         {
             return true;
@@ -83,8 +87,12 @@ public class ColorPicker16 : View
 
     /// <summary>Moves the selected item index to the previous column.</summary>
     /// <returns></returns>
-    private bool MoveLeft (CommandContext ctx)
+    private bool MoveLeft (ICommandContext commandContext)
     {
+        if (commandContext is not CommandContext<KeyBinding> ctx)
+        {
+            return false;
+        }
         if (RaiseSelecting (ctx) == true)
         {
             return true;
@@ -100,8 +108,12 @@ public class ColorPicker16 : View
 
     /// <summary>Moves the selected item index to the next column.</summary>
     /// <returns></returns>
-    private bool MoveRight (CommandContext ctx)
+    private bool MoveRight (ICommandContext commandContext)
     {
+        if (commandContext is not CommandContext<KeyBinding> ctx)
+        {
+            return false;
+        }
         if (RaiseSelecting (ctx) == true)
         {
             return true;
@@ -116,8 +128,12 @@ public class ColorPicker16 : View
 
     /// <summary>Moves the selected item index to the previous row.</summary>
     /// <returns></returns>
-    private bool MoveUp (CommandContext ctx)
+    private bool MoveUp (ICommandContext commandContext)
     {
+        if (commandContext is not CommandContext<KeyBinding> ctx)
+        {
+            return false;
+        }
         if (RaiseSelecting (ctx) == true)
         {
             return true;

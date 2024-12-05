@@ -395,8 +395,12 @@ public class ComboBox : View, IDesignable
         }
     }
 
-    private bool ActivateSelected (CommandContext ctx)
+    private bool ActivateSelected (ICommandContext commandContext)
     {
+        if (commandContext is not CommandContext<KeyBinding> ctx)
+        {
+            return false;
+        }
         if (HasItems ())
         {
             if (SelectText ())

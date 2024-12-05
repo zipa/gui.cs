@@ -34,8 +34,13 @@ public class CheckBox : View
         HighlightStyle = DefaultHighlightStyle;
     }
 
-    private bool? AdvanceAndSelect (CommandContext ctx)
+    private bool? AdvanceAndSelect (ICommandContext commandContext)
     {
+        if (commandContext is not CommandContext<KeyBinding> ctx)
+        {
+            return false;
+        }
+        
         bool? cancelled = AdvanceCheckState ();
 
         if (cancelled is true)

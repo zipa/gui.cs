@@ -365,7 +365,7 @@ public static class MessageBox
                                        {
                                            Clicked = (int)button.Data!;
                                        } 
-                                       else if (e.Context.KeyBinding?.BoundView is Button btn)
+                                       else if (e.Context is CommandContext<KeyBinding> { Binding.BoundView: Button btn })
                                        {
                                            Clicked = (int)btn.Data!;
                                        }

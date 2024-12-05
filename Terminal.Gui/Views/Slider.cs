@@ -1785,8 +1785,12 @@ public class Slider<T> : View, IOrientation
         return SetFocusedOption ();
     }
 
-    internal bool Accept (CommandContext ctx)
+    internal bool Accept (ICommandContext commandContext)
     {
+        if (commandContext is not CommandContext<KeyBinding> ctx)
+        {
+            return false;
+        }
         SetFocusedOption ();
 
         return RaiseAccepting (ctx) == true;

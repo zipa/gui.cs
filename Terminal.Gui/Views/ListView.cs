@@ -141,7 +141,11 @@ public class ListView : View, IDesignable
                                         return !SetFocus ();
                                     });
 
-        AddCommand (Command.SelectAll, (ctx) => MarkAll ((bool)ctx.KeyBinding?.Context!));
+        AddCommand (Command.SelectAll, (ctx) =>
+                                       {
+                                           // BUGBUG: This probably isn't right
+                                           return MarkAll ((bool)ctx!.Data);
+                                       });
 
         // Default keybindings for all ListViews
         KeyBindings.Add (Key.CursorUp, Command.Up);

@@ -133,7 +133,7 @@ public class MenuBar : View, IDesignable
                                                   {
                                                       CloseOtherOpenedMenuBar ();
 
-                                                      return Select (Menus.IndexOf (ctx.KeyBinding?.Context));
+                                                      return Select (Menus.IndexOf (ctx.Data));
                                                   });
         AddCommand (Command.Select, ctx =>
                                     {
@@ -142,7 +142,7 @@ public class MenuBar : View, IDesignable
                                             // HACK: Work around the fact that View.MouseClick always invokes Select
                                             return false;
                                         }
-                                        var res = Run ((ctx.KeyBinding?.Context as MenuItem)?.Action!);
+                                        var res = Run ((ctx.Data as MenuItem)?.Action!);
                                         CloseAllMenus ();
 
                                         return res;

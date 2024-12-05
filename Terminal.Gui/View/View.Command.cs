@@ -330,4 +330,23 @@ public partial class View // Command APIs
 
         return null;
     }
+
+    /// <summary>
+    /// Invokes the specified command.
+    /// </summary>
+    /// <param name="command">The command to invoke.</param>
+    /// <returns>
+    ///     <see langword="null"/> if no command was found; input proessing should continue.
+    ///     <see langword="false"/> if the command was invoked and was not handled (or cancelled); input proessing should continue.
+    ///     <see langword="true"/> if the command was invoked the command was handled (or cancelled); input proessing should stop.
+    /// </returns>
+    public bool? InvokeCommand (Command command)
+    {
+        if (CommandImplementations.TryGetValue (command, out CommandImplementation? implementation))
+        {
+            return implementation (null);
+        }
+
+        return null;
+    }
 }

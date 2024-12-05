@@ -198,9 +198,9 @@ internal sealed class Menu : View
                         return true;
                     }
                    );
-        AddCommand (Command.Select, ctx => _host?.SelectItem ((ctx.KeyBinding?.Context as MenuItem)!));
-        AddCommand (Command.Toggle, ctx => ExpandCollapse ((ctx.KeyBinding?.Context as MenuItem)!));
-        AddCommand (Command.HotKey, ctx => _host?.SelectItem ((ctx.KeyBinding?.Context as MenuItem)!));
+        AddCommand (Command.Select, ctx => _host?.SelectItem ((ctx.Data as MenuItem)!));
+        AddCommand (Command.Toggle, ctx => ExpandCollapse ((ctx.Data as MenuItem)!));
+        AddCommand (Command.HotKey, ctx => _host?.SelectItem ((ctx.Data as MenuItem)!));
 
         // Default key bindings for this view
         KeyBindings.Add (Key.CursorUp, Command.Up);
