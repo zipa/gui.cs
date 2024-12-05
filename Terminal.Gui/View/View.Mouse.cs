@@ -360,7 +360,7 @@ public partial class View // Mouse APIs
 
         // Always invoke Select command on MouseClick
         // By default, this will raise Selecting/OnSelecting - Subclasses can override this via AddCommand (Command.Select ...).
-        args.Handled = InvokeCommand<KeyBinding> (Command.Select, new ([Command.Select], KeyBindingScope.Focused, null, args)) == true;
+        args.Handled = InvokeCommand<MouseBinding> (Command.Select, new ([Command.Select], args)) == true;
 
         return args.Handled;
     }
@@ -666,15 +666,15 @@ public partial class View // Mouse APIs
 
             if (start is not Adornment)
             {
-                if (start.Margin is {} && start.Margin.Contains (currentLocation))
+                if (start.Margin is { } && start.Margin.Contains (currentLocation))
                 {
                     found = start.Margin;
                 }
-                else if (start.Border is {} && start.Border.Contains (currentLocation))
+                else if (start.Border is { } && start.Border.Contains (currentLocation))
                 {
                     found = start.Border;
                 }
-                else if (start.Padding is { } && start.Padding.Contains(currentLocation))
+                else if (start.Padding is { } && start.Padding.Contains (currentLocation))
                 {
                     found = start.Padding;
                 }

@@ -24,7 +24,14 @@ public class CheckBox : View
         AddCommand (Command.Select, AdvanceAndSelect);
 
         // Hotkey - Advance state and raise Select event - DO NOT raise Accept
-        AddCommand (Command.HotKey, AdvanceAndSelect);
+        AddCommand (Command.HotKey, ctx =>
+                                    {
+                                        if (RaiseHandlingHotKey () is true)
+                                        {
+                                            return true;
+                                        }
+                                        return AdvanceAndSelect (ctx);
+                                    });
 
         // Accept (Enter key) - Raise Accept event - DO NOT advance state
         AddCommand (Command.Accept, RaiseAccepting);
@@ -34,13 +41,8 @@ public class CheckBox : View
         HighlightStyle = DefaultHighlightStyle;
     }
 
-    private bool? AdvanceAndSelect (ICommandContext commandContext)
+    private bool? AdvanceAndSelect (ICommandContext? commandContext)
     {
-        if (commandContext is not CommandContext<KeyBinding> ctx)
-        {
-            return false;
-        }
-        
         bool? cancelled = AdvanceCheckState ();
 
         if (cancelled is true)
@@ -48,12 +50,12 @@ public class CheckBox : View
             return true;
         }
 
-        if (RaiseSelecting (ctx) is true)
+        if (RaiseSelecting (commandContext) is true)
         {
             return true;
         }
 
-        return ctx.Command == Command.HotKey ? cancelled : cancelled is false;
+        return commandContext?.Command == Command.HotKey ? cancelled : cancelled is false;
     }
 
     private void Checkbox_TitleChanged (object? sender, EventArgs<string> e)

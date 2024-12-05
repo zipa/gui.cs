@@ -302,20 +302,17 @@ public class Shortcut : View, IOrientation, IDesignable
 
     private bool? DispatchCommand (ICommandContext? commandContext)
     {
-        if (commandContext is not CommandContext<KeyBinding> ctx)
-        {
-            return false;
-        }
+        CommandContext<KeyBinding>? keyCommandContext = commandContext is CommandContext<KeyBinding> ? (CommandContext<KeyBinding>)commandContext : default;
 
-        if (ctx.Binding.Data != this)
+        if (keyCommandContext?.Binding.Data != this)
         {
             // Invoke Select on the command view to cause it to change state if it wants to
             // If this causes CommandView to raise Accept, we eat it
-            ctx.Binding = ctx.Binding with { Data = this };
-            CommandView.InvokeCommand (Command.Select, ctx);
+            keyCommandContext = keyCommandContext!.Value with { Binding = keyCommandContext.Value.Binding with { Data = this } };
+            CommandView.InvokeCommand (Command.Select, keyCommandContext);
         }
 
-        if (RaiseSelecting (ctx) is true)
+        if (RaiseSelecting (keyCommandContext) is true)
         {
             return true;
         }
@@ -325,14 +322,14 @@ public class Shortcut : View, IOrientation, IDesignable
 
         var cancel = false;
 
-        cancel = RaiseAccepting (ctx) is true;
+        cancel = RaiseAccepting (commandContext) is true;
 
         if (cancel)
         {
             return true;
         }
 
-        if (ctx.Command != Command.Accept)
+        if (commandContext?.Command != Command.Accept)
         {
            // return false;
         }
@@ -347,7 +344,7 @@ public class Shortcut : View, IOrientation, IDesignable
 
         if (_targetView is { })
         {
-            _targetView.InvokeCommand (Command, ctx);
+            _targetView.InvokeCommand (Command, commandContext);
         }
 
         return cancel;
@@ -498,7 +495,8 @@ public class Shortcut : View, IOrientation, IDesignable
 
             void CommandViewOnSelecting (object? sender, CommandEventArgs e)
             {
-                if (e.Context is CommandContext<KeyBinding> keyCommandContext && keyCommandContext.Binding.Data != this)
+                if ((e.Context is CommandContext<KeyBinding> keyCommandContext && keyCommandContext.Binding.Data != this) ||
+                    e.Context is CommandContext<MouseBinding>)
                 {
                     // Forward command to ourselves
                     InvokeCommand<KeyBinding> (Command.Select, new ([Command.Select], KeyBindingScope.Focused, null, this));

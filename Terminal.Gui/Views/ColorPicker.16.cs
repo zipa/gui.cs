@@ -69,11 +69,7 @@ public class ColorPicker16 : View
     /// <returns></returns>
     private bool MoveDown (ICommandContext commandContext)
     {
-        if (commandContext is not CommandContext<KeyBinding> ctx)
-        {
-            return false;
-        }
-        if (RaiseSelecting (ctx) == true)
+        if (RaiseSelecting (commandContext) == true)
         {
             return true;
         }
@@ -89,11 +85,7 @@ public class ColorPicker16 : View
     /// <returns></returns>
     private bool MoveLeft (ICommandContext commandContext)
     {
-        if (commandContext is not CommandContext<KeyBinding> ctx)
-        {
-            return false;
-        }
-        if (RaiseSelecting (ctx) == true)
+        if (RaiseSelecting (commandContext) == true)
         {
             return true;
         }
@@ -110,11 +102,7 @@ public class ColorPicker16 : View
     /// <returns></returns>
     private bool MoveRight (ICommandContext commandContext)
     {
-        if (commandContext is not CommandContext<KeyBinding> ctx)
-        {
-            return false;
-        }
-        if (RaiseSelecting (ctx) == true)
+        if (RaiseSelecting (commandContext) == true)
         {
             return true;
         }
@@ -130,11 +118,7 @@ public class ColorPicker16 : View
     /// <returns></returns>
     private bool MoveUp (ICommandContext commandContext)
     {
-        if (commandContext is not CommandContext<KeyBinding> ctx)
-        {
-            return false;
-        }
-        if (RaiseSelecting (ctx) == true)
+        if (RaiseSelecting (commandContext) == true)
         {
             return true;
         }
@@ -206,9 +190,9 @@ public class ColorPicker16 : View
                                     {
                                         bool set = false;
 
-                                        if (ctx is CommandContext<MouseEventArgs> { Binding: { } } mouseCommandContext)
+                                        if (ctx is CommandContext<MouseBinding> { Binding.MouseEventArgs: { } } mouseCommandContext)
                                         {
-                                            Cursor = new (mouseCommandContext.Binding.Position.X / _boxWidth, mouseCommandContext.Binding.Position.Y / _boxHeight);
+                                            Cursor = new (mouseCommandContext.Binding.MouseEventArgs.Position.X / _boxWidth, mouseCommandContext.Binding.MouseEventArgs.Position.Y / _boxHeight);
                                             set = true;
                                         }
                                         return RaiseAccepting (ctx) == true || set;

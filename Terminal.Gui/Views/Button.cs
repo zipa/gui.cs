@@ -72,18 +72,14 @@ public class Button : View, IDesignable
 
     private bool? HandleHotKeyCommand (ICommandContext commandContext)
     {
-        if (commandContext is not CommandContext<KeyBinding> ctx)
-        {
-            return false;
-        }
         bool cachedIsDefault = IsDefault; // Supports "Swap Default" in Buttons scenario where IsDefault changes
 
-        if (RaiseSelecting (ctx) is true)
+        if (RaiseSelecting (commandContext) is true)
         {
             return true;
         }
 
-        bool? handled = RaiseAccepting (ctx);
+        bool? handled = RaiseAccepting (commandContext);
 
         if (handled == true)
         {
@@ -97,7 +93,7 @@ public class Button : View, IDesignable
         // If Accept was not handled...
         if (cachedIsDefault && SuperView is { })
         {
-            return SuperView.InvokeCommand<KeyBinding> (Command.Accept, ctx.Binding);
+            return SuperView.InvokeCommand (Command.Accept);
         }
 
         return false;
@@ -137,7 +133,7 @@ public class Button : View, IDesignable
         }
 
         // TODO: With https://github.com/gui-cs/Terminal.Gui/issues/3778 we won't have to pass data:
-        e.Handled = InvokeCommand<KeyBinding> (Command.HotKey, new KeyBinding([Command.HotKey], KeyBindingScope.HotKey, this, null)) == true;
+        e.Handled = InvokeCommand<KeyBinding> (Command.HotKey, new KeyBinding ([Command.HotKey], KeyBindingScope.HotKey, this, null)) == true;
     }
 
     private void Button_TitleChanged (object sender, EventArgs<string> e)

@@ -3719,7 +3719,7 @@ public class TextView : View
             col = _wrapManager.GetModelColFromWrappedLines (CurrentRow, CurrentColumn);
         }
 
-        UnwrappedCursorPosition?.Invoke (this, new Point (row.Value, col.Value));
+        UnwrappedCursorPosition?.Invoke (this, new Point (col.Value, row.Value));
     }
 
     /// <summary>Paste the clipboard contents into the current selected position.</summary>
@@ -6143,12 +6143,8 @@ public class TextView : View
         Paste ();
     }
 
-    private bool ProcessEnterKey (ICommandContext commandContext)
+    private bool ProcessEnterKey (ICommandContext? commandContext)
     {
-        if (commandContext is not CommandContext<KeyBinding> ctx)
-        {
-            return false;
-        }
         ResetColumnTrack ();
 
         if (_isReadOnly)
@@ -6160,7 +6156,7 @@ public class TextView : View
         {
             // By Default pressing ENTER should be ignored (OnAccept will return false or null). Only cancel if the
             // event was fired and set Cancel = true.
-            return RaiseAccepting (ctx) is null or false;
+            return RaiseAccepting (commandContext) is null or false;
         }
 
         SetWrapModel ();

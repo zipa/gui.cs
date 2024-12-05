@@ -62,10 +62,6 @@ public class Label : View, IDesignable
 
     private bool? InvokeHotKeyOnNext (ICommandContext commandContext)
     {
-        if (commandContext is not CommandContext<KeyBinding> ctx)
-        {
-            return false;
-        }
         if (RaiseHandlingHotKey () == true)
         {
             return true;
@@ -82,7 +78,8 @@ public class Label : View, IDesignable
 
         if (me != -1 && me < SuperView?.Subviews.Count - 1)
         {
-            return SuperView?.Subviews [me + 1].InvokeCommand<KeyBinding> (Command.HotKey, ctx.Binding) == true;
+
+            return SuperView?.Subviews [me + 1].InvokeCommand (Command.HotKey) == true;
         }
 
         return false;

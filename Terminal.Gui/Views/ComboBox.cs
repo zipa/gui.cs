@@ -401,10 +401,6 @@ public class ComboBox : View, IDesignable
 
     private bool ActivateSelected (ICommandContext commandContext)
     {
-        if (commandContext is not CommandContext<KeyBinding> ctx)
-        {
-            return false;
-        }
         if (HasItems ())
         {
             if (SelectText ())
@@ -412,7 +408,7 @@ public class ComboBox : View, IDesignable
                 return false;
             }
 
-            return RaiseAccepting (ctx) == true;
+            return RaiseAccepting (commandContext) == true;
         }
 
         return false;
