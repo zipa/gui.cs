@@ -184,6 +184,8 @@ public static partial class Application // Initialization (Init/Shutdown)
 
     internal static void UnsubscribeDriverEvents ()
     {
+        ArgumentNullException.ThrowIfNull (Driver);
+
         Driver.SizeChanged -= Driver_SizeChanged;
         Driver.KeyDown -= Driver_KeyDown;
         Driver.KeyUp -= Driver_KeyUp;
