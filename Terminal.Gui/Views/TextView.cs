@@ -2413,7 +2413,7 @@ public class TextView : View
         ContextMenu = new ();
         ContextMenu.KeyChanged += ContextMenu_KeyChanged!;
 
-        KeyBindings.Add ((KeyCode)ContextMenu.Key, KeyBindingScope.HotKey, Command.Context);
+        KeyBindings.Add (ContextMenu.Key, Command.Context);
     }
 
     private void TextView_Added1 (object? sender, SuperViewChangedEventArgs e) { throw new NotImplementedException (); }

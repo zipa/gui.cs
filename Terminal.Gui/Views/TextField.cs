@@ -402,7 +402,7 @@ public class TextField : View
         ContextMenu = new () { Host = this };
         ContextMenu.KeyChanged += ContextMenu_KeyChanged;
 
-        KeyBindings.Add (ContextMenu.Key, KeyBindingScope.HotKey, Command.Context);
+        KeyBindings.Add (ContextMenu.Key, Command.Context);
 
         KeyBindings.Remove (Key.Space);
     }

@@ -133,7 +133,7 @@ public class ColorPicker16 : View
     ///<inheritdoc/>
     protected override bool OnDrawingContent ()
     {
-        SetAttribute (HasFocus ? ColorScheme.Focus : GetNormalColor ());
+        SetAttribute (HasFocus ? GetFocusColor () : GetNormalColor ());
         var colorIndex = 0;
 
         for (var y = 0; y < Math.Max (2, Viewport.Height / BoxHeight); y++)

@@ -502,8 +502,6 @@ public partial class View // Keyboard APIs
     /// <summary>Gets the key bindings for this view.</summary>
     public KeyBindings KeyBindings { get; internal set; } = null!;
 
-    private Dictionary<Command, CommandImplementation> CommandImplementations { get; } = new ();
-
     /// <summary>
     ///     INTERNAL API: Invokes any commands bound to <paramref name="key"/> on this view, adornments, and subviews.
     /// </summary>
@@ -526,7 +524,7 @@ public partial class View // Keyboard APIs
         //   `InvokeKeyBindings` returns `false`. Continue passing the event (return `false` from `OnInvokeKeyBindings`)..
         // * If key bindings were found, and any handled the key (at least one `Command` returned `true`),
         //   `InvokeKeyBindings` returns `true`. Continue passing the event (return `false` from `OnInvokeKeyBindings`).
-        bool?  handled = InvokeCommands (key, scope);
+        bool?  handled = InvokeCommandsBoundToKey (key, scope);
 
         if (handled is true)
         {
@@ -681,7 +679,7 @@ public partial class View // Keyboard APIs
     ///     <see langword="true"/> if at least one command was invoked and handled (or cancelled); input processing should
     ///     stop.
     /// </returns>
-    protected bool? InvokeCommands (Key key, KeyBindingScope scope)
+    protected bool? InvokeCommandsBoundToKey (Key key, KeyBindingScope scope)
     {
         if (!KeyBindings.TryGet (key, scope, out KeyBinding binding))
         {

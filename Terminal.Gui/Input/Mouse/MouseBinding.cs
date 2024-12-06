@@ -10,11 +10,15 @@ public record struct MouseBinding
 {
     /// <summary>Initializes a new instance.</summary>
     /// <param name="commands">The commands this mouse binding will invoke.</param>
-    /// <param name="mouseEventArgs">The mouse event arguments, to be passed as context.</param>
-    public MouseBinding (Command [] commands, MouseEventArgs? mouseEventArgs)
+    /// <param name="mouseFlags">The mouse flags that trigger this binding.</param>
+    public MouseBinding (Command [] commands, MouseFlags mouseFlags)
     {
         Commands = commands;
-        MouseEventArgs = mouseEventArgs;
+
+        MouseEventArgs = new MouseEventArgs()
+        {
+            Flags = mouseFlags
+        };
     }
 
     /// <summary>The commands this key binding will invoke.</summary>

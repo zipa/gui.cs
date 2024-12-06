@@ -5,6 +5,8 @@ namespace Terminal.Gui;
 
 public partial class View // Command APIs
 {
+    private Dictionary<Command, CommandImplementation> CommandImplementations { get; } = new ();
+
     #region Default Implementation
 
     /// <summary>
