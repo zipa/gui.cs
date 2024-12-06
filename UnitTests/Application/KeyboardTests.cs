@@ -189,6 +189,7 @@ public class KeyboardTests
         keyWasHandled = false;
         Application.RaiseKeyDownEvent (Key.H);
         Assert.False (keyWasHandled);
+        Assert.True (view.HotKeyCommand);
 
         keyWasHandled = false;
         Assert.False (view.HasFocus);

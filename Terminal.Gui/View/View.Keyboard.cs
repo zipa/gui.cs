@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using System.Diagnostics;
+using System.Reflection.Metadata;
 
 namespace Terminal.Gui;
 
@@ -296,6 +297,12 @@ public partial class View // Keyboard APIs
             return true;
         }
 
+        bool? handled = false;
+        if (InvokeCommandsBoundToHotKeyOnSubviews (key, ref handled))
+        {
+            return true;
+        }
+
         // After
         if (RaiseKeyDownNotHandled (key) || key.Handled)
         {
@@ -499,8 +506,11 @@ public partial class View // Keyboard APIs
 
     #region Key Bindings
 
-    /// <summary>Gets the key bindings for this view.</summary>
+    /// <summary>Gets the bindings for this view that will be invoked only if this view has focus.</summary>
     public KeyBindings KeyBindings { get; internal set; } = null!;
+
+    /// <summary>Gets the bindings for this view that will be invoked regardless of whehter this view has focus or not.</summary>
+    public KeyBindings HotKeyBindings { get; internal set; } = null!;
 
     /// <summary>
     ///     INTERNAL API: Invokes any commands bound to <paramref name="key"/> on this view, adornments, and subviews.
@@ -516,15 +526,13 @@ public partial class View // Keyboard APIs
     /// </returns>
     internal bool? InvokeCommandsBoundToKey (Key key)
     {
-        KeyBindingScope scope = KeyBindingScope.Focused | KeyBindingScope.HotKey;
-
         // * If no key binding was found, `InvokeKeyBindings` returns `null`.
         //   Continue passing the event (return `false` from `OnInvokeKeyBindings`).
         // * If key bindings were found, but none handled the key (all `Command`s returned `false`),
         //   `InvokeKeyBindings` returns `false`. Continue passing the event (return `false` from `OnInvokeKeyBindings`)..
         // * If key bindings were found, and any handled the key (at least one `Command` returned `true`),
         //   `InvokeKeyBindings` returns `true`. Continue passing the event (return `false` from `OnInvokeKeyBindings`).
-        bool?  handled = InvokeCommandsBoundToKey (key, scope);
+        bool? handled = InvokeCommandsBoundToKey (key, KeyBindingScope.Focused);
 
         if (handled is true)
         {
@@ -533,22 +541,17 @@ public partial class View // Keyboard APIs
             return handled;
         }
 
-        if (Margin is { } && InvokeCommandsBoundToKeyOnAdornment (Margin, key, scope, ref handled))
+        if (Margin is { } && InvokeCommandsBoundToKeyOnAdornment (Margin, key, KeyBindingScope.Focused, ref handled))
         {
             return true;
         }
 
-        if (Padding is { } && InvokeCommandsBoundToKeyOnAdornment (Padding, key, scope, ref handled))
+        if (Padding is { } && InvokeCommandsBoundToKeyOnAdornment (Padding, key, KeyBindingScope.Focused, ref handled))
         {
             return true;
         }
 
-        if (Border is { } && InvokeCommandsBoundToKeyOnAdornment (Border, key, scope, ref handled))
-        {
-            return true;
-        }
-
-        if (InvokeCommandsBoundToKeyOnSubviews (key, scope, ref handled))
+        if (Border is { } && InvokeCommandsBoundToKeyOnAdornment (Border, key, KeyBindingScope.Focused, ref handled))
         {
             return true;
         }
@@ -588,8 +591,14 @@ public partial class View // Keyboard APIs
         return false;
     }
 
-    private bool InvokeCommandsBoundToKeyOnSubviews (Key key, KeyBindingScope scope, ref bool? handled, bool invoke = true)
+    private bool InvokeCommandsBoundToHotKeyOnSubviews (Key key, ref bool? handled, bool invoke = true)
     {
+        bool? weHandled = InvokeCommandsBoundToKey (key, KeyBindingScope.HotKey);
+        if (weHandled is true)
+        {
+            return true;
+        }
+
         // Now, process any key bindings in the subviews that are tagged to KeyBindingScope.HotKey.
         foreach (View subview in Subviews)
         {
@@ -598,32 +607,7 @@ public partial class View // Keyboard APIs
                 continue;
             }
 
-            if (subview.KeyBindings.TryGet (key, scope, out KeyBinding binding))
-            {
-                if (binding.Scope == KeyBindingScope.Focused && !subview.HasFocus)
-                {
-                    continue;
-                }
-
-                if (!invoke)
-                {
-                    return true;
-                }
-
-                bool? subViewHandled = subview.InvokeCommandsBoundToKey (key);
-
-                if (subViewHandled is { })
-                {
-                    handled = subViewHandled;
-
-                    if ((bool)subViewHandled)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            bool recurse = subview.InvokeCommandsBoundToKeyOnSubviews (key, scope, ref handled, invoke);
+            bool recurse = subview.InvokeCommandsBoundToHotKeyOnSubviews (key, ref handled, invoke);
 
             if (recurse || (handled is { } && (bool)handled))
             {

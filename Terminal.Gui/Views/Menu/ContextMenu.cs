@@ -110,6 +110,8 @@ public sealed class ContextMenu : IDisposable
         _menuBar = null;
         IsShow = false;
 
+        Application.KeyBindings.Remove (Key);
+
         if (_container is { })
         {
             _container.Closing -= Container_Closing;
@@ -250,6 +252,9 @@ public sealed class ContextMenu : IDisposable
 
         _menuBar._isContextMenuLoading = true;
         _menuBar.MenuAllClosed += MenuBar_MenuAllClosed;
+
+        Application.KeyBindings.Add (Key, _menuBar, Command.Cancel);
+
         _menuBar.BeginInit ();
         _menuBar.EndInit ();
         IsShow = true;

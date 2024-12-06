@@ -38,6 +38,6 @@ public enum KeyBindingScope
     ///     </para>
     /// </summary>
     /// <seealso cref="View.KeyBindings"/>
-    /// <seeals cref="View.HotKey"/>
+    /// <seealso cref="View.HotKey"/>
     HotKey = 2
 }
