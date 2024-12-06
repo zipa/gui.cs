@@ -346,16 +346,17 @@ public class KeyBindings
     ///     </para>
     /// </remarks>
     /// <param name="key">The key bound to the command to be replaced.</param>
-    /// <param name="commands">The set of commands to replace the old ones with.</param>
-    public void ReplaceCommands (Key key, params Command [] commands)
+    /// <param name="newCommands">The set of commands to replace the old ones with.</param>
+    public void ReplaceCommands (Key key, params Command [] newCommands)
     {
         if (TryGet (key, out KeyBinding binding))
         {
-            binding.Commands = commands;
+            Remove (key);
+            Add (key, binding.Scope, newCommands);
         }
         else
         {
-            Add (key, commands);
+            Add (key, newCommands);
         }
     }
 
@@ -418,10 +419,10 @@ public class KeyBindings
     {
         if (!key.IsValid)
         {
-        //if (BoundView is null)
-        //{
-        //    throw new InvalidOperationException ("KeyBindings must be bound to a View to use this method.");
-        //}
+            //if (BoundView is null)
+            //{
+            //    throw new InvalidOperationException ("KeyBindings must be bound to a View to use this method.");
+            //}
 
             binding = new (Array.Empty<Command> (), KeyBindingScope.Disabled, null);
             return false;

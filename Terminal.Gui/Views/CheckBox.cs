@@ -36,6 +36,8 @@ public class CheckBox : View
         // Accept (Enter key) - Raise Accept event - DO NOT advance state
         AddCommand (Command.Accept, RaiseAccepting);
 
+        MouseBindings.Add (MouseFlags.Button1DoubleClicked, Command.Accept);
+
         TitleChanged += Checkbox_TitleChanged;
 
         HighlightStyle = DefaultHighlightStyle;

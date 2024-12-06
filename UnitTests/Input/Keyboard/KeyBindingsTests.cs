@@ -1,13 +1,11 @@
 ﻿using Terminal.Gui.EnumExtensions;
 using Xunit.Abstractions;
+using static Unix.Terminal.Delegates;
 
 namespace Terminal.Gui.InputTests;
 
-public class KeyBindingTests
+public class KeyBindingsTests ()
 {
-    public KeyBindingTests (ITestOutputHelper output) { _output = output; }
-    private readonly ITestOutputHelper _output;
-
     [Fact]
     public void Add_Invalid_Key_Throws ()
     {
@@ -72,7 +70,7 @@ public class KeyBindingTests
     }
 
     // Add should not allow duplicates
-        [Fact]
+    [Fact]
     public void Add_With_Throws_If_Exists ()
     {
         var keyBindings = new KeyBindings (new View ());
@@ -282,7 +280,7 @@ public class KeyBindingTests
     [InlineData (KeyBindingScope.Application)]
     public void Scope_Add_Adds (KeyBindingScope scope)
     {
-        var keyBindings = new KeyBindings (scope.FastHasFlags(KeyBindingScope.Application) ? null : new ());
+        var keyBindings = new KeyBindings (scope.FastHasFlags (KeyBindingScope.Application) ? null : new ());
         Command [] commands = { Command.Right, Command.Left };
 
         var key = new Key (Key.A);
@@ -356,7 +354,7 @@ public class KeyBindingTests
         keyBindings.Add (Key.Q.WithCtrl, KeyBindingScope.Application, Command.HotKey);
         var key = new Key (Key.Q.WithCtrl);
         bool result = keyBindings.TryGet (key, out KeyBinding _);
-        Assert.True (result);;
+        Assert.True (result); ;
 
         result = keyBindings.Bindings.TryGetValue (key, out KeyBinding _);
         Assert.True (result);
@@ -378,5 +376,19 @@ public class KeyBindingTests
         bool result = keyBindings.TryGet (Key.A, out KeyBinding bindings);
         Assert.True (result);
         Assert.Contains (Command.HotKey, bindings.Commands);
+    }
+
+    [Fact]
+    public void ReplaceCommands_Replaces ()
+    {
+        var keyBindings = new KeyBindings ();
+        keyBindings.Add (Key.A, KeyBindingScope.Application, Command.Accept);
+
+        keyBindings.ReplaceCommands (Key.A, Command.Refresh);
+
+        bool result = keyBindings.TryGet (Key.A, out KeyBinding bindings);
+        Assert.True (result);
+        Assert.Contains (Command.Refresh, bindings.Commands);
+
     }
 }

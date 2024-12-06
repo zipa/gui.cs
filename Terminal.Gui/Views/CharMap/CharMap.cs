@@ -59,7 +59,8 @@ public class CharMap : View, IDesignable
         KeyBindings.Add (ContextMenu.DefaultKey, Command.Context);
 
         MouseBindings.Add (MouseFlags.Button1DoubleClicked, Command.Accept);
-        MouseBindings.Add (MouseFlags.Button3Clicked, Command.Context);
+        MouseBindings.ReplaceCommands(MouseFlags.Button3Clicked, Command.Context);
+        MouseBindings.ReplaceCommands (MouseFlags.Button1Clicked | MouseFlags.ButtonCtrl, Command.Context);
         MouseBindings.Add (MouseFlags.WheeledDown, Command.ScrollDown);
         MouseBindings.Add (MouseFlags.WheeledUp, Command.ScrollUp);
         MouseBindings.Add (MouseFlags.WheeledLeft, Command.ScrollLeft);
@@ -561,6 +562,11 @@ public class CharMap : View, IDesignable
     [RequiresDynamicCode ("AOT")]
     private void ShowDetails ()
     {
+        if (!Application.Initialized)
+        {
+            // Some unit tests invoke Accept without Init
+            return;
+        }
         UcdApiClient? client = new ();
         var decResponse = string.Empty;
         var getCodePointError = string.Empty;

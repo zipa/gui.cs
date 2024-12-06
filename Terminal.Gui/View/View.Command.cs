@@ -102,7 +102,10 @@ public partial class View // Command APIs
                 }
             }
 
-            return SuperView?.InvokeCommand<KeyBinding> (Command.Accept, new ([Command.Accept], 0, null, this)) == true;
+            if (SuperView is { })
+            {
+                return SuperView?.InvokeCommand<KeyBinding> (Command.Accept, new ([Command.Accept], 0, null, this)) is true;
+            }
         }
 
         return Accepting is null ? null : args.Cancel;
