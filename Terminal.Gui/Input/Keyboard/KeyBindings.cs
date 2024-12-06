@@ -9,11 +9,11 @@ namespace Terminal.Gui;
 /// <seealso cref="Command"/>
 public class KeyBindings
 {
-    /// <summary>
-    ///     Initializes a new instance. This constructor is used when the <see cref="KeyBindings"/> are not bound to a
-    ///     <see cref="View"/>. This is used for Application.KeyBindings and unit tests.
-    /// </summary>
-    public KeyBindings () { }
+    ///// <summary>
+    /////     Initializes a new instance. This constructor is used when the <see cref="KeyBindings"/> are not bound to a
+    /////     <see cref="View"/>. This is used for Application.KeyBindings and unit tests.
+    ///// </summary>
+    //public KeyBindings () { }
 
     /// <summary>Initializes a new instance bound to <paramref name="boundView"/>.</summary>
     public KeyBindings (View? boundView) { BoundView = boundView; }
@@ -21,18 +21,8 @@ public class KeyBindings
     /// <summary>Adds a <see cref="KeyBinding"/> to the collection.</summary>
     /// <param name="key"></param>
     /// <param name="binding"></param>
-    /// <param name="boundViewForAppScope">Optional View for <see cref="KeyBindingScope.Application"/> bindings.</param>
-    public void Add (Key key, KeyBinding binding, View? boundViewForAppScope = null)
+    public void Add (Key key, KeyBinding binding)
     {
-        if (BoundView is { } && binding.Scope.FastHasFlags (KeyBindingScope.Application))
-        {
-            throw new InvalidOperationException ("Application scoped KeyBindings must be added via Application.KeyBindings.Add");
-        }
-
-        if (BoundView is { } && boundViewForAppScope is null)
-        {
-            boundViewForAppScope = BoundView;
-        }
 
         if (TryGet (key, out KeyBinding _))
         {
@@ -44,10 +34,6 @@ public class KeyBindings
         if (BoundView is { })
         {
             binding.BoundView = BoundView;
-        }
-        else
-        {
-            binding.BoundView = boundViewForAppScope;
         }
 
         // IMPORTANT: Add a COPY of the key. This is needed because ConfigurationManager.Apply uses DeepMemberWiseCopy 
@@ -70,55 +56,6 @@ public class KeyBindings
     /// </remarks>
     /// <param name="key">The key to check.</param>
     /// <param name="scope">The scope for the command.</param>
-    /// <param name="boundViewForAppScope">Optional View for <see cref="KeyBindingScope.Application"/> bindings.</param>
-    /// <param name="commands">
-    ///     The command to invoked on the <see cref="View"/> when <paramref name="key"/> is pressed. When
-    ///     multiple commands are provided,they will be applied in sequence. The bound <paramref name="key"/> strike will be
-    ///     consumed if any took effect.
-    /// </param>
-    public void Add (Key key, KeyBindingScope scope, View? boundViewForAppScope = null, params Command [] commands)
-    {
-        if (BoundView is { } && scope.FastHasFlags (KeyBindingScope.Application))
-        {
-            throw new ArgumentException ("Application scoped KeyBindings must be added via Application.KeyBindings.Add");
-        }
-        else
-        {
-            // boundViewForAppScope = BoundView;
-        }
-
-        if (key is null || !key.IsValid)
-        {
-            //throw new ArgumentException ("Invalid Key", nameof (commands));
-            return;
-        }
-
-        if (commands.Length == 0)
-        {
-            throw new ArgumentException (@"At least one command must be specified", nameof (commands));
-        }
-
-        if (TryGet (key, out KeyBinding binding))
-        {
-            throw new InvalidOperationException (@$"A key binding for {key} exists ({binding}).");
-        }
-
-        Add (key, new KeyBinding (commands, scope, boundViewForAppScope), boundViewForAppScope);
-    }
-
-    /// <summary>
-    ///     <para>Adds a new key combination that will trigger the commands in <paramref name="commands"/>.</para>
-    ///     <para>
-    ///         If the key is already bound to a different array of <see cref="Command"/>s it will be rebound
-    ///         <paramref name="commands"/>.
-    ///     </para>
-    /// </summary>
-    /// <remarks>
-    ///     Commands are only ever applied to the current <see cref="View"/> (i.e. this feature cannot be used to switch
-    ///     focus to another view and perform multiple commands there).
-    /// </remarks>
-    /// <param name="key">The key to check.</param>
-    /// <param name="scope">The scope for the command.</param>
     /// <param name="commands">
     ///     The command to invoked on the <see cref="View"/> when <paramref name="key"/> is pressed. When
     ///     multiple commands are provided,they will be applied in sequence. The bound <paramref name="key"/> strike will be
@@ -126,16 +63,6 @@ public class KeyBindings
     /// </param>
     public void Add (Key key, KeyBindingScope scope, params Command [] commands)
     {
-        if (BoundView is null && !scope.FastHasFlags (KeyBindingScope.Application))
-        {
-            throw new InvalidOperationException ("BoundView cannot be null.");
-        }
-
-        if (BoundView is { } && scope.FastHasFlags (KeyBindingScope.Application))
-        {
-            throw new InvalidOperationException ("Application scoped KeyBindings must be added via Application.KeyBindings.Add");
-        }
-
         if (key == Key.Empty || !key.IsValid)
         {
             throw new ArgumentException (@"Invalid Key", nameof (commands));
@@ -151,7 +78,7 @@ public class KeyBindings
             throw new InvalidOperationException (@$"A key binding for {key} exists ({binding}).");
         }
 
-        Add (key, new KeyBinding (commands, scope, BoundView), BoundView);
+        Add (key, new KeyBinding (commands, scope, BoundView));
     }
 
     /// <summary>
@@ -161,43 +88,7 @@ public class KeyBindings
     ///     </para>
     ///     <para>
     ///         This is a helper function for <see cref="Add(Key,KeyBinding,View?)"/>. If used for a View (
-    ///         <see cref="BoundView"/> is set), the scope will be set to <see cref="KeyBindingScope.Focused"/>.
-    ///         Otherwise, it will be set to <see cref="KeyBindingScope.Application"/>.
-    ///     </para>
-    ///     <para>
-    ///         If the key is already bound to a different array of <see cref="Command"/>s it will be rebound
-    ///         <paramref name="commands"/>.
-    ///     </para>
-    /// </summary>
-    /// <remarks>
-    ///     Commands are only ever applied to the current <see cref="View"/> (i.e. this feature cannot be used to switch
-    ///     focus to another view and perform multiple commands there).
-    /// </remarks>
-    /// <param name="key">The key to check.</param>
-    /// <param name="boundViewForAppScope">Optional View for <see cref="KeyBindingScope.Application"/> bindings.</param>
-    /// <param name="commands">
-    ///     The command to invoked on the <see cref="View"/> when <paramref name="key"/> is pressed. When
-    ///     multiple commands are provided,they will be applied in sequence. The bound <paramref name="key"/> strike will be
-    ///     consumed if any took effect.
-    /// </param>
-    public void Add (Key key, View? boundViewForAppScope = null, params Command [] commands)
-    {
-        if (BoundView is null && boundViewForAppScope is null)
-        {
-            throw new ArgumentException (@"Application scoped KeyBindings must provide a bound view to Add.", nameof (boundViewForAppScope));
-        }
-
-        Add (key, BoundView is { } ? KeyBindingScope.Focused : KeyBindingScope.Application, boundViewForAppScope, commands);
-    }
-
-    /// <summary>
-    ///     <para>
-    ///         Adds a new key combination that will trigger the commands in <paramref name="commands"/> (if supported by the
-    ///         View - see <see cref="View.GetSupportedCommands"/>).
-    ///     </para>
-    ///     <para>
-    ///         This is a helper function for <see cref="Add(Key,KeyBinding,View?)"/>. If used for a View (
-    ///         <see cref="BoundView"/> is set), the scope will be set to <see cref="KeyBindingScope.Focused"/>.
+    ///         <see cref="Target"/> is set), the scope will be set to <see cref="KeyBindingScope.Focused"/>.
     ///         Otherwise, it will be set to <see cref="KeyBindingScope.Application"/>.
     ///     </para>
     ///     <para>
@@ -217,12 +108,7 @@ public class KeyBindings
     /// </param>
     public void Add (Key key, params Command [] commands)
     {
-        if (BoundView is null)
-        {
-            throw new ArgumentException (@"Application scoped KeyBindings must provide a boundViewForAppScope to Add.");
-        }
-
-        Add (key, BoundView is { } ? KeyBindingScope.Focused : KeyBindingScope.Application, null, commands);
+        Add (key, KeyBindingScope.Focused, commands);
     }
 
     // TODO: Add a dictionary comparer that ignores Scope
@@ -245,7 +131,7 @@ public class KeyBindings
     /// <remarks>
     ///     If <see langword="null"/> the KeyBindings object is being used for Application.KeyBindings.
     /// </remarks>
-    internal View? BoundView { get; }
+    public View? BoundView { get; init; }
 
     /// <summary>Removes all <see cref="KeyBinding"/> objects from the collection.</summary>
     public void Clear () { Bindings.Clear (); }

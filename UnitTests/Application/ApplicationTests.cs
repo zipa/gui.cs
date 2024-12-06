@@ -358,7 +358,7 @@ public class ApplicationTests
         Application.PrevTabGroupKey = Key.A;
         Application.NextTabGroupKey = Key.B;
         Application.QuitKey = Key.C;
-        Application.KeyBindings.Add (Key.D, KeyBindingScope.Application, Command.Cancel);
+        Application.KeyBindings.Add (Key.D, Command.Cancel);
 
         Application._cachedViewsUnderMouse.Clear ();
 

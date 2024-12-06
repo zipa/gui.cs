@@ -39,20 +39,5 @@ public enum KeyBindingScope
     /// </summary>
     /// <seealso cref="View.KeyBindings"/>
     /// <seeals cref="View.HotKey"/>
-    HotKey = 2,
-
-    /// <summary>
-    ///     The and the bound <see cref="Command"/>s will be invoked regardless of which View has focus. This is typically used
-    ///     for global
-    ///     commands, which are called Shortcuts.
-    ///     <para>
-    ///         The View does not need to be visible.
-    ///     </para>
-    ///     <para>
-    ///         Application-scoped key bindings are only invoked if the key down event was not handled by the focused view or
-    ///         any of its subviews, and if the key was not bound to a <see cref="View.HotKey"/>.
-    ///     </para>
-    /// </summary>
-    /// <seealso cref="Application.KeyBindings"/>
-    Application = 4
+    HotKey = 2
 }

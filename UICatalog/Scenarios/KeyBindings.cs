@@ -83,7 +83,7 @@ public sealed class KeyBindings : Scenario
         foreach (var key in Application.KeyBindings.GetBoundKeys())
         {
             var binding = Application.KeyBindings.Get (key);
-            appBindings.Add ($"{key} -> {binding.BoundView?.GetType ().Name} - {binding.Commands [0]}");
+            appBindings.Add ($"{key} -> {binding.Target?.GetType ().Name} - {binding.Commands [0]}");
         }
 
         ObservableCollection<string> hotkeyBindings = new ();
@@ -165,29 +165,17 @@ public class KeyBindingsDemo : View
 
         AddCommand (Command.Save, ctx =>
                                  {
-                                     if (ctx is not CommandContext<KeyBinding> keyCommandContext)
-                                     {
-                                         return false;
-                                     }
-                                     MessageBox.Query ($"{keyCommandContext.Binding.Scope}", $"Key: {keyCommandContext.Binding.Key}\nCommand: {ctx.Command}", buttons: "Ok");
+                                     MessageBox.Query ($"{ctx.Command}", $"Ctx: {ctx}", buttons: "Ok");
                                      return true;
                                  });
         AddCommand (Command.New, ctx =>
                                 {
-                                    if (ctx is not CommandContext<KeyBinding> keyCommandContext)
-                                    {
-                                        return false;
-                                    }
-                                    MessageBox.Query ($"{keyCommandContext.Binding.Scope}", $"Key: {keyCommandContext.Binding.Key}\nCommand: {ctx.Command}", buttons: "Ok");
+                                    MessageBox.Query ($"{ctx.Command}", $"Ctx: {ctx}", buttons: "Ok");
                                     return true;
                                 });
         AddCommand (Command.HotKey, ctx =>
         {
-            if (ctx is not CommandContext<KeyBinding> keyCommandContext)
-            {
-                return false;
-            }
-            MessageBox.Query ($"{keyCommandContext.Binding.Scope}", $"Key: {keyCommandContext.Binding.Key}\nCommand: {ctx.Command}", buttons: "Ok");
+            MessageBox.Query ($"{ctx.Command}", $"Ctx: {ctx}\nCommand: {ctx.Command}", buttons: "Ok");
             SetFocus ();
             return true;
         });

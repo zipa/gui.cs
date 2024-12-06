@@ -294,7 +294,7 @@ public class ShortcutTests
     {
         var shortcut = new Shortcut ();
 
-        Assert.Equal (KeyBindingScope.HotKey, shortcut.KeyBindingScope);
+        Assert.False (shortcut.BindKeyToApplication);
     }
 
     [Fact]
@@ -302,9 +302,9 @@ public class ShortcutTests
     {
         var shortcut = new Shortcut ();
 
-        shortcut.KeyBindingScope = KeyBindingScope.Application;
+        shortcut.BindKeyToApplication = true;
 
-        Assert.Equal (KeyBindingScope.Application, shortcut.KeyBindingScope);
+        Assert.True (shortcut.BindKeyToApplication);
     }
 
     [Fact]
@@ -315,11 +315,11 @@ public class ShortcutTests
         shortcut.Key = Key.A;
         Assert.Contains (Key.A, shortcut.KeyBindings.Bindings.Keys);
 
-        shortcut.KeyBindingScope = KeyBindingScope.Application;
+        shortcut.BindKeyToApplication = true;
         Assert.DoesNotContain (Key.A, shortcut.KeyBindings.Bindings.Keys);
         Assert.Contains (Key.A, Application.KeyBindings.Bindings.Keys);
 
-        shortcut.KeyBindingScope = KeyBindingScope.HotKey;
+        shortcut.BindKeyToApplication = false;
         Assert.Contains (Key.A, shortcut.KeyBindings.Bindings.Keys);
         Assert.DoesNotContain (Key.A, Application.KeyBindings.Bindings.Keys);
     }
@@ -789,7 +789,7 @@ public class ShortcutTests
         var shortcut = new Shortcut
         {
             Key = Key.A,
-            KeyBindingScope = KeyBindingScope.Application,
+            BindKeyToApplication = true,
             Text = "0",
             Title = "_C"
         };
@@ -867,7 +867,7 @@ public class ShortcutTests
         var shortcut = new Shortcut
         {
             Key = Key.A,
-            KeyBindingScope = KeyBindingScope.Application,
+            BindKeyToApplication = true,
             Text = "0",
             Title = "_C",
             CanFocus = canFocus
