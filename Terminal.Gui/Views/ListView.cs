@@ -171,8 +171,8 @@ public class ListView : View, IDesignable
         KeyBindings.Add (Key.Space.WithShift, [Command.Select, Command.Down]);
 
         // Use the form of Add that lets us pass context to the handler
-        KeyBindings.Add (Key.A.WithCtrl, new KeyBinding ([Command.SelectAll], KeyBindingScope.Focused, true));
-        KeyBindings.Add (Key.U.WithCtrl, new KeyBinding ([Command.SelectAll], KeyBindingScope.Focused, false));
+        KeyBindings.Add (Key.A.WithCtrl, new KeyBinding ([Command.SelectAll], true));
+        KeyBindings.Add (Key.U.WithCtrl, new KeyBinding ([Command.SelectAll], false));
     }
 
     /// <inheritdoc />

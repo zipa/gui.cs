@@ -108,7 +108,7 @@ public class HotKeyTests
     public void NewKeyDownEvent_Honors_HotKey_KeyBindings_SuperView ()
     {
         var view = new View ();
-        view.KeyBindings.Add (Key.A, KeyBindingScope.HotKey, Command.HotKey);
+        view.HotKeyBindings.Add (Key.A, Command.HotKey);
         bool hotKeyInvoked = false;
         view.HandlingHotKey += (s, e) => { hotKeyInvoked = true; };
 

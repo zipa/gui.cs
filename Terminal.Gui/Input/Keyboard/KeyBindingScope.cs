@@ -22,22 +22,5 @@ public enum KeyBindingScope
     ///     </para>
     /// </summary>
     /// <seealso cref="View.KeyBindings"/>
-    Focused = 1,
-
-    /// <summary>
-    ///     The key binding is scoped to the View's Superview hierarchy and the bound <see cref="Command"/>s will be invoked
-    ///     even when the View does not have
-    ///     focus, as
-    ///     long as some View up the SuperView hierachy does have focus. This is typically used for <see cref="View.HotKey"/>s.
-    ///     <para>
-    ///         The View must be visible.
-    ///     </para>
-    ///     <para>
-    ///         HotKey-scoped key bindings are only invoked if the key down event was not handled by the focused view or
-    ///         any of its subviews.
-    ///     </para>
-    /// </summary>
-    /// <seealso cref="View.KeyBindings"/>
-    /// <seealso cref="View.HotKey"/>
-    HotKey = 2
+    Focused = 1
 }

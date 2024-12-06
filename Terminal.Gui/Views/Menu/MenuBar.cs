@@ -162,8 +162,8 @@ public class MenuBar : View, IDesignable
         KeyBindings.Add (Key.Esc, Command.Cancel);
         KeyBindings.Add (Key.CursorDown, Command.Accept);
 
-        KeyBinding keyBinding = new ([Command.Toggle], KeyBindingScope.HotKey, -1); // -1 indicates Key was used
-        KeyBindings.Add (Key, keyBinding);
+        KeyBinding keyBinding = new ([Command.Toggle], this, data: -1); // -1 indicates Key was used
+        HotKeyBindings.Add (Key, keyBinding);
 
         // TODO: Why do we have two keybindings for opening the menu? Ctrl-Space and Key?
         KeyBindings.Add (Key.Space.WithCtrl, keyBinding);
@@ -204,21 +204,21 @@ public class MenuBar : View, IDesignable
 
                 if (menuBarItem.HotKey != Key.Empty)
                 {
-                    KeyBindings.Remove (menuBarItem.HotKey!);
-                    KeyBinding keyBinding = new ([Command.Toggle], KeyBindingScope.Focused, menuBarItem);
-                    KeyBindings.Add (menuBarItem.HotKey!, keyBinding);
-                    KeyBindings.Remove (menuBarItem.HotKey!.WithAlt);
-                    keyBinding = new ([Command.Toggle], KeyBindingScope.HotKey, menuBarItem);
-                    KeyBindings.Add (menuBarItem.HotKey.WithAlt, keyBinding);
+                    HotKeyBindings.Remove (menuBarItem.HotKey!);
+                    KeyBinding keyBinding = new ([Command.Toggle], this, menuBarItem);
+                    HotKeyBindings.Add (menuBarItem.HotKey!, keyBinding);
+                    HotKeyBindings.Remove (menuBarItem.HotKey!.WithAlt);
+                    keyBinding = new ([Command.Toggle], this, data: menuBarItem);
+                    HotKeyBindings.Add (menuBarItem.HotKey.WithAlt, keyBinding);
                 }
 
                 if (menuBarItem.ShortcutKey != Key.Empty)
                 {
                     // Technically this will never run because MenuBarItems don't have shortcuts
                     // unless the IsTopLevel is true
-                    KeyBindings.Remove (menuBarItem.ShortcutKey!);
-                    KeyBinding keyBinding = new ([Command.Select], KeyBindingScope.HotKey, menuBarItem);
-                    KeyBindings.Add (menuBarItem.ShortcutKey!, keyBinding);
+                    HotKeyBindings.Remove (menuBarItem.ShortcutKey!);
+                    KeyBinding keyBinding = new ([Command.Select], this, data: menuBarItem);
+                    HotKeyBindings.Add (menuBarItem.ShortcutKey!, keyBinding);
                 }
 
                 menuBarItem.AddShortcutKeyBindings (this);
@@ -1310,9 +1310,9 @@ public class MenuBar : View, IDesignable
                 return;
             }
 
-            KeyBindings.Remove (_key);
-            KeyBinding keyBinding = new ([Command.Toggle], KeyBindingScope.HotKey, -1); // -1 indicates Key was used
-            KeyBindings.Add (value, keyBinding);
+            HotKeyBindings.Remove (_key);
+            KeyBinding keyBinding = new ([Command.Toggle], this, data: -1); // -1 indicates Key was used
+            HotKeyBindings.Add (value, keyBinding);
             _key = value;
         }
     }

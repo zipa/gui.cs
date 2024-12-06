@@ -69,7 +69,7 @@ public class Shortcut : View, IOrientation, IDesignable
     /// <param name="helpText">The help text to display.</param>
     public Shortcut (View targetView, Command command, string commandText, string? helpText = null)
         : this (
-                targetView?.KeyBindings.GetKeyFromCommands (command)!,
+                targetView?.HotKeyBindings.GetKeyFromCommands (command)!,
                 commandText,
                 null,
                 helpText)
@@ -499,7 +499,7 @@ public class Shortcut : View, IOrientation, IDesignable
                     e.Context is CommandContext<MouseBinding>)
                 {
                     // Forward command to ourselves
-                    InvokeCommand<KeyBinding> (Command.Select, new ([Command.Select], KeyBindingScope.Focused, null, this));
+                    InvokeCommand<KeyBinding> (Command.Select, new ([Command.Select], null, this));
                 }
 
                 // BUGBUG: This prevents NumericUpDown on statusbar in HexEditor from working
@@ -618,7 +618,7 @@ public class Shortcut : View, IOrientation, IDesignable
     private bool _bindKeyToApplication = false;
 
     /// <summary>
-    ///     Gets or sets whether <see cref="Key"/> is bound to <see cref="Command"/> via <see cref="View.KeyBindings"/> (as a HotKey) or <see cref="Application.KeyBindings"/>.
+    ///     Gets or sets whether <see cref="Key"/> is bound to <see cref="Command"/> via <see cref="View.HotKeyBindings"/> or <see cref="Application.KeyBindings"/>.
     /// </summary>
     public bool BindKeyToApplication
     {
@@ -636,7 +636,7 @@ public class Shortcut : View, IOrientation, IDesignable
             }
             else
             {
-                KeyBindings.Remove (Key);
+                HotKeyBindings.Remove (Key);
             }
 
             _bindKeyToApplication = value;
@@ -716,11 +716,11 @@ public class Shortcut : View, IOrientation, IDesignable
             {
                 if (oldKey != Key.Empty)
                 {
-                    KeyBindings.Remove (oldKey);
+                    HotKeyBindings.Remove (oldKey);
                 }
 
-                KeyBindings.Remove (Key);
-                KeyBindings.Add (Key, KeyBindingScope.HotKey, Command.HotKey);
+                HotKeyBindings.Remove (Key);
+                HotKeyBindings.Add (Key,  Command.HotKey);
             }
         }
     }

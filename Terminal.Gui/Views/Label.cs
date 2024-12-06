@@ -36,7 +36,7 @@ public class Label : View, IDesignable
     {
         if (!CanFocus)
         {
-            e.Handled = InvokeCommand<KeyBinding> (Command.HotKey, new ([Command.HotKey], KeyBindingScope.HotKey, this, this)) == true;
+            e.Handled = InvokeCommand<KeyBinding> (Command.HotKey, new ([Command.HotKey], this, data: this)) == true;
         }
     }
 

@@ -25,7 +25,7 @@ public class FrameView : View
     private void FrameView_MouseClick (object sender, MouseEventArgs e)
     {
         // base sets focus on HotKey
-        e.Handled = InvokeCommand<KeyBinding> (Command.HotKey, new ([Command.HotKey], KeyBindingScope.Focused, null, this)) == true;
+        e.Handled = InvokeCommand<KeyBinding> (Command.HotKey, new ([Command.HotKey], this, this)) == true;
     }
 
 

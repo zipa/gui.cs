@@ -133,7 +133,7 @@ public class Button : View, IDesignable
         }
 
         // TODO: With https://github.com/gui-cs/Terminal.Gui/issues/3778 we won't have to pass data:
-        e.Handled = InvokeCommand<KeyBinding> (Command.HotKey, new KeyBinding ([Command.HotKey], KeyBindingScope.HotKey, this, null)) == true;
+        e.Handled = InvokeCommand<KeyBinding> (Command.HotKey, new KeyBinding ([Command.HotKey], this, data: null)) == true;
     }
 
     private void Button_TitleChanged (object sender, EventArgs<string> e)

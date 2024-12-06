@@ -248,7 +248,7 @@ public class RadioGroup : View, IDesignable, IOrientation
                 if (c > -1)
                 {
                     // Just like the user pressing the items' hotkey
-                    e.Handled = InvokeCommand<KeyBinding> (Command.HotKey, new KeyBinding ([Command.HotKey], KeyBindingScope.HotKey, boundView: this, data: c)) == true;
+                    e.Handled = InvokeCommand<KeyBinding> (Command.HotKey, new KeyBinding ([Command.HotKey], boundView: this, data: c)) == true;
                 }
             }
 

@@ -9,12 +9,6 @@ namespace Terminal.Gui;
 /// <seealso cref="Command"/>
 public class KeyBindings
 {
-    ///// <summary>
-    /////     Initializes a new instance. This constructor is used when the <see cref="KeyBindings"/> are not bound to a
-    /////     <see cref="View"/>. This is used for Application.KeyBindings and unit tests.
-    ///// </summary>
-    //public KeyBindings () { }
-
     /// <summary>Initializes a new instance bound to <paramref name="boundView"/>.</summary>
     public KeyBindings (View? boundView) { BoundView = boundView; }
 
@@ -43,43 +37,6 @@ public class KeyBindings
         Bindings.Add (new (key), binding);
     }
 
-    /// <summary>
-    ///     <para>Adds a new key combination that will trigger the commands in <paramref name="commands"/>.</para>
-    ///     <para>
-    ///         If the key is already bound to a different array of <see cref="Command"/>s it will be rebound
-    ///         <paramref name="commands"/>.
-    ///     </para>
-    /// </summary>
-    /// <remarks>
-    ///     Commands are only ever applied to the current <see cref="View"/> (i.e. this feature cannot be used to switch
-    ///     focus to another view and perform multiple commands there).
-    /// </remarks>
-    /// <param name="key">The key to check.</param>
-    /// <param name="scope">The scope for the command.</param>
-    /// <param name="commands">
-    ///     The command to invoked on the <see cref="View"/> when <paramref name="key"/> is pressed. When
-    ///     multiple commands are provided,they will be applied in sequence. The bound <paramref name="key"/> strike will be
-    ///     consumed if any took effect.
-    /// </param>
-    public void Add (Key key, KeyBindingScope scope, params Command [] commands)
-    {
-        if (key == Key.Empty || !key.IsValid)
-        {
-            throw new ArgumentException (@"Invalid Key", nameof (commands));
-        }
-
-        if (commands.Length == 0)
-        {
-            throw new ArgumentException (@"At least one command must be specified", nameof (commands));
-        }
-
-        if (TryGet (key, out KeyBinding binding))
-        {
-            throw new InvalidOperationException (@$"A key binding for {key} exists ({binding}).");
-        }
-
-        Add (key, new KeyBinding (commands, scope, BoundView));
-    }
 
     /// <summary>
     ///     <para>
@@ -88,7 +45,7 @@ public class KeyBindings
     ///     </para>
     ///     <para>
     ///         This is a helper function for <see cref="Add(Key,KeyBinding,View?)"/>. If used for a View (
-    ///         <see cref="Target"/> is set), the scope will be set to <see cref="KeyBindingScope.Focused"/>.
+    ///         <see cref="BoundView"/> is set), the scope will be set to <see cref="KeyBindingScope.Focused"/>.
     ///         Otherwise, it will be set to <see cref="KeyBindingScope.Application"/>.
     ///     </para>
     ///     <para>
@@ -108,7 +65,7 @@ public class KeyBindings
     /// </param>
     public void Add (Key key, params Command [] commands)
     {
-        Add (key, KeyBindingScope.Focused, commands);
+        Add (key, new KeyBinding(commands));
     }
 
     // TODO: Add a dictionary comparer that ignores Scope
@@ -164,20 +121,6 @@ public class KeyBindings
         }
 
         throw new InvalidOperationException ($"Key {key} is not bound.");
-    }
-
-    /// <summary>Gets the <see cref="KeyBinding"/> for the specified <see cref="Key"/>.</summary>
-    /// <param name="key"></param>
-    /// <param name="scope"></param>
-    /// <returns></returns>
-    public KeyBinding Get (Key key, KeyBindingScope scope)
-    {
-        if (TryGet (key, scope, out KeyBinding binding))
-        {
-            return binding;
-        }
-
-        throw new InvalidOperationException ($"Key {key}/{scope} is not bound.");
     }
 
     /// <summary>Gets the array of <see cref="Command"/>s bound to <paramref name="key"/> if it exists.</summary>
@@ -238,7 +181,7 @@ public class KeyBindings
         if (TryGet (key, out KeyBinding binding))
         {
             Remove (key);
-            Add (key, binding.Scope, newCommands);
+            Add (key, newCommands);
         }
         else
         {
@@ -277,54 +220,11 @@ public class KeyBindings
     /// <returns><see langword="true"/> if the Key is bound; otherwise <see langword="false"/>.</returns>
     public bool TryGet (Key key, out KeyBinding binding)
     {
-        //if (BoundView is null)
-        //{
-        //    throw new InvalidOperationException ("KeyBindings must be bound to a View to use this method.");
-        //}
-
-        binding = new (Array.Empty<Command> (), KeyBindingScope.Disabled, null);
+        binding = new ([], null);
 
         if (key.IsValid)
         {
             return Bindings.TryGetValue (key, out binding);
-        }
-
-        return false;
-    }
-
-    /// <summary>Gets the commands bound with the specified Key that are scoped to a particular scope.</summary>
-    /// <remarks></remarks>
-    /// <param name="key">The key to check.</param>
-    /// <param name="scope">the scope to filter on</param>
-    /// <param name="binding">
-    ///     When this method returns, contains the commands bound with the specified Key, if the Key is
-    ///     found; otherwise, null. This parameter is passed uninitialized.
-    /// </param>
-    /// <returns><see langword="true"/> if the Key is bound; otherwise <see langword="false"/>.</returns>
-    public bool TryGet (Key key, KeyBindingScope scope, out KeyBinding binding)
-    {
-        if (!key.IsValid)
-        {
-            //if (BoundView is null)
-            //{
-            //    throw new InvalidOperationException ("KeyBindings must be bound to a View to use this method.");
-            //}
-
-            binding = new (Array.Empty<Command> (), KeyBindingScope.Disabled, null);
-            return false;
-        }
-
-        if (Bindings.TryGetValue (key, out binding))
-        {
-            if (scope.HasFlag (binding.Scope))
-            {
-                binding.Key = key;
-                return true;
-            }
-        }
-        else
-        {
-            binding = new (Array.Empty<Command> (), KeyBindingScope.Disabled, null);
         }
 
         return false;

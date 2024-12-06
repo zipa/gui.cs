@@ -239,7 +239,7 @@ public class MenuBarItem : MenuItem
             if (_menuBar.Menus [index].HotKey != Key.Empty)
             {
                 // Remove an existent HotKey
-                _menuBar.KeyBindings.Remove (HotKey!.WithAlt);
+                _menuBar.HotKeyBindings.Remove (HotKey!.WithAlt);
             }
 
             _menuBar.Menus [index] = null!;

@@ -699,7 +699,7 @@ public class Editor : Scenario
             Height = 11;
             Arrangement = ViewArrangement.Movable;
 
-            KeyBindings.Add (Key.Esc, KeyBindingScope.Focused, Command.Cancel);
+            KeyBindings.Add (Key.Esc, Command.Cancel);
             AddCommand (Command.Cancel, () =>
                                         {
                                             Visible = false;

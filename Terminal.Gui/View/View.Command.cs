@@ -5,7 +5,7 @@ namespace Terminal.Gui;
 
 public partial class View // Command APIs
 {
-    private Dictionary<Command, CommandImplementation> CommandImplementations { get; } = new ();
+    private readonly Dictionary<Command, CommandImplementation> _commandImplementations = new ();
 
     #region Default Implementation
 
@@ -95,7 +95,7 @@ public partial class View // Command APIs
 
             if (isDefaultView != this && isDefaultView is Button { IsDefault: true } button)
             {
-                bool? handled = isDefaultView.InvokeCommand<KeyBinding> (Command.Accept, new ([Command.Accept], 0, null, this));
+                bool? handled = isDefaultView.InvokeCommand<KeyBinding> (Command.Accept, new ([Command.Accept], null, this));
                 if (handled == true)
                 {
                     return true;
@@ -104,7 +104,7 @@ public partial class View // Command APIs
 
             if (SuperView is { })
             {
-                return SuperView?.InvokeCommand<KeyBinding> (Command.Accept, new ([Command.Accept], 0, null, this)) is true;
+                return SuperView?.InvokeCommand<KeyBinding> (Command.Accept, new ([Command.Accept], null, this)) is true;
             }
         }
 
@@ -249,7 +249,7 @@ public partial class View // Command APIs
     /// </remarks>
     /// <param name="command">The command.</param>
     /// <param name="impl">The delegate.</param>
-    protected void AddCommand (Command command, CommandImplementation impl) { CommandImplementations [command] = impl; }
+    protected void AddCommand (Command command, CommandImplementation impl) { _commandImplementations [command] = impl; }
 
     /// <summary>
     ///     <para>
@@ -270,11 +270,11 @@ public partial class View // Command APIs
     /// </remarks>
     /// <param name="command">The command.</param>
     /// <param name="impl">The delegate.</param>
-    protected void AddCommand (Command command, Func<bool?> impl) { CommandImplementations [command] = ctx => impl (); }
+    protected void AddCommand (Command command, Func<bool?> impl) { _commandImplementations [command] = ctx => impl (); }
 
     /// <summary>Returns all commands that are supported by this <see cref="View"/>.</summary>
     /// <returns></returns>
-    public IEnumerable<Command> GetSupportedCommands () { return CommandImplementations.Keys; }
+    public IEnumerable<Command> GetSupportedCommands () { return _commandImplementations.Keys; }
 
     /// <summary>
     ///     Invokes the specified commands.
@@ -292,7 +292,7 @@ public partial class View // Command APIs
 
         foreach (Command command in commands)
         {
-            if (!CommandImplementations.ContainsKey (command))
+            if (!_commandImplementations.ContainsKey (command))
             {
                 throw new NotSupportedException (
                                                  @$"A Binding was set up for the command {command} ({binding}) but that command is not supported by this View ({GetType ().Name})"
@@ -327,7 +327,7 @@ public partial class View // Command APIs
     /// </returns>
     public bool? InvokeCommand<TBindingType> (Command command, TBindingType binding)
     {
-        if (CommandImplementations.TryGetValue (command, out CommandImplementation? implementation))
+        if (_commandImplementations.TryGetValue (command, out CommandImplementation? implementation))
         {
             return implementation (new CommandContext<TBindingType> ()
             {
@@ -350,7 +350,7 @@ public partial class View // Command APIs
     /// </returns>
     public bool? InvokeCommand (Command command)
     {
-        if (CommandImplementations.TryGetValue (command, out CommandImplementation? implementation))
+        if (_commandImplementations.TryGetValue (command, out CommandImplementation? implementation))
         {
             return implementation (null);
         }

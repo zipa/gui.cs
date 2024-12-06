@@ -139,7 +139,7 @@ public class ViewKeyBindingTests (ITestOutputHelper output)
 
             Application.KeyBindings.Add (Key.A, this, Command.Save);
             HotKey = KeyCode.H;
-            KeyBindings.Add (Key.F, KeyBindingScope.Focused, Command.Left);
+            KeyBindings.Add (Key.F, Command.Left);
         }
 
         public bool ApplicationCommand { get; set; }

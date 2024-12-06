@@ -54,7 +54,7 @@ public static partial class Application // Keyboard handling
                     return false;
                 }
 
-                bool? handled = binding.Value.Target?.InvokeCommands<ApplicationKeyBinding> (binding.Value.Commands, binding.Value);
+                bool? handled = binding.Value.Target?.InvokeCommands (binding.Value.Commands, binding.Value);
 
                 if (handled != null && (bool)handled)
                 {
@@ -83,16 +83,16 @@ public static partial class Application // Keyboard handling
 
         static bool? InvokeCommand (Command command, Key key, ApplicationKeyBinding appBinding)
         {
-            if (!CommandImplementations!.ContainsKey (command))
+            if (!_commandImplementations!.ContainsKey (command))
             {
                 throw new NotSupportedException (
                                                  @$"A KeyBinding was set up for the command {command} ({key}) but that command is not supported by Application."
                                                 );
             }
 
-            if (CommandImplementations.TryGetValue (command, out View.CommandImplementation? implementation))
+            if (_commandImplementations.TryGetValue (command, out View.CommandImplementation? implementation))
             {
-                var context = new CommandContext<ApplicationKeyBinding> (command, appBinding); // Create the context here
+                CommandContext<ApplicationKeyBinding> context = new (command, appBinding); // Create the context here
 
                 return implementation (context);
             }
@@ -116,7 +116,8 @@ public static partial class Application // Keyboard handling
     public static event EventHandler<Key>? KeyDown;
 
     /// <summary>
-    ///     Called when the user releases a key (by the <see cref="IConsoleDriver"/>). Raises the cancelable <see cref="KeyUp"/>
+    ///     Called when the user releases a key (by the <see cref="IConsoleDriver"/>). Raises the cancelable
+    ///     <see cref="KeyUp"/>
     ///     event
     ///     then calls <see cref="View.NewKeyUpEvent"/> on all top level views. Called after <see cref="RaiseKeyDownEvent"/>.
     /// </summary>
@@ -162,7 +163,7 @@ public static partial class Application // Keyboard handling
 
     internal static void AddKeyBindings ()
     {
-        CommandImplementations = new ();
+        _commandImplementations.Clear ();
 
         // Things this view knows how to do
         AddCommand (
@@ -231,7 +232,6 @@ public static partial class Application // Keyboard handling
                         return false;
                     });
 
-
         // Resources/config.json overrides
         QuitKey = Key.Esc;
         NextTabKey = Key.Tab;
@@ -266,35 +266,6 @@ public static partial class Application // Keyboard handling
         }
     }
 
-    private static void ReplaceKey (Key oldKey, Key newKey)
-    {
-        KeyBindings.ReplaceKey (oldKey, newKey);
-
-        //return;
-        //if (KeyBindings.Bindings.Count == 0)
-        //{
-        //    return;
-        //}
-
-        //if (newKey == Key.Empty)
-        //{
-        //    KeyBindings.Remove (oldKey);
-        //}
-        //else
-        //{
-        //    if (KeyBindings.TryGet (oldKey, out ApplicationKeyBinding binding))
-        //    {
-        //        KeyBindings.Remove (oldKey);
-        //        KeyBindings.Add (newKey, binding);
-        //    }
-        //    else
-        //    {
-        //        KeyBindings.Add (newKey, binding);
-        //    }
-        //}
-    }
-
-
     #endregion Application-scoped KeyBindings
 
     /// <summary>
@@ -313,11 +284,10 @@ public static partial class Application // Keyboard handling
     /// </remarks>
     /// <param name="command">The command.</param>
     /// <param name="f">The function.</param>
-    private static void AddCommand (Command command, Func<bool?> f) { CommandImplementations! [command] = ctx => f (); }
+    private static void AddCommand (Command command, Func<bool?> f) { _commandImplementations! [command] = ctx => f (); }
 
     /// <summary>
     ///     Commands for Application.
     /// </summary>
-    private static Dictionary<Command, View.CommandImplementation>? CommandImplementations { get; set; }
-
+    private static readonly Dictionary<Command, View.CommandImplementation> _commandImplementations = new ();
 }

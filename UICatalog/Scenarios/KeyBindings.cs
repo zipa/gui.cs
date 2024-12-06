@@ -104,7 +104,7 @@ public sealed class KeyBindings : Scenario
 
         foreach (var subview in appWindow.Subviews)
         {
-            foreach (var binding in subview.KeyBindings.Bindings.Where (b => b.Value.Scope == KeyBindingScope.HotKey))
+            foreach (var binding in subview.HotKeyBindings.Bindings)
             {
                 hotkeyBindings.Add ($"{binding.Key} -> {subview.GetType ().Name} - {binding.Value.Commands [0]}");
             }
@@ -149,7 +149,7 @@ public sealed class KeyBindings : Scenario
         _focusedBindingsListView.Title = $"_Focused ({focused?.GetType ().Name}) Bindings";
 
         _focusedBindings.Clear();
-        foreach (var binding in focused?.KeyBindings!.Bindings.Where (b => b.Value.Scope == KeyBindingScope.Focused)!)
+        foreach (var binding in focused?.KeyBindings!.Bindings)
         {
             _focusedBindings.Add ($"{binding.Key} -> {binding.Value.Commands [0]}");
         }
@@ -180,7 +180,7 @@ public class KeyBindingsDemo : View
             return true;
         });
 
-        KeyBindings.Add (Key.F2, KeyBindingScope.Focused, Command.Save);
+        KeyBindings.Add (Key.F2, Command.Save);
         KeyBindings.Add (Key.F3, Command.New); // same as specifying KeyBindingScope.Focused
         Application.KeyBindings.Add (Key.F4, this, Command.New);
 
@@ -190,7 +190,7 @@ public class KeyBindingsDemo : View
                                              {
                                                  return false;
                                              }
-                                             MessageBox.Query ($"{keyCommandContext.Binding.Scope}", $"Key: {keyCommandContext.Binding.Key}\nCommand: {ctx.Command}", buttons: "Ok");
+                                             MessageBox.Query ($"{keyCommandContext.Binding}", $"Key: {keyCommandContext.Binding.Key}\nCommand: {ctx.Command}", buttons: "Ok");
                                              Application.RequestStop ();
                                              return true;
                                          });

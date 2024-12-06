@@ -130,7 +130,7 @@ internal sealed class Menu : View
 
                     if (menuItem.ShortcutKey != Key.Empty)
                     {
-                        KeyBinding keyBinding = new ([Command.Select], KeyBindingScope.HotKey, menuItem);
+                        KeyBinding keyBinding = new ([Command.Select], this, data: menuItem);
 
                         // Remove an existent ShortcutKey
                         menuItem._menuBar.KeyBindings.Remove (menuItem.ShortcutKey!);
@@ -251,7 +251,7 @@ internal sealed class Menu : View
     {
         // We didn't handle the key, pass it on to host
         bool? handled = null;
-        return _host.InvokeCommandsBoundToHotKeyOnSubviews (keyEvent, ref handled, true ) == true;
+        return _host.InvokeCommandsBoundToHotKeyOnSubviews (keyEvent, ref handled, true) == true;
     }
 
     protected override bool OnMouseEvent (MouseEventArgs me)
@@ -480,14 +480,14 @@ internal sealed class Menu : View
 
         foreach (MenuItem menuItem in menuItems)
         {
-            KeyBinding keyBinding = new ([Command.Toggle], KeyBindingScope.HotKey, menuItem);
+            KeyBinding keyBinding = new ([Command.Toggle], this, data: menuItem);
 
             if (menuItem.HotKey != Key.Empty)
             {
-                KeyBindings.Remove (menuItem.HotKey!);
-                KeyBindings.Add (menuItem.HotKey!, keyBinding);
-                KeyBindings.Remove (menuItem.HotKey!.WithAlt);
-                KeyBindings.Add (menuItem.HotKey.WithAlt, keyBinding);
+                HotKeyBindings.Remove (menuItem.HotKey!);
+                HotKeyBindings.Add (menuItem.HotKey!, keyBinding);
+                HotKeyBindings.Remove (menuItem.HotKey!.WithAlt);
+                HotKeyBindings.Add (menuItem.HotKey.WithAlt, keyBinding);
             }
         }
     }
