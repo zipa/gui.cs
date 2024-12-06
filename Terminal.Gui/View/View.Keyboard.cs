@@ -591,7 +591,7 @@ public partial class View // Keyboard APIs
         return false;
     }
 
-    private bool InvokeCommandsBoundToHotKeyOnSubviews (Key key, ref bool? handled, bool invoke = true)
+    internal bool InvokeCommandsBoundToHotKeyOnSubviews (Key key, ref bool? handled, bool invoke = true)
     {
         bool? weHandled = InvokeCommandsBoundToKey (key, KeyBindingScope.HotKey);
         if (weHandled is true)

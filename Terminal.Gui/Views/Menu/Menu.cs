@@ -250,7 +250,8 @@ internal sealed class Menu : View
     protected override bool OnKeyDownNotHandled (Key keyEvent)
     {
         // We didn't handle the key, pass it on to host
-        return _host.InvokeCommandsBoundToKey (keyEvent) == true;
+        bool? handled = null;
+        return _host.InvokeCommandsBoundToHotKeyOnSubviews (keyEvent, ref handled, true ) == true;
     }
 
     protected override bool OnMouseEvent (MouseEventArgs me)
