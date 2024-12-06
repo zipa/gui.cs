@@ -317,11 +317,11 @@ public class ShortcutTests
 
         shortcut.BindKeyToApplication = true;
         Assert.DoesNotContain (Key.A, shortcut.KeyBindings.Bindings.Keys);
-        Assert.Contains (Key.A, Application.KeyBindings.Bindings.Keys);
+        Assert.NotEmpty (Application.KeyBindings.GetBindings(Key.A));
 
         shortcut.BindKeyToApplication = false;
         Assert.Contains (Key.A, shortcut.KeyBindings.Bindings.Keys);
-        Assert.DoesNotContain (Key.A, Application.KeyBindings.Bindings.Keys);
+        Assert.Empty (Application.KeyBindings.GetBindings (Key.A));
     }
 
     [Theory]

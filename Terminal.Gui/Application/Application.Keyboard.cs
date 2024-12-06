@@ -45,7 +45,7 @@ public static partial class Application // Keyboard handling
 
         // Invoke any Application-scoped KeyBindings.
         // The first view that handles the key will stop the loop.
-        foreach (KeyValuePair<Key, ApplicationKeyBinding> binding in KeyBindings.Bindings.Where (b => b.Key == key.KeyCode))
+        foreach (KeyValuePair<Key, ApplicationKeyBinding> binding in KeyBindings.GetBindings (key))
         {
             if (binding.Value.Target is { })
             {
@@ -155,12 +155,12 @@ public static partial class Application // Keyboard handling
 
     #region Application-scoped KeyBindings
 
-    static Application () { AddApplicationKeyBindings (); }
+    static Application () { AddKeyBindings (); }
 
     /// <summary>Gets the Application-scoped key bindings.</summary>
     public static ApplicationKeyBindings KeyBindings { get; internal set; } = new ();
 
-    internal static void AddApplicationKeyBindings ()
+    internal static void AddKeyBindings ()
     {
         CommandImplementations = new ();
 
@@ -231,29 +231,30 @@ public static partial class Application // Keyboard handling
                         return false;
                     });
 
-        KeyBindings.Clear ();
 
         // Resources/config.json overrides
+        QuitKey = Key.Esc;
         NextTabKey = Key.Tab;
         PrevTabKey = Key.Tab.WithShift;
         NextTabGroupKey = Key.F6;
         PrevTabGroupKey = Key.F6.WithShift;
-        QuitKey = Key.Esc;
         ArrangeKey = Key.F5.WithCtrl;
 
+        // Need to clear after setting the above to ensure actually clear
+        // because set_QuitKey etc.. may call Add
+        KeyBindings.Clear ();
+
         KeyBindings.Add (QuitKey, Command.Quit);
+        KeyBindings.Add (NextTabKey, Command.NextTabStop);
+        KeyBindings.Add (PrevTabKey, Command.PreviousTabStop);
+        KeyBindings.Add (NextTabGroupKey, Command.NextTabGroup);
+        KeyBindings.Add (PrevTabGroupKey, Command.PreviousTabGroup);
+        KeyBindings.Add (ArrangeKey, Command.Edit);
 
         KeyBindings.Add (Key.CursorRight, Command.NextTabStop);
         KeyBindings.Add (Key.CursorDown, Command.NextTabStop);
         KeyBindings.Add (Key.CursorLeft, Command.PreviousTabStop);
         KeyBindings.Add (Key.CursorUp, Command.PreviousTabStop);
-        KeyBindings.Add (NextTabKey, Command.NextTabStop);
-        KeyBindings.Add (PrevTabKey, Command.PreviousTabStop);
-
-        KeyBindings.Add (NextTabGroupKey, Command.NextTabGroup);
-        KeyBindings.Add (PrevTabGroupKey, Command.PreviousTabGroup);
-
-        KeyBindings.Add (ArrangeKey, Command.Edit);
 
         // TODO: Refresh Key should be configurable
         KeyBindings.Add (Key.F5, Command.Refresh);
@@ -265,46 +266,32 @@ public static partial class Application // Keyboard handling
         }
     }
 
-    /// <summary>
-    ///     Gets the list of <see cref="ApplicationKeyBinding"/>s.
-    /// </summary>
-    /// <remarks>
-    ///     This is an internal method used by the <see cref="View"/> class to add Application key bindings.
-    /// </remarks>
-    /// <returns>The list of Views that have Application-scoped key bindings.</returns>
-    internal static List<ApplicationKeyBinding> GetViewKeyBindings ()
-    {
-        // Get the list of views that do not have Application-scoped key bindings
-        return KeyBindings.Bindings
-                          .Where (kv => kv.Value.Target is {})
-                          .Select (kv => kv.Value)
-                          .Distinct ()
-                          .ToList ();
-    }
-
     private static void ReplaceKey (Key oldKey, Key newKey)
     {
-        if (KeyBindings.Bindings.Count == 0)
-        {
-            return;
-        }
+        KeyBindings.ReplaceKey (oldKey, newKey);
 
-        if (newKey == Key.Empty)
-        {
-            KeyBindings.Remove (oldKey);
-        }
-        else
-        {
-            if (KeyBindings.TryGet (oldKey, out ApplicationKeyBinding binding))
-            {
-                KeyBindings.Remove (oldKey);
-                KeyBindings.Add (newKey, binding);
-            }
-            else
-            {
-                KeyBindings.Add (newKey, binding);
-            }
-        }
+        //return;
+        //if (KeyBindings.Bindings.Count == 0)
+        //{
+        //    return;
+        //}
+
+        //if (newKey == Key.Empty)
+        //{
+        //    KeyBindings.Remove (oldKey);
+        //}
+        //else
+        //{
+        //    if (KeyBindings.TryGet (oldKey, out ApplicationKeyBinding binding))
+        //    {
+        //        KeyBindings.Remove (oldKey);
+        //        KeyBindings.Add (newKey, binding);
+        //    }
+        //    else
+        //    {
+        //        KeyBindings.Add (newKey, binding);
+        //    }
+        //}
     }
 
 

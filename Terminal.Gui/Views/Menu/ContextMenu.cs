@@ -109,7 +109,7 @@ public sealed class ContextMenu : IDisposable
         _menuBar?.Dispose ();
         _menuBar = null;
         IsShow = false;
-        `
+
         if (_container is { })
         {
             _container.Closing -= Container_Closing;

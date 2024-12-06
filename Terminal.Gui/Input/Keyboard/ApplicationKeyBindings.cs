@@ -82,9 +82,7 @@ public class ApplicationKeyBindings
         Add (key, binding);
     }
 
-    // TODO: This should not be public!
-    /// <summary>The collection of <see cref="ApplicationKeyBinding"/> objects.</summary>
-    public Dictionary<Key, ApplicationKeyBinding> Bindings { get; } = new (new KeyEqualityComparer ());
+    private Dictionary<Key, ApplicationKeyBinding> Bindings { get; } = new (new KeyEqualityComparer ());
 
     /// <summary>
     ///     Gets the keys that are bound.
@@ -93,6 +91,16 @@ public class ApplicationKeyBindings
     public IEnumerable<Key> GetBoundKeys ()
     {
         return Bindings.Keys;
+    }
+
+    /// <summary>
+    ///     Gets the bindings bound to <paramref name="key"/>.
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public IEnumerable<KeyValuePair<Key, ApplicationKeyBinding>> GetBindings (Key key)
+    {
+        return Bindings.Where (b => b.Key == key.KeyCode);
     }
 
     /// <summary>Removes all <see cref="ApplicationKeyBinding"/> objects from the collection.</summary>
@@ -193,25 +201,33 @@ public class ApplicationKeyBindings
         throw new InvalidOperationException ($"Key {key} is not bound.");
     }
 
-    /// <summary>Replaces a key combination already bound to a set of <see cref="Command"/>s.</summary>
-    /// <remarks></remarks>
+    /// <summary>Replaces a key combination bound to a set of <see cref="Command"/>s.</summary>
+    /// <remarks>If <paramref name="oldKey"/> is not bound, this method has the same effect as <see cref="Add(Terminal.Gui.Key,Terminal.Gui.ApplicationKeyBinding)"/>.</remarks>
     /// <param name="oldKey">The key to be replaced.</param>
-    /// <param name="newKey">The new key to be used. If <see cref="Key.Empty"/> no action will be taken.</param>
+    /// <param name="newKey">The new key to be used. If <see cref="Key.Empty"/> this method has the same effect as <see cref="Remove"/>.</param>
     public void ReplaceKey (Key oldKey, Key newKey)
     {
-        if (!TryGet (oldKey, out ApplicationKeyBinding _))
-        {
-            throw new InvalidOperationException ($"Key {oldKey} is not bound.");
-        }
-
         if (!newKey.IsValid)
         {
             throw new InvalidOperationException ($"Key {newKey} is is not valid.");
         }
 
-        ApplicationKeyBinding binding = Bindings [oldKey];
-        Remove (oldKey);
-        Add (newKey, binding);
+        if (newKey == Key.Empty)
+        {
+            Remove (oldKey);
+            return;
+        }
+
+
+        if (TryGet (oldKey, out ApplicationKeyBinding binding))
+        {
+            Remove (oldKey);
+            Add (newKey, binding);
+        }
+        else
+        {
+            Add (newKey, binding);
+        }
     }
 
     /// <summary>Gets the commands bound with the specified Key.</summary>

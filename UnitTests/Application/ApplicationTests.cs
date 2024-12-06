@@ -317,9 +317,6 @@ public class ApplicationTests
             Assert.Empty (Application.TopLevels);
             Assert.Empty (Application._cachedViewsUnderMouse);
 
-            // Keyboard
-            Assert.Empty (Application.GetViewKeyBindings ());
-
             // Mouse
             Assert.Null (Application._lastMousePosition);
 
@@ -555,7 +552,7 @@ public class ApplicationTests
 
         Assert.Equal (Key.Q.WithCtrl, Application.QuitKey);
 
-        Assert.Contains (Key.Q.WithCtrl, Application.KeyBindings.Bindings);
+        Assert.NotEmpty (Application.KeyBindings.GetBindings (Key.Q.WithCtrl));
 
         Application.Shutdown ();
         Locations = ConfigLocations.Default;
