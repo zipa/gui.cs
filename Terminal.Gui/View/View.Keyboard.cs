@@ -187,7 +187,8 @@ public partial class View // Keyboard APIs
             KeyBinding keyBinding = new ()
             {
                 Commands = [Command.HotKey],
-                Data = context
+                Key = newKey,
+                Data = context,
             };
 
             // Add the base and Alt key

@@ -281,16 +281,16 @@ public class ShortcutTests
         var shortcut = new Shortcut ();
 
         shortcut.Key = Key.A;
-        Assert.Contains (Key.A, shortcut.KeyBindings.Bindings.Keys);
+        Assert.Contains (Key.A, shortcut.HotKeyBindings.Bindings.Keys);
 
         shortcut.Key = Key.B;
-        Assert.DoesNotContain (Key.A, shortcut.KeyBindings.Bindings.Keys);
-        Assert.Contains (Key.B, shortcut.KeyBindings.Bindings.Keys);
+        Assert.DoesNotContain (Key.A, shortcut.HotKeyBindings.Bindings.Keys);
+        Assert.Contains (Key.B, shortcut.HotKeyBindings.Bindings.Keys);
     }
 
     // Test Key gets bound correctly
     [Fact]
-    public void KeyBindingScope_Defaults_To_HotKey ()
+    public void BindKeyToApplication_Defaults_To_HotKey ()
     {
         var shortcut = new Shortcut ();
 
@@ -298,7 +298,7 @@ public class ShortcutTests
     }
 
     [Fact]
-    public void KeyBindingScope_Can_Be_Set ()
+    public void BindKeyToApplication_Can_Be_Set ()
     {
         var shortcut = new Shortcut ();
 
@@ -308,19 +308,19 @@ public class ShortcutTests
     }
 
     [Fact]
-    public void KeyBindingScope_Changing_Adjusts_KeyBindings ()
+    public void BindKeyToApplication_Changing_Adjusts_KeyBindings ()
     {
         var shortcut = new Shortcut ();
 
         shortcut.Key = Key.A;
-        Assert.Contains (Key.A, shortcut.KeyBindings.Bindings.Keys);
+        Assert.Contains (Key.A, shortcut.HotKeyBindings.Bindings.Keys);
 
         shortcut.BindKeyToApplication = true;
-        Assert.DoesNotContain (Key.A, shortcut.KeyBindings.Bindings.Keys);
+        Assert.DoesNotContain (Key.A, shortcut.HotKeyBindings.Bindings.Keys);
         Assert.NotEmpty (Application.KeyBindings.GetBindings(Key.A));
 
         shortcut.BindKeyToApplication = false;
-        Assert.Contains (Key.A, shortcut.KeyBindings.Bindings.Keys);
+        Assert.Contains (Key.A, shortcut.HotKeyBindings.Bindings.Keys);
         Assert.Empty (Application.KeyBindings.GetBindings (Key.A));
     }
 

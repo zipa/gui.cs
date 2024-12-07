@@ -133,8 +133,8 @@ internal sealed class Menu : View
                         KeyBinding keyBinding = new ([Command.Select], this, data: menuItem);
 
                         // Remove an existent ShortcutKey
-                        menuItem._menuBar.KeyBindings.Remove (menuItem.ShortcutKey!);
-                        menuItem._menuBar.KeyBindings.Add (menuItem.ShortcutKey!, keyBinding);
+                        menuItem._menuBar.HotKeyBindings.Remove (menuItem.ShortcutKey!);
+                        menuItem._menuBar.HotKeyBindings.Add (menuItem.ShortcutKey!, keyBinding);
                     }
                 }
             }

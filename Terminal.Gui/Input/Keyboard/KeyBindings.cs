@@ -15,8 +15,19 @@ public class KeyBindings
     /// <summary>Adds a <see cref="KeyBinding"/> to the collection.</summary>
     /// <param name="key"></param>
     /// <param name="binding"></param>
+    /// <exception cref="ArgumentException">If <paramref name="binding"/> has no Commands or <paramref name="key"/> is invalid.</exception>
     public void Add (Key key, KeyBinding binding)
     {
+
+        if (!key.IsValid)
+        {
+            throw new ArgumentException (nameof (key));
+        }
+
+        if (binding.Commands.Length == 0)
+        {
+            throw new ArgumentException (nameof (binding));
+        }
 
         if (TryGet (key, out KeyBinding _))
         {
@@ -36,7 +47,6 @@ public class KeyBindings
         // IMPORTANT: See the ConfigurationManager.Illustrate_DeepMemberWiseCopy_Breaks_Dictionary test for details.
         Bindings.Add (new (key), binding);
     }
-
 
     /// <summary>
     ///     <para>
@@ -63,9 +73,10 @@ public class KeyBindings
     ///     multiple commands are provided,they will be applied in sequence. The bound <paramref name="key"/> strike will be
     ///     consumed if any took effect.
     /// </param>
+    /// <exception cref="ArgumentException">If <paramref name="commands"/> is empty.</exception>
     public void Add (Key key, params Command [] commands)
     {
-        Add (key, new KeyBinding(commands));
+        Add (key, new KeyBinding (commands));
     }
 
     // TODO: Add a dictionary comparer that ignores Scope
@@ -77,10 +88,7 @@ public class KeyBindings
     ///     Gets the keys that are bound.
     /// </summary>
     /// <returns></returns>
-    public IEnumerable<Key> GetBoundKeys ()
-    {
-        return Bindings.Keys;
-    }
+    public IEnumerable<Key> GetBoundKeys () { return Bindings.Keys; }
 
     /// <summary>
     ///     The view that the <see cref="KeyBindings"/> are bound to.
@@ -136,20 +144,23 @@ public class KeyBindings
             return bindings.Commands;
         }
 
-        return Array.Empty<Command> ();
+        return [];
     }
 
     /// <summary>Gets the first Key bound to the set of commands specified by <paramref name="commands"/>.</summary>
     /// <param name="commands">The set of commands to search.</param>
-    /// <returns>The first <see cref="Key"/> bound to the set of commands specified by <paramref name="commands"/>. <see langword="null"/> if the set of caommands was not found.</returns>
-    public Key? GetKeyFromCommands (params Command [] commands)
-    {
-        return Bindings.FirstOrDefault (a => a.Value.Commands.SequenceEqual (commands)).Key;
-    }
+    /// <returns>
+    ///     The first <see cref="Key"/> bound to the set of commands specified by <paramref name="commands"/>.
+    ///     <see langword="null"/> if the set of caommands was not found.
+    /// </returns>
+    public Key? GetKeyFromCommands (params Command [] commands) { return Bindings.FirstOrDefault (a => a.Value.Commands.SequenceEqual (commands)).Key; }
 
     /// <summary>Gets Keys bound to the set of commands specified by <paramref name="commands"/>.</summary>
     /// <param name="commands">The set of commands to search.</param>
-    /// <returns>The <see cref="Key"/>s bound to the set of commands specified by <paramref name="commands"/>. An empty list if the set of caommands was not found.</returns>
+    /// <returns>
+    ///     The <see cref="Key"/>s bound to the set of commands specified by <paramref name="commands"/>. An empty list if the
+    ///     set of caommands was not found.
+    /// </returns>
     public IEnumerable<Key> GetKeysFromCommands (params Command [] commands)
     {
         return Bindings.Where (a => a.Value.Commands.SequenceEqual (commands)).Select (a => a.Key);

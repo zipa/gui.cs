@@ -150,7 +150,7 @@ public sealed class ContextMenu : IDisposable
                 if (menuItem.ShortcutKey != Key.Empty)
                 {
                     // Remove an existent ShortcutKey
-                    _menuBar?.KeyBindings.Remove (menuItem.ShortcutKey!);
+                    _menuBar?.HotKeyBindings.Remove (menuItem.ShortcutKey!);
                 }
             }
         }

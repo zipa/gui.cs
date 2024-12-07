@@ -1483,9 +1483,9 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.False (deleteFile);
 
         cm.Show (menuItems);
-        Assert.True (cm.MenuBar!.KeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
-        Assert.True (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.R.WithCtrl));
-        Assert.True (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.D.WithCtrl));
+        Assert.True (cm.MenuBar!.HotKeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
+        Assert.True (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.R.WithCtrl));
+        Assert.True (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.D.WithCtrl));
 
         Assert.True (Application.RaiseKeyDownEvent (Key.N.WithCtrl));
         Application.MainLoop!.RunIteration ();
@@ -1502,9 +1502,9 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.True (deleteFile);
         Assert.False (cm.MenuBar.IsMenuOpen);
 
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.R.WithCtrl));
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.D.WithCtrl));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.R.WithCtrl));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.D.WithCtrl));
 
         newFile = false;
         renameFile = false;
@@ -1555,8 +1555,8 @@ public class ContextMenuTests (ITestOutputHelper output)
         top.Add (menuBar);
         Application.Begin (top);
 
-        Assert.True (menuBar.KeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
-        Assert.False (menuBar.KeyBindings.Bindings.ContainsKey (Key.R.WithCtrl));
+        Assert.True (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
+        Assert.False (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.R.WithCtrl));
         Assert.Null (cm.MenuBar);
 
         Assert.True (Application.RaiseKeyDownEvent (Key.N.WithCtrl));
@@ -1568,10 +1568,10 @@ public class ContextMenuTests (ITestOutputHelper output)
         newFile = false;
 
         cm.Show (menuItems);
-        Assert.True (menuBar.KeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
-        Assert.False (menuBar.KeyBindings.Bindings.ContainsKey (Key.R.WithCtrl));
-        Assert.False (cm.MenuBar!.KeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
-        Assert.True (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.R.WithCtrl));
+        Assert.True (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
+        Assert.False (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.R.WithCtrl));
+        Assert.False (cm.MenuBar!.HotKeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
+        Assert.True (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.R.WithCtrl));
 
         Assert.True (cm.MenuBar.IsMenuOpen);
         Assert.True (Application.RaiseKeyDownEvent (Key.N.WithCtrl));
@@ -1584,10 +1584,10 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.True (renameFile);
         Assert.False (cm.MenuBar.IsMenuOpen);
 
-        Assert.True (menuBar.KeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
-        Assert.False (menuBar.KeyBindings.Bindings.ContainsKey (Key.R.WithCtrl));
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.R.WithCtrl));
+        Assert.True (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
+        Assert.False (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.R.WithCtrl));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.R.WithCtrl));
 
         newFile = false;
         renameFile = false;
@@ -1634,7 +1634,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         top.Add (menuBar);
         Application.Begin (top);
 
-        Assert.True (menuBar.KeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
+        Assert.True (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
         Assert.Null (cm.MenuBar);
 
         Assert.True (Application.RaiseKeyDownEvent (Key.N.WithCtrl));
@@ -1645,8 +1645,8 @@ public class ContextMenuTests (ITestOutputHelper output)
         newMenuBar = false;
 
         cm.Show (menuItems);
-        Assert.True (menuBar.KeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
-        Assert.True (cm.MenuBar!.KeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
+        Assert.True (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
+        Assert.True (cm.MenuBar!.HotKeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
 
         Assert.True (cm.MenuBar.IsMenuOpen);
         Assert.True (Application.RaiseKeyDownEvent (Key.N.WithCtrl));
@@ -1657,8 +1657,8 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.True (newContextMenu);
         Assert.False (cm.MenuBar!.IsMenuOpen);
 
-        Assert.True (menuBar.KeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
+        Assert.True (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.N.WithCtrl));
 
         newMenuBar = false;
         newContextMenu = false;
@@ -1704,20 +1704,20 @@ public class ContextMenuTests (ITestOutputHelper output)
 
         cm.Show (menuItems);
         Assert.True (cm.MenuBar!.IsMenuOpen);
-        Assert.False (cm.MenuBar!.KeyBindings.Bindings.ContainsKey (Key.N.WithAlt));
-        Assert.False (cm.MenuBar!.KeyBindings.Bindings.ContainsKey (Key.N.NoShift));
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.R.NoShift));
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.D.WithAlt));
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.D.NoShift));
+        Assert.False (cm.MenuBar!.HotKeyBindings.Bindings.ContainsKey (Key.N.WithAlt));
+        Assert.False (cm.MenuBar!.HotKeyBindings.Bindings.ContainsKey (Key.N.NoShift));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.R.NoShift));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.D.WithAlt));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.D.NoShift));
         Assert.Single (Application.Top!.Subviews);
         View [] menus = Application.Top!.Subviews.Where (v => v is Menu m && m.Host == cm.MenuBar).ToArray ();
-        Assert.True (menus [0].KeyBindings.Bindings.ContainsKey (Key.N.WithAlt));
-        Assert.True (menus [0].KeyBindings.Bindings.ContainsKey (Key.N.NoShift));
-        Assert.True (menus [0].KeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
-        Assert.True (menus [0].KeyBindings.Bindings.ContainsKey (Key.R.NoShift));
-        Assert.True (menus [0].KeyBindings.Bindings.ContainsKey (Key.D.WithAlt));
-        Assert.True (menus [0].KeyBindings.Bindings.ContainsKey (Key.D.NoShift));
+        Assert.True (menus [0].HotKeyBindings.Bindings.ContainsKey (Key.N.WithAlt));
+        Assert.True (menus [0].HotKeyBindings.Bindings.ContainsKey (Key.N.NoShift));
+        Assert.True (menus [0].HotKeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
+        Assert.True (menus [0].HotKeyBindings.Bindings.ContainsKey (Key.R.NoShift));
+        Assert.True (menus [0].HotKeyBindings.Bindings.ContainsKey (Key.D.WithAlt));
+        Assert.True (menus [0].HotKeyBindings.Bindings.ContainsKey (Key.D.NoShift));
 
         Assert.True (Application.RaiseKeyDownEvent (Key.N.WithAlt));
         Assert.False (cm.MenuBar!.IsMenuOpen);
@@ -1734,12 +1734,12 @@ public class ContextMenuTests (ITestOutputHelper output)
         Application.MainLoop!.RunIteration ();
         Assert.True (deleteFile);
 
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.N.WithAlt));
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.N.NoShift));
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.R.NoShift));
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.D.WithAlt));
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.D.NoShift));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.N.WithAlt));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.N.NoShift));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.R.NoShift));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.D.WithAlt));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.D.NoShift));
 
         newFile = false;
         renameFile = false;
@@ -1796,9 +1796,9 @@ public class ContextMenuTests (ITestOutputHelper output)
         top.Add (menuBar);
         Application.Begin (top);
 
-        Assert.True (menuBar.KeyBindings.Bindings.ContainsKey (Key.F.WithAlt));
-        Assert.False (menuBar.KeyBindings.Bindings.ContainsKey (Key.N.WithAlt));
-        Assert.False (menuBar.KeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
+        Assert.True (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.F.WithAlt));
+        Assert.False (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.N.WithAlt));
+        Assert.False (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
         View [] menus = Application.Top!.Subviews.Where (v => v is Menu m && m.Host == menuBar).ToArray ();
         Assert.Empty (menus);
         Assert.Null (cm.MenuBar);
@@ -1807,7 +1807,7 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.True (menuBar.IsMenuOpen);
         Assert.Equal (2, Application.Top!.Subviews.Count);
         menus = Application.Top!.Subviews.Where (v => v is Menu m && m.Host == menuBar).ToArray ();
-        Assert.True (menus [0].KeyBindings.Bindings.ContainsKey (Key.N.WithAlt));
+        Assert.True (menus [0].HotKeyBindings.Bindings.ContainsKey (Key.N.WithAlt));
         Assert.True (Application.RaiseKeyDownEvent (Key.N.WithAlt));
         Assert.False (menuBar.IsMenuOpen);
         Assert.False (Application.RaiseKeyDownEvent (Key.R.WithAlt));
@@ -1818,29 +1818,29 @@ public class ContextMenuTests (ITestOutputHelper output)
         newFile = false;
 
         cm.Show (menuItems);
-        Assert.True (menuBar.KeyBindings.Bindings.ContainsKey (Key.F.WithAlt));
-        Assert.True (menuBar.KeyBindings.Bindings.ContainsKey (Key.F.NoShift));
-        Assert.False (menuBar.KeyBindings.Bindings.ContainsKey (Key.N.WithAlt));
-        Assert.False (menuBar.KeyBindings.Bindings.ContainsKey (Key.N.NoShift));
-        Assert.False (menuBar.KeyBindings.Bindings.ContainsKey (Key.E.WithAlt));
-        Assert.False (menuBar.KeyBindings.Bindings.ContainsKey (Key.E.NoShift));
-        Assert.False (menuBar.KeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
-        Assert.False (menuBar.KeyBindings.Bindings.ContainsKey (Key.R.NoShift));
+        Assert.True (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.F.WithAlt));
+        Assert.True (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.F.NoShift));
+        Assert.False (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.N.WithAlt));
+        Assert.False (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.N.NoShift));
+        Assert.False (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.E.WithAlt));
+        Assert.False (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.E.NoShift));
+        Assert.False (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
+        Assert.False (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.R.NoShift));
         Assert.True (cm.MenuBar!.IsMenuOpen);
-        Assert.False (cm.MenuBar!.KeyBindings.Bindings.ContainsKey (Key.F.WithAlt));
-        Assert.False (cm.MenuBar!.KeyBindings.Bindings.ContainsKey (Key.F.NoShift));
-        Assert.False (cm.MenuBar!.KeyBindings.Bindings.ContainsKey (Key.N.WithAlt));
-        Assert.False (cm.MenuBar!.KeyBindings.Bindings.ContainsKey (Key.N.NoShift));
-        Assert.False (cm.MenuBar!.KeyBindings.Bindings.ContainsKey (Key.E.WithAlt));
-        Assert.False (cm.MenuBar!.KeyBindings.Bindings.ContainsKey (Key.E.NoShift));
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.R.NoShift));
+        Assert.False (cm.MenuBar!.HotKeyBindings.Bindings.ContainsKey (Key.F.WithAlt));
+        Assert.False (cm.MenuBar!.HotKeyBindings.Bindings.ContainsKey (Key.F.NoShift));
+        Assert.False (cm.MenuBar!.HotKeyBindings.Bindings.ContainsKey (Key.N.WithAlt));
+        Assert.False (cm.MenuBar!.HotKeyBindings.Bindings.ContainsKey (Key.N.NoShift));
+        Assert.False (cm.MenuBar!.HotKeyBindings.Bindings.ContainsKey (Key.E.WithAlt));
+        Assert.False (cm.MenuBar!.HotKeyBindings.Bindings.ContainsKey (Key.E.NoShift));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.R.NoShift));
         Assert.Equal (3, Application.Top!.Subviews.Count);
         menus = Application.Top!.Subviews.Where (v => v is Menu m && m.Host == cm.MenuBar).ToArray ();
-        Assert.True (menus [0].KeyBindings.Bindings.ContainsKey (Key.E.WithAlt));
-        Assert.True (menus [0].KeyBindings.Bindings.ContainsKey (Key.E.NoShift));
-        Assert.True (menus [1].KeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
-        Assert.True (menus [1].KeyBindings.Bindings.ContainsKey (Key.R.NoShift));
+        Assert.True (menus [0].HotKeyBindings.Bindings.ContainsKey (Key.E.WithAlt));
+        Assert.True (menus [0].HotKeyBindings.Bindings.ContainsKey (Key.E.NoShift));
+        Assert.True (menus [1].HotKeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
+        Assert.True (menus [1].HotKeyBindings.Bindings.ContainsKey (Key.R.NoShift));
         Assert.True (cm.MenuBar.IsMenuOpen);
         Assert.True (Application.RaiseKeyDownEvent (Key.F.WithAlt));
         Assert.False (cm.MenuBar.IsMenuOpen);
@@ -1852,14 +1852,14 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.True (cm.MenuBar.IsMenuOpen);
         Assert.Equal (3, Application.Top!.Subviews.Count);
         menus = Application.Top!.Subviews.Where (v => v is Menu m && m.Host == cm.MenuBar).ToArray ();
-        Assert.True (menus [0].KeyBindings.Bindings.ContainsKey (Key.E.WithAlt));
-        Assert.True (menus [0].KeyBindings.Bindings.ContainsKey (Key.E.NoShift));
-        Assert.False (menus [0].KeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
-        Assert.False (menus [0].KeyBindings.Bindings.ContainsKey (Key.R.NoShift));
-        Assert.False (menus [1].KeyBindings.Bindings.ContainsKey (Key.E.WithAlt));
-        Assert.False (menus [1].KeyBindings.Bindings.ContainsKey (Key.E.NoShift));
-        Assert.True (menus [1].KeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
-        Assert.True (menus [1].KeyBindings.Bindings.ContainsKey (Key.R.NoShift));
+        Assert.True (menus [0].HotKeyBindings.Bindings.ContainsKey (Key.E.WithAlt));
+        Assert.True (menus [0].HotKeyBindings.Bindings.ContainsKey (Key.E.NoShift));
+        Assert.False (menus [0].HotKeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
+        Assert.False (menus [0].HotKeyBindings.Bindings.ContainsKey (Key.R.NoShift));
+        Assert.False (menus [1].HotKeyBindings.Bindings.ContainsKey (Key.E.WithAlt));
+        Assert.False (menus [1].HotKeyBindings.Bindings.ContainsKey (Key.E.NoShift));
+        Assert.True (menus [1].HotKeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
+        Assert.True (menus [1].HotKeyBindings.Bindings.ContainsKey (Key.R.NoShift));
         Assert.True (Application.RaiseKeyDownEvent (Key.E.NoShift));
         Assert.True (Application.RaiseKeyDownEvent (Key.R.WithAlt));
         Assert.False (cm.MenuBar.IsMenuOpen);
@@ -1867,14 +1867,14 @@ public class ContextMenuTests (ITestOutputHelper output)
         Assert.True (renameFile);
 
         Assert.Single (Application.Top!.Subviews);
-        Assert.True (menuBar.KeyBindings.Bindings.ContainsKey (Key.F.WithAlt));
-        Assert.True (menuBar.KeyBindings.Bindings.ContainsKey (Key.F.NoShift));
-        Assert.False (menuBar.KeyBindings.Bindings.ContainsKey (Key.N.WithAlt));
-        Assert.False (menuBar.KeyBindings.Bindings.ContainsKey (Key.N.NoShift));
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.E.WithAlt));
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.E.NoShift));
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
-        Assert.False (cm.MenuBar.KeyBindings.Bindings.ContainsKey (Key.R.NoShift));
+        Assert.True (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.F.WithAlt));
+        Assert.True (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.F.NoShift));
+        Assert.False (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.N.WithAlt));
+        Assert.False (menuBar.HotKeyBindings.Bindings.ContainsKey (Key.N.NoShift));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.E.WithAlt));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.E.NoShift));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.R.WithAlt));
+        Assert.False (cm.MenuBar.HotKeyBindings.Bindings.ContainsKey (Key.R.NoShift));
 
         newFile = false;
         renameFile = false;

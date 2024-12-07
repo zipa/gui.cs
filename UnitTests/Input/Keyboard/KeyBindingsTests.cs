@@ -257,10 +257,8 @@ public class KeyBindingsTests ()
         Assert.Throws<InvalidOperationException> (() => keyBindings.ReplaceKey (Key.A, Key.Empty));
     }
 
-    // Add with scope does the right things
-    [Theory]
-    [InlineData (KeyBindingScope.Focused)]
-    public void Scope_Add_Adds (KeyBindingScope scope)
+    [Fact]
+    public void Add_Adds ()
     {
         var keyBindings = new KeyBindings (new ());
         Command [] commands = { Command.Right, Command.Left };
@@ -280,12 +278,11 @@ public class KeyBindingsTests ()
         Assert.Contains (Command.Left, resultCommands);
     }
 
-    [Theory]
-    [InlineData (KeyBindingScope.Focused)]
-    public void Scope_Get_Filters (KeyBindingScope scope)
+    [Fact]
+    public void Get_Gets ()
     {
         var keyBindings = new KeyBindings (new ());
-        Command [] commands = { Command.Right, Command.Left };
+        Command [] commands = [Command.Right, Command.Left];
 
         var key = new Key (Key.A);
         keyBindings.Add (key, commands);
@@ -296,32 +293,6 @@ public class KeyBindingsTests ()
         binding = keyBindings.Get (key);
         Assert.Contains (Command.Right, binding.Commands);
         Assert.Contains (Command.Left, binding.Commands);
-    }
-
-    [Theory]
-    [InlineData (KeyBindingScope.Focused)]
-    public void Scope_TryGet_Filters (KeyBindingScope scope)
-    {
-        var keyBindings = new KeyBindings (new ());
-        Command [] commands = { Command.Right, Command.Left };
-
-        var key = new Key (Key.A);
-        keyBindings.Add (key, commands);
-        bool success = keyBindings.TryGet (key, out KeyBinding binding);
-        Assert.Contains (Command.Right, binding.Commands);
-        Assert.Contains (Command.Left, binding.Commands);
-
-        success = keyBindings.TryGet (key, out binding);
-        Assert.Contains (Command.Right, binding.Commands);
-        Assert.Contains (Command.Left, binding.Commands);
-
-        // negative test
-        success = keyBindings.TryGet (key, out binding);
-        Assert.False (success);
-
-        Command [] resultCommands = keyBindings.GetCommands (key);
-        Assert.Contains (Command.Right, resultCommands);
-        Assert.Contains (Command.Left, resultCommands);
     }
 
     // TryGet

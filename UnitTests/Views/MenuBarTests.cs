@@ -19,8 +19,8 @@ public class MenuBarTests (ITestOutputHelper output)
         menuBar.Menus = [menuBarItem];
         Assert.Single (menuBar.Menus);
         Assert.Single (menuBar.Menus [0].Children!);
-        Assert.Contains (Key.N.WithAlt, menuBar.KeyBindings.Bindings);
-        Assert.DoesNotContain (Key.I, menuBar.KeyBindings.Bindings);
+        Assert.Contains (Key.N.WithAlt, menuBar.HotKeyBindings.Bindings);
+        Assert.DoesNotContain (Key.I, menuBar.HotKeyBindings.Bindings);
 
         var top = new Toplevel ();
         top.Add (menuBar);
@@ -39,12 +39,12 @@ public class MenuBarTests (ITestOutputHelper output)
         menuItem.RemoveMenuItem ();
         Assert.Single (menuBar.Menus);
         Assert.Null (menuBar.Menus [0].Children);
-        Assert.Contains (Key.N.WithAlt, menuBar.KeyBindings.Bindings);
-        Assert.DoesNotContain (Key.I, menuBar.KeyBindings.Bindings);
+        Assert.Contains (Key.N.WithAlt, menuBar.HotKeyBindings.Bindings);
+        Assert.DoesNotContain (Key.I, menuBar.HotKeyBindings.Bindings);
 
         menuBarItem.RemoveMenuItem ();
         Assert.Empty (menuBar.Menus);
-        Assert.DoesNotContain (Key.N.WithAlt, menuBar.KeyBindings.Bindings);
+        Assert.DoesNotContain (Key.N.WithAlt, menuBar.HotKeyBindings.Bindings);
 
         top.Dispose ();
     }
@@ -2998,12 +2998,12 @@ Edit
             ]
         };
 
-        Assert.Contains (Key.A.WithCtrl, menuBar.KeyBindings.Bindings);
+        Assert.Contains (Key.A.WithCtrl, menuBar.HotKeyBindings.Bindings);
 
         menuBar.Menus [0].Children! [0].ShortcutKey = Key.B.WithCtrl;
 
-        Assert.DoesNotContain (Key.A.WithCtrl, menuBar.KeyBindings.Bindings);
-        Assert.Contains (Key.B.WithCtrl, menuBar.KeyBindings.Bindings);
+        Assert.DoesNotContain (Key.A.WithCtrl, menuBar.HotKeyBindings.Bindings);
+        Assert.Contains (Key.B.WithCtrl, menuBar.HotKeyBindings.Bindings);
     }
 
     [Fact]
