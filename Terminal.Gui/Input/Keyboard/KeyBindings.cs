@@ -48,15 +48,11 @@ public class KeyBindings
         Bindings.Add (new (key), binding);
     }
 
+#pragma warning disable CS1574 // XML comment has cref attribute that could not be resolved
     /// <summary>
     ///     <para>
     ///         Adds a new key combination that will trigger the commands in <paramref name="commands"/> (if supported by the
     ///         View - see <see cref="View.GetSupportedCommands"/>).
-    ///     </para>
-    ///     <para>
-    ///         This is a helper function for <see cref="Add(Key,KeyBinding,View?)"/>. If used for a View (
-    ///         <see cref="BoundView"/> is set), the scope will be set to <see cref="KeyBindingScope.Focused"/>.
-    ///         Otherwise, it will be set to <see cref="KeyBindingScope.Application"/>.
     ///     </para>
     ///     <para>
     ///         If the key is already bound to a different array of <see cref="Command"/>s it will be rebound
@@ -74,6 +70,7 @@ public class KeyBindings
     ///     consumed if any took effect.
     /// </param>
     /// <exception cref="ArgumentException">If <paramref name="commands"/> is empty.</exception>
+#pragma warning restore CS1574 // XML comment has cref attribute that could not be resolved
     public void Add (Key key, params Command [] commands)
     {
         Add (key, new KeyBinding (commands));
@@ -168,8 +165,7 @@ public class KeyBindings
 
     /// <summary>Removes a <see cref="KeyBinding"/> from the collection.</summary>
     /// <param name="key"></param>
-    /// <param name="boundViewForAppScope">Optional View for <see cref="KeyBindingScope.Application"/> bindings.</param>
-    public void Remove (Key key, View? boundViewForAppScope = null)
+    public void Remove (Key key)
     {
         if (!TryGet (key, out KeyBinding _))
         {

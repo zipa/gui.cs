@@ -18,7 +18,7 @@ namespace Terminal.Gui;
 ///         - Pressing the HotKey specified by <see cref="CommandView"/>.
 ///     </para>
 ///     <para>
-///         If <see cref="BindKeyToApplication"/> is <see cref="KeyBindingScope.Application"/>, <see cref="Key"/> will invoke
+///         If <see cref="BindKeyToApplication"/> is <see langword="true"/>, <see cref="Key"/> will invoke
 ///         <see cref="Command.Accept"/>
 ///         regardless of what View has focus, enabling an application-wide keyboard shortcut.
 ///     </para>

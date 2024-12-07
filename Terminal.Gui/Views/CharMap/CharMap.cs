@@ -20,9 +20,12 @@ public class CharMap : View, IDesignable
 
     private ContextMenu _contextMenu = new ();
 
+
     /// <summary>
     ///     Initializes a new instance.
     /// </summary>
+    [RequiresUnreferencedCode ("AOT")]
+    [RequiresDynamicCode ("AOT")]
     public CharMap ()
     {
         base.ColorScheme = Colors.ColorSchemes ["Dialog"];

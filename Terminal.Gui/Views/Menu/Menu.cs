@@ -251,7 +251,7 @@ internal sealed class Menu : View
     {
         // We didn't handle the key, pass it on to host
         bool? handled = null;
-        return _host.InvokeCommandsBoundToHotKeyOnSubviews (keyEvent, ref handled, true) == true;
+        return _host.InvokeCommandsBoundToHotKey (keyEvent, ref handled) == true;
     }
 
     protected override bool OnMouseEvent (MouseEventArgs me)
