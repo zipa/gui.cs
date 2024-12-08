@@ -6,7 +6,7 @@
 namespace Terminal.Gui;
 
 /// <summary>
-/// Provides a collection of <see cref="Command"/> objects that are scoped to <see cref="KeyBindingScope"/>.
+/// Provides a collection of <see cref="Command"/> objects stored in <see cref="KeyBindings"/>.
 /// </summary>
 /// <seealso cref="Application.KeyBindings"/>
 /// <seealso cref="View.KeyBindings"/>
