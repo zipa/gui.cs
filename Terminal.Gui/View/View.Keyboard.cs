@@ -705,10 +705,10 @@ public partial class View // Keyboard APIs
 
 
     /// <summary>
-    ///     Invokes the Commands bound to <paramref name="key"/>.
+    ///     Invokes the Commands bound to <paramref name="hotKey"/>.
     ///     <para>See <see href="../docs/keyboard.md">for an overview of Terminal.Gui keyboard APIs.</see></para>
     /// </summary>
-    /// <param name="key">The key event passed.</param>
+    /// <param name="hotKey">The hot key event passed.</param>
     /// <returns>
     ///     <see langword="null"/> if no command was invoked; input processing should continue.
     ///     <see langword="false"/> if at least one command was invoked and was not handled (or cancelled); input processing
@@ -716,30 +716,30 @@ public partial class View // Keyboard APIs
     ///     <see langword="true"/> if at least one command was invoked and handled (or cancelled); input processing should
     ///     stop.
     /// </returns>
-    protected bool? InvokeCommandsBoundToHotKey (Key key)
+    protected bool? InvokeCommandsBoundToHotKey (Key hotKey)
     {
-        if (!HotKeyBindings.TryGet (key, out KeyBinding binding))
+        if (!HotKeyBindings.TryGet (hotKey, out KeyBinding binding))
         {
             return null;
         }
 
-#if DEBUG
+//#if DEBUG
 
-        //if (Application.KeyBindings.TryGet (key, out KeyBinding b))
-        //{
-        //    Debug.WriteLine (
-        //                     $"WARNING: InvokeKeyBindings ({key}) - An Application scope binding exists for this key. The registered view will not invoke Command.");
-        //}
+//        //if (Application.KeyBindings.TryGet (key, out KeyBinding b))
+//        //{
+//        //    Debug.WriteLine (
+//        //                     $"WARNING: InvokeKeyBindings ({key}) - An Application scope binding exists for this key. The registered view will not invoke Command.");
+//        //}
 
-        // TODO: This is a "prototype" debug check. It may be too annoying vs. useful.
-        // Scour the bindings up our View hierarchy
-        // to ensure that the key is not already bound to a different set of commands.
-        if (SuperView?.IsHotKeyBound (key, out View? previouslyBoundView) ?? false)
-        {
-            Debug.WriteLine ($"WARNING: InvokeKeyBindings ({key}) - A subview or peer has bound this Key and will not see it: {previouslyBoundView}.");
-        }
+//        // TODO: This is a "prototype" debug check. It may be too annoying vs. useful.
+//        // Scour the bindings up our View hierarchy
+//        // to ensure that the key is not already bound to a different set of commands.
+//        if (SuperView?.IsHotKeyBound (hotKey, out View? previouslyBoundView) ?? false)
+//        {
+//            Debug.WriteLine ($"WARNING: InvokeKeyBindings ({hotKey}) - A subview or peer has bound this Key and will not see it: {previouslyBoundView}.");
+//        }
 
-#endif
+//#endif
         return InvokeCommands<KeyBinding> (binding.Commands, binding);
     }
 
