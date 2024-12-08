@@ -140,12 +140,12 @@ public class KeyboardTests
         Application.KeyBindings.Add (Key.A, Command.Accept);
         Application.KeyBindings.Add (Key.B, Command.Accept);
 
-        Assert.True (Application.KeyBindings.TryGet (Key.A, out ApplicationKeyBinding binding));
+        Assert.True (Application.KeyBindings.TryGet (Key.A, out KeyBinding binding));
         Assert.Null (binding.Target);
         Assert.True (Application.KeyBindings.TryGet (Key.B, out binding));
         Assert.Null (binding.Target);
     }
-
+            
     [Fact]
     [AutoInitShutdown]
     public void KeyBindings_Remove_Removes ()

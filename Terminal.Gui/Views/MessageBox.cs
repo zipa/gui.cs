@@ -370,7 +370,7 @@ public static class MessageBox
                                        {
                                            Clicked = (int)button.Data!;
                                        }
-                                       else if (keyCommandContext.Binding.BoundView is Button btn)
+                                       else if (keyCommandContext.Binding.Target is Button btn)
                                        {
                                            Clicked = (int)btn.Data!;
                                        }

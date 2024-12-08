@@ -45,7 +45,7 @@ public static partial class Application // Keyboard handling
 
         // Invoke any Application-scoped KeyBindings.
         // The first view that handles the key will stop the loop.
-        foreach (KeyValuePair<Key, ApplicationKeyBinding> binding in KeyBindings.GetBindings (key))
+        foreach (KeyValuePair<Key, KeyBinding> binding in KeyBindings.GetBindings (key))
         {
             if (binding.Value.Target is { })
             {
@@ -63,7 +63,7 @@ public static partial class Application // Keyboard handling
             }
             else
             {
-                if (!KeyBindings.TryGet (key, out ApplicationKeyBinding appBinding))
+                if (!KeyBindings.TryGet (key, out KeyBinding appBinding))
                 {
                     continue;
                 }
@@ -81,7 +81,7 @@ public static partial class Application // Keyboard handling
 
         return false;
 
-        static bool? InvokeCommand (Command command, Key key, ApplicationKeyBinding appBinding)
+        static bool? InvokeCommand (Command command, Key key, KeyBinding appBinding)
         {
             if (!_commandImplementations!.ContainsKey (command))
             {
@@ -92,7 +92,7 @@ public static partial class Application // Keyboard handling
 
             if (_commandImplementations.TryGetValue (command, out View.CommandImplementation? implementation))
             {
-                CommandContext<ApplicationKeyBinding> context = new (command, appBinding); // Create the context here
+                CommandContext<KeyBinding> context = new (command, appBinding); // Create the context here
 
                 return implementation (context);
             }
@@ -159,7 +159,7 @@ public static partial class Application // Keyboard handling
     static Application () { AddKeyBindings (); }
 
     /// <summary>Gets the Application-scoped key bindings.</summary>
-    public static ApplicationKeyBindings KeyBindings { get; internal set; } = new ();
+    public static KeyBindings KeyBindings { get; internal set; } = new (null);
 
     internal static void AddKeyBindings ()
     {

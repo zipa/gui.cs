@@ -58,7 +58,7 @@ public class KeyBindingsTests ()
     public void Add_With_Throws_If_Exists ()
     {
         var keyBindings = new KeyBindings (new View ());
-        keyBindings.Add (Key.A,  Command.HotKey);
+        keyBindings.Add (Key.A, Command.HotKey);
         Assert.Throws<InvalidOperationException> (() => keyBindings.Add (Key.A, Command.Accept));
 
         Command [] resultCommands = keyBindings.GetCommands (Key.A);
@@ -105,7 +105,7 @@ public class KeyBindingsTests ()
         var keyBindings = new KeyBindings (new ());
         Assert.Empty (keyBindings.Bindings);
         Assert.Null (keyBindings.GetKeyFromCommands (Command.Accept));
-        Assert.NotNull (keyBindings.BoundView);
+        Assert.NotNull (keyBindings.Target);
     }
 
     [Fact]
@@ -243,10 +243,11 @@ public class KeyBindingsTests ()
     }
 
     [Fact]
-    public void ReplaceKey_Throws_If_DoesNotContain_Old ()
+    public void ReplaceKey_Adds_If_DoesNotContain_Old ()
     {
         var keyBindings = new KeyBindings (new ());
-        Assert.Throws<InvalidOperationException> (() => keyBindings.ReplaceKey (Key.A, Key.B));
+        keyBindings.ReplaceKey (Key.A, Key.B);
+        Assert.NotEmpty (keyBindings.GetBindings (Key.B));
     }
 
     [Fact]

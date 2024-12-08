@@ -69,7 +69,7 @@ public class RadioGroup : View, IDesignable, IOrientation
 
                                 if (HasFocus)
                                 {
-                                    if (keyCommandContext is { Binding : { } } && (keyCommandContext.Binding.BoundView != this || HotKey == keyCommandContext.Binding.Key?.NoAlt.NoCtrl.NoShift))
+                                    if (keyCommandContext is { Binding : { } } && (keyCommandContext.Binding.Target != this || HotKey == keyCommandContext.Binding.Key?.NoAlt.NoCtrl.NoShift))
                                     {
                                         // It's this.HotKey OR Another View (Label?) forwarded the hotkey command to us - Act just like `Space` (Select)
                                         return InvokeCommand (Command.Select);
@@ -248,7 +248,7 @@ public class RadioGroup : View, IDesignable, IOrientation
                 if (c > -1)
                 {
                     // Just like the user pressing the items' hotkey
-                    e.Handled = InvokeCommand<KeyBinding> (Command.HotKey, new KeyBinding ([Command.HotKey], boundView: this, data: c)) == true;
+                    e.Handled = InvokeCommand<KeyBinding> (Command.HotKey, new KeyBinding ([Command.HotKey], target: this, data: c)) == true;
                 }
             }
 

@@ -9,8 +9,8 @@ namespace Terminal.Gui;
 /// <seealso cref="Command"/>
 public class KeyBindings
 {
-    /// <summary>Initializes a new instance bound to <paramref name="boundView"/>.</summary>
-    public KeyBindings (View? boundView) { BoundView = boundView; }
+    /// <summary>Initializes a new instance bound to <paramref name="target"/>.</summary>
+    public KeyBindings (View? target) { Target = target; }
 
     /// <summary>Adds a <see cref="KeyBinding"/> to the collection.</summary>
     /// <param name="key"></param>
@@ -24,7 +24,7 @@ public class KeyBindings
             throw new ArgumentException (nameof (key));
         }
 
-        if (binding.Commands.Length == 0)
+        if (binding.Commands is { Length: 0 })
         {
             throw new ArgumentException (nameof (binding));
         }
@@ -36,9 +36,9 @@ public class KeyBindings
             //Bindings [key] = binding;
         }
 
-        if (BoundView is { })
+        if (Target is { })
         {
-            binding.BoundView = BoundView;
+            binding.Target = Target;
         }
 
         // IMPORTANT: Add a COPY of the key. This is needed because ConfigurationManager.Apply uses DeepMemberWiseCopy 
@@ -76,10 +76,46 @@ public class KeyBindings
         Add (key, new KeyBinding (commands));
     }
 
+
+    /// <summary>
+    ///     <para>
+    ///         Adds a new key combination that will trigger the commands in <paramref name="commands"/> on the View
+    ///         specified by <paramref name="target"/>.
+    ///     </para>
+    ///     <para>
+    ///         If the key is already bound to a different array of <see cref="Command"/>s it will be rebound
+    ///         <paramref name="commands"/>.
+    ///     </para>
+    /// </summary>
+    /// <remarks>
+    /// </remarks>
+    /// <param name="key">The key to check.</param>
+    /// <param name="target">The View the commands will be invoked on. If <see langword="null"/>, the key will be bound to <see cref="Application"/>.</param>
+    /// <param name="commands">
+    ///     The command to invoked on the <see paramref="target"/> when <paramref name="key"/> is pressed. When
+    ///     multiple commands are provided,they will be applied in sequence. The bound <paramref name="key"/> strike will be
+    ///     consumed if any took effect. 
+    /// </param>
+    public void Add (Key key, View? target, params Command [] commands)
+    {
+        KeyBinding binding = new (commands, target);
+        Add (key, binding);
+    }
+
     // TODO: Add a dictionary comparer that ignores Scope
     // TODO: This should not be public!
     /// <summary>The collection of <see cref="KeyBinding"/> objects.</summary>
     public Dictionary<Key, KeyBinding> Bindings { get; } = new (new KeyEqualityComparer ());
+
+    /// <summary>
+    ///     Gets the bindings bound to <paramref name="key"/>.
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public IEnumerable<KeyValuePair<Key, KeyBinding>> GetBindings (Key key)
+    {
+        return Bindings.Where (b => b.Key == key.KeyCode);
+    }
 
     /// <summary>
     ///     Gets the keys that are bound.
@@ -93,7 +129,7 @@ public class KeyBindings
     /// <remarks>
     ///     If <see langword="null"/> the KeyBindings object is being used for Application.KeyBindings.
     /// </remarks>
-    public View? BoundView { get; init; }
+    public View? Target { get; init; }
 
     /// <summary>Removes all <see cref="KeyBinding"/> objects from the collection.</summary>
     public void Clear () { Bindings.Clear (); }
@@ -202,19 +238,27 @@ public class KeyBindings
     /// <param name="newKey">The new key to be used. If <see cref="Key.Empty"/> no action will be taken.</param>
     public void ReplaceKey (Key oldKey, Key newKey)
     {
-        if (!TryGet (oldKey, out KeyBinding _))
-        {
-            throw new InvalidOperationException ($"Key {oldKey} is not bound.");
-        }
-
         if (!newKey.IsValid)
         {
             throw new InvalidOperationException ($"Key {newKey} is is not valid.");
         }
 
-        KeyBinding value = Bindings [oldKey];
-        Remove (oldKey);
-        Add (newKey, value);
+        if (newKey == Key.Empty)
+        {
+            Remove (oldKey);
+            return;
+        }
+
+
+        if (TryGet (oldKey, out KeyBinding binding))
+        {
+            Remove (oldKey);
+            Add (newKey, binding);
+        }
+        else
+        {
+            Add (newKey, binding);
+        }
     }
 
     /// <summary>Gets the commands bound with the specified Key.</summary>
