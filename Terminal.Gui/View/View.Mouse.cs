@@ -595,8 +595,6 @@ public partial class View // Mouse APIs
             return true;
         }
 
-        // Post-conditions
-
         args.Handled = InvokeCommandsBoundToMouse (args) == true;
 
         return args.Handled;
@@ -642,6 +640,13 @@ public partial class View // Mouse APIs
         }
 
         Highlight?.Invoke (this, args);
+
+        //if (args.Cancel)
+        //{
+        //    return true;
+        //}
+
+        //args.Cancel = InvokeCommandsBoundToMouse (args) == true;
 
         return args.Cancel;
     }

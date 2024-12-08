@@ -45,16 +45,17 @@ public static partial class Application // Keyboard handling
 
         // Invoke any Application-scoped KeyBindings.
         // The first view that handles the key will stop the loop.
-        foreach (KeyValuePair<Key, KeyBinding> binding in KeyBindings.GetBindings (key))
+        // foreach (KeyValuePair<Key, KeyBinding> binding in KeyBindings.GetBindings (key))
+        if (KeyBindings.TryGet (key, out KeyBinding binding))
         {
-            if (binding.Value.Target is { })
+            if (binding.Target is { })
             {
-                if (!binding.Value.Target.Enabled)
+                if (!binding.Target.Enabled)
                 {
                     return false;
                 }
 
-                bool? handled = binding.Value.Target?.InvokeCommands (binding.Value.Commands, binding.Value);
+                bool? handled = binding.Target?.InvokeCommands (binding.Commands, binding);
 
                 if (handled != null && (bool)handled)
                 {
@@ -65,7 +66,7 @@ public static partial class Application // Keyboard handling
             {
                 if (!KeyBindings.TryGet (key, out KeyBinding appBinding))
                 {
-                    continue;
+                    return false;
                 }
 
                 bool? toReturn = null;

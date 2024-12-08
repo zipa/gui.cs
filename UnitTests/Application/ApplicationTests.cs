@@ -552,7 +552,7 @@ public class ApplicationTests
 
         Assert.Equal (Key.Q.WithCtrl, Application.QuitKey);
 
-        Assert.NotEmpty (Application.KeyBindings.GetBindings (Key.Q.WithCtrl));
+        Assert.True (Application.KeyBindings.TryGet (Key.Q.WithCtrl, out _));
 
         Application.Shutdown ();
         Locations = ConfigLocations.Default;

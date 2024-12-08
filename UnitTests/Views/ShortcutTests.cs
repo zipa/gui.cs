@@ -100,7 +100,7 @@ public class ShortcutTests
             Title = command,
         };
 
-        shortcut.Layout();
+        shortcut.Layout ();
 
         // |0123456789
         // | C  H  K |
@@ -281,7 +281,7 @@ public class ShortcutTests
         var shortcut = new Shortcut ();
 
         shortcut.Key = Key.A;
-        Assert.True(shortcut.HotKeyBindings.TryGet(Key.A, out _));
+        Assert.True (shortcut.HotKeyBindings.TryGet (Key.A, out _));
 
         shortcut.Key = Key.B;
         Assert.False (shortcut.HotKeyBindings.TryGet (Key.A, out _));
@@ -313,15 +313,15 @@ public class ShortcutTests
         var shortcut = new Shortcut ();
 
         shortcut.Key = Key.A;
-        Assert.True (shortcut.HotKeyBindings.TryGet(Key.A, out _));
+        Assert.True (shortcut.HotKeyBindings.TryGet (Key.A, out _));
 
         shortcut.BindKeyToApplication = true;
         Assert.False (shortcut.HotKeyBindings.TryGet (Key.A, out _));
-        Assert.NotEmpty (Application.KeyBindings.GetBindings(Key.A));
+        Assert.True (Application.KeyBindings.TryGet (Key.A, out _));
 
         shortcut.BindKeyToApplication = false;
         Assert.True (shortcut.HotKeyBindings.TryGet (Key.A, out _));
-        Assert.Empty (Application.KeyBindings.GetBindings (Key.A));
+        Assert.False (Application.KeyBindings.TryGet (Key.A, out _));
     }
 
     [Theory]

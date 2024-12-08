@@ -105,17 +105,12 @@ public class KeyBindings
     private readonly Dictionary<Key, KeyBinding> _bindings = new (new KeyEqualityComparer ());
 
     /// <summary>
-    ///     Gets the bindings bound to <paramref name="key"/>.
+    ///     Gets the bindings.
     /// </summary>
-    /// <param name="key"></param>
     /// <returns></returns>
-    public IEnumerable<KeyValuePair<Key, KeyBinding>> GetBindings (Key? key = null)
+    public IEnumerable<KeyValuePair<Key, KeyBinding>> GetBindings ()
     {
-        if (key is null)
-        {
-            return _bindings;
-        }
-        return _bindings.Where (b => b.Key == key.KeyCode);
+        return _bindings;
     }
 
     /// <summary>
