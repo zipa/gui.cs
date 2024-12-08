@@ -103,7 +103,7 @@ public class KeyBindingsTests ()
     public void Defaults ()
     {
         var keyBindings = new KeyBindings (new ());
-        Assert.Empty (keyBindings.Bindings);
+        Assert.Empty (keyBindings.GetBindings ());
         Assert.Null (keyBindings.GetKeyFromCommands (Command.Accept));
         Assert.NotNull (keyBindings.Target);
     }
@@ -305,9 +305,6 @@ public class KeyBindingsTests ()
         var key = new Key (Key.Q.WithCtrl);
         bool result = keyBindings.TryGet (key, out KeyBinding _);
         Assert.True (result); ;
-
-        result = keyBindings.Bindings.TryGetValue (key, out KeyBinding _);
-        Assert.True (result);
     }
 
     [Fact]

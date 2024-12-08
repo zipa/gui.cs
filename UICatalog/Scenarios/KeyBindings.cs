@@ -80,7 +80,7 @@ public sealed class KeyBindings : Scenario
         };
         appWindow.Add (appBindingsListView);
 
-        foreach (var key in Application.KeyBindings.GetBoundKeys())
+        foreach (var key in Application.KeyBindings.GetBoundKeys ())
         {
             var binding = Application.KeyBindings.Get (key);
             appBindings.Add ($"{key} -> {binding.Target?.GetType ().Name} - {binding.Commands [0]}");
@@ -104,7 +104,7 @@ public sealed class KeyBindings : Scenario
 
         foreach (var subview in appWindow.Subviews)
         {
-            foreach (var binding in subview.HotKeyBindings.Bindings)
+            foreach (KeyValuePair<Key, KeyBinding> binding in subview.HotKeyBindings.GetBindings ())
             {
                 hotkeyBindings.Add ($"{binding.Key} -> {subview.GetType ().Name} - {binding.Value.Commands [0]}");
             }
@@ -148,8 +148,8 @@ public sealed class KeyBindings : Scenario
 
         _focusedBindingsListView.Title = $"_Focused ({focused?.GetType ().Name}) Bindings";
 
-        _focusedBindings.Clear();
-        foreach (var binding in focused?.KeyBindings!.Bindings)
+        _focusedBindings.Clear ();
+        foreach (var binding in focused?.KeyBindings!.GetBindings ())
         {
             _focusedBindings.Add ($"{binding.Key} -> {binding.Value.Commands [0]}");
         }

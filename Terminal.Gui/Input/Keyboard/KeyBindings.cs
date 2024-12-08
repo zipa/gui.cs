@@ -45,7 +45,7 @@ public class KeyBindings
         // IMPORTANT: update the memory referenced by the key, and Dictionary uses caching for performance, and thus 
         // IMPORTANT: Apply will update the Dictionary with the new key, but the old key will still be in the dictionary.
         // IMPORTANT: See the ConfigurationManager.Illustrate_DeepMemberWiseCopy_Breaks_Dictionary test for details.
-        Bindings.Add (new (key), binding);
+        _bindings.Add (new (key), binding);
     }
 
 #pragma warning disable CS1574 // XML comment has cref attribute that could not be resolved
@@ -102,26 +102,27 @@ public class KeyBindings
         Add (key, binding);
     }
 
-    // TODO: Add a dictionary comparer that ignores Scope
-    // TODO: This should not be public!
-    /// <summary>The collection of <see cref="KeyBinding"/> objects.</summary>
-    public Dictionary<Key, KeyBinding> Bindings { get; } = new (new KeyEqualityComparer ());
+    private readonly Dictionary<Key, KeyBinding> _bindings = new (new KeyEqualityComparer ());
 
     /// <summary>
     ///     Gets the bindings bound to <paramref name="key"/>.
     /// </summary>
     /// <param name="key"></param>
     /// <returns></returns>
-    public IEnumerable<KeyValuePair<Key, KeyBinding>> GetBindings (Key key)
+    public IEnumerable<KeyValuePair<Key, KeyBinding>> GetBindings (Key? key = null)
     {
-        return Bindings.Where (b => b.Key == key.KeyCode);
+        if (key is null)
+        {
+            return _bindings;
+        }
+        return _bindings.Where (b => b.Key == key.KeyCode);
     }
 
     /// <summary>
     ///     Gets the keys that are bound.
     /// </summary>
     /// <returns></returns>
-    public IEnumerable<Key> GetBoundKeys () { return Bindings.Keys; }
+    public IEnumerable<Key> GetBoundKeys () { return _bindings.Keys; }
 
     /// <summary>
     ///     The view that the <see cref="KeyBindings"/> are bound to.
@@ -132,7 +133,7 @@ public class KeyBindings
     public View? Target { get; init; }
 
     /// <summary>Removes all <see cref="KeyBinding"/> objects from the collection.</summary>
-    public void Clear () { Bindings.Clear (); }
+    public void Clear () { _bindings.Clear (); }
 
     /// <summary>
     ///     Removes all key bindings that trigger the given command set. Views can have multiple different keys bound to
@@ -141,7 +142,7 @@ public class KeyBindings
     /// <param name="command"></param>
     public void Clear (params Command [] command)
     {
-        KeyValuePair<Key, KeyBinding> [] kvps = Bindings
+        KeyValuePair<Key, KeyBinding> [] kvps = _bindings
                                                 .Where (kvp => kvp.Value.Commands.SequenceEqual (command))
                                                 .ToArray ();
 
@@ -186,7 +187,7 @@ public class KeyBindings
     ///     The first <see cref="Key"/> bound to the set of commands specified by <paramref name="commands"/>.
     ///     <see langword="null"/> if the set of caommands was not found.
     /// </returns>
-    public Key? GetKeyFromCommands (params Command [] commands) { return Bindings.FirstOrDefault (a => a.Value.Commands.SequenceEqual (commands)).Key; }
+    public Key? GetKeyFromCommands (params Command [] commands) { return _bindings.FirstOrDefault (a => a.Value.Commands.SequenceEqual (commands)).Key; }
 
     /// <summary>Gets Keys bound to the set of commands specified by <paramref name="commands"/>.</summary>
     /// <param name="commands">The set of commands to search.</param>
@@ -196,7 +197,7 @@ public class KeyBindings
     /// </returns>
     public IEnumerable<Key> GetKeysFromCommands (params Command [] commands)
     {
-        return Bindings.Where (a => a.Value.Commands.SequenceEqual (commands)).Select (a => a.Key);
+        return _bindings.Where (a => a.Value.Commands.SequenceEqual (commands)).Select (a => a.Key);
     }
 
     /// <summary>Removes a <see cref="KeyBinding"/> from the collection.</summary>
@@ -208,7 +209,7 @@ public class KeyBindings
             return;
         }
 
-        Bindings.Remove (key);
+        _bindings.Remove (key);
     }
 
     /// <summary>Replaces the commands already bound to a key.</summary>
@@ -275,7 +276,7 @@ public class KeyBindings
 
         if (key.IsValid)
         {
-            return Bindings.TryGetValue (key, out binding);
+            return _bindings.TryGetValue (key, out binding);
         }
 
         return false;

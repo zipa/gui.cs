@@ -72,7 +72,8 @@ public class HotKeyTests
         Assert.Equal (KeyCode.Z, view.HotKey);
 
         view.AddKeyBindingsForHotKey (view.HotKey, Key.A);
-        Assert.Equal (Key.A, view.HotKeyBindings.Bindings [Key.A].Key);
+        view.HotKeyBindings.TryGet (Key.A, out var binding);
+        Assert.Equal (Key.A, binding.Key);
     }
 
     [Fact]
@@ -83,7 +84,8 @@ public class HotKeyTests
         Assert.Equal (KeyCode.Z, view.HotKey);
 
         view.AddKeyBindingsForHotKey (view.HotKey, Key.A, "data");
-        Assert.Equal ("data", view.HotKeyBindings.Bindings [Key.A].Data);
+        view.HotKeyBindings.TryGet (Key.A, out var binding);
+        Assert.Equal ("data", binding.Data);
     }
 
     [Fact]
