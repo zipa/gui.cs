@@ -1,4 +1,5 @@
-﻿namespace Terminal.Gui;
+﻿#nullable enable
+namespace Terminal.Gui;
 
 /// <summary>The <see cref="ColorPicker16"/> <see cref="View"/> Color picker.</summary>
 public class ColorPicker16 : View
@@ -7,10 +8,10 @@ public class ColorPicker16 : View
     public ColorPicker16 () { SetInitialProperties (); }
 
     /// <summary>Columns of color boxes</summary>
-    private readonly int _cols = 8;
+    private const int COLS = 8;
 
     /// <summary>Rows of color boxes</summary>
-    private readonly int _rows = 2;
+    private const int ROWS = 2;
 
     private int _boxHeight = 2;
     private int _boxWidth = 4;
@@ -25,9 +26,9 @@ public class ColorPicker16 : View
             if (_boxHeight != value)
             {
                 _boxHeight = value;
-                Width = Dim.Auto (minimumContentDim: _boxWidth * _cols);
-                Height = Dim.Auto (minimumContentDim: _boxHeight * _rows);
-                SetContentSize (new (_boxWidth * _cols, _boxHeight * _rows));
+                Width = Dim.Auto (minimumContentDim: _boxWidth * COLS);
+                Height = Dim.Auto (minimumContentDim: _boxHeight * ROWS);
+                SetContentSize (new (_boxWidth * COLS, _boxHeight * ROWS));
                 SetNeedsLayout ();
             }
         }
@@ -42,25 +43,24 @@ public class ColorPicker16 : View
             if (_boxWidth != value)
             {
                 _boxWidth = value;
-                Width = Dim.Auto (minimumContentDim: _boxWidth * _cols);
-                Height = Dim.Auto (minimumContentDim: _boxHeight * _rows);
-                SetContentSize (new (_boxWidth * _cols, _boxHeight * _rows));
+                Width = Dim.Auto (minimumContentDim: _boxWidth * COLS);
+                Height = Dim.Auto (minimumContentDim: _boxHeight * ROWS);
+                SetContentSize (new (_boxWidth * COLS, _boxHeight * ROWS));
                 SetNeedsLayout ();
             }
         }
     }
 
     /// <summary>Fired when a color is picked.</summary>
-    [CanBeNull]
-    public event EventHandler<ColorEventArgs> ColorChanged;
+    public event EventHandler<ColorEventArgs>? ColorChanged;
 
     /// <summary>Cursor for the selected color.</summary>
     public Point Cursor
     {
-        get => new (_selectColorIndex % _cols, _selectColorIndex / _cols);
+        get => new (_selectColorIndex % COLS, _selectColorIndex / COLS);
         set
         {
-            int colorIndex = value.Y * _cols + value.X;
+            int colorIndex = value.Y * COLS + value.X;
             SelectedColor = (ColorName16)colorIndex;
         }
     }
@@ -73,9 +73,9 @@ public class ColorPicker16 : View
         {
             return true;
         }
-        if (Cursor.Y < _rows - 1)
+        if (Cursor.Y < ROWS - 1)
         {
-            SelectedColor += _cols;
+            SelectedColor += COLS;
         }
 
         return true;
@@ -106,7 +106,7 @@ public class ColorPicker16 : View
         {
             return true;
         }
-        if (Cursor.X < _cols - 1)
+        if (Cursor.X < COLS - 1)
         {
             SelectedColor++;
         }
@@ -124,7 +124,7 @@ public class ColorPicker16 : View
         }
         if (Cursor.Y > 0)
         {
-            SelectedColor -= _cols;
+            SelectedColor -= COLS;
         }
 
         return true;
@@ -140,7 +140,7 @@ public class ColorPicker16 : View
         {
             for (var x = 0; x < Math.Max (8, Viewport.Width / BoxWidth); x++)
             {
-                int foregroundColorIndex = y == 0 ? colorIndex + _cols : colorIndex - _cols;
+                int foregroundColorIndex = y == 0 ? colorIndex + COLS : colorIndex - COLS;
 
                 if (foregroundColorIndex > 15 || colorIndex > 15)
                 {
@@ -210,21 +210,17 @@ public class ColorPicker16 : View
 
     // TODO: Decouple Cursor from SelectedColor so that mouse press-and-hold can show the color under the cursor.
 
-
     /// <summary>Draw a box for one color.</summary>
     /// <param name="x">X location.</param>
     /// <param name="y">Y location</param>
     /// <param name="selected"></param>
     private void DrawColorBox (int x, int y, bool selected)
     {
-        var index = 0;
-
         for (var zoomedY = 0; zoomedY < BoxHeight; zoomedY++)
         {
             for (var zoomedX = 0; zoomedX < BoxWidth; zoomedX++)
             {
                 AddRune (x * BoxWidth + zoomedX, y * BoxHeight + zoomedY, (Rune)' ');
-                index++;
             }
         }
 
@@ -281,8 +277,8 @@ public class ColorPicker16 : View
         AddCommands ();
         AddKeyBindings ();
 
-        Width = Dim.Auto (minimumContentDim: _boxWidth * _cols);
-        Height = Dim.Auto (minimumContentDim: _boxHeight * _rows);
-        SetContentSize (new (_boxWidth * _cols, _boxHeight * _rows));
+        Width = Dim.Auto (minimumContentDim: _boxWidth * COLS);
+        Height = Dim.Auto (minimumContentDim: _boxHeight * ROWS);
+        SetContentSize (new (_boxWidth * COLS, _boxHeight * ROWS));
     }
 }
