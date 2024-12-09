@@ -1,16 +1,18 @@
 ﻿#nullable enable
+using System.Collections;
 using System.Collections.Generic;
 
 namespace Terminal.Gui;
 
 public abstract class Bindings<TKey, TBind>  where TBind : IInputBinding, new()
 {
-    protected readonly Dictionary<TKey, TBind> _bindings = new ();
+    protected readonly Dictionary<TKey, TBind> _bindings;
     private readonly Func<Command [], TKey, TBind> _constructBinding;
 
-    protected Bindings (Func<Command [], TKey, TBind> constructBinding)
+    protected Bindings (Func<Command [], TKey, TBind> constructBinding, IEqualityComparer<TKey> equalityComparer)
     {
         _constructBinding = constructBinding;
+        _bindings = new (equalityComparer);
     }
 
     /// <summary>Adds a <see cref="MouseBinding"/> to the collection.</summary>
@@ -151,7 +153,8 @@ public class MouseBindings : Bindings<MouseFlags,MouseBinding>
     ///     <see cref="View"/>. This is used for Application.MouseBindings and unit tests.
     /// </summary>
     public MouseBindings ():base(
-                                 (commands, flags)=> new MouseBinding (commands, flags)) { }
+                                 (commands, flags)=> new MouseBinding (commands, flags),
+                                 EqualityComparer<MouseFlags>.Default) { }
 
     
 

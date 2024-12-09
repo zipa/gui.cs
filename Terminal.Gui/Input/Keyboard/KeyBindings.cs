@@ -10,71 +10,10 @@ namespace Terminal.Gui;
 public class KeyBindings : Bindings<Key,KeyBinding>
 {
     /// <summary>Initializes a new instance bound to <paramref name="target"/>.</summary>
-    public KeyBindings (View? target) :base((commands,key)=> new KeyBinding (commands)) { Target = target; }
+    public KeyBindings (View? target) :base(
+                                            (commands,key)=> new KeyBinding (commands),
+                                            new KeyEqualityComparer ()) { Target = target; }
 
-    /// <summary>Adds a <see cref="KeyBinding"/> to the collection.</summary>
-    /// <param name="key"></param>
-    /// <param name="binding"></param>
-    /// <exception cref="ArgumentException">If <paramref name="binding"/> has no Commands or <paramref name="key"/> is invalid.</exception>
-    public void Add (Key key, KeyBinding binding)
-    {
-
-        if (!key.IsValid)
-        {
-            throw new ArgumentException (nameof (key));
-        }
-
-        if (binding.Commands is { Length: 0 })
-        {
-            throw new ArgumentException (nameof (binding));
-        }
-
-        if (TryGet (key, out KeyBinding _))
-        {
-            throw new InvalidOperationException (@$"A key binding for {key} exists ({binding}).");
-
-            //Bindings [key] = binding;
-        }
-
-        if (Target is { })
-        {
-            binding.Target = Target;
-        }
-
-        // IMPORTANT: Add a COPY of the key. This is needed because ConfigurationManager.Apply uses DeepMemberWiseCopy 
-        // IMPORTANT: update the memory referenced by the key, and Dictionary uses caching for performance, and thus 
-        // IMPORTANT: Apply will update the Dictionary with the new key, but the old key will still be in the dictionary.
-        // IMPORTANT: See the ConfigurationManager.Illustrate_DeepMemberWiseCopy_Breaks_Dictionary test for details.
-        _bindings.Add (new (key), binding);
-    }
-
-#pragma warning disable CS1574 // XML comment has cref attribute that could not be resolved
-    /// <summary>
-    ///     <para>
-    ///         Adds a new key combination that will trigger the commands in <paramref name="commands"/> (if supported by the
-    ///         View - see <see cref="View.GetSupportedCommands"/>).
-    ///     </para>
-    ///     <para>
-    ///         If the key is already bound to a different array of <see cref="Command"/>s it will be rebound
-    ///         <paramref name="commands"/>.
-    ///     </para>
-    /// </summary>
-    /// <remarks>
-    ///     Commands are only ever applied to the current <see cref="View"/> (i.e. this feature cannot be used to switch
-    ///     focus to another view and perform multiple commands there).
-    /// </remarks>
-    /// <param name="key">The key to check.</param>
-    /// <param name="commands">
-    ///     The command to invoked on the <see cref="View"/> when <paramref name="key"/> is pressed. When
-    ///     multiple commands are provided,they will be applied in sequence. The bound <paramref name="key"/> strike will be
-    ///     consumed if any took effect.
-    /// </param>
-    /// <exception cref="ArgumentException">If <paramref name="commands"/> is empty.</exception>
-#pragma warning restore CS1574 // XML comment has cref attribute that could not be resolved
-    public void Add (Key key, params Command [] commands)
-    {
-        Add (key, new KeyBinding (commands));
-    }
 
 
     /// <summary>
@@ -101,8 +40,6 @@ public class KeyBindings : Bindings<Key,KeyBinding>
         KeyBinding binding = new (commands, target);
         Add (key, binding);
     }
-
-    private readonly Dictionary<Key, KeyBinding> _bindings = new (new KeyEqualityComparer ());
 
     /// <summary>
     ///     Gets the bindings.
