@@ -1,9 +1,17 @@
 ﻿#nullable enable
+using System.Collections.Generic;
+
 namespace Terminal.Gui;
 
 public abstract class Bindings<TKey, TBind> where TKey: Enum where TBind : IInputBinding, new()
 {
-    private readonly Dictionary<TKey, TBind> _bindings = new ();
+    protected readonly Dictionary<TKey, TBind> _bindings = new ();
+    private readonly Func<Command [], TKey, TBind> _constructBinding;
+
+    protected Bindings (Func<Command [], TKey, TBind> constructBinding)
+    {
+        _constructBinding = constructBinding;
+    }
 
     /// <summary>Adds a <see cref="MouseBinding"/> to the collection.</summary>
     /// <param name="mouseEventArgs"></param>
@@ -35,37 +43,7 @@ public abstract class Bindings<TKey, TBind> where TKey: Enum where TBind : IInpu
     {
         return _bindings.TryGetValue (mouseEventArgs, out binding);
     }
-}
 
-/// <summary>
-///     Provides a collection of <see cref="MouseBinding"/> objects bound to a combination of <see cref="MouseFlags"/>.
-/// </summary>
-/// <seealso cref="View.MouseBindings"/>
-/// <seealso cref="Command"/>
-public class MouseBindings : Bindings<MouseFlags,MouseBinding>
-{
-    /// <summary>
-    ///     Initializes a new instance. This constructor is used when the <see cref="MouseBindings"/> are not bound to a
-    ///     <see cref="View"/>. This is used for Application.MouseBindings and unit tests.
-    /// </summary>
-    public MouseBindings () { }
-
-    /// <summary>Adds a <see cref="MouseBinding"/> to the collection.</summary>
-    /// <param name="mouseEventArgs"></param>
-    /// <param name="binding"></param>
-    public void Add (MouseFlags mouseEventArgs, MouseBinding binding)
-    {
-        if (TryGet (mouseEventArgs, out MouseBinding _))
-        {
-            throw new InvalidOperationException (@$"A binding for {mouseEventArgs} exists ({binding}).");
-        }
-
-        // IMPORTANT: Add a COPY of the mouseEventArgs. This is needed because ConfigurationManager.Apply uses DeepMemberWiseCopy 
-        // IMPORTANT: update the memory referenced by the key, and Dictionary uses caching for performance, and thus 
-        // IMPORTANT: Apply will update the Dictionary with the new mouseEventArgs, but the old mouseEventArgs will still be in the dictionary.
-        // IMPORTANT: See the ConfigurationManager.Illustrate_DeepMemberWiseCopy_Breaks_Dictionary test for details.
-        _bindings.Add (mouseEventArgs, binding);
-    }
 
     /// <summary>
     ///     <para>Adds a new mouse flag combination that will trigger the commands in <paramref name="commands"/>.</para>
@@ -85,9 +63,9 @@ public class MouseBindings : Bindings<MouseFlags,MouseBinding>
     ///     will be
     ///     consumed if any took effect.
     /// </param>
-    public void Add (MouseFlags mouseFlags, params Command [] commands)
+    public void Add (TKey mouseFlags, params Command [] commands)
     {
-        if (mouseFlags == MouseFlags.None)
+        if (EqualityComparer<TKey>.Default.Equals (mouseFlags, default))
         {
             throw new ArgumentException (@"Invalid MouseFlag", nameof (mouseFlags));
         }
@@ -97,21 +75,19 @@ public class MouseBindings : Bindings<MouseFlags,MouseBinding>
             throw new ArgumentException (@"At least one command must be specified", nameof (commands));
         }
 
-        if (TryGet (mouseFlags, out MouseBinding binding))
+        if (TryGet (mouseFlags, out var binding))
         {
             throw new InvalidOperationException (@$"A binding for {mouseFlags} exists ({binding}).");
         }
 
-        Add (mouseFlags, new MouseBinding (commands, mouseFlags));
+        Add (mouseFlags, _constructBinding(commands,mouseFlags));
     }
-
-    private readonly Dictionary<MouseFlags, MouseBinding> _bindings = new ();
 
     /// <summary>
     ///     Gets the bindings.
     /// </summary>
     /// <returns></returns>
-    public IEnumerable<KeyValuePair<MouseFlags, MouseBinding>> GetBindings ()
+    public IEnumerable<KeyValuePair<TKey, TBind>> GetBindings ()
     {
         return _bindings;
     }
@@ -126,11 +102,11 @@ public class MouseBindings : Bindings<MouseFlags,MouseBinding>
     /// <param name="command"></param>
     public void Clear (params Command [] command)
     {
-        KeyValuePair<MouseFlags, MouseBinding> [] kvps = _bindings
-                                                             .Where (kvp => kvp.Value.Commands.SequenceEqual (command))
-                                                             .ToArray ();
+        KeyValuePair<TKey, TBind> [] kvps = _bindings
+                                                         .Where (kvp => kvp.Value.Commands.SequenceEqual (command))
+                                                         .ToArray ();
 
-        foreach (KeyValuePair<MouseFlags, MouseBinding> kvp in kvps)
+        foreach (KeyValuePair<TKey, TBind> kvp in kvps)
         {
             Remove (kvp.Key);
         }
@@ -139,15 +115,45 @@ public class MouseBindings : Bindings<MouseFlags,MouseBinding>
     /// <summary>Gets the <see cref="MouseBinding"/> for the specified combination of <see cref="MouseFlags"/>.</summary>
     /// <param name="mouseEventArgs"></param>
     /// <returns></returns>
-    public MouseBinding Get (MouseFlags mouseEventArgs)
+    public TBind? Get (TKey mouseEventArgs)
     {
-        if (TryGet (mouseEventArgs, out MouseBinding binding))
+        if (TryGet (mouseEventArgs, out var binding))
         {
             return binding;
         }
 
         throw new InvalidOperationException ($"{mouseEventArgs} is not bound.");
     }
+
+
+    /// <summary>Removes a <see cref="MouseBinding"/> from the collection.</summary>
+    /// <param name="mouseEventArgs"></param>
+    public void Remove (TKey mouseEventArgs)
+    {
+        if (!TryGet (mouseEventArgs, out var _))
+        {
+            return;
+        }
+
+        _bindings.Remove (mouseEventArgs);
+    }
+}
+
+/// <summary>
+///     Provides a collection of <see cref="MouseBinding"/> objects bound to a combination of <see cref="MouseFlags"/>.
+/// </summary>
+/// <seealso cref="View.MouseBindings"/>
+/// <seealso cref="Command"/>
+public class MouseBindings : Bindings<MouseFlags,MouseBinding>
+{
+    /// <summary>
+    ///     Initializes a new instance. This constructor is used when the <see cref="MouseBindings"/> are not bound to a
+    ///     <see cref="View"/>. This is used for Application.MouseBindings and unit tests.
+    /// </summary>
+    public MouseBindings ():base(
+                                 (commands, flags)=> new MouseBinding (commands, flags)) { }
+
+    
 
     /// <summary>
     ///     Gets combination of <see cref="MouseFlags"/> bound to the set of commands specified by
@@ -200,17 +206,6 @@ public class MouseBindings : Bindings<MouseFlags,MouseBinding>
         return _bindings.FirstOrDefault (a => a.Value.Commands.SequenceEqual (commands)).Key;
     }
 
-    /// <summary>Removes a <see cref="MouseBinding"/> from the collection.</summary>
-    /// <param name="mouseEventArgs"></param>
-    public void Remove (MouseFlags mouseEventArgs)
-    {
-        if (!TryGet (mouseEventArgs, out MouseBinding _))
-        {
-            return;
-        }
-
-        _bindings.Remove (mouseEventArgs);
-    }
 
     /// <summary>Replaces the commands already bound to a combination of <see cref="MouseFlags"/>.</summary>
     /// <remarks>
