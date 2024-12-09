@@ -1,12 +1,48 @@
 ﻿#nullable enable
 namespace Terminal.Gui;
 
+public abstract class Bindings<TKey, TBind> where TKey: Enum where TBind : IInputBinding, new()
+{
+    private readonly Dictionary<TKey, TBind> _bindings = new ();
+
+    /// <summary>Adds a <see cref="MouseBinding"/> to the collection.</summary>
+    /// <param name="mouseEventArgs"></param>
+    /// <param name="binding"></param>
+    public void Add (TKey mouseEventArgs, TBind binding)
+    {
+        if (TryGet (mouseEventArgs, out TBind _))
+        {
+            throw new InvalidOperationException (@$"A binding for {mouseEventArgs} exists ({binding}).");
+        }
+
+        // IMPORTANT: Add a COPY of the mouseEventArgs. This is needed because ConfigurationManager.Apply uses DeepMemberWiseCopy 
+        // IMPORTANT: update the memory referenced by the key, and Dictionary uses caching for performance, and thus 
+        // IMPORTANT: Apply will update the Dictionary with the new mouseEventArgs, but the old mouseEventArgs will still be in the dictionary.
+        // IMPORTANT: See the ConfigurationManager.Illustrate_DeepMemberWiseCopy_Breaks_Dictionary test for details.
+        _bindings.Add (mouseEventArgs, binding);
+    }
+
+
+    /// <summary>Gets the commands bound with the specified <see cref="MouseFlags"/>.</summary>
+    /// <remarks></remarks>
+    /// <param name="mouseEventArgs">The key to check.</param>
+    /// <param name="binding">
+    ///     When this method returns, contains the commands bound with the specified mouse flags, if the mouse flags are
+    ///     found; otherwise, null. This parameter is passed uninitialized.
+    /// </param>
+    /// <returns><see langword="true"/> if the mouse flags are bound; otherwise <see langword="false"/>.</returns>
+    public bool TryGet (TKey mouseEventArgs, out TBind? binding)
+    {
+        return _bindings.TryGetValue (mouseEventArgs, out binding);
+    }
+}
+
 /// <summary>
 ///     Provides a collection of <see cref="MouseBinding"/> objects bound to a combination of <see cref="MouseFlags"/>.
 /// </summary>
 /// <seealso cref="View.MouseBindings"/>
 /// <seealso cref="Command"/>
-public class MouseBindings
+public class MouseBindings : Bindings<MouseFlags,MouseBinding>
 {
     /// <summary>
     ///     Initializes a new instance. This constructor is used when the <see cref="MouseBindings"/> are not bound to a

@@ -6,7 +6,7 @@ namespace Terminal.Gui;
 /// Provides a collection of <see cref="Command"/> objects for mouse events.
 /// </summary>
 /// <seealso cref="Command"/>
-public record struct MouseBinding
+public record struct MouseBinding : IInputBinding
 {
     /// <summary>Initializes a new instance.</summary>
     /// <param name="commands">The commands this mouse binding will invoke.</param>

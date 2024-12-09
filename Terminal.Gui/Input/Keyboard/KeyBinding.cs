@@ -11,7 +11,7 @@ namespace Terminal.Gui;
 /// <seealso cref="Application.KeyBindings"/>
 /// <seealso cref="View.KeyBindings"/>
 /// <seealso cref="Command"/>
-public record struct KeyBinding
+public record struct KeyBinding : IInputBinding
 {
     /// <summary>Initializes a new instance.</summary>
     /// <param name="commands">The commands this key binding will invoke.</param>
