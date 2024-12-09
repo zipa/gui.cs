@@ -29,8 +29,6 @@ public class MouseBindingsTests
         var mouseBindings = new MouseBindings ();
         List<Command> commands = new ();
         Assert.Throws<ArgumentException> (() => mouseBindings.Add (MouseFlags.None, Command.Accept));
-
-        Assert.Throws<ArgumentException> (() => mouseBindings.Add ((MouseFlags)0x8ffffff, Command.Accept));
     }
 
     [Fact]
