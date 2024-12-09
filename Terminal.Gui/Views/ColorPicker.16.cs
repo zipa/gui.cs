@@ -188,7 +188,7 @@ public class ColorPicker16 : View
 
         AddCommand (Command.Select, (ctx) =>
                                     {
-                                        bool set = false;
+                                        var set = false;
 
                                         if (ctx is CommandContext<MouseBinding> { Binding.MouseEventArgs: { } } mouseCommandContext)
                                         {

@@ -51,9 +51,9 @@ public class MouseBindings
     /// </param>
     public void Add (MouseFlags mouseFlags, params Command [] commands)
     {
-        if (!Enum.IsDefined (typeof (MouseFlags), mouseFlags) || mouseFlags == MouseFlags.None)
+        if (mouseFlags == MouseFlags.None)
         {
-            throw new ArgumentException (@"Invalid MouseFlag", nameof (commands));
+            throw new ArgumentException (@"Invalid MouseFlag", nameof (mouseFlags));
         }
 
         if (commands.Length == 0)
