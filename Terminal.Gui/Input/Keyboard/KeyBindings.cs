@@ -7,10 +7,10 @@ namespace Terminal.Gui;
 /// <seealso cref="Application.KeyBindings"/>
 /// <seealso cref="View.KeyBindings"/>
 /// <seealso cref="Command"/>
-public class KeyBindings
+public class KeyBindings : Bindings<Key,KeyBinding>
 {
     /// <summary>Initializes a new instance bound to <paramref name="target"/>.</summary>
-    public KeyBindings (View? target) { Target = target; }
+    public KeyBindings (View? target) :base((commands,key)=> new KeyBinding (commands)) { Target = target; }
 
     /// <summary>Adds a <see cref="KeyBinding"/> to the collection.</summary>
     /// <param name="key"></param>

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Terminal.Gui;
 
-public abstract class Bindings<TKey, TBind> where TKey: Enum where TBind : IInputBinding, new()
+public abstract class Bindings<TKey, TBind>  where TBind : IInputBinding, new()
 {
     protected readonly Dictionary<TKey, TBind> _bindings = new ();
     private readonly Func<Command [], TKey, TBind> _constructBinding;
