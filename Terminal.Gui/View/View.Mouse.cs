@@ -1,6 +1,5 @@
 ﻿#nullable enable
 using System.ComponentModel;
-using System.Diagnostics;
 
 namespace Terminal.Gui;
 
@@ -20,7 +19,6 @@ public partial class View // Mouse APIs
         MouseBindings.Add (MouseFlags.Button4Clicked, Command.Select);
         MouseBindings.Add (MouseFlags.Button1Clicked | MouseFlags.ButtonCtrl, Command.Select);
     }
-
 
     /// <summary>
     ///     Invokes the Commands bound to the MouseFlags specified by <paramref name="mouseEventArgs"/>.
@@ -43,7 +41,7 @@ public partial class View // Mouse APIs
 
         binding.MouseEventArgs = mouseEventArgs;
 
-        return InvokeCommands<MouseBinding> (binding.Commands, binding);
+        return InvokeCommands (binding.Commands, binding);
     }
 
     #region MouseEnterLeave
@@ -52,7 +50,8 @@ public partial class View // Mouse APIs
     private ColorScheme? _savedNonHoverColorScheme;
 
     /// <summary>
-    ///     INTERNAL Called by <see cref="Application.RaiseMouseEvent"/> when the mouse moves over the View's <see cref="Frame"/>.
+    ///     INTERNAL Called by <see cref="Application.RaiseMouseEvent"/> when the mouse moves over the View's
+    ///     <see cref="Frame"/>.
     ///     <see cref="MouseLeave"/> will
     ///     be raised when the mouse is no longer over the <see cref="Frame"/>. If another View occludes this View, the
     ///     that View will also receive MouseEnter/Leave events.
@@ -167,7 +166,8 @@ public partial class View // Mouse APIs
     public event EventHandler<CancelEventArgs>? MouseEnter;
 
     /// <summary>
-    ///     INTERNAL Called by <see cref="Application.RaiseMouseEvent"/> when the mouse leaves <see cref="Frame"/>, or is occluded
+    ///     INTERNAL Called by <see cref="Application.RaiseMouseEvent"/> when the mouse leaves <see cref="Frame"/>, or is
+    ///     occluded
     ///     by another non-SubView.
     /// </summary>
     /// <remarks>
@@ -245,7 +245,8 @@ public partial class View // Mouse APIs
     public bool WantMousePositionReports { get; set; }
 
     /// <summary>
-    ///     Processes a new <see cref="MouseEvent"/>. This method is called by <see cref="Application.RaiseMouseEvent"/> when a mouse
+    ///     Processes a new <see cref="MouseEvent"/>. This method is called by <see cref="Application.RaiseMouseEvent"/> when a
+    ///     mouse
     ///     event occurs.
     /// </summary>
     /// <remarks>
@@ -260,8 +261,10 @@ public partial class View // Mouse APIs
     ///         See <see cref="SetPressedHighlight"/> for more information.
     ///     </para>
     ///     <para>
-    ///         If <see cref="WantContinuousButtonPressed"/> is <see langword="true"/>, the <see cref="RaiseMouseEvent"/>/<see cref="MouseEvent"/> event
-    ///         will be raised on any new mouse event where <see cref="Terminal.Gui.MouseEventArgs.Flags"/> indicates a button is pressed.
+    ///         If <see cref="WantContinuousButtonPressed"/> is <see langword="true"/>, the <see cref="RaiseMouseEvent"/>/
+    ///         <see cref="MouseEvent"/> event
+    ///         will be raised on any new mouse event where <see cref="Terminal.Gui.MouseEventArgs.Flags"/> indicates a button
+    ///         is pressed.
     ///     </para>
     /// </remarks>
     /// <param name="mouseEvent"></param>
@@ -332,7 +335,7 @@ public partial class View // Mouse APIs
     /// <returns><see langword="true"/>, if the event was handled, <see langword="false"/> otherwise.</returns>
     public bool RaiseMouseEvent (MouseEventArgs mouseEvent)
     {
-        if (OnMouseEvent (mouseEvent) || mouseEvent.Handled == true)
+        if (OnMouseEvent (mouseEvent) || mouseEvent.Handled)
         {
             return true;
         }
@@ -350,10 +353,7 @@ public partial class View // Mouse APIs
     /// </remarks>
     /// <param name="mouseEvent"></param>
     /// <returns><see langword="true"/>, if the event was handled, <see langword="false"/> otherwise.</returns>
-    protected virtual bool OnMouseEvent (MouseEventArgs mouseEvent)
-    {
-        return false;
-    }
+    protected virtual bool OnMouseEvent (MouseEventArgs mouseEvent) { return false; }
 
     /// <summary>Raised when a mouse event occurs.</summary>
     /// <remarks>
@@ -368,7 +368,8 @@ public partial class View // Mouse APIs
     #region Mouse Pressed Events
 
     /// <summary>
-    ///     INTERNAL For cases where the view is grabbed and the mouse is clicked, this method handles the released event (typically
+    ///     INTERNAL For cases where the view is grabbed and the mouse is clicked, this method handles the released event
+    ///     (typically
     ///     when <see cref="WantContinuousButtonPressed"/> or <see cref="HighlightStyle"/> are set).
     /// </summary>
     /// <remarks>
@@ -394,7 +395,8 @@ public partial class View // Mouse APIs
     }
 
     /// <summary>
-    ///     INTERNAL For cases where the view is grabbed and the mouse is clicked, this method handles the released event (typically
+    ///     INTERNAL For cases where the view is grabbed and the mouse is clicked, this method handles the released event
+    ///     (typically
     ///     when <see cref="WantContinuousButtonPressed"/> or <see cref="HighlightStyle"/> are set).
     /// </summary>
     /// <remarks>
@@ -463,7 +465,8 @@ public partial class View // Mouse APIs
     ///         Called when the mouse is either clicked or double-clicked.
     ///     </para>
     ///     <para>
-    ///         If <see cref="WantContinuousButtonPressed"/> is <see langword="true"/>, will be invoked on every mouse event where
+    ///         If <see cref="WantContinuousButtonPressed"/> is <see langword="true"/>, will be invoked on every mouse event
+    ///         where
     ///         the mouse button is pressed.
     ///     </para>
     /// </remarks>
@@ -507,7 +510,8 @@ public partial class View // Mouse APIs
     ///         Called when the mouse is either clicked or double-clicked.
     ///     </para>
     ///     <para>
-    ///         If <see cref="WantContinuousButtonPressed"/> is <see langword="true"/>, will be called on every mouse event where
+    ///         If <see cref="WantContinuousButtonPressed"/> is <see langword="true"/>, will be called on every mouse event
+    ///         where
     ///         the mouse button is pressed.
     ///     </para>
     /// </remarks>
@@ -521,14 +525,16 @@ public partial class View // Mouse APIs
     ///         Raised when the mouse is either clicked or double-clicked.
     ///     </para>
     ///     <para>
-    ///         If <see cref="WantContinuousButtonPressed"/> is <see langword="true"/>, will be raised on every mouse event where
+    ///         If <see cref="WantContinuousButtonPressed"/> is <see langword="true"/>, will be raised on every mouse event
+    ///         where
     ///         the mouse button is pressed.
     ///     </para>
     /// </remarks>
     public event EventHandler<MouseEventArgs>? MouseClick;
 
     /// <summary>
-    ///     INTERNAL For cases where the view is grabbed and the mouse is clicked, this method handles the click event (typically
+    ///     INTERNAL For cases where the view is grabbed and the mouse is clicked, this method handles the click event
+    ///     (typically
     ///     when <see cref="WantContinuousButtonPressed"/> or <see cref="HighlightStyle"/> are set).
     /// </summary>
     /// <remarks>
@@ -562,9 +568,7 @@ public partial class View // Mouse APIs
         return false;
     }
 
-
     #endregion Mouse Clicked Events
-
 
     #region Mouse Wheel Events
 
@@ -601,7 +605,8 @@ public partial class View // Mouse APIs
     }
 
     /// <summary>
-    ///     Called when a mouse wheel event occurs. Check <see cref="MouseEventArgs.Flags"/> to see which wheel was moved was clicked.
+    ///     Called when a mouse wheel event occurs. Check <see cref="MouseEventArgs.Flags"/> to see which wheel was moved was
+    ///     clicked.
     /// </summary>
     /// <remarks>
     /// </remarks>
@@ -828,8 +833,5 @@ public partial class View // Mouse APIs
         return viewsUnderMouse;
     }
 
-    private void DisposeMouse ()
-    {
-
-    }
+    private void DisposeMouse () { }
 }

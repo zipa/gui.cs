@@ -1,7 +1,4 @@
 ﻿#nullable enable
-using System.Diagnostics;
-using System.Reflection.Metadata;
-
 namespace Terminal.Gui;
 
 public partial class View // Keyboard APIs
@@ -188,7 +185,7 @@ public partial class View // Keyboard APIs
             {
                 Commands = [Command.HotKey],
                 Key = newKey,
-                Data = context,
+                Data = context
             };
 
             // Add the base and Alt key
@@ -263,7 +260,8 @@ public partial class View // Keyboard APIs
     ///     <para>
     ///         If a more focused subview does not handle the key press, this method raises <see cref="OnKeyDown"/>/
     ///         <see cref="KeyDown"/> to allow the
-    ///         view to pre-process the key press. If <see cref="OnKeyDown"/>/<see cref="KeyDown"/> is not handled any commands bound to the key will be invoked.
+    ///         view to pre-process the key press. If <see cref="OnKeyDown"/>/<see cref="KeyDown"/> is not handled any commands
+    ///         bound to the key will be invoked.
     ///         Then, only if no key bindings are
     ///         handled, <see cref="OnKeyDownNotHandled"/>/<see cref="KeyDownNotHandled"/> will be raised allowing the view to
     ///         process the key press.
@@ -305,6 +303,7 @@ public partial class View // Keyboard APIs
         }
 
         bool? handled = false;
+
         if (InvokeCommandsBoundToHotKey (key, ref handled))
         {
             return true;
@@ -588,17 +587,20 @@ public partial class View // Keyboard APIs
 
     // BUGBUG: This will miss any hotkeys in subviews of Adornments.
     /// <summary>
-    ///     Invokes any commands bound to <paramref name="key"/> on this view and subviews.
+    ///     Invokes any commands bound to <paramref name="hotKey"/> on this view and subviews.
     /// </summary>
-    /// <param name="key"></param>
+    /// <param name="hotKey"></param>
     /// <param name="handled"></param>
     /// <returns></returns>
-    internal bool InvokeCommandsBoundToHotKey (Key key, ref bool? handled)
+    internal bool InvokeCommandsBoundToHotKey (Key hotKey, ref bool? handled)
     {
-        bool? weHandled = InvokeCommandsBoundToHotKey (key);
-        if (weHandled is true)
+        // Process this View
+        if (HotKeyBindings.TryGet (hotKey, out KeyBinding binding))
         {
-            return true;
+            if (InvokeCommands (binding.Commands, binding) is true)
+            {
+                return true;
+            }
         }
 
         // Now, process any HotKey bindings in the subviews
@@ -609,41 +611,9 @@ public partial class View // Keyboard APIs
                 continue;
             }
 
-            bool recurse = subview.InvokeCommandsBoundToHotKey (key, ref handled);
+            bool recurse = subview.InvokeCommandsBoundToHotKey (hotKey, ref handled);
 
             if (recurse || (handled is { } && (bool)handled))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    // TODO: This is a "prototype" debug check. It may be too annoying vs. useful.
-    // TODO: A better approach would be to have Application hold a list of bound Hotkeys, similar to
-    // TODO: how Application holds a list of Application Scoped key bindings and then check that list.
-    /// <summary>
-    ///     Returns true if Key is bound in this view hierarchy. For debugging
-    /// </summary>
-    /// <param name="key">The key to test.</param>
-    /// <param name="boundView">Returns the view the key is bound to.</param>
-    /// <returns></returns>
-    public bool IsHotKeyBound (Key key, out View? boundView)
-    {
-        // recurse through the subviews to find the views that has the key bound
-        boundView = null;
-
-        foreach (View subview in Subviews)
-        {
-            if (subview.HotKeyBindings.TryGet (key, out _))
-            {
-                boundView = subview;
-
-                return true;
-            }
-
-            if (subview.IsHotKeyBound (key, out boundView))
             {
                 return true;
             }
@@ -671,26 +641,8 @@ public partial class View // Keyboard APIs
             return null;
         }
 
-#if DEBUG
-
-        //if (Application.KeyBindings.TryGet (key, out KeyBinding b))
-        //{
-        //    Debug.WriteLine (
-        //                     $"WARNING: InvokeKeyBindings ({key}) - An Application scope binding exists for this key. The registered view will not invoke Command.");
-        //}
-
-        // TODO: This is a "prototype" debug check. It may be too annoying vs. useful.
-        // Scour the bindings up our View hierarchy
-        // to ensure that the key is not already bound to a different set of commands.
-        if (SuperView?.IsHotKeyBound (key, out View? previouslyBoundView) ?? false)
-        {
-            Debug.WriteLine ($"WARNING: InvokeKeyBindings ({key}) - A subview or peer has bound this Key and will not see it: {previouslyBoundView}.");
-        }
-
-#endif
-        return InvokeCommands<KeyBinding> (binding.Commands, binding);
+        return InvokeCommands (binding.Commands, binding);
     }
-
 
     /// <summary>
     ///     Invokes the Commands bound to <paramref name="hotKey"/>.
@@ -711,24 +663,7 @@ public partial class View // Keyboard APIs
             return null;
         }
 
-//#if DEBUG
-
-//        //if (Application.KeyBindings.TryGet (key, out KeyBinding b))
-//        //{
-//        //    Debug.WriteLine (
-//        //                     $"WARNING: InvokeKeyBindings ({key}) - An Application scope binding exists for this key. The registered view will not invoke Command.");
-//        //}
-
-//        // TODO: This is a "prototype" debug check. It may be too annoying vs. useful.
-//        // Scour the bindings up our View hierarchy
-//        // to ensure that the key is not already bound to a different set of commands.
-//        if (SuperView?.IsHotKeyBound (hotKey, out View? previouslyBoundView) ?? false)
-//        {
-//            Debug.WriteLine ($"WARNING: InvokeKeyBindings ({hotKey}) - A subview or peer has bound this Key and will not see it: {previouslyBoundView}.");
-//        }
-
-//#endif
-        return InvokeCommands<KeyBinding> (binding.Commands, binding);
+        return InvokeCommands (binding.Commands, binding);
     }
 
     #endregion Key Bindings

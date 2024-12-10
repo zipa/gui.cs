@@ -2,7 +2,7 @@
 namespace Terminal.Gui;
 
 /// <summary>
-///     Abstract base class for <see cref="KeyBindings"/> and <see cref="MouseBindings"/>.
+///     Abstract class for <see cref="KeyBindings"/> and <see cref="MouseBindings"/>.
 /// </summary>
 /// <typeparam name="TEvent">The type of the event (e.g. <see cref="Key"/> or <see cref="MouseFlags"/>).</typeparam>
 /// <typeparam name="TBinding">The binding type (e.g. <see cref="KeyBinding"/>).</typeparam>
@@ -136,7 +136,7 @@ public abstract class InputBindings<TEvent, TBinding> where TBinding : IInputBin
     public bool TryGet (TEvent eventArgs, out TBinding? binding) { return _bindings.TryGetValue (eventArgs, out binding); }
 
     /// <summary>Gets the array of <see cref="Command"/>s bound to <paramref name="eventArgs"/> if it exists.</summary>
-    /// <param name="eventArgs">The key to check.</param>
+    /// <param name="eventArgs">The <typeparamref name="TEvent"/> to check.</param>
     /// <returns>
     ///     The array of <see cref="Command"/>s if <paramref name="eventArgs"/> is bound. An empty <see cref="Command"/> array
     ///     if not.
