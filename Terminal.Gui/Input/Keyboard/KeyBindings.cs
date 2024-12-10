@@ -7,14 +7,15 @@ namespace Terminal.Gui;
 /// <seealso cref="Application.KeyBindings"/>
 /// <seealso cref="View.KeyBindings"/>
 /// <seealso cref="Command"/>
-public class KeyBindings : Bindings<Key,KeyBinding>
+public class KeyBindings : Bindings<Key, KeyBinding>
 {
     /// <summary>Initializes a new instance bound to <paramref name="target"/>.</summary>
-    public KeyBindings (View? target) :base(
-                                            (commands,key)=> new KeyBinding (commands),
-                                            new KeyEqualityComparer ()) { Target = target; }
-
-
+    public KeyBindings (View? target) : base (
+                                              (commands, key) => new (commands),
+                                              new KeyEqualityComparer ())
+    {
+        Target = target;
+    }
 
     /// <summary>
     ///     <para>
@@ -29,11 +30,14 @@ public class KeyBindings : Bindings<Key,KeyBinding>
     /// <remarks>
     /// </remarks>
     /// <param name="key">The key to check.</param>
-    /// <param name="target">The View the commands will be invoked on. If <see langword="null"/>, the key will be bound to <see cref="Application"/>.</param>
+    /// <param name="target">
+    ///     The View the commands will be invoked on. If <see langword="null"/>, the key will be bound to
+    ///     <see cref="Application"/>.
+    /// </param>
     /// <param name="commands">
     ///     The command to invoked on the <see paramref="target"/> when <paramref name="key"/> is pressed. When
     ///     multiple commands are provided,they will be applied in sequence. The bound <paramref name="key"/> strike will be
-    ///     consumed if any took effect. 
+    ///     consumed if any took effect.
     /// </param>
     public void Add (Key key, View? target, params Command [] commands)
     {
@@ -45,10 +49,7 @@ public class KeyBindings : Bindings<Key,KeyBinding>
     ///     Gets the bindings.
     /// </summary>
     /// <returns></returns>
-    public IEnumerable<KeyValuePair<Key, KeyBinding>> GetBindings ()
-    {
-        return _bindings;
-    }
+    public IEnumerable<KeyValuePair<Key, KeyBinding>> GetBindings () { return _bindings; }
 
     /// <summary>
     ///     Gets the keys that are bound.
@@ -179,9 +180,9 @@ public class KeyBindings : Bindings<Key,KeyBinding>
         if (newKey == Key.Empty)
         {
             Remove (oldKey);
+
             return;
         }
-
 
         if (TryGet (oldKey, out KeyBinding binding))
         {

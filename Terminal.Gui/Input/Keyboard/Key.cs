@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
@@ -69,6 +70,7 @@ namespace Terminal.Gui;
 ///         </list>
 ///     </para>
 /// </remarks>
+[DefaultValue(KeyCode.Null)]
 public class Key : EventArgs, IEquatable<Key>
 {
     /// <summary>Constructs a new <see cref="Key"/></summary>

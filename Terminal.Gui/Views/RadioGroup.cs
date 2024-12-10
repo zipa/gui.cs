@@ -59,6 +59,7 @@ public class RadioGroup : View, IDesignable, IOrientation
         AddCommand (Command.HotKey,
                     ctx =>
                             {
+                                // If the command did not come from a keyboard event, ignore it
                                 if (ctx is not CommandContext<KeyBinding> keyCommandContext)
                                 {
                                     return false;
@@ -66,10 +67,9 @@ public class RadioGroup : View, IDesignable, IOrientation
 
                                 var item = keyCommandContext.Binding.Data as int?;
 
-
                                 if (HasFocus)
                                 {
-                                    if (keyCommandContext is { Binding : { } } && (keyCommandContext.Binding.Target != this || HotKey == keyCommandContext.Binding.Key?.NoAlt.NoCtrl.NoShift))
+                                    if (keyCommandContext is { Binding : { } } && (item is null || HotKey == keyCommandContext.Binding.Key?.NoAlt.NoCtrl.NoShift))
                                     {
                                         // It's this.HotKey OR Another View (Label?) forwarded the hotkey command to us - Act just like `Space` (Select)
                                         return InvokeCommand (Command.Select);

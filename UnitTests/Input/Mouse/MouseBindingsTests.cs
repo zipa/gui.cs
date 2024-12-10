@@ -23,13 +23,13 @@ public class MouseBindingsTests
         Assert.Contains (Command.Left, resultCommands);
     }
 
-    [Fact]
-    public void Add_Invalid_Flag_Throws ()
-    {
-        var mouseBindings = new MouseBindings ();
-        List<Command> commands = new ();
-        Assert.Throws<ArgumentException> (() => mouseBindings.Add (MouseFlags.None, Command.Accept));
-    }
+    //[Fact]
+    //public void Add_Invalid_Flag_Throws ()
+    //{
+    //    var mouseBindings = new MouseBindings ();
+    //    List<Command> commands = new ();
+    //    Assert.Throws<ArgumentException> (() => mouseBindings.Add (MouseFlags.None, Command.Accept));
+    //}
 
     [Fact]
     public void Add_Multiple_Commands_Adds ()

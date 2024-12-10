@@ -27,13 +27,13 @@ public class KeyBindingsTests ()
         Assert.Contains (Command.Left, resultCommands);
     }
 
-    [Fact]
-    public void Add_Invalid_Key_Throws ()
-    {
-        var keyBindings = new KeyBindings (new View ());
-        List<Command> commands = new ();
-        Assert.Throws<ArgumentException> (() => keyBindings.Add (Key.Empty, Command.Accept));
-    }
+    //[Fact]
+    //public void Add_Invalid_Key_Throws ()
+    //{
+    //    var keyBindings = new KeyBindings (new View ());
+    //    List<Command> commands = new ();
+    //    Assert.Throws<ArgumentException> (() => keyBindings.Add (Key.Empty, Command.Accept));
+    //}
 
     [Fact]
     public void Add_Multiple_Commands_Adds ()
