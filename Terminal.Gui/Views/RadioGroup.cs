@@ -36,8 +36,6 @@ public class RadioGroup : View, IDesignable, IOrientation
         // ReSharper disable once UseObjectOrCollectionInitializer
         _orientationHelper = new (this);
         _orientationHelper.Orientation = Orientation.Vertical;
-        _orientationHelper.OrientationChanging += (sender, e) => OrientationChanging?.Invoke (this, e);
-        _orientationHelper.OrientationChanged += (sender, e) => OrientationChanged?.Invoke (this, e);
 
         SetupKeyBindings ();
 
@@ -353,11 +351,7 @@ public class RadioGroup : View, IDesignable, IOrientation
 
                     if (j == hotPos && i == Cursor)
                     {
-                        SetAttribute (
-                                                          HasFocus
-                                                              ? ColorScheme!.HotFocus
-                                                              : GetHotNormalColor ()
-                                                         );
+                        SetAttribute (HasFocus ? GetHotFocusColor() : GetHotNormalColor ());
                     }
                     else if (j == hotPos && i != Cursor)
                     {
@@ -375,11 +369,7 @@ public class RadioGroup : View, IDesignable, IOrientation
 
                         if (i == Cursor)
                         {
-                            SetAttribute (
-                                                              HasFocus
-                                                                  ? ColorScheme!.HotFocus
-                                                                  : GetHotNormalColor ()
-                                                             );
+                            SetAttribute (HasFocus ? GetHotFocusColor() : GetHotNormalColor ());
                         }
                         else if (i != Cursor)
                         {
