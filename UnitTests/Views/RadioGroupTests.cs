@@ -668,7 +668,7 @@ public class RadioGroupTests (ITestOutputHelper output)
 
     [Fact]
     [SetupFakeDriver]
-    public void Mouse_DoubleClick ()
+    public void Mouse_DoubleClick_Accepts ()
     {
         var radioGroup = new RadioGroup
         {
@@ -705,12 +705,13 @@ public class RadioGroupTests (ITestOutputHelper output)
         // NOTE: We need to do the same
 
         Assert.True (radioGroup.NewMouseEvent (new () { Position = new (0, 0), Flags = MouseFlags.Button1Clicked }));
-        Assert.True (radioGroup.NewMouseEvent (new () { Position = new (0, 0), Flags = MouseFlags.Button1DoubleClicked }));
+        Assert.False (radioGroup.NewMouseEvent (new () { Position = new (0, 0), Flags = MouseFlags.Button1DoubleClicked }));
         Assert.Equal (0, radioGroup.SelectedItem);
         Assert.Equal (0, selectedItemChanged);
         Assert.Equal (0, selectingCount);
         Assert.Equal (1, acceptedCount);
 
+        // single click twice
         Assert.True (radioGroup.NewMouseEvent (new () { Position = new (0, 1), Flags = MouseFlags.Button1Clicked }));
         Assert.True (radioGroup.NewMouseEvent (new () { Position = new (0, 1), Flags = MouseFlags.Button1Clicked }));
         Assert.Equal (1, radioGroup.SelectedItem);
@@ -719,7 +720,7 @@ public class RadioGroupTests (ITestOutputHelper output)
         Assert.Equal (1, acceptedCount);
 
         Assert.True (radioGroup.NewMouseEvent (new () { Position = new (0, 1), Flags = MouseFlags.Button1Clicked }));
-        Assert.True (radioGroup.NewMouseEvent (new () { Position = new (0, 1), Flags = MouseFlags.Button1DoubleClicked }));
+        Assert.False (radioGroup.NewMouseEvent (new () { Position = new (0, 1), Flags = MouseFlags.Button1DoubleClicked }));
         Assert.Equal (1, radioGroup.SelectedItem);
         Assert.Equal (1, selectedItemChanged);
         Assert.Equal (1, selectingCount);
@@ -766,7 +767,7 @@ public class RadioGroupTests (ITestOutputHelper output)
 
         radioGroup.DoubleClickAccepts = false;
         Assert.True (radioGroup.NewMouseEvent (new () { Position = new (0, 1), Flags = MouseFlags.Button1Clicked }));
-        Assert.True (radioGroup.NewMouseEvent (new () { Position = new (0, 1), Flags = MouseFlags.Button1DoubleClicked }));
+        Assert.False (radioGroup.NewMouseEvent (new () { Position = new (0, 1), Flags = MouseFlags.Button1DoubleClicked }));
     }
 
     #endregion Mouse Tests
