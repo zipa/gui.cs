@@ -1,4 +1,4 @@
-using System.ComponentModel;
+#nullable enable
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
@@ -70,7 +70,6 @@ namespace Terminal.Gui;
 ///         </list>
 ///     </para>
 /// </remarks>
-[DefaultValue(KeyCode.Null)]
 public class Key : EventArgs, IEquatable<Key>
 {
     /// <summary>Constructs a new <see cref="Key"/></summary>
@@ -213,7 +212,7 @@ public class Key : EventArgs, IEquatable<Key>
 #if DEBUG
             if (GetIsKeyCodeAtoZ (value) && (value & KeyCode.Space) != 0)
             {
-                throw new ArgumentException ($"Invalid KeyCode: {value} is invalid.", nameof (value));
+                throw new ArgumentException (@$"Invalid KeyCode: {value} is invalid.", nameof (value));
             }
 
 #endif
@@ -395,7 +394,7 @@ public class Key : EventArgs, IEquatable<Key>
     public static implicit operator string (Key key) { return key.ToString (); }
 
     /// <inheritdoc/>
-    public override bool Equals (object obj)
+    public override bool Equals (object? obj)
     {
         if (obj is Key other)
         {
@@ -404,7 +403,7 @@ public class Key : EventArgs, IEquatable<Key>
         return false;
     }
 
-    bool IEquatable<Key>.Equals (Key other) { return Equals (other); }
+    bool IEquatable<Key>.Equals (Key? other) { return Equals (other); }
 
     /// <inheritdoc/>
     public override int GetHashCode () { return _keyCode.GetHashCode (); }
@@ -473,7 +472,7 @@ public class Key : EventArgs, IEquatable<Key>
             return ((Rune)(uint)key).ToString ();
         }
 
-        string keyName = Enum.GetName (typeof (KeyCode), key);
+        string? keyName = Enum.GetName (typeof (KeyCode), key);
 
         return !string.IsNullOrEmpty (keyName) ? keyName : ((Rune)(uint)key).ToString ();
     }
@@ -576,7 +575,7 @@ public class Key : EventArgs, IEquatable<Key>
     /// <param name="key">The parsed value.</param>
     /// <returns>A boolean value indicating whether parsing was successful.</returns>
     /// <remarks></remarks>
-    public static bool TryParse (string text, [NotNullWhen (true)] out Key key)
+    public static bool TryParse (string text, out Key key)
     {
         if (string.IsNullOrEmpty (text))
         {
@@ -601,7 +600,7 @@ public class Key : EventArgs, IEquatable<Key>
                 return true;
         }
 
-        key = null;
+        key = null!;
 
         Rune separator = Separator;
 
