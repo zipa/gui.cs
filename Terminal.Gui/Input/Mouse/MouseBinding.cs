@@ -3,8 +3,9 @@
 namespace Terminal.Gui;
 
 /// <summary>
-/// Provides a collection of <see cref="Command"/> objects for mouse events.
+///     Provides a collection of <see cref="MouseFlags"/> bound to <see cref="Command"/>s.
 /// </summary>
+/// <seealso cref="MouseBindings"/>
 /// <seealso cref="Command"/>
 public record struct MouseBinding : IInputBinding
 {
@@ -21,7 +22,7 @@ public record struct MouseBinding : IInputBinding
         };
     }
 
-    /// <summary>The commands this key binding will invoke.</summary>
+    /// <summary>The commands this binding will invoke.</summary>
     public Command [] Commands { get; set; }
 
     /// <summary>

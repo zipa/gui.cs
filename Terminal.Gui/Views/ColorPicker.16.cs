@@ -67,7 +67,7 @@ public class ColorPicker16 : View
 
     /// <summary>Moves the selected item index to the next row.</summary>
     /// <returns></returns>
-    private bool MoveDown (ICommandContext commandContext)
+    private bool MoveDown (ICommandContext? commandContext)
     {
         if (RaiseSelecting (commandContext) == true)
         {
@@ -83,7 +83,7 @@ public class ColorPicker16 : View
 
     /// <summary>Moves the selected item index to the previous column.</summary>
     /// <returns></returns>
-    private bool MoveLeft (ICommandContext commandContext)
+    private bool MoveLeft (ICommandContext? commandContext)
     {
         if (RaiseSelecting (commandContext) == true)
         {
@@ -100,7 +100,7 @@ public class ColorPicker16 : View
 
     /// <summary>Moves the selected item index to the next column.</summary>
     /// <returns></returns>
-    private bool MoveRight (ICommandContext commandContext)
+    private bool MoveRight (ICommandContext? commandContext)
     {
         if (RaiseSelecting (commandContext) == true)
         {
@@ -116,7 +116,7 @@ public class ColorPicker16 : View
 
     /// <summary>Moves the selected item index to the previous row.</summary>
     /// <returns></returns>
-    private bool MoveUp (ICommandContext commandContext)
+    private bool MoveUp (ICommandContext? commandContext)
     {
         if (RaiseSelecting (commandContext) == true)
         {

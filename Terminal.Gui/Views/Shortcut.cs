@@ -69,7 +69,7 @@ public class Shortcut : View, IOrientation, IDesignable
     /// <param name="helpText">The help text to display.</param>
     public Shortcut (View targetView, Command command, string commandText, string? helpText = null)
         : this (
-                targetView?.HotKeyBindings.GetKeyFromCommands (command)!,
+                targetView?.HotKeyBindings.GetFirstFromCommands (command)!,
                 commandText,
                 null,
                 helpText)

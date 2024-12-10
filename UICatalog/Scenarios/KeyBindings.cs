@@ -80,7 +80,7 @@ public sealed class KeyBindings : Scenario
         };
         appWindow.Add (appBindingsListView);
 
-        foreach (var key in Application.KeyBindings.GetBoundKeys ())
+        foreach (Key key in Application.KeyBindings.GetBindings().ToDictionary().Keys)
         {
             var binding = Application.KeyBindings.Get (key);
             appBindings.Add ($"{key} -> {binding.Target?.GetType ().Name} - {binding.Commands [0]}");

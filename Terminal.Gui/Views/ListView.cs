@@ -813,14 +813,14 @@ public class ListView : View, IDesignable
         // at it
         if (AllowsMarking)
         {
-            var keys = KeyBindings.GetKeysFromCommands (Command.Select);
+            var keys = KeyBindings.GetAllFromCommands (Command.Select);
 
             if (keys.Contains (a))
             {
                 return false;
             }
 
-            keys = KeyBindings.GetKeysFromCommands ([Command.Select, Command.Down]);
+            keys = KeyBindings.GetAllFromCommands ([Command.Select, Command.Down]);
 
             if (keys.Contains (a))
             {

@@ -358,10 +358,6 @@ public partial class View // Keyboard APIs
     ///     and processing should stop.
     /// </returns>
     /// <remarks>
-    ///     <para>
-    ///         For processing <see cref="HotKey"/>s and commands, use <see cref="Command"/> and
-    ///         <see cref="KeyBindings.Add(Key, Command[])"/>instead.
-    ///     </para>
     ///     <para>Fires the <see cref="KeyDown"/> event.</para>
     /// </remarks>
     protected virtual bool OnKeyDown (Key key) { return false; }
@@ -387,10 +383,6 @@ public partial class View // Keyboard APIs
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///         For processing <see cref="HotKey"/>s and commands, use <see cref="Command"/> and
-    ///         <see cref="KeyBindings.Add(Key, Command[])"/>instead.
-    ///     </para>
-    ///     <para>
     ///         Not all terminals support distinct key up notifications; applications should avoid depending on distinct
     ///         KeyUp events.
     ///     </para>
@@ -406,10 +398,6 @@ public partial class View // Keyboard APIs
     ///     Raised when the user has pressed key it wasn't handled by <see cref="KeyDown"/> and was not bound to a key binding.
     /// </summary>
     /// <remarks>
-    ///     <para>
-    ///         For processing <see cref="HotKey"/>s and commands, use <see cref="Command"/> and
-    ///         <see cref="KeyBindings.Add(Key, Command[])"/>instead.
-    ///     </para>
     ///     <para>
     ///         SubViews can use the <see cref="KeyDownNotHandled"/> of their super view override the default behavior of when
     ///         key bindings are invoked.

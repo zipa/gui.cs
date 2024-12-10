@@ -102,7 +102,7 @@ public class HotKeyTests
         commands = view.HotKeyBindings.GetCommands (KeyCode.Null);
         Assert.Empty (commands);
 
-        Assert.Empty (view.HotKeyBindings.GetBoundKeys ());
+        Assert.Empty (view.HotKeyBindings.GetBindings ());
     }
 
     [Theory]

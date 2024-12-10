@@ -64,16 +64,17 @@ public static partial class Application // Keyboard handling
             }
             else
             {
-                if (!KeyBindings.TryGet (key, out KeyBinding appBinding))
+                // BUGBUG: this seems unneeded.
+                if (!KeyBindings.TryGet (key, out KeyBinding keybinding))
                 {
                     return false;
                 }
 
                 bool? toReturn = null;
 
-                foreach (Command command in appBinding.Commands)
+                foreach (Command command in keybinding.Commands)
                 {
-                    toReturn = InvokeCommand (command, key, appBinding);
+                    toReturn = InvokeCommand (command, key, keybinding);
                 }
 
                 return toReturn ?? true;
@@ -82,7 +83,7 @@ public static partial class Application // Keyboard handling
 
         return false;
 
-        static bool? InvokeCommand (Command command, Key key, KeyBinding appBinding)
+        static bool? InvokeCommand (Command command, Key key, KeyBinding binding)
         {
             if (!_commandImplementations!.ContainsKey (command))
             {
@@ -93,7 +94,7 @@ public static partial class Application // Keyboard handling
 
             if (_commandImplementations.TryGetValue (command, out View.CommandImplementation? implementation))
             {
-                CommandContext<KeyBinding> context = new (command, appBinding); // Create the context here
+                CommandContext<KeyBinding> context = new (command, binding); // Create the context here
 
                 return implementation (context);
             }

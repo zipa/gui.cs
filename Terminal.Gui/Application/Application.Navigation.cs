@@ -22,7 +22,7 @@ public static partial class Application // Navigation stuff
         {
             if (_nextTabGroupKey != value)
             {
-                KeyBindings.ReplaceKey (_nextTabGroupKey, value);
+                KeyBindings.Replace (_nextTabGroupKey, value);
                 _nextTabGroupKey = value;
             }
         }
@@ -37,7 +37,7 @@ public static partial class Application // Navigation stuff
         {
             if (_nextTabKey != value)
             {
-                KeyBindings.ReplaceKey (_nextTabKey, value);
+                KeyBindings.Replace (_nextTabKey, value);
                 _nextTabKey = value;
             }
         }
@@ -66,7 +66,7 @@ public static partial class Application // Navigation stuff
         {
             if (_prevTabGroupKey != value)
             {
-                KeyBindings.ReplaceKey (_prevTabGroupKey, value);
+                KeyBindings.Replace (_prevTabGroupKey, value);
                 _prevTabGroupKey = value;
             }
         }
@@ -81,7 +81,7 @@ public static partial class Application // Navigation stuff
         {   
             if (_prevTabKey != value)
             {
-                KeyBindings.ReplaceKey (_prevTabKey, value);
+                KeyBindings.Replace (_prevTabKey, value);
                 _prevTabKey = value;
             }
         }
