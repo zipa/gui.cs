@@ -49,13 +49,15 @@ The team is looking forward to seeing new amazing projects made by the community
 
 ## Sample Usage in C#
 
-The following example shows a basic Terminal.Gui application in C#:
-
-[!code-csharp[](./Example/Example.cs)]
+The following example shows a basic Terminal.Gui application in C#:  
+[Example (source)](./Example/Example.cs)
 
 When run the application looks as follows:
 
 ![Simple Usage app](./docfx/images/Example.png)
+
+## Sample usage in F#  
+F# examples are located [here](./FSharpExample/Program.fs)
 
 ## Installing
 
