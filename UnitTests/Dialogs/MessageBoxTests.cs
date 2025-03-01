@@ -192,7 +192,7 @@ public class MessageBoxTests
         ((FakeDriver)Application.Driver!).SetBufferSize (20, 10);
 
         var btn =
-            $"{CM.Glyphs.LeftBracket}{CM.Glyphs.LeftDefaultIndicator} btn {CM.Glyphs.RightDefaultIndicator}{CM.Glyphs.RightBracket}";
+            $"{Glyphs.LeftBracket}{Glyphs.LeftDefaultIndicator} btn {Glyphs.RightDefaultIndicator}{Glyphs.RightBracket}";
 
         // Override CM
         MessageBox.DefaultButtonAlignment = Alignment.End;
@@ -264,7 +264,7 @@ public class MessageBoxTests
         ((FakeDriver)Application.Driver!).SetBufferSize (20, 10);
 
         var btn =
-            $"{CM.Glyphs.LeftBracket}{CM.Glyphs.LeftDefaultIndicator} btn {CM.Glyphs.RightDefaultIndicator}{CM.Glyphs.RightBracket}";
+            $"{Glyphs.LeftBracket}{Glyphs.LeftDefaultIndicator} btn {Glyphs.RightDefaultIndicator}{Glyphs.RightBracket}";
 
         // Override CM
         MessageBox.DefaultButtonAlignment = Alignment.End;
@@ -475,19 +475,19 @@ public class MessageBoxTests
 
                                          string expectedText = """
                                                                ┌────────────────────────────────────────────────────────────────────┐
-                                                               │    ╔══════════════════════════════════════════════════════════╗    │
-                                                               │    ║      UI Catalog: A comprehensive sample library for      ║    │
-                                                               │    ║                                                          ║    │
-                                                               │    ║ _______                  _             _   _____       _ ║    │
-                                                               │    ║|__   __|                (_)           | | / ____|     (_)║    │
-                                                               │    ║   | | ___ _ __ _ __ ___  _ _ __   __ _| || |  __ _   _ _ ║    │
-                                                               │    ║   | |/ _ \ '__| '_ ` _ \| | '_ \ / _` | || | |_ | | | | |║    │
-                                                               │    ║   | |  __/ |  | | | | | | | | | | (_| | || |__| | |_| | |║    │
-                                                               │    ║   |_|\___|_|  |_| |_| |_|_|_| |_|\__,_|_(_)_____|\__,_|_|║    │
-                                                               │    ║                                                          ║    │
-                                                               │    ║                      v2 - Pre-Alpha                      ║    │
-                                                               │    ║                                                  ⟦► Ok ◄⟧║    │
-                                                               │    ╚══════════════════════════════════════════════════════════╝    │
+                                                               │   ╔═══════════════════════════════════════════════════════════╗    │
+                                                               │   ║UI Catalog: A comprehensive sample library and test app for║    │
+                                                               │   ║                                                           ║    │
+                                                               │   ║ _______                  _             _   _____       _  ║    │
+                                                               │   ║|__   __|                (_)           | | / ____|     (_) ║    │
+                                                               │   ║   | | ___ _ __ _ __ ___  _ _ __   __ _| || |  __ _   _ _  ║    │
+                                                               │   ║   | |/ _ \ '__| '_ ` _ \| | '_ \ / _` | || | |_ | | | | | ║    │
+                                                               │   ║   | |  __/ |  | | | | | | | | | | (_| | || |__| | |_| | | ║    │
+                                                               │   ║   |_|\___|_|  |_| |_| |_|_|_| |_|\__,_|_(_)_____|\__,_|_| ║    │
+                                                               │   ║                                                           ║    │
+                                                               │   ║                      v2 - Pre-Alpha                       ║    │
+                                                               │   ║                                                   ⟦► Ok ◄⟧║    │
+                                                               │   ╚═══════════════════════════════════════════════════════════╝    │
                                                                └────────────────────────────────────────────────────────────────────┘
                                                                """;
 

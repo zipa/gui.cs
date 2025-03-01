@@ -9,6 +9,7 @@ namespace UICatalog.Scenarios;
 [ScenarioCategory ("Layout")]
 [ScenarioCategory ("Arrangement")]
 [ScenarioCategory ("Tests")]
+[ScenarioCategory ("Drawing")]
 public class Clipping : Scenario
 {
     private int _hotkeyCount;
@@ -25,7 +26,7 @@ public class Clipping : Scenario
 
         app.DrawingContent += (s, e) =>
                            {
-                               app!.FillRect (app!.Viewport, CM.Glyphs.Dot);
+                               app!.FillRect (app!.Viewport, Glyphs.Dot);
                                e.Cancel = true;
                            };
 

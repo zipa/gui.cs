@@ -193,15 +193,19 @@ public class Scenario : IDisposable
 
             Application.Iteration += OnApplicationOnIteration;
             Application.Driver!.ClearedContents += (sender, args) => BenchmarkResults.ClearedContentCount++;
-            Application.Driver!.Refreshed += (sender, args) =>
-            {
-                BenchmarkResults.RefreshedCount++;
 
-                if (args.CurrentValue)
-                {
-                    BenchmarkResults.UpdatedCount++;
-                }
-            };
+            if (Application.Driver is ConsoleDriver cd)
+            {
+                cd.Refreshed += (sender, args) =>
+                                                 {
+                                                     BenchmarkResults.RefreshedCount++;
+                                                     if (args.CurrentValue)
+                                                     {
+                                                         BenchmarkResults.UpdatedCount++;
+                                                     }
+                                                 };
+
+            }
             Application.NotifyNewRunState += OnApplicationNotifyNewRunState;
 
 
@@ -272,7 +276,7 @@ public class Scenario : IDisposable
             }
         }
 
-        Debug.WriteLine ($@"  Failed to Quit with {Application.QuitKey} after {BenchmarkTimeout}ms and {BenchmarkResults.IterationCount} iterations. Force quit.");
+        Logging.Trace ($@"  Failed to Quit with {Application.QuitKey} after {BenchmarkTimeout}ms and {BenchmarkResults.IterationCount} iterations. Force quit.");
 
         Application.RequestStop ();
 
