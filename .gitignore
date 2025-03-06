@@ -61,4 +61,10 @@ demo.*
 
 logs/
 
+BenchmarkDotNet.Artifacts/
+
+*.log
+
+*.log.*
+
 log.*

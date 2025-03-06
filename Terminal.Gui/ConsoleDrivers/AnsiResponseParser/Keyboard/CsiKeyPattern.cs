@@ -53,7 +53,7 @@ public class CsiKeyPattern : AnsiKeyboardParserPattern
     }
 
     /// <summary>
-    /// 
+    ///     Called by the base class to determine the key that matches the input.
     /// </summary>
     /// <param name="input"></param>
     /// <returns></returns>

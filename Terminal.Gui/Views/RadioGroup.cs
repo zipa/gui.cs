@@ -411,6 +411,8 @@ public class RadioGroup : View, IDesignable, IOrientation
     public event EventHandler<EventArgs<Orientation>>? OrientationChanged;
 #pragma warning restore CS0067 // The event is never used
 
+#pragma warning restore CS0067
+
     /// <summary>Called when <see cref="Orientation"/> has changed.</summary>
     /// <param name="newOrientation"></param>
     public void OnOrientationChanged (Orientation newOrientation)
