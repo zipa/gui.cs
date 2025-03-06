@@ -51,7 +51,6 @@ branches:
     increment: Patch
     # Specifies v2_develop as the source branch
     source-branches: ['develop']
-    prevent-increment-of-merged-branch-version: true
 
   # V1 Branches - Included for historical reference
   v1_develop:
