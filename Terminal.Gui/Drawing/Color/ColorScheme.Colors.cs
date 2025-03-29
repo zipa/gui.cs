@@ -185,11 +185,7 @@ public sealed class Colors : INotifyCollectionChanged, IDictionary<string, Color
         }
     }
 
-    /// <summary>
-    ///     Copies the elements of the <see cref="ColorSchemes"/> to an array, starting at a particular array index.
-    /// </summary>
-    /// <param name="array">The one-dimensional array that is the destination of the elements copied from <see cref="ColorSchemes"/>.</param>
-    /// <param name="arrayIndex">The zero-based index in array at which copying begins.</param>
+    /// <inheritdoc />
     public void CopyTo (KeyValuePair<string, ColorScheme?> [] array, int arrayIndex)
     {
         lock (_lock)
@@ -198,10 +194,7 @@ public sealed class Colors : INotifyCollectionChanged, IDictionary<string, Color
         }
     }
 
-    /// <summary>
-    ///     Returns an enumerator that iterates through the <see cref="ColorSchemes"/>.
-    /// </summary>
-    /// <returns>An enumerator for the <see cref="ColorSchemes"/>.</returns>
+    /// <inheritdoc />
     public IEnumerator<KeyValuePair<string, ColorScheme?>> GetEnumerator ()
     {
         lock (_lock)
