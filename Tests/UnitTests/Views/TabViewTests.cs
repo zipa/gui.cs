@@ -1,6 +1,5 @@
 ﻿using System.Globalization;
 using UnitTests;
-using UnitTests;
 using Xunit.Abstractions;
 
 namespace Terminal.Gui.ViewsTests;
@@ -102,7 +101,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         tv.Draw ();
 
-        View tabRow = tv.Subviews [0];
+        View tabRow = tv.SubViews.ElementAt (0);
         Assert.Equal ("TabRow", tabRow.GetType ().Name);
 
         DriverAssert.AssertDriverContentsAre (
@@ -185,7 +184,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         tv.Draw ();
 
-        View tabRow = tv.Subviews [0];
+        View tabRow = tv.SubViews.ElementAt (0);
         Assert.Equal ("TabRow", tabRow.GetType ().Name);
 
         DriverAssert.AssertDriverContentsAre (
@@ -273,7 +272,7 @@ public class TabViewTests (ITestOutputHelper output)
 
         tv.Draw ();
 
-        View tabRow = tv.Subviews [0];
+        View tabRow = tv.SubViews.ElementAt (0);
         Assert.Equal ("TabRow", tabRow.GetType ().Name);
 
         DriverAssert.AssertDriverContentsAre (
@@ -416,7 +415,7 @@ public class TabViewTests (ITestOutputHelper output)
         var btnSubView = new View ()
         {
             Id = "btnSubView",
-            Title = "_Subview",
+            Title = "_SubView",
             CanFocus = true
         };
         tv.SelectedTab.View.Add (btnSubView);
@@ -435,9 +434,8 @@ public class TabViewTests (ITestOutputHelper output)
         Assert.Equal (btnSubView, top.MostFocused);
 
         Assert.True (Application.RaiseKeyDownEvent (Key.CursorUp));
-        // TabRow now has TabGroup which only F6 is allowed
-        Assert.NotEqual (tab2, top.MostFocused);
-        Assert.Equal (btn, top.MostFocused);
+        Assert.Equal (tab2, top.MostFocused);
+        Assert.NotEqual (btn, top.MostFocused);
 
         Assert.True (Application.RaiseKeyDownEvent (Key.CursorUp));
         Assert.Equal (btnSubView, top.MostFocused);
@@ -460,7 +458,8 @@ public class TabViewTests (ITestOutputHelper output)
         // Press the cursor up key to focus the selected tab which it's the only way to do that
         Assert.True (Application.RaiseKeyDownEvent (Key.CursorUp));
         Assert.Equal (tab2, tv.SelectedTab);
-        Assert.Equal (btn, top.Focused);
+        Assert.False (tab2.View.HasFocus);
+        Assert.Equal (tv, top.Focused);
 
         Assert.True (Application.RaiseKeyDownEvent (Key.CursorUp));
         Assert.Equal (tv, top.Focused);
@@ -662,7 +661,7 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
 
         tv.SelectedTab = tab2;
-        Assert.Equal (tab2, tv.Subviews.First (v => v.Id.Contains ("tabRow")).MostFocused);
+        Assert.Equal (tab2, tv.SubViews.First (v => v.Id.Contains ("tabRow")).MostFocused);
 
         tv.Layout ();
         View.SetClipToScreen ();
@@ -808,7 +807,7 @@ public class TabViewTests (ITestOutputHelper output)
                                                      );
 
         tv.SelectedTab = tab2;
-        Assert.Equal (tab2, tv.Subviews.First (v => v.Id.Contains ("tabRow")).MostFocused);
+        Assert.Equal (tab2, tv.SubViews.First (v => v.Id.Contains ("tabRow")).MostFocused);
 
         tv.Layout ();
         View.SetClipToScreen ();

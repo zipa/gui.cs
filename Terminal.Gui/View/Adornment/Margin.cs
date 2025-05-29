@@ -32,7 +32,7 @@ public class Margin : Adornment
         // BUGBUG: We should not set HighlightStyle.Pressed here, but wherever it is actually needed
         // HighlightStyle |= HighlightStyle.Pressed;
         Highlight += Margin_Highlight;
-        SubviewLayout += Margin_LayoutStarted;
+        SubViewLayout += Margin_LayoutStarted;
 
         // Margin should not be focusable
         CanFocus = false;
@@ -48,7 +48,7 @@ public class Margin : Adornment
 
     internal void CacheClip ()
     {
-        if (Thickness != Thickness.Empty)
+        if (Thickness != Thickness.Empty && ShadowStyle != ShadowStyle.None)
         {
             // PERFORMANCE: How expensive are these clones?
             _cachedClip = GetClip ()?.Clone ();
@@ -82,7 +82,7 @@ public class Margin : Adornment
 
             view.NeedsDraw = false;
 
-            foreach (var subview in view.Subviews)
+            foreach (var subview in view.SubViews)
             {
                 stack.Push (subview);
             }

@@ -1,11 +1,12 @@
-﻿using System.Collections.Concurrent;
+﻿#nullable enable
+using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 using Moq;
 
 namespace UnitTests.ConsoleDrivers.V2;
 public class ApplicationV2Tests
 {
-
+    
     private ApplicationV2 NewApplicationV2 ()
     {
         var netInput = new Mock<INetInput> ();
@@ -221,6 +222,53 @@ public class ApplicationV2Tests
 
         ApplicationImpl.ChangeInstance (orig);
     }
+
+    [Fact]
+    public void Test_V2_ClosingRaised ()
+    {
+        var orig = ApplicationImpl.Instance;
+
+        var v2 = NewApplicationV2 ();
+        ApplicationImpl.ChangeInstance (v2);
+
+        v2.Init ();
+
+        int closing=0;
+        int closed = 0;
+        var t=new Toplevel ();
+        t.Closing
+            += (_, a) =>
+               {
+                   // Cancel the first time
+                   if (closing==0)
+                   {
+                       a.Cancel = true;
+                   }
+                   closing++;
+                   Assert.Same(t,a.RequestingTop);
+               };
+
+        t.Closed
+            += (_, a) =>
+               {
+                   closed++;
+                   Assert.Same (t, a.Toplevel);
+               };
+
+        v2.AddIdle (IdleExit);
+
+        // Blocks until the timeout call is hit
+
+        v2.Run (t);
+
+        Assert.Null (Application.Top);
+        v2.Shutdown ();
+
+        ApplicationImpl.ChangeInstance (orig);
+
+        Assert.Equal (2,closing);
+        Assert.Equal (1, closed);
+    }
     private bool IdleExit ()
     {
         if (Application.Top != null)
@@ -251,7 +299,7 @@ public class ApplicationV2Tests
 
         v2.Shutdown ();
         v2.Shutdown ();
-        outputMock.Verify(o=>o.Dispose (),Times.Once);
+        outputMock!.Verify(o=>o.Dispose (),Times.Once);
     }
     [Fact]
     public void TestRepeatedInitCalls_WarnsAndIgnores ()
@@ -275,7 +323,7 @@ public class ApplicationV2Tests
                                     It.IsAny<EventId> (),
                                     It.Is<It.IsAnyType> ((v, t) => v.ToString () == "Init called multiple times without shutdown, ignoring."),
                                     It.IsAny<Exception> (),
-                                    It.IsAny<Func<It.IsAnyType, Exception, string>> ())
+                                    It.IsAny<Func<It.IsAnyType, Exception, string>> ()!)
                           ,Times.Exactly (2));
 
         v2.Shutdown ();

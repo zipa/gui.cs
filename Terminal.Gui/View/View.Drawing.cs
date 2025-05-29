@@ -27,6 +27,7 @@ public partial class View // Drawing APIs
             view.Draw (context);
         }
 
+        // Draw the margins (those whith Shadows) last to ensure they are drawn on top of the content.
         Margin.DrawMargins (viewsArray);
     }
 
@@ -57,9 +58,9 @@ public partial class View // Drawing APIs
         {
             // ------------------------------------
             // Draw the Border and Padding.
-            // Note Margin is special-cased and drawn in a separate pass to support
+            // Note Margin with a Shadow is special-cased and drawn in a separate pass to support
             // transparent shadows.
-            DoDrawBorderAndPadding (originalClip);
+            DoDrawAdornments (originalClip);
             SetClip (originalClip);
 
             // ------------------------------------
@@ -78,11 +79,11 @@ public partial class View // Drawing APIs
             DoClearViewport ();
 
             // ------------------------------------
-            // Draw the subviews first (order matters: Subviews, Text, Content)
+            // Draw the subviews first (order matters: SubViews, Text, Content)
             if (SubViewNeedsDraw)
             {
                 DoSetAttribute ();
-                DoDrawSubviews (context);
+                DoDrawSubViews (context);
             }
 
             // ------------------------------------
@@ -106,7 +107,7 @@ public partial class View // Drawing APIs
             // ------------------------------------
             // Re-draw the border and padding subviews
             // HACK: This is a hack to ensure that the border and padding subviews are drawn after the line canvas.
-            DoDrawBorderAndPaddingSubViews ();
+            DoDrawAdornmentsSubViews ();
 
             // ------------------------------------
             // Advance the diagnostics draw indicator
@@ -116,8 +117,8 @@ public partial class View // Drawing APIs
         }
 
         // ------------------------------------
-        // This causes the Margin to be drawn in a second pass
-        // PERFORMANCE: If there is a Margin, it will be redrawn each iteration of the main loop.
+        // This causes the Margin to be drawn in a second pass if it has a ShadowStyle
+        // PERFORMANCE: If there is a Margin w/ Shadow, it will be redrawn each iteration of the main loop.
         Margin?.CacheClip ();
 
         // ------------------------------------
@@ -131,12 +132,15 @@ public partial class View // Drawing APIs
 
     #region DrawAdornments
 
-    private void DoDrawBorderAndPaddingSubViews ()
+    private void DoDrawAdornmentsSubViews ()
     {
-        if (Border?.Subviews is { } && Border.Thickness != Thickness.Empty)
+
+        // NOTE: We do not support subviews of Margin?
+
+        if (Border?.SubViews is { } && Border.Thickness != Thickness.Empty)
         {
             // PERFORMANCE: Get the check for DrawIndicator out of this somehow.
-            foreach (View subview in Border.Subviews.Where (v => v.Visible || v.Id == "DrawIndicator"))
+            foreach (View subview in Border.SubViews.Where (v => v.Visible || v.Id == "DrawIndicator"))
             {
                 if (subview.Id != "DrawIndicator")
                 {
@@ -147,24 +151,24 @@ public partial class View // Drawing APIs
             }
 
             Region? saved = Border?.AddFrameToClip ();
-            Border?.DoDrawSubviews ();
+            Border?.DoDrawSubViews ();
             SetClip (saved);
         }
 
-        if (Padding?.Subviews is { } && Padding.Thickness != Thickness.Empty)
+        if (Padding?.SubViews is { } && Padding.Thickness != Thickness.Empty)
         {
-            foreach (View subview in Padding.Subviews)
+            foreach (View subview in Padding.SubViews)
             {
                 subview.SetNeedsDraw ();
             }
 
             Region? saved = Padding?.AddFrameToClip ();
-            Padding?.DoDrawSubviews ();
+            Padding?.DoDrawSubViews ();
             SetClip (saved);
         }
     }
 
-    private void DoDrawBorderAndPadding (Region? originalClip)
+    private void DoDrawAdornments (Region? originalClip)
     {
         if (this is Adornment)
         {
@@ -191,30 +195,31 @@ public partial class View // Drawing APIs
 
         if (SubViewNeedsDraw)
         {
-            // A Subview may add to the LineCanvas. This ensures any Adornment LineCanvas updates happen.
+            // A SubView may add to the LineCanvas. This ensures any Adornment LineCanvas updates happen.
             Border?.SetNeedsDraw ();
             Padding?.SetNeedsDraw ();
+            Margin?.SetNeedsDraw ();
         }
 
-        if (OnDrawingBorderAndPadding ())
+        if (OnDrawingAdornments ())
         {
             return;
         }
 
         // TODO: add event.
 
-        DrawBorderAndPadding ();
+        DrawAdornments ();
     }
 
     /// <summary>
-    ///     Causes <see cref="Border"/> and <see cref="Padding"/> to be drawn.
+    ///     Causes <see cref="Margin"/>, <see cref="Border"/>, and <see cref="Padding"/> to be drawn.
     /// </summary>
     /// <remarks>
     ///     <para>
-    ///         <see cref="Margin"/> is drawn in a separate pass.
+    ///         <see cref="Margin"/> is drawn in a separate pass if <see cref="ShadowStyle"/> is set.
     ///     </para>
     /// </remarks>
-    public void DrawBorderAndPadding ()
+    public void DrawAdornments ()
     {
         // We do not attempt to draw Margin. It is drawn in a separate pass.
 
@@ -230,6 +235,11 @@ public partial class View // Drawing APIs
             Padding?.Draw ();
         }
 
+
+        if (Margin is { } && Margin.Thickness != Thickness.Empty && Margin.ShadowStyle == ShadowStyle.None)
+        {
+            Margin?.Draw ();
+        }
     }
 
     private void ClearFrame ()
@@ -255,7 +265,7 @@ public partial class View // Drawing APIs
     ///     false (the default), this method will cause the <see cref="LineCanvas"/> be prepared to be rendered.
     /// </summary>
     /// <returns><see langword="true"/> to stop further drawing of the Adornments.</returns>
-    protected virtual bool OnDrawingBorderAndPadding () { return false; }
+    protected virtual bool OnDrawingAdornments () { return false; }
 
     #endregion DrawAdornments
 
@@ -525,22 +535,22 @@ public partial class View // Drawing APIs
 
     #endregion DrawContent
 
-    #region DrawSubviews
+    #region DrawSubViews
 
-    private void DoDrawSubviews (DrawContext? context = null)
+    private void DoDrawSubViews (DrawContext? context = null)
     {
-        if (OnDrawingSubviews (context))
+        if (OnDrawingSubViews (context))
         {
             return;
         }
 
-        if (OnDrawingSubviews ())
+        if (OnDrawingSubViews ())
         {
             return;
         }
 
         var dev = new DrawEventArgs (Viewport, Rectangle.Empty, context);
-        DrawingSubviews?.Invoke (this, dev);
+        DrawingSubViews?.Invoke (this, dev);
 
         if (dev.Cancel)
         {
@@ -552,44 +562,44 @@ public partial class View // Drawing APIs
             return;
         }
 
-        DrawSubviews (context);
+        DrawSubViews (context);
     }
 
     /// <summary>
-    ///     Called when the <see cref="Subviews"/> are to be drawn.
+    ///     Called when the <see cref="SubViews"/> are to be drawn.
     /// </summary>
     /// <param name="context">The draw context to report drawn areas to, or null if not tracking.</param>
-    /// <returns><see langword="true"/> to stop further drawing of <see cref="Subviews"/>.</returns>
-    protected virtual bool OnDrawingSubviews (DrawContext? context) { return false; }
+    /// <returns><see langword="true"/> to stop further drawing of <see cref="SubViews"/>.</returns>
+    protected virtual bool OnDrawingSubViews (DrawContext? context) { return false; }
 
     /// <summary>
-    ///     Called when the <see cref="Subviews"/> are to be drawn.
+    ///     Called when the <see cref="SubViews"/> are to be drawn.
     /// </summary>
-    /// <returns><see langword="true"/> to stop further drawing of <see cref="Subviews"/>.</returns>
-    protected virtual bool OnDrawingSubviews () { return false; }
+    /// <returns><see langword="true"/> to stop further drawing of <see cref="SubViews"/>.</returns>
+    protected virtual bool OnDrawingSubViews () { return false; }
 
-    /// <summary>Raised when the <see cref="Subviews"/> are to be drawn.</summary>
+    /// <summary>Raised when the <see cref="SubViews"/> are to be drawn.</summary>
     /// <remarks>
     /// </remarks>
     /// <returns>
     ///     Set <see cref="CancelEventArgs.Cancel"/> to <see langword="true"/> to stop further drawing of
-    ///     <see cref="Subviews"/>.
+    ///     <see cref="SubViews"/>.
     /// </returns>
-    public event EventHandler<DrawEventArgs>? DrawingSubviews;
+    public event EventHandler<DrawEventArgs>? DrawingSubViews;
 
     /// <summary>
-    ///     Draws the <see cref="Subviews"/>.
+    ///     Draws the <see cref="SubViews"/>.
     /// </summary>
     /// <param name="context">The draw context to report drawn areas to, or null if not tracking.</param>
-    public void DrawSubviews (DrawContext? context = null)
+    public void DrawSubViews (DrawContext? context = null)
     {
-        if (_subviews is null)
+        if (InternalSubViews.Count == 0)
         {
             return;
         }
 
         // Draw the subviews in reverse order to leverage clipping.
-        foreach (View view in _subviews.Where (view => view.Visible).Reverse ())
+        foreach (View view in InternalSubViews.Where (view => view.Visible).Reverse ())
         {
             // TODO: HACK - This forcing of SetNeedsDraw with SuperViewRendersLineCanvas enables auto line join to work, but is brute force.
             if (view.SuperViewRendersLineCanvas || view.ViewportSettings.HasFlag (ViewportSettings.Transparent))
@@ -606,7 +616,7 @@ public partial class View // Drawing APIs
         }
     }
 
-    #endregion DrawSubviews
+    #endregion DrawSubViews
 
     #region DrawLineCanvas
 
@@ -635,7 +645,7 @@ public partial class View // Drawing APIs
     /// <summary>
     ///     Gets or sets whether this View will use it's SuperView's <see cref="LineCanvas"/> for rendering any
     ///     lines. If <see langword="true"/> the rendering of any borders drawn by this Frame will be done by its parent's
-    ///     SuperView. If <see langword="false"/> (the default) this View's <see cref="OnDrawingBorderAndPadding"/> method will
+    ///     SuperView. If <see langword="false"/> (the default) this View's <see cref="OnDrawingAdornments"/> method will
     ///     be
     ///     called to render the borders.
     /// </summary>
@@ -772,7 +782,7 @@ public partial class View // Drawing APIs
         }
     }
 
-    /// <summary>Gets whether any Subviews need to be redrawn.</summary>
+    /// <summary>Gets whether any SubViews need to be redrawn.</summary>
     public bool SubViewNeedsDraw { get; private set; }
 
     /// <summary>Sets that the <see cref="Viewport"/> of this View needs to be redrawn.</summary>
@@ -844,7 +854,7 @@ public partial class View // Drawing APIs
         }
 
         // There was multiple enumeration error here, so calling ToArray - probably a stop gap
-        foreach (View subview in Subviews.ToArray ())
+        foreach (View subview in SubViews.ToArray ())
         {
             if (subview.Frame.IntersectsWith (viewPortRelativeRegion))
             {
@@ -898,7 +908,7 @@ public partial class View // Drawing APIs
             Padding?.ClearNeedsDraw ();
         }
 
-        foreach (View subview in Subviews)
+        foreach (View subview in SubViews)
         {
             subview.ClearNeedsDraw ();
         }
