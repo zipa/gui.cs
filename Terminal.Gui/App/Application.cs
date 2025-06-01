@@ -16,8 +16,6 @@ global using Terminal.Gui.Drawing;
 global using Terminal.Gui.Text;
 global using Terminal.Gui.Resources;
 global using Terminal.Gui.FileServices;
-
-using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
 using System.Resources;
