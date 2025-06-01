@@ -14,9 +14,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
-      # with:
-      #   fetch-depth: 0 # fetch-depth is needed for GitVersion
+    - name: Checkout ${{ github.ref_name }}
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0 # fetch-depth is needed for GitVersion https://github.com/GitTools/actions/blob/main/docs/cloning.md
 
     - name: Install GitVersion
       uses: gittools/actions/gitversion/setup@v3.1.11
