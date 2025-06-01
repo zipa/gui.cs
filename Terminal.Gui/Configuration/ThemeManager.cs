@@ -4,7 +4,7 @@ using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
-namespace Terminal.Gui;
+namespace Terminal.Gui.Configuration;
 
 /// <summary>Manages Themes.</summary>
 /// <remarks>
@@ -100,6 +100,10 @@ public static class ThemeManager
     /// </summary>
     /// <returns></returns>
     public static string GetCurrentThemeName () { return Theme!; }
+
+    // TODO: Add a lock around Theme and Themes
+    // TODO: For now, this test can't run in parallel with other tests that access Theme or Themes.
+    // TODO: ThemeScopeList_WithThemes_ClonesSuccessfully
 
     /// <summary>
     ///     Gets the Themes dictionary. <see cref="GetThemes"/> is preferred.

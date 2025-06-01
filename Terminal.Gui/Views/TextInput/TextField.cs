@@ -1,9 +1,8 @@
 using System.Globalization;
-using Terminal.Gui.Resources;
 
-namespace Terminal.Gui;
+namespace Terminal.Gui.Views;
 
-/// <summary>Single-line text entry <see cref="View"/></summary>
+/// <summary>Single-line text editor.</summary>
 /// <remarks>The <see cref="TextField"/> <see cref="View"/> provides editing functionality and mouse support.</remarks>
 public class TextField : View, IDesignable
 {
@@ -1015,7 +1014,6 @@ public class TextField : View, IDesignable
 
         RenderCaption ();
 
-        DrawAutocomplete ();
         _isDrawing = false;
 
         return true;
@@ -1686,6 +1684,8 @@ public class TextField : View, IDesignable
         }
 
         GenerateSuggestions ();
+
+        DrawAutocomplete ();
     }
 
     private void DrawAutocomplete ()

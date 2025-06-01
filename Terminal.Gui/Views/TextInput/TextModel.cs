@@ -1,5 +1,6 @@
 #nullable enable
-namespace Terminal.Gui;
+
+namespace Terminal.Gui.Views;
 
 /// <summary>
 ///     Represents the underlying data model for managing and manipulating multi-line text in a <see cref="TextView"/>.
@@ -269,9 +270,11 @@ internal class TextModel
 
                     if (nRow != fromRow && (Rune.IsLetterOrDigit (nRune) || Rune.IsPunctuation (nRune) || Rune.IsSymbol (nRune)))
                     {
+                        List<Cell> line = GetLine (nRow);
+
                         if (lastValidCol > -1)
                         {
-                            nCol = lastValidCol;
+                            nCol = lastValidCol + Math.Max (lastValidCol, line.Count);
                         }
 
                         return;

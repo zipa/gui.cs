@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 
-namespace Terminal.Gui;
+namespace Terminal.Gui.Configuration;
 
 /// <summary>
 ///     Provides deep cloning functionality for Terminal.Gui configuration objects.
@@ -56,9 +56,11 @@ public static class DeepCloner
 
             // If in AOT but source generation failed, throw an exception
             // instead of silently falling back to reflection
-            throw new InvalidOperationException (
-                                                 $"Type {typeof (T).FullName} is not properly registered in SourceGenerationContext " +
-                                                 $"for AOT-compatible cloning.");
+            //throw new InvalidOperationException (
+            //                                     $"Type {typeof (T).FullName} is not properly registered in SourceGenerationContext " +
+            //                                     $"for AOT-compatible cloning.");
+            Logging.Error ($"Type {typeof (T).FullName} is not properly registered in SourceGenerationContext " +
+                          $"for AOT-compatible cloning.");
         }
 
         // Use reflection-based approach, which should have better performance in non-AOT environments
@@ -285,20 +287,31 @@ public static class DeepCloner
         IDictionary tempDict = CreateDictionaryInstance (dictType, comparer);
         visited.TryAdd (source, tempDict);
 
-        // Clone all key-value pairs
-        foreach (object? key in sourceDict.Keys)
-        {
-            object? clonedKey = DeepCloneInternal (key, visited);
-            object? clonedValue = DeepCloneInternal (sourceDict [key], visited);
 
-            if (tempDict.Contains (clonedKey!))
+        object? lastKey = null;
+        try
+        {
+            // Clone all key-value pairs
+            foreach (object? key in sourceDict.Keys)
             {
-                tempDict [clonedKey!] = clonedValue;
+                lastKey = key;
+                object? clonedKey = DeepCloneInternal (key, visited);
+                object? clonedValue = DeepCloneInternal (sourceDict [key], visited);
+
+                if (tempDict.Contains (clonedKey!))
+                {
+                    tempDict [clonedKey!] = clonedValue;
+                }
+                else
+                {
+                    tempDict.Add (clonedKey!, clonedValue);
+                }
             }
-            else
-            {
-                tempDict.Add (clonedKey!, clonedValue);
-            }
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Handle cases where the dictionary is modified during enumeration
+            throw new InvalidOperationException ($"Error cloning dictionary ({source}) (last key was \"{lastKey}\"). Ensure the source dictionary is not modified during cloning.", ex);
         }
 
         // If the original dictionary type has a parameterless constructor, create a new instance
