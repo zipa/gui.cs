@@ -37,10 +37,10 @@ jobs:
         dotnet-quality: 'ga'
 
     - name: Build Release Terminal.Gui
-      run: dotnet build Terminal.Gui/Terminal.Gui.csproj --no-incremental --nologo --force --configuration Release
+      run: dotnet build Terminal.Gui/Terminal.Gui.csproj --no-incremental --nologo --force --configuration Debug
 
     - name: Pack Release Terminal.Gui ${{ steps.gitversion.outputs.SemVer }} for Nuget
-      run: dotnet pack Terminal.Gui/Terminal.Gui.csproj -c Release --include-symbols -p:Version='${{ steps.gitversion.outputs.SemVer }}' 
+      run: dotnet pack Terminal.Gui/Terminal.Gui.csproj -c Debug --include-symbols -p:Version='${{ steps.gitversion.outputs.SemVer }}' 
 
     # - name: Test to generate Code Coverage Report
     #   run: |
@@ -64,5 +64,5 @@ jobs:
     #     echo "Code coverage percentage: ${{steps.create_coverage_badge.outputs.percentage}}%"
     #     echo "Badge data: ${{steps.create_coverage_badge.outputs.badge}}"
         
-    - name: Publish Pakcage to NuGet.org
+    - name: Publish Terminal.Gui.${{ steps.gitversion.outputs.SemVer }} to NuGet.org
       run: dotnet nuget push Terminal.Gui/bin/Release/Terminal.Gui.${{ steps.gitversion.outputs.SemVer }}.nupkg --api-key ${{ secrets.NUGET_API_KEY }} 
