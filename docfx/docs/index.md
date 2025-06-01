@@ -34,5 +34,5 @@ Welcome to the Terminal.Gui documentation! This comprehensive guide covers every
 
 ## API Reference
 
-For detailed API documentation, see the [API Reference](~/api).
+For detailed API documentation, see the [API Reference](~/api/Terminal.Gui).
 

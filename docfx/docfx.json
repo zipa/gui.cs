@@ -54,6 +54,7 @@
         ]
       }
     ],
+    "overwrite": "apispec/*.md",
     "globalMetadata": {
       "_appName": "Terminal.Gui v2",
       "_appTitle": "Terminal.Gui v2",
