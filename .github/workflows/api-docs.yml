@@ -40,7 +40,7 @@ jobs:
         path: docfx/_site
        
     - name: Deploy to GitHub Pages
-      if: github.ref_name github.ref_name == 'v2_develop' || github.ref_name == 'v2_release'
+      if: github.ref_name == 'v2_release' ||  github.ref_name == 'v2_develop'
       id: deployment
       uses: actions/deploy-pages@v4
       with:
