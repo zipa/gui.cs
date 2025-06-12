@@ -3,7 +3,7 @@
 Welcome to the Terminal.Gui documentation! This comprehensive guide covers everything you need to know about building modern terminal user interfaces with Terminal.Gui.
 
 > [!NOTE]
-> This is the v2 API documentation. For v1 go here: https://gui-cs.github.io/Terminal.Gui/api/Terminal.Gui.html
+> This is the v2 API documentation. For v1 go here: https://gui-cs.github.io/Terminal.GuiV2Docs/
 
 ## Getting Started
 
