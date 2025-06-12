@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/github/license/gui-cs/gui.cs.svg)](LICENSE)
 ![Bugs](https://img.shields.io/github/issues/gui-cs/gui.cs/bug)
 
-# Terminal.Gui
+# Terminal.Gui v2
 
 The premier toolkit for building rich console apps for Windows, the Mac, and Linux/Unix.
 
